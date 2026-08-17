@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+      <%- include('../partials/topbar') %>
+      <main class="page-content">
+        <!-- Monitoring Overview Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>Monitoring Overview</h1>
+          </div>
+          <div class="page-header-right">
+            <div class="mt-selector-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:.6;">
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                <line x1="6" y1="18" x2="6.01" y2="18"></line>
+              </svg>
+              <select id="mikrotikSelector" class="mt-selector" title="Pilih MikroTik untuk monitoring">
+                <option value="">Loading…</option>
+              </select>
+            </div>
+            <button class="btn-secondary" id="refreshDashboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <style>
+          .page-header-right { display:flex; align-items:center; gap:10px; }
+          .mt-selector-wrap {
+            display:flex; align-items:center; gap:8px;
+            background:#fff; border:1px solid #e2e8f0; border-radius:8px;
+            padding:6px 12px; min-width:200px;
+            transition: border-color .15s, box-shadow .15s;
+          }
+          .mt-selector-wrap:hover { border-color:#1e3a8a; }
+          .mt-selector-wrap:focus-within { border-color:#1d4ed8; box-shadow:0 0 0 3px rgba(29,78,216,.12); }
+          .mt-selector {
+            border:none; outline:none; background:transparent;
+            font-family: inherit; font-size:13px; font-weight:500; color:#1e293b;
+            min-width:160px; cursor:pointer;
+          }
+          .mt-selector:disabled { color:#94a3b8; cursor:not-allowed; }
+
+          /* Interface selector — konsisten dengan period-select */
+          .iface-select {
+            padding: 5px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1e293b;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color .15s, box-shadow .15s;
+            min-width: 110px;
+            max-width: 160px;
+          }
+          .iface-select:hover { border-color:#1d4ed8; }
+          .iface-select:focus {
+            outline:none; border-color:#1d4ed8;
+            box-shadow:0 0 0 3px rgba(29,78,216,.12);
+          }
+          .iface-select:disabled { color:#94a3b8; cursor:not-allowed; background:#f8fafc; }
+
+          /* Wrapper untuk dropdown + period di Bandwidth Trends card */
+          .bw-trends-controls {
+            display:flex; align-items:center; gap:8px;
+          }
+
+          /* ===== Open Tickets List (di card Ticket Statistics) ===== */
+          .open-tickets-list {
+            margin-top: 16px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 340px;
+            overflow-y: auto;
+          }
+          .open-tickets-list .loading-state,
+          .open-tickets-list .empty-state {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 18px 8px;
+          }
+          .open-ticket-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: background .15s, border-color .15s, transform .15s;
+          }
+          .open-ticket-item:hover {
+            background: #fff;
+            border-color: #cbd5e1;
+            transform: translateX(2px);
+          }
+          .ot-priority {
+            flex: 0 0 4px;
+            align-self: stretch;
+            border-radius: 4px;
+            min-height: 36px;
+          }
+          .ot-priority.critical { background: #ef4444; }
+          .ot-priority.high     { background: #f59e0b; }
+          .ot-priority.medium   { background: #3b82f6; }
+          .ot-priority.low      { background: #94a3b8; }
+          .ot-body { flex: 1; min-width: 0; }
+          .ot-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+          }
+          .ot-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #64748b;
+          }
+          .ot-meta .ot-num { font-weight: 600; color: #475569; }
+          .ot-meta .ot-customer {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+          }
+          .ot-status {
+            flex: 0 0 auto;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+          .ot-status.open        { background: #dbeafe; color: #1e40af; }
+          .ot-status.in_progress { background: #fef3c7; color: #92400e; }
+          .ot-status.pending     { background: #ccfbf1; color: #115e59; }
+
+          @media (max-width: 640px) {
+            .ot-meta .ot-customer { max-width: 90px; }
+            .ot-title { font-size: 12px; }
+          }
+
+          @media (max-width: 640px) {
+            .mt-selector-wrap { min-width:140px; padding:5px 10px; }
+            .mt-selector { min-width:110px; font-size:12px; }
+            .iface-select { min-width:90px; max-width:120px; font-size:11px; }
+            .bw-trends-controls { flex-wrap:wrap; gap:6px; }
+          }
+
+          /* ── Popup marker modern (Customer Distribution) ── */
+          .dpop-wrap .leaflet-popup-content-wrapper{ padding:0; overflow:hidden; border-radius:14px; box-shadow:0 10px 30px rgba(15,40,90,.22); }
+          .dpop-wrap .leaflet-popup-content{ margin:0; width:230px !important; }
+          .dpop{ font-family:'DM Sans',sans-serif; }
+          .dpop-head{ display:flex; align-items:center; gap:10px; padding:12px 14px; color:#fff; }
+          .dpop-head .ic{ width:34px; height:34px; border-radius:9px; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .dpop-head .tt{ display:flex; flex-direction:column; line-height:1.25; min-width:0; }
+          .dpop-head .tt b{ font-size:13.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .dpop-head .tt span{ font-size:10.5px; opacity:.9; font-family:'DM Mono',monospace; }
+          .dpop-body{ padding:11px 14px 13px; }
+          .dpop-row{ display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f1f5f9; font-size:12px; }
+          .dpop-row:last-of-type{ border-bottom:none; }
+          .dpop-row .l{ color:#94a3b8; }
+          .dpop-row .v{ color:#0d1b3e; font-weight:600; text-align:right; }
+          .dpop-addr{ font-size:11.5px; color:#64748b; margin-top:7px; line-height:1.45; }
+          .dpop-badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:700; color:#fff; }
+          .dpop-link{ display:inline-block; margin-top:9px; font-size:11.5px; color:#2563eb; font-weight:700; text-decoration:none; }
+          .dpop-link:hover{ text-decoration:underline; }
+
+          /* ── Toggle Peta/Satelit ── */
+          #dashCustMap .map-toggle{ display:flex; gap:0; background:#fff; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; box-shadow:0 2px 8px rgba(15,40,90,.12); }
+          #dashCustMap .map-toggle button{ border:none; background:#fff; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#64748b; padding:7px 14px; cursor:pointer; }
+          #dashCustMap .map-toggle button:hover{ background:#f1f5fb; color:#0d1b3e; }
+          #dashCustMap .map-toggle button.on{ background:#1a6ef5; color:#fff; }
+
+          /* ── Panel Needs Attention ── */
+          .alerts-badge{ background:#f5365c; color:#fff; font-size:11px; font-weight:800; padding:2px 9px; border-radius:20px; }
+          .alert-chip{ border:1.5px solid #e2e8f0; background:#fff; color:#64748b; font-family:'DM Sans',sans-serif; font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:8px; cursor:pointer; transition:all .15s; }
+          .alert-chip:hover{ border-color:#cdd9ee; color:#0d1b3e; }
+          .alert-chip.on{ border-color:#1a6ef5; background:#eff4ff; color:#1d4ed8; }
+          .alerts-list{ display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto; }
+          .alerts-loading,.alerts-empty{ text-align:center; color:#94a3b8; padding:28px 0; font-size:13px; }
+          .alerts-empty .ok{ color:#16a34a; font-weight:700; }
+          .alert-item{ display:flex; align-items:flex-start; gap:11px; padding:11px 13px; border-radius:11px; border:1px solid #eef2f7; background:#fff; transition:background .12s; text-decoration:none; }
+          .alert-item:hover{ background:#f8fafc; }
+          .alert-item .ai-ic{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+          .alert-item .ai-body{ flex:1; min-width:0; }
+          .alert-item .ai-title{ font-size:13px; font-weight:700; color:#0d1b3e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .alert-item .ai-detail{ font-size:11.5px; color:#64748b; margin-top:2px; line-height:1.4; }
+          .alert-item .ai-time{ font-size:10.5px; color:#94a3b8; white-space:nowrap; flex-shrink:0; margin-top:2px; }
+
+          /* ── Pulse animasi untuk marker offline/gangguan ── */
+          .dash-pulse{ position:absolute; top:50%; left:50%; width:15px; height:15px; border-radius:50%; background:rgba(239,68,68,.35); transform:translate(-50%,-50%); z-index:1; animation:dashPulse 1.6s ease-out infinite; }
+          @keyframes dashPulse{
+            0%   { box-shadow:0 0 0 0 rgba(239,68,68,.65); opacity:1; }
+            70%  { box-shadow:0 0 0 32px rgba(239,68,68,0); opacity:.3; }
+            100% { box-shadow:0 0 0 0 rgba(239,68,68,0); opacity:1; }
+          }
+
+          /* ── Overlay loading peta ── */
+          #dashCustMap{ position:relative; }
+          .dash-map-loading{ position:absolute; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.6); backdrop-filter:blur(1px); }
+          .dash-map-loading .dml-box{ display:flex; align-items:center; gap:10px; background:#fff; padding:10px 16px; border-radius:10px; box-shadow:0 4px 14px rgba(15,40,90,.16); font-size:12.5px; font-weight:600; color:#475569; }
+          .dash-map-loading .dml-spin{ width:16px; height:16px; border:2.5px solid #e2e8f0; border-top-color:#1a6ef5; border-radius:50%; animation:dmlSpin .8s linear infinite; }
+          @keyframes dmlSpin{ to{ transform:rotate(360deg); } }
+        </style>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+          <div class="summary-card gradient-blue">
+            <div class="sc-label">Total Number<br>PPPoE Active</div>
+            <div class="sc-value" id="pppoeActiveCount">0</div>
+            <div class="sc-sub">Sessions online</div>
+          </div>
+          <div class="summary-card gradient-blue">
+            <div class="sc-label">Total Bandwidth<br>Download</div>
+            <div class="sc-value" id="totalBandwidth">0</div>
+            <div class="sc-sub">Mbps aggregate</div>
+          </div>
+          <div class="summary-card gradient-blue">
+            <div class="sc-label">ONT Online<br>To Date</div>
+            <div class="sc-value" id="ontOnlineCount">0</div>
+            <div class="sc-sub">Active ONTs</div>
+          </div>
+          <div class="summary-card gradient-blue">
+            <div class="sc-label">Total Number<br>ONT Offline</div>
+            <div class="sc-value" id="ontOfflineCount">0</div>
+            <div class="sc-sub">Need attention</div>
+          </div>
+          <div class="summary-card gradient-blue">
+            <div class="sc-label">CPU Load<br>Average</div>
+            <div class="sc-value" id="cpuLoadAvg">0%</div>
+            <div class="sc-sub" id="cpuDeviceName">Router</div>
+          </div>
+        </div>
+
+        <!-- ── Panel "Perlu Perhatian" / Needs Attention ── -->
+        <div class="dashboard-grid" style="grid-template-columns:1fr">
+          <div class="card" id="alertsCard">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <h3>Needs Attention</h3>
+                <span id="alertsBadge" class="alerts-badge" style="display:none"></span>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="alertsFilters">
+                <button class="alert-chip on" data-f="all">All</button>
+                <button class="alert-chip" data-f="device_offline">Device</button>
+                <button class="alert-chip" data-f="ont_offline">ONT</button>
+                <button class="alert-chip" data-f="customer_isolated">Isolir</button>
+                <button class="alert-chip" data-f="ticket_urgent">Tiket</button>
+                <button id="alertsRefresh" class="period-select" style="cursor:pointer" title="Refresh">↻</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="alertsList" class="alerts-list"><div class="alerts-loading">Memuat...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Grid: Traffic Interface + Activity Chart -->
+        <div class="dashboard-grid">
+          <!-- Traffic Interface Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+                <h3>Traffic Interface</h3>
+              </div>
+              <a href="/monitoring/traffic" class="card-link">View all →</a>
+            </div>
+            <div class="card-body" id="trafficInterfaceList">
+              <div class="loading-state">Loading interfaces...</div>
+            </div>
+          </div>
+
+          <!-- Activity Chart Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+                <h3>Activity Chart</h3>
+              </div>
+              <div class="chart-legend">
+                <select id="activityChartIface" class="iface-select" title="Pilih interface untuk dipantau">
+                  <option value="__all__">All Interfaces</option>
+                </select>
+                <span class="legend-item"><span class="legend-line blue"></span> RX</span>
+                <span class="legend-item"><span class="legend-line orange"></span> TX</span>
+                <div class="chart-range-btns">
+                  <button class="range-btn active" data-range="2s">2s</button>
+                  <button class="range-btn" data-range="1m">1m</button>
+                  <button class="range-btn" data-range="5m">5m</button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-stats">
+                <div class="chart-stat">
+                  <span class="stat-label">MAX RX</span>
+                  <span class="stat-value blue" id="maxRx">0 Mbps</span>
+                </div>
+                <div class="chart-stat">
+                  <span class="stat-label">MAX TX</span>
+                  <span class="stat-value orange" id="maxTx">0 Mbps</span>
+                </div>
+                <div class="chart-stat">
+                  <span class="stat-label">AVG RX</span>
+                  <span class="stat-value blue" id="avgRx">0 Mbps</span>
+                </div>
+                <div class="chart-stat">
+                  <span class="stat-label">AVG TX</span>
+                  <span class="stat-value orange" id="avgTx">0 Mbps</span>
+                </div>
+              </div>
+              <div class="chart-container" style="height:auto;min-height:240px;">
+                <div id="activityChart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Top Customers + Network Uptime -->
+        <div class="dashboard-grid">
+          <!-- Top Customers by Bandwidth -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <polyline points="17 11 19 13 23 9"></polyline>
+                </svg>
+                <h3>Top Customers by Bandwidth</h3>
+              </div>
+              <select id="topCustomersPeriod" class="period-select">
+                <option value="total" selected>Total (Simple Queue)</option>
+                <option value="24h">Last 24h</option>
+                <option value="7d">Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div id="topCustomersList" class="top-customers-list">
+                <div class="loading-state">Loading data...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Network Uptime Statistics -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <h3>Network Uptime</h3>
+              </div>
+              <select id="uptimePeriod" class="period-select">
+                <option value="7d" selected>Last 7 days</option>
+                <option value="30d">Last 30 days</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div class="uptime-summary" id="uptimeSummary">
+                <div class="uptime-stat">
+                  <div class="stat-value" id="avgUptime">0%</div>
+                  <div class="stat-label">Average Uptime</div>
+                </div>
+                <div class="uptime-stat">
+                  <div class="stat-value" id="criticalDevices">0</div>
+                  <div class="stat-label">Critical Devices</div>
+                </div>
+              </div>
+              <div id="uptimeDevicesList" class="uptime-devices-list">
+                <div class="loading-state">Loading data...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Ticket Stats + Bandwidth Trends -->
+        <div class="dashboard-grid">
+          <!-- Ticket/Support Statistics -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <h3>Ticket Statistics</h3>
+              </div>
+              <a href="/tickets" class="card-link">View all →</a>
+            </div>
+            <div class="card-body">
+              <div class="ticket-stats-grid" id="ticketStatsGrid">
+                <div class="ticket-stat">
+                  <div class="stat-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="stat-value" id="openTickets">0</div>
+                    <div class="stat-label">Open Tickets</div>
+                  </div>
+                </div>
+                <div class="ticket-stat">
+                  <div class="stat-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="stat-value" id="resolvedTickets">0</div>
+                    <div class="stat-label">Resolved</div>
+                  </div>
+                </div>
+                <div class="ticket-stat">
+                  <div class="stat-icon orange">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="8" x2="12" y2="12"></line>
+                      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="stat-value" id="avgResolutionTime">0h</div>
+                    <div class="stat-label">Avg Resolution</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Open Tickets List — klik untuk buka detail di /tickets/:id -->
+              <div class="open-tickets-list" id="openTicketsList">
+                <div class="loading-state">Loading tickets...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bandwidth Trends Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+                <h3>Bandwidth Trends</h3>
+              </div>
+              <div class="bw-trends-controls">
+                <select id="bandwidthTrendsIface" class="iface-select" title="Pilih interface">
+                  <option value="">All Interfaces</option>
+                </select>
+                <select id="bandwidthTrendsPeriod" class="period-select">
+                  <option value="realtime">Realtime (1h)</option>
+                  <option value="daily" selected>Daily (30d)</option>
+                  <option value="weekly">Weekly (7d)</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:280px;">
+                <div id="bandwidthTrendsChart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peta Sebaran Pelanggan + status UP/DOWN -->
+        <div class="dashboard-grid" style="grid-template-columns:1fr">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <h3>Customer Distribution</h3>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#16a34a;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#16a34a;display:inline-block"></span><span id="custMapUp">0</span> Up</span>
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#ef4444;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block"></span><span id="custMapDown">0</span> Down</span>
+                <button id="custMapRefresh" class="period-select" style="cursor:pointer" title="Refresh status">↻</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="dashCustMap" style="width:100%;height:420px;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;z-index:0"></div>
+              <div style="font-size:11.5px;color:#94a3b8;margin-top:8px;line-height:1.5">
+                <b style="color:#16a34a">Green</b> marker = customer online (active PPPoE session), <b style="color:#ef4444">red</b> = offline/down. Click a point for details.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Customer Growth + Revenue Forecast -->
+        <div class="dashboard-grid">
+          <!-- Customer Growth Chart -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <h3>Customer Growth</h3>
+              </div>
+              <div class="customer-growth-stats" id="customerGrowthStats">
+                <div class="growth-stat">
+                  <span class="growth-value" id="totalCustomersGrowth">0</span>
+                  <span class="growth-label">Total</span>
+                </div>
+                <div class="growth-stat">
+                  <span class="growth-value green" id="growthRate">+0%</span>
+                  <span class="growth-label">Growth Rate</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:280px;">
+                <div id="customerGrowthChart"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Revenue Forecast -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <h3>Revenue Forecast</h3>
+              </div>
+              <div class="revenue-current">
+                <span class="revenue-label">This Month</span>
+                <span class="revenue-value" id="currentMonthRevenue">Rp 0</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="chart-container" style="height:280px;">
+                <div id="revenueForecastChart"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Existing: Device Status + Billing Overview -->
+        <div class="dashboard-grid">
+          <div class="card">
+            <div class="card-header">
+              <h3>Device Status</h3>
+              <a href="/devices" class="card-link">View all →</a>
+            </div>
+            <div class="card-body">
+              <div class="device-status-grid" id="deviceStatusGrid">
+                <div class="ds-item online">
+                  <div class="ds-count" id="devOnline">0</div>
+                  <div class="ds-label">Online</div>
+                </div>
+                <div class="ds-item offline">
+                  <div class="ds-count" id="devOffline">0</div>
+                  <div class="ds-label">Offline</div>
+                </div>
+                <div class="ds-item warning">
+                  <div class="ds-count" id="devWarning">0</div>
+                  <div class="ds-label">Warning</div>
+                </div>
+                <div class="ds-item total">
+                  <div class="ds-count" id="devTotal">0</div>
+                  <div class="ds-label">Total</div>
+                </div>
+              </div>
+              <div id="deviceList" class="device-list"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Billing Overview</h3>
+              <a href="/billing" class="card-link">View all →</a>
+            </div>
+            <div class="card-body">
+              <div class="billing-stats">
+                <div class="bs-item">
+                  <div class="bs-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"/></svg></div>
+                  <div><div class="bs-value" id="billPaid">0</div><div class="bs-label">Paid this month</div></div>
+                </div>
+                <div class="bs-item">
+                  <div class="bs-icon yellow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                  <div><div class="bs-value" id="billUnpaid">0</div><div class="bs-label">Unpaid</div></div>
+                </div>
+                <div class="bs-item">
+                  <div class="bs-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                  <div><div class="bs-value" id="billOverdue">0</div><div class="bs-label">Overdue</div></div>
+                </div>
+              </div>
+              
+              <!-- Revenue This Month - New Style -->
+              <div class="revenue-box-new">
+                <span class="revenue-label-new">Revenue This Month</span>
+                <span class="revenue-value-new" id="revenueMonthNew">Rp 0</span>
+                <span class="revenue-detail-new" id="revenueDetail">0 pelanggan bayar</span>
+              </div>
+              
+              <!-- Total Outstanding Amount -->
+              <div class="outstanding-box">
+                <span class="outstanding-label">Total Tagihan Belum Dibayar</span>
+                <span class="outstanding-value" id="totalOutstanding">Rp 0</span>
+                <span class="outstanding-detail" id="outstandingDetail">0 pelanggan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/mikrotik-selector.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/dashboard-analytics.js"></script>
+</body>
+</html>

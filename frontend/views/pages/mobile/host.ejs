@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#fff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:#fff;color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;border:1px solid #eef1f6;}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:4px 16px 20px;}
+    .dev-sel{width:100%;padding:13px 14px;border:1px solid #eef1f6;background:#fff;border-radius:14px;font-size:14px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;margin-bottom:12px;}
+    .search-wrap{position:relative;margin-bottom:12px;}
+    .search-wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted);}
+    .search-wrap input{width:100%;padding:12px 12px 12px 38px;border:1px solid #eef1f6;background:#fff;border-radius:13px;font-size:13.5px;font-family:inherit;outline:none;}
+    .count-bar{font-size:12px;color:var(--muted);font-weight:600;margin:0 2px 10px;}
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .ht{background:#fff;border:1px solid #eef1f6;border-radius:15px;padding:13px 15px;}
+    .ht-top{display:flex;align-items:center;gap:11px;}
+    .ht-ic{width:40px;height:40px;border-radius:12px;background:#f4f6fa;color:#3a4a68;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ht-ic svg{width:19px;height:19px;stroke-width:1.8;}
+    .ht-body{flex:1;min-width:0;}
+    .ht-mac{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ht-ip{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .ht-badges{display:flex;gap:5px;flex-shrink:0;}
+    .ht-badge{font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:100px;}
+    .hb-auth{background:#dcf7ec;color:#0f9d63;} .hb-bypass{background:#e0f2fe;color:#0ea5e9;} .hb-dyn{background:#f0f3f9;color:#6b7a97;}
+    .ht-cust{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#0ea5e9;margin-top:9px;padding:7px 10px;background:#f2f6ff;border-radius:10px;}
+    .ht-cust svg{width:14px;height:14px;flex-shrink:0;}
+    .ht-foot{display:flex;align-items:center;gap:10px;margin-top:11px;padding-top:11px;border-top:1px solid #f2f5fa;}
+    .ht-meta{flex:1;font-size:11px;color:var(--muted);display:flex;gap:12px;}
+    .ht-meta b{color:#3a4a68;font-weight:700;}
+    .bind-btn{padding:9px 14px;border:none;border-radius:11px;background:linear-gradient(135deg,#38bdf8,#0369a1);color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+    .bind-btn:disabled{opacity:.5;} .bind-btn svg{width:14px;height:14px;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{width:44px;height:44px;color:#c7d0e0;margin-bottom:12px;}
+    .skel{background:linear-gradient(90deg,#eef1f6 25%,#f6f8fb 50%,#eef1f6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;max-width:90vw;text-align:center;pointer-events:none;}
+    .toast.show{opacity:1;} .toast.ok{background:#12946f;} .toast.err{background:#d13b42;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="htitle">Host Terdeteksi</div><div class="hsub" id="hostSub">Host aktif di MikroTik</div></div>
+      <div class="refresh" id="refreshBtn" onclick="loadHosts(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+    <div class="content">
+      <select class="dev-sel" id="devSel" onchange="onDeviceChange()"><option value="">Memuat perangkat…</option></select>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="hostSearch" placeholder="Cari MAC / IP…">
+      </div>
+      <div class="count-bar" id="countBar">–</div>
+      <div class="list" id="hostList">
+        <div class="ht"><div class="ht-top"><div class="skel" style="width:40px;height:40px;border-radius:12px;"></div><div class="ht-body"><div class="skel" style="width:150px;height:13px;"></div><div class="skel" style="width:100px;height:10px;margin-top:6px;"></div></div></div></div>
+        <div class="ht"><div class="ht-top"><div class="skel" style="width:40px;height:40px;border-radius:12px;"></div><div class="ht-body"><div class="skel" style="width:150px;height:13px;"></div><div class="skel" style="width:100px;height:10px;margin-top:6px;"></div></div></div></div>
+      </div>
+    </div>
+  </div>
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,opts){ opts=opts||{}; const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}, opts.headers||{}); try{ const r=await fetch(url,Object.assign({credentials:'include',headers},opts)); if(r.status===401){location.href='/login';return null;} const x=await r.text(); let d=null; try{d=x?JSON.parse(x):null;}catch(_){}; return {status:r.status,data:d}; }catch(e){return {status:0,data:null};} }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function toast(m,t){ const el=document.getElementById('toast'); el.textContent=m; el.className='toast show'+(t?' '+t:''); setTimeout(()=>el.classList.remove('show'),2600); }
+    function fmtBytes(n){ n=Number(n)||0; if(n>=1073741824)return (n/1073741824).toFixed(1)+' GB'; if(n>=1048576)return (n/1048576).toFixed(1)+' MB'; if(n>=1024)return (n/1024).toFixed(0)+' KB'; return n+' B'; }
+
+    let _device='', _hosts=[], _custIndex={};
+    function qs(){ return _device?('?device_id='+encodeURIComponent(_device)):''; }
+
+    async function buildCustomerIndex(){
+      const r=await api('/api/tools/hotspot/customers');
+      const rows=(r.data&&r.data.success)?(Array.isArray(r.data.data)?r.data.data:[]):[];
+      _custIndex={};
+      rows.forEach(c=>{ const mac=(c.mac_address||'').toUpperCase().trim(); const ip=(c.static_ip||'').trim(); if(mac)_custIndex['mac:'+mac]=c; if(ip)_custIndex['ip:'+ip]=c; });
+    }
+    function matchCustomer(h){ const mac=(h.macAddress||'').toUpperCase().trim(); const ip=(h.address||'').trim(); return (mac&&_custIndex['mac:'+mac])||(ip&&_custIndex['ip:'+ip])||null; }
+
+    async function loadDevices(){
+      const r=await api('/api/devices/mikrotik-list');
+      const sel=document.getElementById('devSel');
+      const rows=(r.data&&r.data.success)?(Array.isArray(r.data.data)?r.data.data:(r.data.data&&r.data.data.rows?r.data.data.rows:[])):(Array.isArray(r.data)?r.data:[]);
+      if(rows.length){ sel.innerHTML=rows.map(d=>'<option value="'+d.id+'">'+esc(d.name||('Router #'+d.id))+'</option>').join(''); _device=rows[0].id; sel.value=_device; await buildCustomerIndex(); loadHosts(); }
+      else{ sel.innerHTML='<option value="">Tidak ada perangkat</option>'; document.getElementById('hostList').innerHTML='<div class="empty">Tidak ada perangkat MikroTik</div>'; }
+    }
+    function onDeviceChange(){ _device=document.getElementById('devSel').value; loadHosts(); }
+
+    function hostCard(h){
+      const mac=h.macAddress||'—'; const ip=h.address||'—'; const cust=matchCustomer(h);
+      const badges=[];
+      if(h.authorized)badges.push('<span class="ht-badge hb-auth">auth</span>');
+      if(h.bypassed)badges.push('<span class="ht-badge hb-bypass">bypass</span>');
+      if(h.dynamic)badges.push('<span class="ht-badge hb-dyn">dynamic</span>');
+      const custLine=cust?('<div class="ht-cust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+esc(cust.name||'')+(cust.customer_id?(' · '+esc(cust.customer_id)):'')+'</div>'):'';
+      const canBind=!h.bypassed;
+      return '<div class="ht">'+
+        '<div class="ht-top"><div class="ht-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div>'+
+        '<div class="ht-body"><div class="ht-mac">'+esc(mac)+'</div><div class="ht-ip">'+esc(ip)+'</div></div>'+
+        '<div class="ht-badges">'+badges.join('')+'</div></div>'+
+        custLine+
+        '<div class="ht-foot"><div class="ht-meta">'+(h.uptime?'<span>Uptime <b>'+esc(h.uptime)+'</b></span>':'')+'<span>↓<b>'+fmtBytes(h.bytesOut)+'</b></span><span>↑<b>'+fmtBytes(h.bytesIn)+'</b></span></div>'+
+        (canBind?('<button class="bind-btn" onclick="makeBinding(\''+esc(h.id)+'\',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Jadikan Binding</button>'):'')+
+        '</div></div>';
+    }
+    function renderHosts(filter){
+      let rows=_hosts;
+      if(filter){ const v=filter.toLowerCase(); rows=rows.filter(h=>((h.macAddress||'')+' '+(h.address||'')).toLowerCase().includes(v)); }
+      const list=document.getElementById('hostList');
+      document.getElementById('countBar').textContent=rows.length+' host';
+      if(rows.length){ list.innerHTML=rows.map(hostCard).join(''); }
+      else{ list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg><div>Tidak ada host terdeteksi</div></div>'; }
+    }
+    async function loadHosts(manual){
+      if(!_device)return;
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+      const r=await api('/api/mikrotik/hotspot/hosts'+qs());
+      _hosts=(r.data&&r.data.success)?(Array.isArray(r.data.data)?r.data.data:[]):[];
+      document.getElementById('hostSub').textContent=_hosts.length+' host terdeteksi';
+      renderHosts(document.getElementById('hostSearch').value.trim());
+      if(manual)setTimeout(()=>btn.classList.remove('spin'),600);
+    }
+    async function makeBinding(id,btn){
+      btn.disabled=true; btn.textContent='Memproses…';
+      const r=await api('/api/mikrotik/hotspot/hosts/'+encodeURIComponent(id)+'/make-binding'+qs(),{method:'POST',body:JSON.stringify({device_id:_device})});
+      if(r.data&&r.data.success){ toast('Host dijadikan binding (bypassed)','ok'); loadHosts(); }
+      else{ toast((r.data&&r.data.message)||'Gagal membuat binding','err'); btn.disabled=false; btn.textContent='Jadikan Binding'; }
+    }
+    let _t=null;
+    document.getElementById('hostSearch').addEventListener('input',function(){ clearTimeout(_t); const v=this.value.trim(); _t=setTimeout(()=>renderHosts(v),200); });
+    loadDevices();
+  </script>
+</body>
+</html>

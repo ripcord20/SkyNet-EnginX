@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    :root {
+      --dd-blue:#2563eb; --dd-blue-d:#1d4ed8; --dd-blue-l:#eff6ff;
+      --dd-green:#16a34a; --dd-green-l:#f0fdf4;
+      --dd-red:#dc2626;   --dd-red-l:#fef2f2;
+      --dd-amber:#d97706; --dd-amber-l:#fffbeb;
+      --dd-teal:#0891b2;  --dd-teal-l:#ecfeff;
+      --dd-purple:#7c3aed;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    body { font-family:'Plus Jakarta Sans',sans-serif; }
+    .dd { font-family:'Plus Jakarta Sans',sans-serif; }
+    .mono { font-family:'JetBrains Mono',monospace; font-weight:500; }
+
+    /* ── BREADCRUMB ── */
+    .dd-crumb { display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+    .dd-crumb a { color:var(--muted); text-decoration:none; display:inline-flex; align-items:center; gap:4px; }
+    .dd-crumb a:hover { color:var(--dd-blue); }
+    .dd-crumb svg { color:var(--faint); width:11px; height:11px; }
+
+    /* ── HEADER ── */
+    .dd-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .dd-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0; display:flex; align-items:center; gap:10px; }
+    .dd-hdr-l p  { font-size:13px; color:var(--muted); margin:4px 0 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .dd-hdr-l p .mono { background:#f1f5f9; padding:2px 8px; border-radius:6px; font-size:12px; }
+    .dd-hdr-r    { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; background:#fff; }
+    .btn svg { flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue   { background:var(--dd-blue); border-color:var(--dd-blue); color:#fff; }
+    .btn-blue:hover { background:var(--dd-blue-d); }
+    .btn-red    { background:var(--dd-red); border-color:var(--dd-red); color:#fff; }
+    .btn-red:hover { background:#b91c1c; }
+    .btn-teal   { background:var(--dd-teal); border-color:var(--dd-teal); color:#fff; }
+    .btn-teal:hover { background:#0e7490; }
+    .btn-sm     { padding:6px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+
+    /* Status chip */
+    .st-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+    .st-online { background:var(--dd-green-l); color:var(--dd-green); border:1px solid #bbf7d0; }
+    .st-offline { background:var(--dd-red-l); color:var(--dd-red); border:1px solid #fecaca; }
+    .st-warning { background:var(--dd-amber-l); color:var(--dd-amber); border:1px solid #fde68a; }
+    .st-maintenance { background:var(--dd-teal-l); color:var(--dd-teal); border:1px solid #a5f3fc; }
+    .st-chip .dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
+    .st-online .dot { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.7)} }
+
+    /* ── OVERVIEW CARDS (top row) ── */
+    .dd-overview { display:grid; grid-template-columns: minmax(0,1fr) 340px; gap:16px; margin-bottom:18px; }
+    @media(max-width:960px) { .dd-overview { grid-template-columns:1fr; } }
+
+    .info-card { background:#fff; border:1px solid var(--border); border-radius:var(--rc); padding:20px 22px; }
+    .info-card-title { font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+    .info-card-title svg { color:var(--dd-blue); width:14px; height:14px; }
+
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 24px; }
+    @media(max-width:560px) { .info-grid { grid-template-columns:1fr; } }
+    .info-row { }
+    .info-row .lbl { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .info-row .val { font-size:13.5px; color:var(--text); font-weight:600; word-break:break-word; }
+    .info-row .val.mono { font-family:'JetBrains Mono',monospace; font-weight:500; }
+    .info-row .val-muted { color:var(--muted); font-style:italic; font-weight:500; }
+
+    /* Live metrics card */
+    .live-card { background:linear-gradient(135deg,#1e40af,#1d4ed8); border-radius:var(--rc); padding:20px 22px; color:#fff; position:relative; overflow:hidden; }
+    .live-card-title { font-size:11.5px; font-weight:700; opacity:.85; text-transform:uppercase; letter-spacing:.5px; margin-bottom:16px; display:flex; align-items:center; gap:6px; position:relative; }
+    .live-card-title .live-badge { margin-left:auto; display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:20px; background:rgba(255,255,255,.15); font-size:10px; font-weight:800; letter-spacing:.3px; }
+    .live-card-title .live-badge .dot { width:6px; height:6px; border-radius:50%; background:#86efac; animation:pulse 2s infinite; }
+
+    .gauge-row { display:flex; gap:18px; align-items:center; margin-bottom:18px; position:relative; }
+    .gauge { position:relative; width:100px; height:100px; flex-shrink:0; }
+    .gauge-svg { width:100%; height:100%; transform:rotate(-90deg); }
+    .gauge-bg { fill:none; stroke:rgba(255,255,255,.15); stroke-width:8; }
+    .gauge-fg { fill:none; stroke:#fff; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset .6s ease; }
+    .gauge-txt { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .gauge-val { font-size:22px; font-weight:800; letter-spacing:-1px; line-height:1; }
+    .gauge-lbl { font-size:10px; opacity:.75; font-weight:600; text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
+    .gauge-info { flex:1; min-width:0; }
+    .gauge-info-lbl { font-size:11px; opacity:.75; font-weight:600; margin-bottom:3px; }
+    .gauge-info-val { font-size:14px; font-weight:700; word-break:break-word; }
+    .gauge-info-sub { font-size:10.5px; opacity:.65; margin-top:2px; font-family:'JetBrains Mono',monospace; }
+
+    .live-uptime { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.1); border-radius:10px; padding:10px 14px; position:relative; }
+    .live-uptime-ico { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .live-uptime-lbl { font-size:10.5px; opacity:.75; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+    .live-uptime-val { font-size:14px; font-weight:700; margin-top:1px; font-family:'JetBrains Mono',monospace; }
+
+    /* Bandwidth RX/TX */
+    .bw-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .bw-card { display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.1); border-radius:10px; padding:10px 12px; min-width:0; }
+    .bw-ico { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .bw-rx { background:rgba(96,165,250,.28); color:#bfdbfe; }
+    .bw-tx { background:rgba(251,146,60,.28); color:#fed7aa; }
+    .bw-info { min-width:0; flex:1; }
+    .bw-lbl { font-size:9.5px; opacity:.75; font-weight:700; text-transform:uppercase; letter-spacing:.4px; }
+    .bw-val { font-size:13px; font-weight:800; font-family:'JetBrains Mono',monospace; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bw-sub { font-size:10px; opacity:.65; font-family:'JetBrains Mono',monospace; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* ── TABS ── */
+    .dd-tabs { display:flex; gap:2px; background:#fff; border:1px solid var(--border); border-radius:12px; padding:5px; margin-bottom:16px; overflow-x:auto; }
+    .dd-tab { padding:9px 18px; font-size:13px; font-weight:700; color:var(--muted); cursor:pointer; border-radius:8px; transition:all .15s; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; background:transparent; border:none; font-family:inherit; }
+    .dd-tab:hover { color:var(--text); background:#f8fafc; }
+    .dd-tab.active { background:var(--dd-blue); color:#fff; }
+    .dd-tab.active:hover { background:var(--dd-blue-d); }
+    .dd-tab svg { width:14px; height:14px; }
+    .dd-tab-content { display:none; }
+    .dd-tab-content.active { display:block; }
+
+    /* ── TAB: Interfaces table ── */
+    .if-wrap { background:#fff; border:1px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .if-table { width:100%; border-collapse:collapse; }
+    .if-table th { text-align:left; padding:11px 14px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; background:#f8fafc; border-bottom:1px solid var(--border); white-space:nowrap; }
+    .if-table td { padding:12px 14px; font-size:13px; color:var(--text); border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .if-table tbody tr:last-child td { border-bottom:none; }
+    .if-table tbody tr:hover { background:#fafbff; }
+
+    .if-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; }
+    .if-dot.run { background:var(--dd-green); box-shadow:0 0 0 3px rgba(22,163,74,.18); }
+    .if-dot.stop { background:var(--faint); }
+    .if-dot.disabled { background:var(--dd-red); }
+    .if-name { font-weight:700; color:var(--text); font-size:13px; }
+    .if-type { font-size:10.5px; padding:2px 7px; border-radius:20px; background:#f1f5f9; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+    .if-comment { font-size:11px; color:var(--muted); margin-top:2px; font-style:italic; }
+    .if-bitrate { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; }
+    .if-bitrate.rx { color:var(--dd-blue); }
+    .if-bitrate.tx { color:var(--dd-amber); }
+    .if-total { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); font-weight:500; }
+
+    .if-row { cursor:pointer; transition:background .12s; }
+    .if-row:hover { background:#eff6ff !important; }
+    .if-row:hover .if-name { color:var(--dd-blue); }
+
+    /* ── Interface Detail Modal ── */
+    .ifm-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(15,23,42,.55);
+      z-index:1000; padding:20px;
+      align-items:flex-start; justify-content:center;
+      backdrop-filter:blur(4px);
+      overflow-y:auto;
+    }
+    .ifm-overlay.active { display:flex; }
+    .ifm-box {
+      background:#fff; border-radius:18px;
+      width:100%; max-width:880px;
+      box-shadow:0 24px 60px rgba(0,0,0,.25);
+      overflow:hidden;
+      margin:auto;
+    }
+    .ifm-hdr {
+      padding:18px 24px;
+      background:linear-gradient(135deg,#1e40af,#1d4ed8);
+      color:#fff;
+      display:flex; align-items:center; gap:14px;
+    }
+    .ifm-hdr-ico {
+      width:42px; height:42px; border-radius:12px;
+      background:rgba(255,255,255,.18);
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .ifm-hdr-info { flex:1; min-width:0; }
+    .ifm-hdr-title { font-size:16px; font-weight:800; margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ifm-hdr-title .live-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; background:rgba(134,239,172,.25); color:#86efac; font-size:10px; font-weight:800; letter-spacing:.3px; }
+    .ifm-hdr-title .live-pill .dot { width:5px; height:5px; border-radius:50%; background:#86efac; animation:pulse 1.8s infinite; }
+    .ifm-hdr-sub { font-size:12px; opacity:.85; margin-top:2px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ifm-hdr-sub .mono { font-family:'JetBrains Mono',monospace; font-weight:500; }
+    .ifm-close {
+      background:rgba(255,255,255,.15); border:none; color:#fff;
+      width:34px; height:34px; border-radius:10px;
+      cursor:pointer; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      transition:background .15s;
+    }
+    .ifm-close:hover { background:rgba(255,255,255,.28); }
+
+    .ifm-body { padding:20px 24px; }
+
+    /* Stat cards inside modal */
+    .ifm-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+    @media(max-width:700px){ .ifm-stats{ grid-template-columns:repeat(2,1fr); } }
+    .ifm-stat {
+      background:#f8fafc; border:1px solid var(--border);
+      border-radius:12px; padding:12px 14px;
+      position:relative; overflow:hidden;
+    }
+    .ifm-stat-lbl { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; display:flex; align-items:center; gap:5px; }
+    .ifm-stat-val { font-size:18px; font-weight:800; color:var(--text); font-family:'JetBrains Mono',monospace; letter-spacing:-.5px; margin-top:6px; line-height:1; }
+    .ifm-stat-sub { font-size:10.5px; color:var(--muted); margin-top:4px; font-family:'JetBrains Mono',monospace; font-weight:500; }
+    .ifm-stat.rx { background:#eff6ff; border-color:#bfdbfe; }
+    .ifm-stat.rx .ifm-stat-lbl,
+    .ifm-stat.rx .ifm-stat-val { color:#1d4ed8; }
+    .ifm-stat.tx { background:#fff7ed; border-color:#fed7aa; }
+    .ifm-stat.tx .ifm-stat-lbl,
+    .ifm-stat.tx .ifm-stat-val { color:#c2410c; }
+
+    .ifm-chart-wrap {
+      background:#fff; border:1px solid var(--border);
+      border-radius:14px; padding:16px 18px;
+    }
+    .ifm-chart-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+    .ifm-chart-hdr h3 { margin:0; font-size:13px; font-weight:700; color:var(--text); }
+    .ifm-chart-hdr p { margin:2px 0 0; font-size:11.5px; color:var(--muted); }
+    .ifm-chart-peak {
+      display:flex; gap:16px; font-size:11px;
+    }
+    .ifm-chart-peak .pk-lbl { color:var(--muted); font-weight:600; }
+    .ifm-chart-peak .pk-val { font-weight:800; font-family:'JetBrains Mono',monospace; }
+    .ifm-chart-peak .rx-pk { color:#1d4ed8; }
+    .ifm-chart-peak .tx-pk { color:#c2410c; }
+    #ifmChart { min-height:280px; }
+
+    /* ── TAB: Traffic chart ── */
+    .chart-wrap { background:#fff; border:1px solid var(--border); border-radius:var(--rc); padding:18px 20px; }
+    .chart-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px; }
+    .chart-hdr h3 { margin:0; font-size:14px; font-weight:700; color:var(--text); }
+    .chart-hdr p { margin:2px 0 0; font-size:12px; color:var(--muted); }
+
+    /* ── TAB: Logs ── */
+    .log-list { background:#fff; border:1px solid var(--border); border-radius:var(--rc); padding:6px 0; max-height:500px; overflow-y:auto; }
+    .log-row { padding:10px 18px; border-bottom:1px solid #f1f5f9; display:grid; grid-template-columns:180px 1fr 80px 80px; gap:12px; font-size:12.5px; align-items:center; }
+    .log-row:last-child { border-bottom:none; }
+    .log-row:hover { background:#fafbff; }
+    .log-row .time { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11.5px; }
+    .log-row .metric { font-weight:600; }
+    .log-row .mono { font-family:'JetBrains Mono',monospace; font-weight:500; }
+
+    .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+    .empty-state svg { color:var(--faint); margin-bottom:14px; }
+    .empty-state-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+
+    .spinner { display:inline-block; width:28px; height:28px; border:3px solid #e2e8f0; border-top-color:var(--dd-blue); border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spin-wrap { text-align:center; padding:60px 20px; color:var(--muted); font-size:13px; }
+    .spin-wrap .spinner { margin-bottom:10px; }
+
+    .err-banner { background:var(--dd-amber-l); border:1px solid #fde68a; border-radius:12px; padding:12px 16px; margin-bottom:14px; display:flex; gap:10px; align-items:flex-start; font-size:12.5px; color:#78350f; }
+    .err-banner svg { color:#b45309; flex-shrink:0; margin-top:1px; }
+    .err-banner b { color:#78350f; }
+  </style>
+</head>
+<body data-device-id="<%= deviceId %>">
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content dd">
+
+      <!-- Breadcrumb -->
+      <div class="dd-crumb">
+        <a href="/devices">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+          Devices
+        </a>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span id="crumbName">Loading...</span>
+      </div>
+
+      <!-- Header -->
+      <div class="dd-hdr">
+        <div class="dd-hdr-l">
+          <h1 id="hdrName">Loading device...</h1>
+          <p>
+            <span class="mono" id="hdrIp">—</span>
+            <span id="hdrType" style="text-transform:capitalize">—</span>
+            <span class="st-chip st-offline" id="hdrStatus"><span class="dot"></span>offline</span>
+          </p>
+        </div>
+        <div class="dd-hdr-r">
+          <button class="btn btn-outline btn-sm" onclick="loadLiveData()" id="btnRefresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-teal btn-sm" onclick="testConnectionNow()" id="btnTest">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h3l3-9 6 18 3-9h5"/></svg>
+            Test Koneksi
+          </button>
+        </div>
+      </div>
+
+      <!-- Optional Error Banner -->
+      <div id="errBanner" style="display:none"></div>
+
+      <!-- Overview row: Info + Live Metrics -->
+      <div class="dd-overview">
+        <!-- Left: Device Info -->
+        <div class="info-card">
+          <div class="info-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Informasi Device
+          </div>
+          <div class="info-grid" id="infoGrid">
+            <div class="info-row"><div class="lbl">Name</div><div class="val" id="iName">—</div></div>
+            <div class="info-row"><div class="lbl">IP Address</div><div class="val mono" id="iIp">—</div></div>
+            <div class="info-row"><div class="lbl">Brand / Model</div><div class="val" id="iBrand">—</div></div>
+            <div class="info-row"><div class="lbl">Tipe</div><div class="val" id="iType">—</div></div>
+            <div class="info-row"><div class="lbl">Identity (MikroTik)</div><div class="val" id="iIdentity">—</div></div>
+            <div class="info-row"><div class="lbl">Platform / Board</div><div class="val" id="iBoard">—</div></div>
+            <div class="info-row"><div class="lbl">Firmware</div><div class="val mono" id="iFirmware">—</div></div>
+            <div class="info-row"><div class="lbl">Monitoring</div><div class="val" id="iMonitoring">—</div></div>
+            <div class="info-row"><div class="lbl">Lokasi</div><div class="val" id="iLocation">—</div></div>
+            <div class="info-row"><div class="lbl">Polling Terakhir</div><div class="val" id="iLastPolled">—</div></div>
+          </div>
+        </div>
+
+        <!-- Right: Live Metrics -->
+        <div class="live-card">
+          <div class="live-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Live Metrics
+            <span class="live-badge"><span class="dot"></span>LIVE</span>
+          </div>
+
+          <div class="gauge-row">
+            <div class="gauge">
+              <svg class="gauge-svg" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="42"/>
+                <circle class="gauge-fg" id="gaugeCpu" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"/>
+              </svg>
+              <div class="gauge-txt">
+                <div class="gauge-val" id="gaugeCpuVal">—</div>
+                <div class="gauge-lbl">CPU</div>
+              </div>
+            </div>
+            <div class="gauge-info">
+              <div class="gauge-info-lbl">Memory Usage</div>
+              <div class="gauge-info-val" id="memVal">—</div>
+              <div class="gauge-info-sub" id="memSub">—</div>
+            </div>
+          </div>
+
+          <div class="live-uptime">
+            <div class="live-uptime-ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="live-uptime-lbl">Uptime</div>
+              <div class="live-uptime-val" id="uptimeVal">—</div>
+            </div>
+          </div>
+
+          <!-- Bandwidth RX/TX -->
+          <div class="bw-row">
+            <div class="bw-card">
+              <div class="bw-ico bw-rx">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div class="bw-info">
+                <div class="bw-lbl">Download (RX)</div>
+                <div class="bw-val" id="bwRxVal">—</div>
+                <div class="bw-sub" id="bwRxSub">—</div>
+              </div>
+            </div>
+            <div class="bw-card">
+              <div class="bw-ico bw-tx">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="bw-info">
+                <div class="bw-lbl">Upload (TX)</div>
+                <div class="bw-val" id="bwTxVal">—</div>
+                <div class="bw-sub" id="bwTxSub">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="dd-tabs">
+        <button class="dd-tab active" onclick="switchTab('overview', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Overview
+        </button>
+        <button class="dd-tab" onclick="switchTab('interfaces', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="7" cy="15" r=".8" fill="currentColor"/><circle cx="11" cy="15" r=".8" fill="currentColor"/></svg>
+          Interfaces <span id="ifBadge" style="background:#f1f5f9;color:var(--muted);padding:1px 7px;border-radius:20px;font-size:10.5px;font-weight:800;margin-left:2px">—</span>
+        </button>
+        <button class="dd-tab" onclick="switchTab('traffic', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Traffic
+        </button>
+        <button class="dd-tab" onclick="switchTab('logs', this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Log
+        </button>
+      </div>
+
+      <!-- Tab: Overview -->
+      <div class="dd-tab-content active" id="tab-overview">
+        <div class="info-card">
+          <div class="info-card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Ringkasan
+          </div>
+          <div class="info-grid">
+            <div class="info-row"><div class="lbl">SNMP Community</div><div class="val mono" id="oSnmpCommunity">—</div></div>
+            <div class="info-row"><div class="lbl">SNMP Port / Version</div><div class="val mono" id="oSnmpPort">—</div></div>
+            <div class="info-row"><div class="lbl">API Username</div><div class="val mono" id="oApiUser">—</div></div>
+            <div class="info-row"><div class="lbl">API Port</div><div class="val mono" id="oApiPort">—</div></div>
+            <div class="info-row"><div class="lbl">Poll Interval</div><div class="val mono" id="oPollInterval">—</div></div>
+            <div class="info-row"><div class="lbl">Status Aktif</div><div class="val" id="oActive">—</div></div>
+            <div class="info-row" style="grid-column:1/-1"><div class="lbl">Catatan</div><div class="val" id="oNotes">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Interfaces -->
+      <div class="dd-tab-content" id="tab-interfaces">
+        <div class="if-wrap">
+          <table class="if-table">
+            <thead>
+              <tr>
+                <th style="width:180px">Interface</th>
+                <th>Type</th>
+                <th>MAC Address</th>
+                <th style="width:130px">RX (live)</th>
+                <th style="width:130px">TX (live)</th>
+                <th style="width:160px">Total RX / TX</th>
+              </tr>
+            </thead>
+            <tbody id="ifTbody">
+              <tr><td colspan="6" class="spin-wrap"><span class="spinner"></span><div>Memuat interfaces...</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab: Traffic -->
+      <div class="dd-tab-content" id="tab-traffic">
+        <div class="chart-wrap">
+          <div class="chart-hdr">
+            <div>
+              <h3>Traffic History</h3>
+              <p>Data RX/TX dari polling 1 jam terakhir (semua interface)</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <select id="trafficHours" onchange="loadTraffic()" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:600;color:var(--text);background:#fff;font-family:inherit;cursor:pointer">
+                <option value="1">1 jam terakhir</option>
+                <option value="6">6 jam</option>
+                <option value="24" selected>24 jam</option>
+                <option value="168">7 hari</option>
+              </select>
+            </div>
+          </div>
+          <div id="trafficChart" style="min-height:320px"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Logs -->
+      <div class="dd-tab-content" id="tab-logs">
+        <div class="log-list">
+          <div style="padding:10px 18px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:#f8fafc;display:grid;grid-template-columns:180px 1fr 80px 80px;gap:12px">
+            <span>Waktu</span>
+            <span>Status</span>
+            <span style="text-align:right">CPU</span>
+            <span style="text-align:right">Memory</span>
+          </div>
+          <div id="logList">
+            <div class="spin-wrap"><span class="spinner"></span><div>Memuat logs...</div></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: Interface Detail with Live Chart ═══════ -->
+<div class="ifm-overlay" id="ifmOverlay">
+  <div class="ifm-box">
+    <div class="ifm-hdr">
+      <div class="ifm-hdr-ico">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="ifm-hdr-info">
+        <h3 class="ifm-hdr-title">
+          <span id="ifmName">Interface</span>
+          <span class="live-pill"><span class="dot"></span>LIVE</span>
+        </h3>
+        <div class="ifm-hdr-sub">
+          <span id="ifmType">—</span>
+          <span class="mono" id="ifmMac">—</span>
+          <span id="ifmState">—</span>
+        </div>
+      </div>
+      <button class="ifm-close" onclick="closeInterfaceModal()" title="Tutup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ifm-body">
+
+      <!-- Stat cards -->
+      <div class="ifm-stats">
+        <div class="ifm-stat rx">
+          <div class="ifm-stat-lbl">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            RX Live
+          </div>
+          <div class="ifm-stat-val" id="ifmRxLive">—</div>
+          <div class="ifm-stat-sub" id="ifmRxPps">— pps</div>
+        </div>
+        <div class="ifm-stat tx">
+          <div class="ifm-stat-lbl">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            TX Live
+          </div>
+          <div class="ifm-stat-val" id="ifmTxLive">—</div>
+          <div class="ifm-stat-sub" id="ifmTxPps">— pps</div>
+        </div>
+        <div class="ifm-stat">
+          <div class="ifm-stat-lbl">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Total RX
+          </div>
+          <div class="ifm-stat-val" id="ifmRxTotal">—</div>
+          <div class="ifm-stat-sub" id="ifmRxPkts">— pkts</div>
+        </div>
+        <div class="ifm-stat">
+          <div class="ifm-stat-lbl">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Total TX
+          </div>
+          <div class="ifm-stat-val" id="ifmTxTotal">—</div>
+          <div class="ifm-stat-sub" id="ifmTxPkts">— pkts</div>
+        </div>
+      </div>
+
+      <!-- Live Chart -->
+      <div class="ifm-chart-wrap">
+        <div class="ifm-chart-hdr">
+          <div>
+            <h3>Real-time Traffic</h3>
+            <p>Update tiap 2 detik · rolling window 60 data points</p>
+          </div>
+          <div class="ifm-chart-peak">
+            <div><span class="pk-lbl">Peak RX: </span><span class="pk-val rx-pk" id="ifmRxPeak">—</span></div>
+            <div><span class="pk-lbl">Peak TX: </span><span class="pk-val tx-pk" id="ifmTxPeak">—</span></div>
+          </div>
+        </div>
+        <div id="ifmChart"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  /* eslint-disable */
+  var DEVICE_ID = parseInt(document.body.getAttribute('data-device-id')) || 0;
+  var _DEVICE_CACHE = null;
+  var _LIVE_CACHE   = null;
+  var _TRAFFIC_CHART = null;
+  var _REFRESH_INT  = null;
+
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  // Format bytes jadi human-readable
+  function fmtBytes(b) {
+    if (!b && b !== 0) return '—';
+    const n = parseFloat(b);
+    if (n < 1024) return n.toFixed(0) + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    if (n < 1024*1024*1024) return (n/(1024*1024)).toFixed(1) + ' MB';
+    if (n < 1024*1024*1024*1024) return (n/(1024*1024*1024)).toFixed(2) + ' GB';
+    return (n/(1024*1024*1024*1024)).toFixed(2) + ' TB';
+  }
+
+  // Format bitrate jadi bps/Kbps/Mbps
+  function fmtBitrate(bps) {
+    if (!bps && bps !== 0) return '0 bps';
+    const n = parseFloat(bps);
+    if (n < 1000) return n.toFixed(0) + ' bps';
+    if (n < 1e6) return (n/1000).toFixed(1) + ' Kbps';
+    if (n < 1e9) return (n/1e6).toFixed(2) + ' Mbps';
+    return (n/1e9).toFixed(2) + ' Gbps';
+  }
+
+  function fmtDateTime(d) {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleString('id-ID', {
+        day:'2-digit',month:'short',year:'numeric',
+        hour:'2-digit',minute:'2-digit',second:'2-digit'
+      });
+    } catch { return '—'; }
+  }
+
+  function timeAgo(d) {
+    if (!d) return '—';
+    const ms = Date.now() - new Date(d).getTime();
+    if (ms < 60000) return 'baru saja';
+    if (ms < 3600000) return Math.round(ms/60000) + ' menit lalu';
+    if (ms < 86400000) return Math.round(ms/3600000) + ' jam lalu';
+    return Math.round(ms/86400000) + ' hari lalu';
+  }
+
+  // Load data awal
+  async function loadInitial() {
+    try {
+      const res = await App.api('/devices/' + DEVICE_ID);
+      if (!res?.success) throw new Error(res?.message || 'Gagal memuat device');
+      _DEVICE_CACHE = res.data;
+      renderDeviceInfo();
+      renderOverviewTab();
+      renderLogsTab();
+
+      // Lanjut ambil live data
+      loadLiveData();
+    } catch (e) {
+      document.getElementById('hdrName').textContent = 'Error';
+      document.getElementById('crumbName').textContent = 'Error';
+      App.showToast('Gagal memuat: ' + e.message, 'error');
+    }
+  }
+
+  // Load live data dari MikroTik
+  async function loadLiveData() {
+    const btn = document.getElementById('btnRefresh');
+    btn.disabled = true;
+    try {
+      const res = await App.api('/devices/' + DEVICE_ID + '/live-data');
+      if (res?.success) {
+        _LIVE_CACHE = res.data;
+        // Update device cache juga (status bisa berubah)
+        if (_LIVE_CACHE.device) Object.assign(_DEVICE_CACHE, _LIVE_CACHE.device);
+
+        renderLiveMetrics();
+        renderInterfacesTab();
+        renderDeviceInfo();  // refresh info setelah live update
+
+        // Tampilkan error banner kalau ada
+        const banner = document.getElementById('errBanner');
+        if (_LIVE_CACHE.errors && _LIVE_CACHE.errors.length) {
+          const msg = _LIVE_CACHE.errors[0].error || 'Tidak bisa mengambil data live';
+          banner.style.display = 'block';
+          banner.className = 'err-banner';
+          banner.innerHTML =
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+            '<div><b>Live data tidak tersedia.</b> ' + esc(msg) + '</div>';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+    } catch (e) {
+      console.error('loadLiveData:', e);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderDeviceInfo() {
+    const d = _DEVICE_CACHE;
+    if (!d) return;
+
+    // Header
+    document.getElementById('crumbName').textContent = d.name || 'Device';
+    document.getElementById('hdrName').textContent   = d.name || '—';
+    document.getElementById('hdrIp').textContent     = d.ip_address || '—';
+    document.getElementById('hdrType').textContent   = d.type || '—';
+    document.title = (d.name || 'Device') + ' - Device Detail - ISP NetOps';
+
+    const st = d.status || 'offline';
+    const stChip = document.getElementById('hdrStatus');
+    stChip.className = 'st-chip st-' + st;
+    stChip.innerHTML = '<span class="dot"></span>' + st;
+
+    // Info grid
+    document.getElementById('iName').textContent   = d.name || '—';
+    document.getElementById('iIp').textContent     = d.ip_address || '—';
+    const brand = [d.brand, d.model].filter(Boolean).join(' · ');
+    document.getElementById('iBrand').textContent  = brand || '—';
+    document.getElementById('iType').textContent   = d.type || '—';
+
+    const identity = _LIVE_CACHE?.identity || '—';
+    document.getElementById('iIdentity').textContent = identity;
+    document.getElementById('iBoard').textContent    = _LIVE_CACHE?.resource?.boardName || d.brand || '—';
+    document.getElementById('iFirmware').textContent = _LIVE_CACHE?.resource?.version || d.firmware || '—';
+
+    document.getElementById('iMonitoring').textContent =
+      d.monitoring_type === 'both' ? 'SNMP + API' :
+      d.monitoring_type === 'api'  ? 'API saja' : 'SNMP saja';
+
+    document.getElementById('iLocation').textContent = d.location || '—';
+
+    const lp = d.last_polled;
+    document.getElementById('iLastPolled').innerHTML = lp
+      ? esc(fmtDateTime(lp)) + '<div style="font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px">' + timeAgo(lp) + '</div>'
+      : '—';
+  }
+
+  function renderLiveMetrics() {
+    const r = _LIVE_CACHE?.resource;
+    if (!r) {
+      document.getElementById('gaugeCpuVal').textContent = '—';
+      document.getElementById('memVal').textContent = '—';
+      document.getElementById('memSub').textContent = '—';
+      document.getElementById('uptimeVal').textContent = '—';
+      document.getElementById('bwRxVal').textContent = '—';
+      document.getElementById('bwRxSub').textContent = '—';
+      document.getElementById('bwTxVal').textContent = '—';
+      document.getElementById('bwTxSub').textContent = '—';
+      setGauge('gaugeCpu', 0);
+      return;
+    }
+
+    const cpu = r.cpuLoad || 0;
+    document.getElementById('gaugeCpuVal').textContent = cpu + '%';
+    setGauge('gaugeCpu', cpu);
+
+    const memUsed = r.totalMemory - r.freeMemory;
+    const memPct  = r.totalMemory > 0 ? Math.round((memUsed/r.totalMemory)*100) : 0;
+    document.getElementById('memVal').textContent = memPct + '%';
+    document.getElementById('memSub').textContent = fmtBytes(memUsed) + ' / ' + fmtBytes(r.totalMemory);
+
+    document.getElementById('uptimeVal').textContent = r.uptime || '—';
+
+    // ── Total bandwidth dari semua interface ──
+    // Exclude bridge/vlan yang kadang double-count trafik
+    const ifaces = (_LIVE_CACHE?.interfaces || []).filter(i =>
+      i.running && !['bridge','vlan','vrrp'].includes((i.type||'').toLowerCase())
+    );
+    const totalRxBps = ifaces.reduce((sum,i) => sum + (i.rxBitsPerSecond || 0), 0);
+    const totalTxBps = ifaces.reduce((sum,i) => sum + (i.txBitsPerSecond || 0), 0);
+    const totalRxBytes = ifaces.reduce((sum,i) => sum + (i.rxByte || 0), 0);
+    const totalTxBytes = ifaces.reduce((sum,i) => sum + (i.txByte || 0), 0);
+
+    document.getElementById('bwRxVal').textContent = fmtBitrate(totalRxBps);
+    document.getElementById('bwRxSub').textContent = 'Total ' + fmtBytes(totalRxBytes);
+    document.getElementById('bwTxVal').textContent = fmtBitrate(totalTxBps);
+    document.getElementById('bwTxSub').textContent = 'Total ' + fmtBytes(totalTxBytes);
+  }
+
+  function setGauge(id, pct) {
+    const circumference = 2 * Math.PI * 42; // ~264
+    const offset = circumference - (circumference * pct / 100);
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('stroke-dashoffset', offset);
+  }
+
+  function renderOverviewTab() {
+    const d = _DEVICE_CACHE;
+    if (!d) return;
+    document.getElementById('oSnmpCommunity').textContent = d.snmp_community || '—';
+    document.getElementById('oSnmpPort').textContent      = (d.snmp_port || 161) + ' / v' + (d.snmp_version || 2) + 'c';
+    document.getElementById('oApiUser').textContent       = d.api_username || '—';
+    document.getElementById('oApiPort').textContent       = d.api_port || '—';
+    document.getElementById('oPollInterval').textContent  = (d.poll_interval || 60) + ' detik';
+
+    const activeEl = document.getElementById('oActive');
+    if (d.is_active) {
+      activeEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--dd-green-l);color:var(--dd-green);font-size:11px;font-weight:700">● Aktif</span>';
+    } else {
+      activeEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:#f1f5f9;color:var(--muted);font-size:11px;font-weight:700">○ Nonaktif</span>';
+    }
+
+    const notes = document.getElementById('oNotes');
+    if (d.notes) notes.textContent = d.notes;
+    else notes.innerHTML = '<span class="val-muted">Tidak ada catatan</span>';
+  }
+
+  function renderInterfacesTab() {
+    const ifaces = _LIVE_CACHE?.interfaces || [];
+    const tbody = document.getElementById('ifTbody');
+    const badge = document.getElementById('ifBadge');
+
+    if (!ifaces.length) {
+      badge.textContent = '0';
+      tbody.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <div class="empty-state-title">Tidak ada data interface</div>
+            <div style="font-size:12px">Live data hanya tersedia untuk device MikroTik dengan monitoring API aktif</div>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    badge.textContent = ifaces.length;
+    tbody.innerHTML = ifaces.map(i => {
+      let dotCls = 'stop', stateTxt = 'stopped';
+      if (i.disabled) { dotCls = 'disabled'; stateTxt = 'disabled'; }
+      else if (i.running) { dotCls = 'run'; stateTxt = 'running'; }
+
+      return `
+        <tr class="if-row" data-if-name="${esc(i.name)}">
+          <td>
+            <span class="if-dot ${dotCls}"></span>
+            <span class="if-name">${esc(i.name)}</span>
+            ${i.comment ? `<div class="if-comment">${esc(i.comment)}</div>` : ''}
+          </td>
+          <td><span class="if-type">${esc(i.type || 'ether')}</span></td>
+          <td><span class="mono" style="font-size:12px;color:var(--muted)">${esc(i.macAddress || '—')}</span></td>
+          <td><span class="if-bitrate rx">▼ ${esc(fmtBitrate(i.rxBitsPerSecond))}</span></td>
+          <td><span class="if-bitrate tx">▲ ${esc(fmtBitrate(i.txBitsPerSecond))}</span></td>
+          <td>
+            <div class="if-total">RX ${esc(fmtBytes(i.rxByte))}</div>
+            <div class="if-total">TX ${esc(fmtBytes(i.txByte))}</div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    // Event delegation — klik row buka modal
+    if (!tbody._ifClickAttached) {
+      tbody._ifClickAttached = true;
+      tbody.addEventListener('click', (e) => {
+        const row = e.target.closest('.if-row[data-if-name]');
+        if (!row) return;
+        openInterfaceModal(row.getAttribute('data-if-name'));
+      });
+    }
+  }
+
+  function renderLogsTab() {
+    const logs = (_DEVICE_CACHE?.logs || []).slice(0, 100);
+    const wrap = document.getElementById('logList');
+    if (!logs.length) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <div class="empty-state-title">Belum ada log polling</div>
+          <div style="font-size:12px">Log akan terisi otomatis saat poller berjalan</div>
+        </div>`;
+      return;
+    }
+    wrap.innerHTML = logs.map(l => {
+      const cpu = l.cpu_load != null ? Math.round(l.cpu_load) + '%' : '—';
+      const mem = l.memory_usage != null ? Math.round(l.memory_usage) + '%' : '—';
+      const st = l.status || 'unknown';
+      const color = st === 'online' ? 'var(--dd-green)' : st === 'offline' ? 'var(--dd-red)' : 'var(--muted)';
+      return `<div class="log-row">
+        <span class="time">${esc(fmtDateTime(l.polled_at))}</span>
+        <span class="metric" style="color:${color};text-transform:capitalize">● ${esc(st)}</span>
+        <span class="mono" style="text-align:right">${cpu}</span>
+        <span class="mono" style="text-align:right">${mem}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Tab switch ──
+  function switchTab(name, el) {
+    document.querySelectorAll('.dd-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dd-tab-content').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    if (name === 'traffic') loadTraffic();
+  }
+
+  // ── Traffic chart ──
+  async function loadTraffic() {
+    const hours = document.getElementById('trafficHours').value;
+    const chartEl = document.getElementById('trafficChart');
+    chartEl.innerHTML = '<div class="spin-wrap"><span class="spinner"></span><div>Memuat chart...</div></div>';
+
+    try {
+      const res = await App.api('/devices/' + DEVICE_ID + '/traffic?hours=' + hours);
+      const raw = res?.data || [];
+      if (!raw.length) {
+        chartEl.innerHTML = `
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div class="empty-state-title">Belum ada data traffic</div>
+            <div style="font-size:12px">Data akan terkumpul seiring polling berjalan</div>
+          </div>`;
+        return;
+      }
+
+      // Group by recorded_at → sum RX/TX semua interface
+      const grouped = {};
+      raw.forEach(r => {
+        const t = new Date(r.recorded_at).getTime();
+        if (!grouped[t]) grouped[t] = { rx: 0, tx: 0 };
+        grouped[t].rx += parseFloat(r.rx_bytes) || 0;
+        grouped[t].tx += parseFloat(r.tx_bytes) || 0;
+      });
+
+      const times = Object.keys(grouped).sort((a,b) => a-b);
+      const rxSeries = times.map(t => ({ x: parseInt(t), y: grouped[t].rx }));
+      const txSeries = times.map(t => ({ x: parseInt(t), y: grouped[t].tx }));
+
+      chartEl.innerHTML = '';
+      if (_TRAFFIC_CHART) { _TRAFFIC_CHART.destroy(); _TRAFFIC_CHART = null; }
+
+      _TRAFFIC_CHART = new ApexCharts(chartEl, {
+        chart: { type:'area', height:340, toolbar:{show:false}, zoom:{enabled:true}, fontFamily:'Plus Jakarta Sans' },
+        series: [
+          { name:'RX', data: rxSeries },
+          { name:'TX', data: txSeries }
+        ],
+        colors: ['#2563eb', '#f97316'],
+        stroke: { curve:'smooth', width:2.5 },
+        fill: {
+          type:'gradient',
+          gradient: { shadeIntensity:1, opacityFrom:.35, opacityTo:.02, stops:[0,100] }
+        },
+        xaxis: {
+          type:'datetime',
+          labels:{ datetimeUTC:false, style:{colors:'#64748b',fontSize:'11px'} },
+          axisBorder:{show:false}, axisTicks:{show:false}
+        },
+        yaxis: {
+          labels: {
+            formatter:(v) => fmtBytes(v),
+            style:{colors:'#64748b',fontSize:'11px'}
+          }
+        },
+        grid: { borderColor:'#f1f5f9', strokeDashArray:4 },
+        tooltip: {
+          x:{ format:'dd MMM HH:mm' },
+          y:{ formatter:(v) => fmtBytes(v) }
+        },
+        legend: { position:'top', horizontalAlign:'right', fontSize:'12px' },
+        dataLabels:{enabled:false}
+      });
+      _TRAFFIC_CHART.render();
+    } catch (e) {
+      chartEl.innerHTML = '<div class="empty-state" style="color:var(--dd-red)">Error: ' + esc(e.message) + '</div>';
+    }
+  }
+
+  // ── Test connection ──
+  async function testConnectionNow() {
+    const btn = document.getElementById('btnTest');
+    btn.disabled = true;
+    App.showToast('Testing koneksi...', 'info');
+    try {
+      const res = await App.api('/devices/' + DEVICE_ID + '/test-connection', { method:'POST' });
+      if (res?.success) {
+        const r = res.data;
+        if (r.success) {
+          App.showToast('✓ Online — ' + r.ping_ms + 'ms' + (r.identity ? ' (' + r.identity + ')' : ''), 'success');
+        } else {
+          App.showToast('✕ ' + (r.error || 'Tidak terjangkau'), 'error');
+        }
+        // Reload data
+        const res2 = await App.api('/devices/' + DEVICE_ID);
+        if (res2?.success) {
+          _DEVICE_CACHE = res2.data;
+          renderDeviceInfo();
+          renderOverviewTab();
+        }
+        loadLiveData();
+      }
+    } catch (e) {
+      App.showToast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // INTERFACE DETAIL MODAL — Live chart 2s polling
+  // ══════════════════════════════════════════════
+  var _IFM_CHART = null;
+  var _IFM_POLL  = null;
+  var _IFM_NAME  = null;
+  var _IFM_RX_DATA = [];   // rolling window {x,y}
+  var _IFM_TX_DATA = [];
+  var _IFM_RX_PEAK = 0;
+  var _IFM_TX_PEAK = 0;
+  var _IFM_PKT_PEAK = 0;
+  const IFM_MAX_POINTS = 60; // ~2 menit @ 2s interval
+
+  async function openInterfaceModal(name) {
+    _IFM_NAME = name;
+    _IFM_RX_DATA = [];
+    _IFM_TX_DATA = [];
+    _IFM_RX_PEAK = 0;
+    _IFM_TX_PEAK = 0;
+
+    // Pre-fill header dari cache interfaces (sementara sebelum fetch live)
+    const iface = (_LIVE_CACHE?.interfaces || []).find(i => i.name === name);
+    document.getElementById('ifmName').textContent = name;
+    document.getElementById('ifmType').textContent = iface?.type || '—';
+    document.getElementById('ifmMac').textContent  = iface?.macAddress || '—';
+
+    let stateHtml = '';
+    if (iface?.disabled) stateHtml = '<span style="color:#fecaca">● disabled</span>';
+    else if (iface?.running) stateHtml = '<span style="color:#86efac">● running</span>';
+    else stateHtml = '<span style="opacity:.7">● stopped</span>';
+    document.getElementById('ifmState').innerHTML = stateHtml;
+
+    // Reset UI values
+    ['ifmRxLive','ifmTxLive','ifmRxTotal','ifmTxTotal','ifmRxPeak','ifmTxPeak'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    document.getElementById('ifmRxPps').textContent = '— pps';
+    document.getElementById('ifmTxPps').textContent = '— pps';
+    document.getElementById('ifmRxPkts').textContent = '— pkts';
+    document.getElementById('ifmTxPkts').textContent = '— pkts';
+
+    // Show modal + init chart
+    document.getElementById('ifmOverlay').classList.add('active');
+    initIfmChart();
+
+    // Immediate fetch, then start polling
+    await ifmFetchStats();
+    _IFM_POLL = setInterval(ifmFetchStats, 2000);
+  }
+
+  function closeInterfaceModal() {
+    document.getElementById('ifmOverlay').classList.remove('active');
+    if (_IFM_POLL) { clearInterval(_IFM_POLL); _IFM_POLL = null; }
+    if (_IFM_CHART) { _IFM_CHART.destroy(); _IFM_CHART = null; }
+    _IFM_NAME = null;
+  }
+
+  function initIfmChart() {
+    const el = document.getElementById('ifmChart');
+    el.innerHTML = '';
+    if (_IFM_CHART) { try { _IFM_CHART.destroy(); } catch(_) {} }
+
+    _IFM_CHART = new ApexCharts(el, {
+      chart: {
+        type:'area', height:300, fontFamily:'Plus Jakarta Sans',
+        animations: {
+          enabled:true, easing:'linear',
+          dynamicAnimation:{ speed:600 }
+        },
+        toolbar:{show:false}, zoom:{enabled:false},
+        background:'transparent'
+      },
+      series: [
+        { name:'RX (Download)', data: [] },
+        { name:'TX (Upload)',   data: [] }
+      ],
+      colors: ['#2563eb', '#f97316'],
+      stroke: { curve:'smooth', width:2.5 },
+      fill: {
+        type:'gradient',
+        gradient: {
+          shadeIntensity:1,
+          opacityFrom:.5, opacityTo:.05,
+          stops:[0,100]
+        }
+      },
+      markers: {
+        size: 0,
+        hover: { size: 5 }
+      },
+      xaxis: {
+        type:'datetime',
+        range: IFM_MAX_POINTS * 2000,
+        labels:{
+          datetimeUTC:false,
+          style:{colors:'#64748b',fontSize:'10.5px'},
+          format:'HH:mm:ss'
+        },
+        axisBorder:{show:false},
+        axisTicks:{show:false}
+      },
+      yaxis: {
+        labels: {
+          formatter:(v) => fmtBitrate(v),
+          style:{colors:'#64748b',fontSize:'10.5px'}
+        },
+        min: 0,
+        forceNiceScale: true
+      },
+      grid: { borderColor:'#f1f5f9', strokeDashArray:3, padding:{left:0,right:0} },
+      tooltip: {
+        x:{ format:'HH:mm:ss' },
+        y:{ formatter:(v) => fmtBitrate(v) },
+        theme:'light'
+      },
+      legend: { position:'top', horizontalAlign:'right', fontSize:'12px', fontWeight:600, markers:{width:10,height:10,radius:5} },
+      dataLabels:{enabled:false}
+    });
+    _IFM_CHART.render();
+  }
+
+  async function ifmFetchStats() {
+    if (!_IFM_NAME) return;
+    try {
+      const res = await App.api('/devices/' + DEVICE_ID + '/interface-stats?name=' + encodeURIComponent(_IFM_NAME));
+      if (!res?.success) return;
+      const s = res.data;
+      const now = Date.now();
+
+      // Append to rolling window
+      _IFM_RX_DATA.push({ x: now, y: s.rxBitsPerSecond });
+      _IFM_TX_DATA.push({ x: now, y: s.txBitsPerSecond });
+      if (_IFM_RX_DATA.length > IFM_MAX_POINTS) _IFM_RX_DATA.shift();
+      if (_IFM_TX_DATA.length > IFM_MAX_POINTS) _IFM_TX_DATA.shift();
+
+      // Update peak
+      if (s.rxBitsPerSecond > _IFM_RX_PEAK) _IFM_RX_PEAK = s.rxBitsPerSecond;
+      if (s.txBitsPerSecond > _IFM_TX_PEAK) _IFM_TX_PEAK = s.txBitsPerSecond;
+
+      // Update chart
+      if (_IFM_CHART) {
+        _IFM_CHART.updateSeries([
+          { name:'RX (Download)', data: _IFM_RX_DATA },
+          { name:'TX (Upload)',   data: _IFM_TX_DATA }
+        ], false);
+      }
+
+      // Update stat cards
+      document.getElementById('ifmRxLive').textContent   = fmtBitrate(s.rxBitsPerSecond);
+      document.getElementById('ifmTxLive').textContent   = fmtBitrate(s.txBitsPerSecond);
+      document.getElementById('ifmRxPps').textContent    = (s.rxPacketsPerSecond || 0).toLocaleString('id-ID') + ' pps';
+      document.getElementById('ifmTxPps').textContent    = (s.txPacketsPerSecond || 0).toLocaleString('id-ID') + ' pps';
+      document.getElementById('ifmRxTotal').textContent  = fmtBytes(s.rxByte);
+      document.getElementById('ifmTxTotal').textContent  = fmtBytes(s.txByte);
+      document.getElementById('ifmRxPkts').textContent   = (s.rxPacket || 0).toLocaleString('id-ID') + ' pkts';
+      document.getElementById('ifmTxPkts').textContent   = (s.txPacket || 0).toLocaleString('id-ID') + ' pkts';
+      document.getElementById('ifmRxPeak').textContent   = fmtBitrate(_IFM_RX_PEAK);
+      document.getElementById('ifmTxPeak').textContent   = fmtBitrate(_IFM_TX_PEAK);
+
+      // Update state kalau berubah
+      let stateHtml = '';
+      if (s.disabled) stateHtml = '<span style="color:#fecaca">● disabled</span>';
+      else if (s.running) stateHtml = '<span style="color:#86efac">● running</span>';
+      else stateHtml = '<span style="opacity:.7">● stopped</span>';
+      document.getElementById('ifmState').innerHTML = stateHtml;
+    } catch (e) {
+      // Silent fail — polling terus jalan
+      console.warn('ifmFetchStats:', e.message);
+    }
+  }
+
+  // Close modal pada klik di luar / ESC
+  document.getElementById('ifmOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'ifmOverlay') closeInterfaceModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('ifmOverlay').classList.contains('active')) {
+      closeInterfaceModal();
+    }
+  });
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    loadInitial();
+    // Auto-refresh live data tiap 15 detik
+    _REFRESH_INT = setInterval(loadLiveData, 15000);
+  });
+  window.addEventListener('beforeunload', () => {
+    if (_REFRESH_INT) clearInterval(_REFRESH_INT);
+    if (_IFM_POLL) clearInterval(_IFM_POLL);
+    if (_TRAFFIC_CHART) _TRAFFIC_CHART.destroy();
+    if (_IFM_CHART) _IFM_CHART.destroy();
+  });
+</script>
+</body>
+</html>

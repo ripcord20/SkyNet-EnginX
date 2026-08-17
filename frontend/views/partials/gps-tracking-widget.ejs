@@ -1,0 +1,416 @@
+<!-- GPS Tracking Widget Component -->
+<!-- Include this in ticket detail page -->
+
+<div class="card-modern" id="gps-tracking-widget" style="display: none;">
+  <div class="info-section">
+    <div class="section-title">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      GPS Tracking - Teknisi Field
+    </div>
+
+    <!-- Tracking Status -->
+    <div id="tracking-status-badge" style="margin-bottom: 16px;"></div>
+
+    <!-- Technician Info -->
+    <div id="technician-info" style="margin-bottom: 16px;"></div>
+
+    <!-- Tracking Stats -->
+    <div id="tracking-stats" class="info-grid" style="margin-bottom: 16px;"></div>
+
+    <!-- Mini Map -->
+    <div id="tracking-mini-map" style="height: 300px; border-radius: 12px; overflow: hidden; border: 2px solid #e2e8f0; display: none;"></div>
+
+    <!-- Action Buttons -->
+    <div id="tracking-actions" style="margin-top: 16px;"></div>
+  </div>
+</div>
+
+<style>
+  .tracking-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .tracking-status-badge.active {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  .tracking-status-badge.inactive {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .tracking-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+    border-radius: 50%;
+    animation: pulse-tracking 2s infinite;
+  }
+
+  @keyframes pulse-tracking {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .tech-avatar-widget {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    margin-right: 12px;
+  }
+
+  .tech-info-widget {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 12px;
+  }
+
+  .tech-details-widget h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .tech-details-widget p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .stat-mini {
+    padding: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 12px;
+    text-align: center;
+    color: white;
+  }
+
+  .stat-mini-value {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+
+  .stat-mini-label {
+    font-size: 11px;
+    opacity: 0.9;
+  }
+
+  .tracking-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .tracking-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  }
+
+  .tracking-btn-primary {
+    background: linear-gradient(135deg, #2f6cbb, #1e3ecc);
+    color: white;
+  }
+
+  .tracking-btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+  }
+</style>
+
+<script>
+  // ══════════════════════════════════════════════════════════════
+  // GPS TRACKING WIDGET FOR TICKET DETAIL
+  // ══════════════════════════════════════════════════════════════
+  
+  let trackingWidget = {
+    ticketId: null,
+    session: null,
+    map: null,
+    techMarker: null,
+    ticketMarker: null,
+    trailPolyline: null,
+    updateInterval: null,
+
+    // Initialize widget
+    init: function(ticketId) {
+      this.ticketId = ticketId;
+      this.loadTrackingData();
+      
+      // Listen to real-time updates
+      if (typeof socket !== 'undefined') {
+        socket.on('technician:location:update', (data) => {
+          if (data.ticket_id === this.ticketId) {
+            this.handleLocationUpdate(data);
+          }
+        });
+
+        socket.on('technician:tracking:started', (data) => {
+          if (data.ticket_id === this.ticketId) {
+            this.loadTrackingData();
+          }
+        });
+
+        socket.on('technician:tracking:stopped', (data) => {
+          if (data.ticket_id === this.ticketId) {
+            this.loadTrackingData();
+          }
+        });
+      }
+
+      // Auto refresh every 30 seconds
+      this.updateInterval = setInterval(() => {
+        if (this.session && this.session.status === 'active') {
+          this.loadTrackingData();
+        }
+      }, 30000);
+    },
+
+    // Load tracking data
+    loadTrackingData: async function() {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/tracking/history/${this.ticketId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (data.success && data.data.sessions.length > 0) {
+          // Get active session or latest session
+          this.session = data.data.sessions.find(s => s.status === 'active') || data.data.sessions[0];
+          this.render();
+          
+          // Load trail if session active
+          if (this.session.status === 'active' && data.data.locations.length > 0) {
+            this.renderMap(data.data.locations);
+          }
+        } else {
+          // No tracking data
+          document.getElementById('gps-tracking-widget').style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Error loading tracking:', error);
+      }
+    },
+
+    // Render widget UI
+    render: function() {
+      const widget = document.getElementById('gps-tracking-widget');
+      widget.style.display = 'block';
+
+      const isActive = this.session.status === 'active';
+      const tech = this.session.technician;
+
+      // Status Badge
+      document.getElementById('tracking-status-badge').innerHTML = isActive ?
+        `<div class="tracking-status-badge active">
+          <div class="tracking-pulse-dot"></div>
+          Tracking Aktif
+        </div>` :
+        `<div class="tracking-status-badge inactive">
+          Tracking Selesai
+        </div>`;
+
+      // Technician Info
+      const initials = tech.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('technician-info').innerHTML = `
+        <div class="tech-info-widget">
+          <div class="tech-avatar-widget">${initials}</div>
+          <div class="tech-details-widget">
+            <h4>${tech.name}</h4>
+            <p>${tech.email || tech.phone || ''}</p>
+          </div>
+        </div>
+      `;
+
+      // Stats
+      const duration = this.formatDuration(this.session.total_duration || 0);
+      const distance = this.formatDistance(this.session.total_distance || 0);
+      const points = this.session.points_count || 0;
+
+      document.getElementById('tracking-stats').innerHTML = `
+        <div class="stat-mini">
+          <div class="stat-mini-value">${duration}</div>
+          <div class="stat-mini-label">Durasi</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-value">${distance}</div>
+          <div class="stat-mini-label">Jarak</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-value">${points}</div>
+          <div class="stat-mini-label">Points</div>
+        </div>
+      `;
+
+      // Actions
+      document.getElementById('tracking-actions').innerHTML = `
+        <button class="tracking-btn tracking-btn-primary" onclick="trackingWidget.showFullMap()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lihat di Map Lengkap
+        </button>
+      `;
+    },
+
+    // Render mini map
+    renderMap: function(locations) {
+      const container = document.getElementById('tracking-mini-map');
+      container.style.display = 'block';
+
+      if (!this.map) {
+        this.map = L.map('tracking-mini-map');
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+      }
+
+      // Clear old markers
+      if (this.techMarker) this.map.removeLayer(this.techMarker);
+      if (this.ticketMarker) this.map.removeLayer(this.ticketMarker);
+      if (this.trailPolyline) this.map.removeLayer(this.trailPolyline);
+
+      if (locations.length === 0) return;
+
+      // Latest location
+      const latest = locations[locations.length - 1];
+      
+      // Technician marker
+      const techIcon = L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+          width: 32px; height: 32px; 
+          background: linear-gradient(135deg, #10b981, #059669);
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+        ">🚶</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+      });
+
+      this.techMarker = L.marker([latest.latitude, latest.longitude], { icon: techIcon })
+        .bindPopup(`<b>Posisi Teknisi</b><br>Last update: ${this.formatTimestamp(latest.recorded_at)}`)
+        .addTo(this.map);
+
+      // Trail
+      const coords = locations.map(loc => [loc.latitude, loc.longitude]);
+      this.trailPolyline = L.polyline(coords, {
+        color: '#f59e0b',
+        weight: 3,
+        opacity: 0.7
+      }).addTo(this.map);
+
+      // Fit bounds
+      this.map.fitBounds(this.trailPolyline.getBounds());
+    },
+
+    // Handle real-time location update
+    handleLocationUpdate: function(data) {
+      if (this.session && this.session.session_id === data.session_id) {
+        // Update session stats
+        if (data.stats) {
+          this.session.total_distance = data.stats.total_distance;
+          this.session.total_duration = data.stats.total_duration;
+          this.session.points_count = data.stats.points_count;
+        }
+        
+        // Re-render
+        this.render();
+
+        // Update marker on map
+        if (this.techMarker && data.location) {
+          this.techMarker.setLatLng([data.location.latitude, data.location.longitude]);
+          
+          // Update trail
+          if (this.trailPolyline) {
+            const latlngs = this.trailPolyline.getLatLngs();
+            latlngs.push([data.location.latitude, data.location.longitude]);
+            this.trailPolyline.setLatLngs(latlngs);
+          }
+        }
+      }
+    },
+
+    // Show full tracking map
+    showFullMap: function() {
+      window.open('/gps-tracking', '_blank');
+    },
+
+    // Utility functions
+    formatDuration: function(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      if (hrs > 0) return `${hrs}h ${mins}m`;
+      return `${mins}m`;
+    },
+
+    formatDistance: function(meters) {
+      if (meters < 1000) return `${Math.round(meters)} m`;
+      return `${(meters / 1000).toFixed(1)} km`;
+    },
+
+    formatTimestamp: function(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        day: '2-digit',
+        month: 'short'
+      });
+    },
+
+    // Cleanup
+    destroy: function() {
+      if (this.updateInterval) {
+        clearInterval(this.updateInterval);
+      }
+      if (this.map) {
+        this.map.remove();
+        this.map = null;
+      }
+    }
+  };
+
+  // Auto-init when page loads (if ticketId is available)
+  document.addEventListener('DOMContentLoaded', function() {
+    // ticketId should be set by the parent page
+    if (typeof ticketId !== 'undefined') {
+      trackingWidget.init(ticketId);
+    }
+  });
+</script>

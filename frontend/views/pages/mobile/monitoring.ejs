@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --bg:#eff8ff; --card:#ffffff; --ink:#1F3849; --muted:#7c93a0; --line:#e2eefb;
+      --blue:#0ea5e9; --teal:#38bdf8; --green:#1fb877; --amber:#f5a623; --red:#f2545b;
+      --violet:#8b7cf6; --nav-h:70px;
+    }
+    body{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);
+      padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .tnum{font-variant-numeric:tabular-nums;}
+    .wrap{max-width:520px;margin:0 auto;}
+
+    /* Header */
+    .head{padding:8px 20px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .htitle{font-size:23px;font-weight:800;letter-spacing:-.6px;}
+    .hsub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500;display:flex;align-items:center;gap:6px;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;box-shadow:0 6px 16px -10px rgba(30,60,120,.28);flex-shrink:0;}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:0 16px 22px;}
+
+    /* Section heading */
+    .sec{font-size:11.5px;font-weight:800;margin:22px 3px 12px;letter-spacing:.5px;text-transform:uppercase;color:#8a99b5;display:flex;align-items:center;justify-content:space-between;}
+    .sec-first{margin-top:2px;}
+    .live-dot{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:800;color:var(--red);letter-spacing:.5px;}
+    .live-dot .ld{width:7px;height:7px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+
+    /* Total bytes cards */
+    .bytes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .byte-card{border-radius:18px;padding:16px;color:#fff;position:relative;overflow:hidden;box-shadow:0 12px 26px -14px rgba(14,120,200,.5);}
+    .byte-card.dl{background:linear-gradient(135deg,#0ea5e9,#0284c7);}
+    .byte-card.ul{background:linear-gradient(135deg,#38bdf8,#0ea5e9);}
+    .byte-top{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;opacity:.95;margin-bottom:12px;}
+    .byte-top svg{width:16px;height:16px;stroke-width:2.2;}
+    .byte-val{font-size:25px;font-weight:800;letter-spacing:-.8px;line-height:1;}
+    .byte-unit{font-size:14px;font-weight:700;opacity:.85;margin-left:2px;}
+    .byte-sub{font-size:10.5px;opacity:.8;margin-top:7px;font-weight:500;}
+
+    /* Status cards — redesign (ONT & PPPoE) */
+    .stat-card{background:#fff;border:1px solid #eef2f8;border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:0 10px 24px -16px rgba(30,60,120,.3);}
+    .stat-main{display:flex;align-items:center;gap:16px;}
+    /* Donut ring */
+    .donut{position:relative;width:86px;height:86px;flex-shrink:0;}
+    .donut svg{width:86px;height:86px;transform:rotate(-90deg);}
+    .donut .d-track{fill:none;stroke:#eef2f7;stroke-width:9;}
+    .donut .d-arc{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.22,.61,.36,1);}
+    .donut .d-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .donut .d-pct{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;font-variant-numeric:tabular-nums;}
+    .donut .d-cap{font-size:8.5px;color:var(--muted);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+    /* Breakdown rows beside donut */
+    .stat-rows{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px;}
+    .stat-item{display:flex;align-items:center;gap:11px;}
+    .si-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .si-ic svg{width:17px;height:17px;stroke-width:2;}
+    .si-on .si-ic{background:rgba(31,184,119,.12);color:var(--green);}
+    .si-off .si-ic{background:rgba(242,84,91,.12);color:var(--red);}
+    .si-body{flex:1;min-width:0;}
+    .si-val{font-size:19px;font-weight:800;letter-spacing:-.5px;line-height:1;font-variant-numeric:tabular-nums;}
+    .si-on .si-val{color:var(--green);} .si-off .si-val{color:var(--red);}
+    .si-lbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;}
+    /* Footer strip inside stat card */
+    .stat-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid #f1f4f9;font-size:11.5px;}
+    .stat-foot .sf-k{color:var(--muted);font-weight:600;}
+    .stat-foot .sf-v{font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+
+    /* Resource gauges */
+    .res-dev{padding:8px 12px;border:1px solid #eef1f6;background:#fff;border-radius:11px;font-size:12px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;max-width:160px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%2394a0b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+    .gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+    .gauge-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 10px;text-align:center;box-shadow:0 8px 20px -16px rgba(30,60,120,.26);}
+    .gauge-title{font-size:11.5px;font-weight:700;color:#5a6885;margin-bottom:10px;}
+    .gauge{position:relative;width:110px;height:110px;margin:0 auto;}
+    .gauge svg{width:110px;height:110px;transform:rotate(-90deg);}
+    .gauge .g-track{fill:none;stroke:#eef1f5;stroke-width:11;}
+    .gauge .g-arc{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1);}
+    .gauge .g-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .gauge .g-pct{font-size:22px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+    .gauge .g-sub{font-size:9px;color:var(--muted);font-weight:600;margin-top:1px;}
+    .res-info{background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:13px 15px;font-size:11.5px;color:#6b7a97;line-height:1.75;box-shadow:0 8px 20px -16px rgba(30,60,120,.22);}
+    .res-info .ri-row{display:flex;justify-content:space-between;gap:12px;}
+    .res-info b{color:#3a4a68;font-weight:700;}
+
+    /* Performance charts */
+    .perf-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:14px 15px;margin-bottom:11px;box-shadow:0 8px 20px -16px rgba(30,60,120,.24);}
+    .perf-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+    .perf-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;}
+    .perf-stats{display:flex;gap:11px;font-size:10px;color:var(--muted);font-weight:600;}
+    .perf-stats b{font-variant-numeric:tabular-nums;font-size:11px;color:#3a4a68;}
+    .perf-chart{width:100%;height:126px;display:block;overflow:visible;}
+
+    /* Real-time traffic */
+    .rt-card{background:#fff;border:1px solid #f0f3f9;border-radius:18px;padding:16px;margin-bottom:8px;box-shadow:0 10px 24px -16px rgba(30,60,120,.3);}
+    .rt-sel{width:100%;padding:12px 14px;border:1px solid #eef1f6;background:#f7faff;border-radius:13px;font-size:13.5px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;margin-bottom:11px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a0b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:38px;}
+    .rt-sel:last-of-type{margin-bottom:14px;}
+    .rt-legend{display:flex;gap:20px;margin-bottom:10px;}
+    .rt-legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;font-weight:600;}
+    .rt-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+    .rt-legend b{color:var(--ink);font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:800;}
+    .rt-chart{width:100%;height:140px;overflow:visible;display:block;}
+    .iface-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f0f3f9;border-radius:14px;padding:13px 14px;margin-bottom:9px;box-shadow:0 6px 16px -14px rgba(30,60,120,.22);}
+    .if-ic{width:36px;height:36px;border-radius:11px;background:rgba(14,165,233,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .if-ic svg{width:17px;height:17px;}
+    .if-body{flex:1;min-width:0;}
+    .if-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .if-rates{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+    .if-rates .rx{color:#0ea5e9;font-weight:700;} .if-rates .tx{color:#38bdf8;font-weight:700;}
+
+    /* Device status rows */
+    .status-row{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #f0f3f9;border-radius:15px;padding:14px 15px;margin-bottom:10px;box-shadow:0 6px 16px -13px rgba(30,60,120,.2);}
+    .st-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+    .st-on{background:var(--green);box-shadow:0 0 0 4px rgba(31,184,119,.15);}
+    .st-off{background:var(--red);box-shadow:0 0 0 4px rgba(242,84,91,.15);}
+    .st-body{flex:1;min-width:0;}
+    .st-t{font-size:13.5px;font-weight:700;}
+    .st-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+    /* Bottom nav */
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;}
+    .bn-item.active{color:var(--blue);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;pointer-events:none;}
+    .toast.show{opacity:1;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <div class="htitle">Monitoring</div>
+        <div class="hsub" id="monUpdated">Memuat…</div>
+      </div>
+      <div class="refresh" id="refreshBtn" onclick="loadMonitoring(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+
+    <div class="content">
+      <!-- Traffic Real-time (utama) -->
+      <div class="sec sec-first"><span>Traffic Real-time</span></div>
+      <div class="rt-card">
+        <select class="rt-sel" id="devSel" onchange="onDevChange()"><option value="">Semua router</option></select>
+        <select class="rt-sel" id="ifaceSel" onchange="onIfaceChange()"><option value="">Memuat interface…</option></select>
+        <div class="rt-legend">
+          <span><i style="background:#0ea5e9;"></i>Download <b id="rtRx">0 bps</b></span>
+          <span><i style="background:#38bdf8;"></i>Upload <b id="rtTx">0 bps</b></span>
+        </div>
+        <svg class="rt-chart" id="rtChart" viewBox="0 0 320 130" preserveAspectRatio="none"></svg>
+      </div>
+
+      <!-- Total Bytes -->
+      <div class="sec"><span>Total Transfer Data</span></div>
+      <select class="rt-sel" id="byteIfaceSel" onchange="onByteIfaceChange()" style="margin-bottom:12px;"><option value="">Semua interface</option></select>
+      <div class="bytes-grid">
+        <div class="byte-card dl">
+          <div class="byte-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14"/><path d="M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>Download</div>
+          <div><span class="byte-val tnum" id="byteDlVal">–</span><span class="byte-unit" id="byteDlUnit"></span></div>
+          <div class="byte-sub" id="byteDlSub">Menghitung…</div>
+        </div>
+        <div class="byte-card ul">
+          <div class="byte-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"/><path d="M6 13l6-6 6 6"/><path d="M4 3h16"/></svg>Upload</div>
+          <div><span class="byte-val tnum" id="byteUlVal">–</span><span class="byte-unit" id="byteUlUnit"></span></div>
+          <div class="byte-sub" id="byteUlSub">Menghitung…</div>
+        </div>
+      </div>
+
+      <!-- Resource Perangkat -->
+      <div class="sec"><span>Resource Perangkat</span>
+        <select class="res-dev" id="resDev" onchange="onResDevChange()"><option value="">Router utama</option></select>
+      </div>
+      <div class="gauge-grid">
+        <div class="gauge-card"><div class="gauge-title">Router CPU</div><div class="gauge" id="gRouterCpu"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Router Memory</div><div class="gauge" id="gRouterMem"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Server CPU</div><div class="gauge" id="gServerCpu"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Server Memory</div><div class="gauge" id="gServerMem"></div></div>
+      </div>
+      <div class="res-info" id="resInfo"><div style="text-align:center;color:#9aa7bd;">Memuat resource…</div></div>
+
+      <!-- Performance metrics -->
+      <div class="sec"><span>Performance Metrics</span></div>
+      <div class="perf-card">
+        <div class="perf-head"><span class="perf-title" style="color:#f5a623;">CPU Usage</span>
+          <div class="perf-stats"><span>CUR <b id="cpuCur" style="color:#f5a623;">–</b></span><span>AVG <b id="cpuAvg">–</b></span><span>MAX <b id="cpuMax">–</b></span></div>
+        </div>
+        <svg class="perf-chart" id="cpuChart" viewBox="0 0 320 126" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="perf-card">
+        <div class="perf-head"><span class="perf-title" style="color:#0ea5e9;">Memory Usage</span>
+          <div class="perf-stats"><span>CUR <b id="memCur" style="color:#0ea5e9;">–</b></span><span>AVG <b id="memAvg">–</b></span><span>MAX <b id="memMax">–</b></span></div>
+        </div>
+        <svg class="perf-chart" id="memChart" viewBox="0 0 320 126" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <!-- Interface list -->
+      <div class="sec">Interface MikroTik</div>
+      <div id="ifaceList">
+        <div class="iface-row"><div class="skel" style="width:36px;height:36px;border-radius:11px;"></div><div class="if-body"><div class="skel" style="width:120px;height:13px;margin-bottom:6px;"></div><div class="skel" style="width:80px;height:10px;"></div></div></div>
+      </div>
+
+      <!-- Status ONT -->
+      <div class="sec">Status ONT</div>
+      <div class="stat-card">
+        <div class="stat-main">
+          <div class="donut" id="ontDonut"></div>
+          <div class="stat-rows">
+            <div class="stat-item si-on">
+              <div class="si-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+              <div class="si-body"><div class="si-val" id="ontOnline">–</div><div class="si-lbl">ONT Online</div></div>
+            </div>
+            <div class="stat-item si-off">
+              <div class="si-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76"/><path d="M16.85 11.25a10 10 0 0 1 2.22 1.68"/><path d="M5 13a10 10 0 0 1 5.24-2.76"/><line x1="12" y1="20" x2="12.01" y2="20"/><line x1="2" y1="2" x2="22" y2="22"/></svg></div>
+              <div class="si-body"><div class="si-val" id="ontOffline">–</div><div class="si-lbl">ONT Offline</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-foot"><span class="sf-k">Kesehatan ONT</span><span class="sf-v" id="ontTotalTxt">–</span></div>
+      </div>
+
+      <!-- Status PPPoE -->
+      <div class="sec"><span>Status Akun PPPoE</span></div>
+      <div class="stat-card">
+        <div class="stat-main">
+          <div class="donut" id="pppoeDonut"></div>
+          <div class="stat-rows">
+            <div class="stat-item si-on">
+              <div class="si-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+              <div class="si-body"><div class="si-val" id="pppoeConn">–</div><div class="si-lbl">Connected</div></div>
+            </div>
+            <div class="stat-item si-off">
+              <div class="si-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+              <div class="si-body"><div class="si-val" id="pppoeDiscon">–</div><div class="si-lbl">Disconnected</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="stat-foot"><span class="sf-k">Total akun</span><span class="sf-v" id="pppoeTotalTxt">–</span></div>
+      </div>
+      <div class="ppp-list" id="pppoeList"></div>
+      <button class="ppp-toggle" id="pppToggle" onclick="togglePppList()" style="display:none;width:100%;padding:12px;border:1px solid #f0f3f9;background:#fff;border-radius:13px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--blue);cursor:pointer;margin-bottom:8px;box-shadow:0 6px 16px -13px rgba(30,60,120,.22);">Lihat sesi aktif</button>
+
+      <!-- Status Perangkat -->
+      <div class="sec">Status Perangkat</div>
+      <div id="deviceStatus">
+        <div class="status-row"><div class="skel" style="width:11px;height:11px;border-radius:50%;"></div><div class="st-body"><div class="skel" style="width:120px;height:13px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item active" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url){ const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}); try{ const r=await fetch(url,{credentials:'include',headers}); if(r.status===401){location.href='/login';return null;} const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;} }catch(e){return null;} }
+    function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function deviceRow(online,label,detail){ return '<div class="status-row"><div class="st-dot '+(online?'st-on':'st-off')+'"></div><div class="st-body"><div class="st-t">'+label+'</div><div class="st-s">'+detail+'</div></div></div>'; }
+
+    // Donut ring untuk kartu status (ONT / PPPoE).
+    // pct = persentase sehat/terkoneksi; col = warna arc; cap = label kecil.
+    function drawDonut(elId, pct, col, cap){
+      pct=Math.max(0,Math.min(100,Math.round(pct||0)));
+      const el=document.getElementById(elId); if(!el)return;
+      const R=36, C=2*Math.PI*R, off=C-(C*pct/100);
+      el.innerHTML='<svg viewBox="0 0 86 86"><circle class="d-track" cx="43" cy="43" r="'+R+'"/>'+
+        '<circle class="d-arc" cx="43" cy="43" r="'+R+'" stroke="'+col+'" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'"/></svg>'+
+        '<div class="d-center"><div class="d-pct" style="color:'+col+';">'+pct+'<span style="font-size:11px;">%</span></div><div class="d-cap">'+(cap||'')+'</div></div>';
+      requestAnimationFrame(()=>{ const arc=el.querySelector('.d-arc'); if(arc)arc.style.strokeDashoffset=off; });
+    }
+
+    // Format byte kumulatif → MB / GB / TB
+    function fmtBytes(bytes){
+      bytes=Number(bytes)||0;
+      if(bytes>=1.0995116e12) return {val:(bytes/1.0995116e12).toFixed(2), unit:'TB'};
+      if(bytes>=1.073742e9)   return {val:(bytes/1.073742e9).toFixed(2),   unit:'GB'};
+      if(bytes>=1.048576e6)   return {val:(bytes/1.048576e6).toFixed(1),   unit:'MB'};
+      if(bytes>=1024)         return {val:(bytes/1024).toFixed(0),          unit:'KB'};
+      return {val:String(Math.round(bytes)), unit:'B'};
+    }
+
+    async function loadMonitoring(manual){
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+      const j=await api('/api/dashboard/overview');
+      if(j&&j.success){
+        const d=j.data;
+        let html='';
+        if(d.devices){ const on=d.devices.online||0,off=d.devices.offline||0,tot=d.devices.total||(on+off); html+=deviceRow(off===0,'Perangkat MikroTik',on+' online · '+off+' offline dari '+tot); }
+        if(d.ont){ const on=d.ont.online||0,off=d.ont.offline||0; html+=deviceRow(off===0&&on>0,'ONT / ONU',on+' online · '+off+' offline'); }
+        if(d.cpu&&d.cpu.average!=null){ const cpu=d.cpu.average; html+=deviceRow(cpu<80,'Beban CPU'+(d.cpu.deviceName?(' · '+d.cpu.deviceName):''),cpu+'% rata-rata'); }
+        document.getElementById('deviceStatus').innerHTML=html||'<div style="padding:20px;text-align:center;color:#7c93a0;font-size:13px;">Tidak ada data perangkat</div>';
+        if(d.ont){
+          const on=d.ont.online||0, off=d.ont.offline||0, tot=on+off;
+          document.getElementById('ontOnline').textContent=on;
+          document.getElementById('ontOffline').textContent=off;
+          const pct=tot>0?Math.round(on/tot*100):0;
+          const col=pct>=70?'#1fb877':(pct>=40?'#f5a623':'#f2545b');
+          drawDonut('ontDonut', pct, col, 'sehat');
+          document.getElementById('ontTotalTxt').textContent=tot>0?(pct+'% · '+tot+' ONT'):'—';
+        }
+        const now=new Date(); document.getElementById('monUpdated').textContent='Diperbarui '+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      } else { document.getElementById('monUpdated').textContent='Gagal memuat data'; }
+      if(manual){ setTimeout(()=>btn.classList.remove('spin'),600); toast('Data diperbarui'); }
+    }
+
+    // ── Status PPPoE ──
+    let _pppSessions=[], _pppShown=false;
+    async function loadPppoeStatus(){
+      const [st,ac]=await Promise.all([api('/api/mikrotik/pppoe/stats'), api('/api/mikrotik/pppoe/secrets')]);
+      let connected=0, totalAcc=0;
+      if(st&&st.success&&st.data){ connected=st.data.total!=null?st.data.total:(st.data.pppoe||0); }
+      if(ac&&ac.success){ totalAcc=ac.total!=null?ac.total:((Array.isArray(ac.data)?ac.data.length:0)); }
+      const discon=Math.max(0, totalAcc-connected);
+      document.getElementById('pppoeConn').textContent=connected;
+      document.getElementById('pppoeDiscon').textContent=totalAcc>0?discon:'–';
+      const cpct=totalAcc>0?Math.round(connected/totalAcc*100):0;
+      const ccol=cpct>=70?'#1fb877':(cpct>=40?'#f5a623':'#f2545b');
+      drawDonut('pppoeDonut', cpct, ccol, 'online');
+      document.getElementById('pppoeTotalTxt').textContent=totalAcc>0?(totalAcc+' akun · '+cpct+'% online'):'—';
+      const sess=await api('/api/mikrotik/pppoe/active');
+      _pppSessions=(sess&&sess.success)?(Array.isArray(sess.data)?sess.data:[]):[];
+      const btn=document.getElementById('pppToggle');
+      if(_pppSessions.length){ btn.style.display='block'; btn.textContent=_pppShown?('Sembunyikan sesi ('+_pppSessions.length+')'):('Lihat sesi aktif ('+_pppSessions.length+')'); }
+      else { btn.style.display='none'; }
+      if(_pppShown) renderPppList();
+    }
+    function renderPppList(){
+      const wrap=document.getElementById('pppoeList');
+      if(!_pppShown||!_pppSessions.length){ wrap.innerHTML=''; return; }
+      wrap.innerHTML=_pppSessions.slice(0,50).map(function(s){
+        return '<div class="iface-row"><div class="if-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>'+
+          '<div class="if-body"><div class="if-name">'+esc(s.name||'-')+'</div><div class="if-rates">'+esc(s.address||'')+(s.callerID?(' · '+esc(s.callerID)):'')+'</div></div>'+
+          '<div style="font-size:11px;color:var(--green);font-weight:800;flex-shrink:0;">'+esc(s.uptime||'')+'</div></div>';
+      }).join('');
+    }
+    function togglePppList(){ _pppShown=!_pppShown; document.getElementById('pppToggle').textContent=_pppShown?('Sembunyikan sesi ('+_pppSessions.length+')'):('Lihat sesi aktif ('+_pppSessions.length+')'); renderPppList(); }
+
+    // ── Resource gauges + performance ──
+    function gaugeColor(pct){ if(pct>=85)return '#f2545b'; if(pct>=65)return '#f5a623'; return '#38bdf8'; }
+    function drawGauge(elId,pct,subLabel){
+      pct=Math.max(0,Math.min(100,Math.round(pct||0)));
+      const el=document.getElementById(elId); if(!el)return;
+      const R=45, C=2*Math.PI*R, off=C-(C*pct/100), col=gaugeColor(pct);
+      el.innerHTML='<svg viewBox="0 0 110 110"><circle class="g-track" cx="55" cy="55" r="'+R+'"/>'+
+        '<circle class="g-arc" cx="55" cy="55" r="'+R+'" stroke="'+col+'" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'"/></svg>'+
+        '<div class="g-center"><div class="g-pct" style="color:'+col+';">'+pct+'<span style="font-size:13px;">%</span></div><div class="g-sub">'+(subLabel||'used')+'</div></div>';
+      requestAnimationFrame(()=>{ const arc=el.querySelector('.g-arc'); if(arc)arc.style.strokeDashoffset=off; });
+    }
+    function fmtMB(bytes){ bytes=Number(bytes)||0; if(bytes>=1073741824)return (bytes/1073741824).toFixed(1)+' GB'; if(bytes>=1048576)return (bytes/1048576).toFixed(0)+' MB'; return (bytes/1024).toFixed(0)+' KB'; }
+
+    let _cpuHist=[], _memHist=[], _tHist=[]; const PMAX=40;
+    function drawPerf(svgId, hist, color){
+      const svg=document.getElementById(svgId); if(!svg)return;
+      const W=320,H=126,padL=26,padR=8,padT=10,padB=18;
+      const plotW=W-padL-padR, plotH=H-padT-padB;
+      let grid='';
+      [0,25,50,75,100].forEach(function(v){ const y=padT+plotH*(1-v/100); grid+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#e2eefb" stroke-width="1"'+(v===0?'':' stroke-dasharray="3 4"')+'/><text x="'+(padL-5)+'" y="'+(y+3)+'" text-anchor="end" font-size="7.5" fill="#b3bdd0">'+v+'</text>'; });
+      for(let i=0;i<=4;i++){ const x=padL+plotW*i/4; grid+='<line x1="'+x+'" y1="'+padT+'" x2="'+x+'" y2="'+(padT+plotH)+'" stroke="#f3f6fb" stroke-width="1"/>'; }
+      if(hist.length<2){ svg.innerHTML=grid; return; }
+      const n=hist.length;
+      const xs=i=>padL+(i*plotW/(PMAX-1));
+      const ys=v=>padT+plotH*(1-Math.max(0,Math.min(100,v))/100);
+      const start=PMAX-n;
+      let d='M '+xs(start)+' '+ys(hist[0]);
+      for(let i=1;i<n;i++){ const x0=xs(start+i-1),y0=ys(hist[i-1]),x1=xs(start+i),y1=ys(hist[i]);const cx=(x0+x1)/2; d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1; }
+      const area=d+' L '+xs(start+n-1)+' '+(padT+plotH)+' L '+xs(start)+' '+(padT+plotH)+' Z';
+      const gid=svgId+'grad', glow=svgId+'glow';
+      const lastX=xs(start+n-1), lastY=ys(hist[n-1]);
+      let tlabels='';
+      if(_tHist.length){ const idxs=[0, Math.floor(n/2), n-1]; idxs.forEach(function(ii){ const t=_tHist[ii]; if(t){ const x=xs(start+ii); tlabels+='<text x="'+x+'" y="'+(H-5)+'" text-anchor="middle" font-size="7.5" fill="#b3bdd0">'+t+'</text>'; } }); }
+      svg.innerHTML=grid+
+        '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="70%" stop-color="'+color+'" stop-opacity=".05"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient>'+
+        '<filter id="'+glow+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'+
+        '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+        '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#'+glow+')"/>'+
+        '<circle cx="'+lastX+'" cy="'+lastY+'" r="4.5" fill="'+color+'" opacity=".18"/>'+
+        '<circle cx="'+lastX+'" cy="'+lastY+'" r="2.6" fill="'+color+'"/>'+
+        tlabels;
+    }
+    function pushPerf(hist,val){ hist.push(val); if(hist.length>PMAX)hist.shift(); }
+    function perfStats(hist){ if(!hist.length)return{cur:0,avg:0,max:0}; const cur=hist[hist.length-1]; const avg=hist.reduce((a,b)=>a+b,0)/hist.length; const max=Math.max.apply(null,hist); return {cur:Math.round(cur),avg:Math.round(avg),max:Math.round(max)}; }
+    function updatePerf(cpu,mem){
+      pushPerf(_cpuHist,cpu||0); pushPerf(_memHist,mem||0);
+      const now=new Date(); _tHist.push(now.toTimeString().slice(0,5)); if(_tHist.length>PMAX)_tHist.shift();
+      const cs=perfStats(_cpuHist), ms=perfStats(_memHist);
+      document.getElementById('cpuCur').textContent=cs.cur+'%'; document.getElementById('cpuAvg').textContent=cs.avg+'%'; document.getElementById('cpuMax').textContent=cs.max+'%';
+      document.getElementById('memCur').textContent=ms.cur+'%'; document.getElementById('memAvg').textContent=ms.avg+'%'; document.getElementById('memMax').textContent=ms.max+'%';
+      drawPerf('cpuChart',_cpuHist,'#f5a623'); drawPerf('memChart',_memHist,'#0ea5e9');
+    }
+    async function loadResDevices(){
+      const r=await api('/api/devices/mikrotik-list');
+      const sel=document.getElementById('resDev');
+      const rows=(r&&r.success)?(Array.isArray(r.data)?r.data:(r.data&&r.data.rows?r.data.rows:[])):(Array.isArray(r)?r:[]);
+      if(rows.length){ sel.innerHTML='<option value="">Router utama</option>'+rows.map(d=>'<option value="'+d.id+'">'+esc(d.name||('Router #'+d.id))+'</option>').join(''); }
+    }
+    async function loadResources(){
+      const dev=document.getElementById('resDev').value;
+      const j=await api('/api/resources/all'+(dev?('?device_id='+encodeURIComponent(dev)):''));
+      if(j&&j.success&&j.data){
+        const rt=j.data.router, sv=j.data.server;
+        if(rt){
+          drawGauge('gRouterCpu', rt.cpuLoad!=null?rt.cpuLoad:0, 'CPU load');
+          drawGauge('gRouterMem', rt.memoryUsagePercent!=null?rt.memoryUsagePercent:0, fmtMB(rt.usedMemory)+' / '+fmtMB(rt.totalMemory));
+          updatePerf(rt.cpuLoad||0, rt.memoryUsagePercent||0);
+        } else { drawGauge('gRouterCpu',0,'—'); drawGauge('gRouterMem',0,'—'); }
+        if(sv){
+          drawGauge('gServerCpu', sv.cpuLoadPercent!=null?sv.cpuLoadPercent:0, (sv.cpuCount||'?')+' core');
+          drawGauge('gServerMem', sv.memoryUsagePercent!=null?sv.memoryUsagePercent:0, fmtMB(sv.usedMemory)+' / '+fmtMB(sv.totalMemory));
+        } else { drawGauge('gServerCpu',0,'—'); drawGauge('gServerMem',0,'—'); }
+        const info=document.getElementById('resInfo');
+        info.innerHTML=
+          (rt?('<div class="ri-row"><span>Router</span><b>'+esc(rt.identity||'MikroTik')+'</b></div>'+
+               '<div class="ri-row"><span>Versi / Board</span><b>'+esc(rt.version||'-')+' · '+esc(rt.boardName||'-')+'</b></div>'+
+               '<div class="ri-row"><span>Uptime</span><b>'+esc(rt.uptime||'-')+'</b></div>'):'')+
+          (sv?('<div class="ri-row"><span>Server</span><b>'+esc(sv.hostname||'-')+'</b></div>'+
+               '<div class="ri-row"><span>Server uptime</span><b>'+esc(sv.uptime||'-')+'</b></div>'):'')
+          || '<div style="text-align:center;color:#9aa7bd;">Data resource tidak tersedia</div>';
+      } else {
+        ['gRouterCpu','gRouterMem','gServerCpu','gServerMem'].forEach(id=>drawGauge(id,0,'—'));
+        document.getElementById('resInfo').innerHTML='<div style="text-align:center;color:#9aa7bd;">Data resource tidak tersedia</div>';
+      }
+    }
+    function onResDevChange(){ _cpuHist=[]; _memHist=[]; _tHist=[]; loadResources(); }
+
+    // ── Real-time traffic interface + Total Bytes ──
+    function fmtbps(bits){ bits=Number(bits)||0; if(bits>=1e9)return (bits/1e9).toFixed(2)+' Gbps'; if(bits>=1e6)return (bits/1e6).toFixed(2)+' Mbps'; if(bits>=1e3)return (bits/1e3).toFixed(1)+' Kbps'; return Math.round(bits)+' bps'; }
+    let _iface='', _rxHist=[], _txHist=[], _rtTimer=null, _ifaceLoaded=false, _device=''; const MAXPTS=30;
+
+    async function loadDevices(){
+      const r=await api('/api/devices/mikrotik-list');
+      const sel=document.getElementById('devSel');
+      const rows=(r&&r.success)?(Array.isArray(r.data)?r.data:(r.data&&r.data.rows?r.data.rows:[])):(Array.isArray(r)?r:[]);
+      if(rows.length){ sel.innerHTML='<option value="">Semua router</option>'+rows.map(d=>'<option value="'+d.id+'">'+esc(d.name||('Router #'+d.id))+'</option>').join(''); }
+    }
+    function onDevChange(){ _device=document.getElementById('devSel').value; _ifaceLoaded=false; _iface=''; _rxHist=[]; _txHist=[]; _byteIfaceLoaded=false; _byteIface=''; document.getElementById('byteIfaceSel').innerHTML='<option value="">Semua interface</option>'; document.getElementById('rtChart').innerHTML=''; document.getElementById('ifaceSel').innerHTML='<option value="">Memuat interface…</option>'; pollTraffic(); }
+    function devQs(){ return _device?('?device_id='+encodeURIComponent(_device)):''; }
+
+    function drawRt(){
+      const svg=document.getElementById('rtChart'); const W=320,H=130,pad=4;
+      if(_rxHist.length<2){ svg.innerHTML=''; return; }
+      const all=_rxHist.concat(_txHist); let max=Math.max.apply(null,all); if(max<=0)max=1;
+      const n=_rxHist.length;
+      const xs=i=>pad+(i*(W-2*pad)/(MAXPTS-1));
+      const ys=v=>H-pad-(v/max)*(H-2*pad);
+      function path(arr){ let d='M '+xs(MAXPTS-n)+' '+ys(arr[0]); for(let i=1;i<n;i++){ const x0=xs(MAXPTS-n+i-1),y0=ys(arr[i-1]),x1=xs(MAXPTS-n+i),y1=ys(arr[i]);const cx=(x0+x1)/2; d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1;} return d; }
+      const rxP=path(_rxHist), txP=path(_txHist);
+      const rxArea=rxP+' L '+xs(MAXPTS-1)+' '+H+' L '+xs(MAXPTS-n)+' '+H+' Z';
+      svg.innerHTML=
+        '<defs><linearGradient id="rtg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0ea5e9" stop-opacity=".22"/><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/></linearGradient></defs>'+
+        '<path d="'+rxArea+'" fill="url(#rtg)"/>'+
+        '<path d="'+rxP+'" fill="none" stroke="#0ea5e9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'+
+        '<path d="'+txP+'" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+    function ifaceIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>'; }
+
+    // Interface yang dipilih untuk kartu Total Transfer Data.
+    // Kosong = akumulasi semua interface.
+    let _byteIface='', _byteIfaceLoaded=false, _lastIfaces=[];
+    function onByteIfaceChange(){ _byteIface=document.getElementById('byteIfaceSel').value; updateTotalBytes(_lastIfaces); }
+
+    function updateTotalBytes(interfaces){
+      _lastIfaces=interfaces||[];
+      // Isi dropdown sekali dari daftar interface yang tersedia.
+      if(!_byteIfaceLoaded && _lastIfaces.length){
+        const sel=document.getElementById('byteIfaceSel');
+        sel.innerHTML='<option value="">Semua interface</option>'+
+          _lastIfaces.map(i=>'<option value="'+esc(i.name)+'">'+esc(i.name)+(i.comment?(' — '+esc(i.comment)):'')+'</option>').join('');
+        sel.value=_byteIface; _byteIfaceLoaded=true;
+      }
+      // Pilih interface sesuai filter; kosong = semua.
+      const src=_byteIface?_lastIfaces.filter(i=>i.name===_byteIface):_lastIfaces;
+      let totRx=0, totTx=0;
+      src.forEach(function(i){ totRx+=Number(i.rxByte)||0; totTx+=Number(i.txByte)||0; });
+      const dl=fmtBytes(totRx), ul=fmtBytes(totTx);
+      document.getElementById('byteDlVal').textContent=dl.val;
+      document.getElementById('byteDlUnit').textContent=dl.unit;
+      document.getElementById('byteUlVal').textContent=ul.val;
+      document.getElementById('byteUlUnit').textContent=ul.unit;
+      const sub=_byteIface?('Interface '+_byteIface):('Akumulasi '+src.length+' interface');
+      document.getElementById('byteDlSub').textContent=sub;
+      document.getElementById('byteUlSub').textContent=sub;
+    }
+
+    async function pollTraffic(){
+      const j=await api('/api/mikrotik/interfaces/monitor'+devQs());
+      if(!j||!j.success){ return; }
+      const stats=j.data||[]; const ifaces=j.interfaces||[];
+      updateTotalBytes(ifaces);
+      if(!_ifaceLoaded && ifaces.length){
+        const sel=document.getElementById('ifaceSel');
+        sel.innerHTML=ifaces.map(i=>'<option value="'+esc(i.name)+'">'+esc(i.name)+(i.comment?(' — '+esc(i.comment)):'')+'</option>').join('');
+        _iface=ifaces[0].name; sel.value=_iface; _ifaceLoaded=true;
+      }
+      document.getElementById('ifaceList').innerHTML=stats.map(function(s){
+        return '<div class="iface-row"><div class="if-ic">'+ifaceIcon()+'</div><div class="if-body"><div class="if-name">'+esc(s.name)+'</div>'+
+          '<div class="if-rates"><span class="rx">↓ '+fmtbps(s.rxBitsPerSecond)+'</span> &nbsp; <span class="tx">↑ '+fmtbps(s.txBitsPerSecond)+'</span></div></div></div>';
+      }).join('')||'<div style="padding:16px;text-align:center;color:#7c93a0;font-size:12.5px;">Tidak ada interface aktif</div>';
+      const cur=stats.find(s=>s.name===_iface);
+      if(cur){
+        _rxHist.push(cur.rxBitsPerSecond); _txHist.push(cur.txBitsPerSecond);
+        if(_rxHist.length>MAXPTS)_rxHist.shift(); if(_txHist.length>MAXPTS)_txHist.shift();
+        document.getElementById('rtRx').textContent=fmtbps(cur.rxBitsPerSecond);
+        document.getElementById('rtTx').textContent=fmtbps(cur.txBitsPerSecond);
+        drawRt();
+      }
+    }
+    function onIfaceChange(){ _iface=document.getElementById('ifaceSel').value; _rxHist=[]; _txHist=[]; document.getElementById('rtChart').innerHTML=''; pollTraffic(); }
+
+    // ── Init ──
+    loadMonitoring(false);
+    loadPppoeStatus();
+    loadResDevices(); loadResources();
+    loadDevices(); pollTraffic();
+    setInterval(()=>{ if(document.visibilityState==='visible'){ loadMonitoring(false); loadPppoeStatus(); } },30000);
+    setInterval(()=>{ if(document.visibilityState==='visible'){ loadResources(); } }, 4000);
+    _rtTimer=setInterval(()=>{ if(document.visibilityState==='visible'){ pollTraffic(); } }, 2000);
+  </script>
+</body>
+</html>

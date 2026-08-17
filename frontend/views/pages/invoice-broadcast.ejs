@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{--d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;--d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;}
+    .ib-page{font-family:'DM Sans',sans-serif;}
+
+    /* ── Stat cards (clickable, blue-active) ── */
+    .ib-grid{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:16px;border:1px solid #e8eaed;overflow:hidden;margin-bottom:20px;}
+    .ib-card{padding:20px 22px 18px;border-right:1px solid #e8eaed;display:flex;flex-direction:column;cursor:pointer;position:relative;overflow:hidden;transition:background .15s;}
+    .ib-card::before,.ib-card::after{display:none!important;content:none!important;}
+    .ib-card:last-child{border-right:none;}
+    .ib-card:hover{background:#fafbff;}
+    .ib-card.xc-active{background:#2563eb;border-color:#2563eb;}
+    .ib-card.xc-active:hover{background:#1d4ed8;}
+    .ib-card.xc-active .ib-lbl{color:rgba(255,255,255,.70);}
+    .ib-card.xc-active .ib-val{color:#fff;}
+    .ib-card.xc-active .ib-sub{color:rgba(255,255,255,.60);}
+    .ib-card.xc-active .ib-pill{background:rgba(255,255,255,.20)!important;color:rgba(255,255,255,.92)!important;}
+    .ib-lbl{font-size:12px;font-weight:500;color:#64748b;margin-bottom:9px;letter-spacing:.1px;transition:color .15s;}
+    .ib-val{font-size:28px;font-weight:800;color:#0f172a;letter-spacing:-1.1px;line-height:1;transition:color .15s;}
+    @media(max-width:1400px){.ib-val{font-size:24px;}}
+    .ib-meta{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap;}
+    .ib-pill{display:inline-flex;align-items:center;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;white-space:nowrap;transition:all .15s;}
+    .ib-pill.blue{background:#dbeafe;color:#1d4ed8;}
+    .ib-pill.green{background:#dcfce7;color:#16a34a;}
+    .ib-pill.amber{background:#fef3c7;color:#b45309;}
+    .ib-pill.red{background:#fee2e2;color:#dc2626;}
+    .ib-sub{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
+    @media(max-width:700px){
+      .ib-grid{grid-template-columns:repeat(2,1fr);}
+      .ib-card{border-right:none;border-bottom:1px solid #e8eaed;padding:16px 16px 14px;}
+      .ib-card:nth-child(odd){border-right:1px solid #e8eaed;}
+      .ib-card:nth-last-child(-n+2){border-bottom:none;}
+      .ib-val{font-size:22px;}
+    }
+    @media(max-width:400px){
+      .ib-grid{grid-template-columns:1fr;}
+      .ib-card{border-right:none!important;border-bottom:1px solid #e8eaed;}
+      .ib-card:last-child{border-bottom:none;}
+    }
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .35s ease both}.a2{animation:fadeUp .35s .07s ease both}.a5{animation:fadeUp .35s .28s ease both}
+    @keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite;}
+
+    /* ── Layout ── */
+    .ib-layout{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start;}
+    @media(max-width:1080px){.ib-layout{grid-template-columns:1fr;}}
+
+    .panel{background:#fff;border:1px solid var(--d-border);border-radius:20px;overflow:hidden;}
+    .panel-hdr{padding:15px 18px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f8faff,#f0f4ff);}
+    .panel-body{padding:18px;}
+    .panel-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+    .pf-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:5px;}
+    .pf-input,.pf-select{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--d-text);transition:all .15s;}
+    .pf-input:focus,.pf-select:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-textarea{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:12.5px;box-sizing:border-box;font-family:'DM Sans',sans-serif;resize:vertical;min-height:62px;outline:none;line-height:1.6;transition:all .15s;}
+    .pf-textarea:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-field{margin-bottom:13px;}
+
+    .seg{display:flex;background:#f1f5f9;border-radius:9px;padding:3px;margin-bottom:14px;}
+    .seg button{flex:1;padding:7px 10px;border:none;background:transparent;border-radius:7px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s;}
+    .seg button.active{background:#fff;color:#0d1b3e;box-shadow:0 1px 3px rgba(0,0,0,.07);}
+
+    .var-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+    .var-chip{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;padding:2px 7px;border-radius:6px;cursor:pointer;transition:all .12s;}
+    .var-chip:hover{background:#1e3a8a;border-color:#1e3a8a;color:#fff;}
+
+    /* Toggle */
+    .tgl{position:relative;display:inline-block;width:38px;height:21px;flex-shrink:0;}
+    .tgl input{opacity:0;width:0;height:0;}
+    .tgl-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:21px;transition:.2s;}
+    .tgl-slider:before{content:"";position:absolute;height:15px;width:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+    .tgl input:checked + .tgl-slider{background:#1a6ef5;}
+    .tgl input:checked + .tgl-slider:before{transform:translateX(17px);}
+    .tgl-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #f5f8ff;}
+    .tgl-row:last-child{border-bottom:none;}
+    .tgl-title{font-size:12.5px;font-weight:700;color:var(--d-text);}
+    .tgl-desc{font-size:11px;color:var(--d-muted);margin-top:1px;}
+
+    .ib-btn{padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;}
+    .ib-btn:hover{opacity:.92;transform:translateY(-1px);}
+    .ib-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .ib-btn-blue{background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;width:100%;}
+    .ib-btn-green{background:linear-gradient(135deg,#00c896,#00a07a);color:#fff;}
+    .ib-btn-ghost{background:#f4f8ff;border:1.5px solid var(--d-border);color:var(--d-blue1);}
+
+    /* SMTP warn */
+    .smtp-box{border-radius:10px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px;border:1.5px solid;}
+    .smtp-box.warn{background:#fffbeb;border-color:#fde68a;}
+
+    /* List */
+    .list-hdr{padding:14px 18px;border-bottom:1px solid #f0f4ff;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .list-filter{padding:7px 11px;border:1.5px solid var(--d-border);border-radius:9px;font-size:12px;outline:none;background:#f8faff;font-family:inherit;color:var(--d-text);}
+    .ib-table{width:100%;border-collapse:collapse;}
+    .ib-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);border-bottom:1px solid #f0f4ff;background:#fafbff;}
+    .ib-table td{padding:10px 14px;font-size:12.5px;border-bottom:1px solid #f5f8ff;color:var(--d-text);vertical-align:middle;}
+    .ib-table tr:hover td{background:#fafbff;}
+    .ib-check{width:16px;height:16px;accent-color:#1a6ef5;cursor:pointer;}
+    .st-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+    .st-unpaid{background:#fef3c7;color:#b45309;}
+    .st-overdue{background:#fee2e2;color:#dc2626;}
+    .st-paid{background:#dcfce7;color:#16a34a;}
+    .no-email{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#dc2626;background:#fef2f2;padding:2px 7px;border-radius:6px;}
+    .tbl-empty{padding:40px 16px;text-align:center;color:var(--d-muted);font-size:12.5px;}
+
+    /* ── Pagination ── */
+    .ib-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 18px;border-top:1px solid #f0f4ff;flex-wrap:wrap;}
+    .ib-pagination:empty{display:none;}
+    .pg-info{font-size:11.5px;color:var(--d-muted);}
+    .pg-info b{color:var(--d-text);font-weight:700;}
+    .pg-nav{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+    .pg-btn{min-width:32px;height:32px;padding:0 9px;border-radius:9px;border:1px solid #e8edf5;background:#fff;color:#475569;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;}
+    .pg-btn:hover:not(:disabled):not(.active){background:#f4f8ff;border-color:#bfdbfe;color:#1d4ed8;}
+    .pg-btn.active{background:linear-gradient(135deg,#1a6ef5,#0047cc);border-color:#1a6ef5;color:#fff;cursor:default;}
+    .pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .pg-dots{padding:0 4px;color:#94a3b8;font-size:12px;}
+    @media(max-width:560px){
+      .ib-pagination{justify-content:center;}
+      .pg-info{width:100%;text-align:center;order:2;}
+      .pg-nav{order:1;}
+    }
+
+    /* Mobile cards */
+    .ib-cards{display:none;}
+    @media(max-width:760px){
+      .ib-table-wrap{display:none;}
+      .ib-cards{display:flex;flex-direction:column;}
+      .ibc-item{padding:12px 16px;border-bottom:1px solid #f0f4ff;display:flex;align-items:flex-start;gap:11px;}
+      .panel-body{padding:14px;}
+    }
+
+    /* Preview */
+    .preview-frame{width:100%;height:540px;border:1.5px solid var(--d-border);border-radius:12px;background:#eef2f9;}
+    .preview-subj{font-size:12px;color:var(--d-text);background:#f8faff;border:1px solid var(--d-border);border-radius:9px;padding:9px 12px;margin-bottom:10px;word-break:break-word;}
+    .preview-subj b{color:var(--d-muted);font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.06em;display:block;margin-bottom:2px;}
+
+    /* Modal */
+    .ib-modal-bg{position:fixed;inset:0;background:rgba(13,27,62,.48);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center;padding:18px;}
+    .ib-modal-bg.open{display:flex;animation:fadeUp .18s ease;}
+    .ib-modal{background:#fff;border-radius:20px;width:100%;max-width:440px;padding:24px;box-shadow:0 24px 60px rgba(13,27,62,.28);}
+    .ib-modal h3{font-size:16px;font-weight:800;color:#0d1b3e;margin:0 0 6px;}
+    .ib-modal p{font-size:13px;color:#6b7fa8;line-height:1.6;margin:0 0 18px;}
+    .ib-modal-actions{display:flex;gap:10px;}
+    .ib-modal-btn{flex:1;padding:11px;border-radius:11px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:transform .1s,opacity .15s;}
+    .ib-modal-btn:hover{transform:translateY(-1px);}
+    .ib-modal-btn.ghost{background:#f1f5f9;color:#475569;}
+    .ib-modal-btn.primary{background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;}
+    @media(max-width:440px){.ib-modal-actions{flex-direction:column-reverse;}}
+  </style>
+</head>
+<body>
+<div class="app-layout ib-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;" class="a1">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;color:#0d1b3e;margin:0 0 3px;">Broadcast Invoice</h1>
+          <p style="font-size:12.5px;color:var(--d-muted);margin:0;">Kirim invoice/tagihan ke pelanggan via email — atur format pesannya, sinkron dengan Settings &gt; Email/SMTP</p>
+        </div>
+        <button type="button" class="ib-btn ib-btn-ghost" onclick="openSmtpModal()">
+          <span id="smtpDot" style="width:8px;height:8px;border-radius:50%;background:#cbd5e1;flex-shrink:0;"></span>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+          Setting SMTP
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="ib-grid a2">
+        <div class="ib-card xc-active" data-filter="unpaid" onclick="ibCardClick(this)">
+          <div class="ib-lbl">Belum Lunas</div>
+          <span class="ib-val" id="stUnpaid">0</span>
+          <div class="ib-meta"><span class="ib-pill amber">tagihan</span><span class="ib-sub">Perlu dikirim</span></div>
+        </div>
+        <div class="ib-card" data-filter="overdue" onclick="ibCardClick(this)">
+          <div class="ib-lbl">Overdue</div>
+          <span class="ib-val" id="stOverdue">0</span>
+          <div class="ib-meta"><span class="ib-pill red">lewat tempo</span><span class="ib-sub">Prioritas</span></div>
+        </div>
+        <div class="ib-card" data-filter="paid" onclick="ibCardClick(this)">
+          <div class="ib-lbl">Lunas</div>
+          <span class="ib-val" id="stPaid">0</span>
+          <div class="ib-meta"><span class="ib-pill green">kwitansi</span><span class="ib-sub">Bisa kirim ulang</span></div>
+        </div>
+        <div class="ib-card" data-filter="__coverage" onclick="ibCardClick(this)">
+          <div class="ib-lbl">Pelanggan Punya Email</div>
+          <span class="ib-val" id="stCoverage">0</span>
+          <div class="ib-meta"><span class="ib-pill blue">coverage</span><span class="ib-sub">Jangkauan email</span></div>
+        </div>
+      </div>
+
+      <div class="ib-layout a5">
+
+        <!-- ════════ Kolom kiri: Format Email ════════ -->
+        <div class="panel" style="position:sticky;top:78px;">
+          <div class="panel-hdr">
+            <div class="panel-icon" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);">
+              <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--d-text);">Format Email Invoice</div>
+              <div style="font-size:11px;color:var(--d-muted);">Tersimpan & dipakai juga oleh reminder otomatis</div>
+            </div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Status segment: unpaid / paid format -->
+            <div class="seg" id="fmtSeg">
+              <button type="button" class="active" data-st="unpaid" onclick="setFmtStatus('unpaid',this)">Tagihan (Belum Lunas)</button>
+              <button type="button" data-st="paid" onclick="setFmtStatus('paid',this)">Kwitansi (Lunas)</button>
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label">Subjek Email</label>
+              <input type="text" class="pf-input" id="fSubject" oninput="schedulePreview()">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Judul Header (di bawah nama perusahaan)</label>
+              <input type="text" class="pf-input" id="fHeader" oninput="schedulePreview()">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Kalimat Pembuka</label>
+              <textarea class="pf-textarea" id="fIntro" oninput="schedulePreview()"></textarea>
+              <div class="var-chips" id="varChips">
+                <span class="var-chip" onclick="insertVar('fIntro','{nama}')">{nama}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{invoice}')">{invoice}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{periode}')">{periode}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{paket}')">{paket}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{jumlah}')">{jumlah}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{jatuh_tempo}')">{jatuh_tempo}</span>
+                <span class="var-chip" onclick="insertVar('fIntro','{perusahaan}')">{perusahaan}</span>
+              </div>
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Catatan Kaki (footer)</label>
+              <textarea class="pf-textarea" id="fFooter" oninput="schedulePreview()" style="min-height:50px;"></textarea>
+            </div>
+
+            <div style="border-top:1px solid #f0f4ff;margin:4px 0 6px;"></div>
+
+            <div class="tgl-row">
+              <div><div class="tgl-title">Lampirkan PDF Invoice/Kwitansi</div><div class="tgl-desc">Mengikuti Settings &gt; Email</div></div>
+              <label class="tgl"><input type="checkbox" id="fAttach"><span class="tgl-slider"></span></label>
+            </div>
+            <div class="tgl-row">
+              <div><div class="tgl-title">Tampilkan Info Rekening Bank</div><div class="tgl-desc">Untuk tagihan belum lunas</div></div>
+              <label class="tgl"><input type="checkbox" id="fShowBank" onchange="schedulePreview()"><span class="tgl-slider"></span></label>
+            </div>
+            <div class="tgl-row">
+              <div><div class="tgl-title">Tombol "Bayar Sekarang"</div><div class="tgl-desc">Link otomatis ke invoice publik tiap pelanggan</div></div>
+              <label class="tgl"><input type="checkbox" id="fShowPaybtn" onchange="onPaybtnToggle()"><span class="tgl-slider"></span></label>
+            </div>
+            <div class="pf-field" id="paybtnExtra" style="display:none;margin-top:10px;">
+              <label class="pf-label">Label Tombol</label>
+              <input type="text" class="pf-input" id="fPaybtnLabel" oninput="schedulePreview()" style="margin-bottom:8px;">
+              <label class="pf-label">Base URL Publik</label>
+              <input type="text" class="pf-input" id="fBaseUrl" placeholder="https://app.isp.id">
+              <div style="font-size:10px;color:var(--d-muted);margin-top:3px;">Domain dasar untuk link bayar, mis. <code style="background:#f1f5f9;padding:1px 4px;border-radius:4px;">https://crm.victoriaccess.id</code> → tombol mengarah ke <code style="background:#f1f5f9;padding:1px 4px;border-radius:4px;">/pub/invoice/&lt;id&gt;.&lt;sig&gt;</code>. Bila kosong, dipakai APP_URL dari server.</div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:14px;">
+              <button class="ib-btn ib-btn-ghost" style="flex:1;" onclick="resetFormat()">Reset Default</button>
+              <button class="ib-btn ib-btn-blue" style="flex:1.4;" id="btnSaveFmt" onclick="saveFormat()">Simpan Format</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ Kolom kanan ════════ -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Preview -->
+          <div class="panel">
+            <div class="panel-hdr" style="background:#fff;">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">Preview Email</div>
+              <div style="margin-left:auto;font-size:11px;color:var(--d-muted);" id="previewHint">Memuat preview...</div>
+            </div>
+            <div class="panel-body">
+              <div class="preview-subj"><b>Subjek</b><span id="pvSubject">-</span></div>
+              <iframe class="preview-frame" id="pvFrame" sandbox=""></iframe>
+            </div>
+          </div>
+
+          <!-- Invoice list + send -->
+          <div class="panel">
+            <div class="list-hdr">
+              <div>
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">Daftar Invoice</div>
+                <div style="font-size:11.5px;color:var(--d-muted);margin-top:1px;" id="listSub">-</div>
+              </div>
+              <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="text" class="list-filter" id="searchBox" placeholder="Cari nama / CID..." oninput="searchDebounced()" style="width:150px;">
+                <select class="list-filter" id="statusFilter" onchange="_page=1;loadInvoices()">
+                  <option value="unpaid">Belum Lunas</option>
+                  <option value="overdue">Overdue</option>
+                  <option value="paid">Lunas</option>
+                  <option value="">Semua</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="padding:11px 18px;border-bottom:1px solid #f0f4ff;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <label style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--d-muted);cursor:pointer;">
+                <input type="checkbox" class="ib-check" id="selectAll" onchange="toggleAll(this.checked)"> Pilih semua (punya email)
+              </label>
+              <span style="font-size:12px;font-weight:700;color:#1a6ef5;" id="selCount">0 dipilih</span>
+              <button class="ib-btn ib-btn-green" style="margin-left:auto;" id="btnSend" onclick="openSendModal()" disabled>
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Kirim Email
+              </button>
+            </div>
+
+            <div class="ib-table-wrap" style="overflow-x:auto;">
+              <table class="ib-table">
+                <thead><tr>
+                  <th style="width:34px;"></th><th>Invoice</th><th>Pelanggan</th><th>Periode</th><th>Jumlah</th><th>Status</th>
+                </tr></thead>
+                <tbody id="invTable"><tr><td colspan="6"><div class="tbl-empty">Memuat data...</div></td></tr></tbody>
+              </table>
+            </div>
+            <div class="ib-cards" id="invCards"></div>
+            <div class="ib-pagination" id="invPagination"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal Pengaturan SMTP (sinkron dgn Settings) -->
+<div class="ib-modal-bg" id="smtpModal" onclick="if(event.target===this)closeSmtpModal()">
+  <div class="ib-modal" role="dialog" aria-modal="true" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:flex-start;gap:11px;margin-bottom:16px;">
+      <div class="panel-icon" style="background:linear-gradient(135deg,#0e7490,#0891b2);width:38px;height:38px;border-radius:11px;flex-shrink:0;">
+        <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <h3 style="margin:0 0 2px;">Pengaturan SMTP Email</h3>
+        <p style="margin:0;font-size:11.5px;">Sinkron otomatis dengan Settings &gt; Email/SMTP</p>
+      </div>
+      <span id="smtpStatusChip" class="ib-pill" style="font-size:10px;margin-top:3px;">-</span>
+      <button onclick="closeSmtpModal()" style="background:#f1f5f9;border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#64748b;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="tgl-row" style="padding-top:0;">
+      <div><div class="tgl-title">Aktifkan Email SMTP</div><div class="tgl-desc">Mengaktifkan pengiriman email via server SMTP</div></div>
+      <label class="tgl"><input type="checkbox" id="smtpEnabled" onchange="onSmtpToggle()"><span class="tgl-slider"></span></label>
+    </div>
+
+    <div id="smtpFields" style="margin-top:12px;">
+      <div style="display:grid;grid-template-columns:1fr 86px;gap:10px;">
+        <div class="pf-field"><label class="pf-label">SMTP Host</label><input type="text" class="pf-input" id="smtpHost" placeholder="smtp.gmail.com"></div>
+        <div class="pf-field"><label class="pf-label">Port</label><input type="number" class="pf-input" id="smtpPort" placeholder="587"></div>
+      </div>
+      <div class="pf-field"><label class="pf-label">Username / Email</label><input type="text" class="pf-input" id="smtpUser" placeholder="email@gmail.com"></div>
+      <div class="pf-field"><label class="pf-label">Password / App Password</label><input type="password" class="pf-input" id="smtpPass" placeholder="••••••••••••"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="pf-field"><label class="pf-label">Nama Pengirim</label><input type="text" class="pf-input" id="smtpFromName" placeholder="DIGIS"></div>
+        <div class="pf-field"><label class="pf-label">Email Pengirim (From)</label><input type="text" class="pf-input" id="smtpFrom" placeholder="FLAYNET"></div>
+      </div>
+      <div class="pf-field" style="margin-bottom:0;">
+        <label class="pf-label">Koneksi Aman (SSL/TLS)</label>
+        <select class="pf-select" id="smtpSecure">
+          <option value="0">STARTTLS (port 587)</option>
+          <option value="1">SSL/TLS (port 465)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--d-muted);margin-top:10px;line-height:1.5;">Gmail: aktifkan 2FA lalu buat <b>App Password</b>. Host <code style="background:#f1f5f9;padding:1px 4px;border-radius:4px;">smtp.gmail.com</code>, port <code style="background:#f1f5f9;padding:1px 4px;border-radius:4px;">587</code>.</div>
+
+    <div class="ib-modal-actions" style="margin-top:16px;">
+      <button class="ib-modal-btn ghost" id="btnTestSmtp" onclick="testSmtp()">Kirim Test</button>
+      <button class="ib-modal-btn primary" id="btnSaveSmtp" onclick="saveSmtp()">Simpan SMTP</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal konfirmasi kirim -->
+<div class="ib-modal-bg" id="sendModal" onclick="if(event.target===this)closeSendModal()">
+  <div class="ib-modal" role="dialog" aria-modal="true">
+    <h3>Kirim Invoice via Email?</h3>
+    <p id="sendModalMsg">-</p>
+    <div class="ib-modal-actions">
+      <button class="ib-modal-btn ghost" onclick="closeSendModal()">Batal</button>
+      <button class="ib-modal-btn primary" id="sendModalOk" onclick="confirmSend()">Ya, Kirim</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/invoice-broadcast.js"></script>
+</body></html>

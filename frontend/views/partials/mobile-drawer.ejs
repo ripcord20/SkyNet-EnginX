@@ -1,0 +1,1171 @@
+<%
+  // Partial: mobile slide-in drawer sidebar.
+  // Pemakaian: include partial ini di setiap halaman mobile dengan meneruskan
+  // variabel active, appName, dan user. 'active' menandai menu yang sedang dibuka.
+  var _act = (typeof active !== 'undefined') ? active : '';
+  var _app = (typeof appName !== 'undefined' && appName) ? appName : 'FLAYNET';
+  var _uname = (typeof user !== 'undefined' && user && user.name) ? user.name : 'Owner';
+  var _uemail = (typeof user !== 'undefined' && user && user.email) ? user.email : '';
+  var _uavatar = (typeof user !== 'undefined' && user && user.avatar) ? user.avatar : '';
+  function _on(id){ return _act === id ? ' active' : ''; }
+%>
+<style>
+  /* Hamburger lama (floating) dimatikan — diganti avatar di top nav sticky */
+  .mdr-hamb{display:none !important;}
+
+  /* ───────────────── TOP NAV STICKY (ala MyTelkomsel) ─────────────────
+     Menempel di atas .wrap; karena .wrap yang men-scroll, sticky top:0
+     membuat nav tetap di tempat saat konten digulung. */
+  .mtop{
+    position:sticky; top:0; z-index:240;
+    display:flex; align-items:center; gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+    background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(180%) blur(12px);
+    -webkit-backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid #eef1f6;
+  }
+  /* Bayangan halus muncul saat konten mulai discroll (di-toggle via JS) */
+  .mtop.scrolled{box-shadow:0 6px 18px -12px rgba(23,43,84,.28);}
+  .mtop-hamb{
+    width:40px;height:40px;border-radius:12px;flex-shrink:0;cursor:pointer;
+    background:#eef1f6;border:none;display:flex;align-items:center;justify-content:center;color:#25324d;
+  }
+  .mtop-hamb svg{width:21px;height:21px;}
+  .mtop-av{
+    width:40px;height:40px;border-radius:50%;flex-shrink:0;cursor:pointer;text-decoration:none;
+    background:linear-gradient(135deg,#2f6fed,#1e4fd6);color:#fff;border:none;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;
+    overflow:hidden;padding:0;font-family:inherit;
+  }
+  .mtop-av img{width:100%;height:100%;object-fit:cover;}
+  .mtop-search{
+    flex:1;min-width:0;height:40px;border-radius:100px;border:none;
+    background:#eef1f6;display:flex;align-items:center;gap:8px;padding:0 14px;
+    cursor:text;color:#94a0b8;font-size:13px;font-family:inherit;
+  }
+  .mtop-search svg{width:17px;height:17px;flex-shrink:0;color:#94a0b8;}
+  .mtop-search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mtop-bell{
+    width:40px;height:40px;border-radius:50%;flex-shrink:0;cursor:pointer;position:relative;
+    background:#eef1f6;border:none;display:flex;align-items:center;justify-content:center;color:#3a4a68;
+  }
+  .mtop-bell svg{width:20px;height:20px;}
+  .mtop-bell .dot{
+    position:absolute;top:7px;right:8px;min-width:15px;height:15px;padding:0 4px;
+    border-radius:100px;background:#f2545b;color:#fff;font-size:9px;font-weight:800;
+    display:none;align-items:center;justify-content:center;line-height:1;border:1.5px solid #fff;
+  }
+  .mtop-bell .dot.show{display:flex;}
+
+  /* ───────────── PANEL NOTIFIKASI (dropdown dari bell) ───────────── */
+  .mnotif-overlay{position:fixed;inset:0;z-index:1000;background:rgba(15,27,74,.28);opacity:0;visibility:hidden;transition:opacity .2s;}
+  .mnotif-overlay.open{opacity:1;visibility:visible;}
+  .mnotif{
+    position:fixed;z-index:1001;top:calc(58px + env(safe-area-inset-top));
+    left:50%;transform:translateX(-50%) translateY(-8px);
+    width:calc(100% - 24px);max-width:calc(var(--shell-max,480px) - 24px);
+    background:#fff;border-radius:16px;box-shadow:0 18px 44px -12px rgba(23,43,84,.34);
+    opacity:0;visibility:hidden;transition:opacity .2s, transform .2s, visibility .2s;
+    display:flex;flex-direction:column;max-height:70vh;overflow:hidden;
+  }
+  .mnotif.open{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+  .mnotif-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eef1f6;}
+  .mnotif-head span{font-size:14.5px;font-weight:800;color:#1a2b4a;}
+  .mnotif-readall{border:none;background:none;color:#2f6fed;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 4px;}
+  .mnotif-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .mnotif-item{display:flex;gap:11px;padding:12px 16px;text-decoration:none;border-bottom:1px solid #f4f7fb;cursor:pointer;position:relative;}
+  .mnotif-item:active{background:#f4f7fb;}
+  .mnotif-item.unread{background:#f5f9ff;}
+  .mnotif-ic{width:34px;height:34px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+  .mnotif-ic svg{width:17px;height:17px;}
+  .mnotif-ic.info{background:#e2f0ff;color:#2f6fed;}
+  .mnotif-ic.warning{background:#fdf1dc;color:#b9781a;}
+  .mnotif-ic.error,.mnotif-ic.critical{background:#fde5e6;color:#d13b42;}
+  .mnotif-tt{font-size:13px;font-weight:700;color:#1a2b4a;line-height:1.35;}
+  .mnotif-ms{font-size:11.5px;color:#6b7a97;margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .mnotif-tm{font-size:10.5px;color:#a7b0c4;margin-top:4px;}
+  .mnotif-empty{padding:40px 24px;text-align:center;color:#94a0b8;font-size:12.5px;}
+  .mnotif-empty svg{width:40px;height:40px;color:#d4dbe8;margin-bottom:10px;}
+  .mnotif-foot{display:block;text-align:center;padding:12px;font-size:12.5px;font-weight:700;color:#2f6fed;text-decoration:none;border-top:1px solid #eef1f6;}
+  .mnotif-foot:active{background:#f4f7fb;}
+  .mnotif-spin{width:22px;height:22px;margin:28px auto;border:2.5px solid #e7edf6;border-top-color:#2f6fed;border-radius:50%;animation:mtopspin .8s linear infinite;}
+
+  /* ───────────────── OVERLAY PENCARIAN GLOBAL ───────────────── */
+  .msearch{
+    position:fixed;top:0;bottom:0;left:50%;z-index:1000;background:#fff;
+    width:100%;max-width:var(--shell-max,480px);
+    opacity:0;visibility:hidden;
+    transition:opacity .2s, transform .2s, visibility .2s;
+    display:flex;flex-direction:column;
+    transform:translateX(-50%) translateY(8px);
+  }
+  .msearch.open{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+  .msearch-bar{
+    display:flex;align-items:center;gap:10px;
+    padding:calc(10px + env(safe-area-inset-top)) 14px 12px;border-bottom:1px solid #eef1f6;
+  }
+  .msearch-back{width:38px;height:38px;flex-shrink:0;border:none;background:none;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#3a4a68;cursor:pointer;}
+  .msearch-back svg{width:22px;height:22px;}
+  .msearch-field{flex:1;display:flex;align-items:center;gap:8px;background:#eef1f6;border-radius:100px;padding:0 14px;height:42px;}
+  .msearch-field svg{width:18px;height:18px;color:#94a0b8;flex-shrink:0;}
+  .msearch-field input{flex:1;min-width:0;border:none;background:none;outline:none;font-size:14px;font-family:inherit;color:#1a2b4a;}
+  .msearch-clear{border:none;background:none;color:#94a0b8;cursor:pointer;padding:4px;display:none;}
+  .msearch-clear.show{display:block;}
+  .msearch-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 0 24px;}
+  .msearch-sec{font-size:11px;font-weight:800;color:#b3bdd0;text-transform:uppercase;letter-spacing:.5px;padding:14px 18px 6px;}
+  .msearch-item{display:flex;align-items:center;gap:12px;padding:11px 16px;text-decoration:none;cursor:pointer;}
+  .msearch-item:active{background:#f4f7fb;}
+  .msearch-ic{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+  .msearch-ic.cust{background:#e2f0ff;color:#2f6fed;}
+  .msearch-ic.pkg{background:#e6f7f4;color:#0e9a8b;}
+  .msearch-ic.inv{background:#fdf1dc;color:#b9781a;}
+  .msearch-tt{font-size:13.5px;font-weight:700;color:#1a2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .msearch-ss{font-size:11.5px;color:#94a0b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .msearch-empty{padding:48px 24px;text-align:center;color:#94a0b8;font-size:13px;}
+  .msearch-empty svg{width:44px;height:44px;color:#d4dbe8;margin-bottom:12px;}
+  .msearch-hint{padding:20px 18px;color:#94a0b8;font-size:12.5px;line-height:1.6;}
+  .msearch-spin{width:22px;height:22px;margin:32px auto;border:2.5px solid #e7edf6;border-top-color:#2f6fed;border-radius:50%;animation:mtopspin .8s linear infinite;}
+  @keyframes mtopspin{to{transform:rotate(360deg);}}
+
+  .mdr-hamb svg{width:22px;height:22px;}
+  /* CATATAN: posisi (left/transform/max-width) drawer & overlay diatur di
+     mobile-shell.css — SATU sumber kebenaran. Di sini hanya tampilan. */
+  .mdr-overlay{
+    position:fixed;top:0;bottom:0;
+    z-index:998;background:rgba(15,27,74,.42);
+    opacity:0;visibility:hidden;transition:opacity .28s;
+  }
+  .mdr-overlay.open{opacity:1;visibility:visible;}
+  /* Posisi horizontal (left) diselaraskan ke shell di mobile-shell.css.
+     TAPI keadaan tersembunyi/terbuka HARUS didefinisikan di sini juga, supaya
+     drawer tetap tertutup meski mobile-shell.css gagal dimuat / masih versi
+     cache lama. Tanpa ini, drawer tampil terbuka permanen & tak bisa ditutup. */
+  .mdr{
+    position:fixed;top:0;bottom:0;left:0;
+    z-index:999;
+    width:288px;max-width:82vw;
+    background:#fff;
+    transform:translateX(-100%);            /* default: TERSEMBUNYI */
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    display:flex;flex-direction:column;
+    box-shadow:8px 0 40px rgba(15,27,74,.18);
+    visibility:hidden;                       /* jaring pengaman ekstra */
+  }
+  .mdr.open{
+    transform:translateX(0);
+    visibility:visible;
+  }
+  .mdr-head{padding:calc(18px + env(safe-area-inset-top)) 18px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f0f3f9;flex-shrink:0;}
+  .mdr-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#36C9A8,#279694);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex-shrink:0;}
+  .mdr-brand-t{font-size:15.5px;font-weight:800;color:#1F3849;letter-spacing:-.3px;line-height:1.2;}
+  .mdr-brand-s{font-size:11px;color:#7c93a0;margin-top:2px;}
+  /* Area menu: satu-satunya bagian yang scroll, sisanya tetap */
+  .mdr-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:10px 10px 16px;min-height:0;}
+  .mdr-body::-webkit-scrollbar{width:0;}
+  .mdr-group{font-size:10px;font-weight:800;color:#b3bdd0;text-transform:uppercase;letter-spacing:.7px;padding:14px 10px 6px;}
+  .mdr-group:first-child{padding-top:4px;}
+  .mdr-item{display:flex;align-items:center;gap:12px;padding:10.5px 10px;border-radius:11px;text-decoration:none;color:#3a4a68;font-size:13.5px;font-weight:600;transition:background .12s;cursor:pointer;}
+  .mdr-item:active{background:#f0f3f9;}
+  .mdr-item svg{width:20px;height:20px;stroke-width:1.9;flex-shrink:0;color:#5a6885;}
+  .mdr-item.active{background:#e8f0ff;color:#2f6fed;}
+  .mdr-item.active svg{color:#2f6fed;}
+  .mdr-item .mdr-tag{margin-left:auto;font-size:9.5px;font-weight:700;background:#e8f0ff;color:#2f6fed;padding:2px 7px;border-radius:100px;}
+  /* Footer selalu menempel di bawah, tak ikut scroll */
+  .mdr-foot{border-top:1px solid #f0f3f9;padding:12px 14px calc(12px + env(safe-area-inset-bottom));flex-shrink:0;background:#fff;}
+  .mdr-user{display:flex;align-items:center;gap:10px;margin-bottom:10px;min-width:0;}
+  .mdr-uav{width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#2f6fed,#1e4fd6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+  .mdr-uname{font-size:13.5px;font-weight:700;color:#1a2b4a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mdr-uemail{font-size:11px;color:#94a0b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .mdr-logout{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:none;background:none;border-radius:12px;color:#f2545b;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .mdr-logout svg{width:19px;height:19px;stroke-width:2;}
+  .mdr-logout:active{background:#fde5e6;}
+
+  /* ═════════════ FAB ACTION SHEET (menu tombol +) ═════════════ */
+  .fabsheet-ov{position:fixed;inset:0;z-index:600;background:rgba(15,32,51,.42);opacity:0;pointer-events:none;transition:opacity .2s;}
+  .fabsheet-ov.open{opacity:1;pointer-events:auto;}
+  .fabsheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;z-index:601;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px -10px rgba(15,32,51,.3);transition:transform .26s cubic-bezier(.22,1,.36,1);}
+  .fabsheet.open{transform:translateX(-50%) translateY(0);}
+  .fabsheet-grip{width:40px;height:4px;border-radius:100px;background:#d9e1ec;margin:4px auto 12px;}
+  .fabsheet-h{font-size:15px;font-weight:800;color:#1f3849;margin:0 4px 12px;letter-spacing:-.2px;}
+  .fabsheet-item{display:flex;align-items:center;gap:14px;width:100%;padding:13px 12px;border:none;background:none;border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;color:#1f3849;cursor:pointer;text-align:left;text-decoration:none;}
+  .fabsheet-item:active{background:#f1f6ff;}
+  .fabsheet-ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#e0f2fe;color:#0284c7;}
+  .fabsheet-ic svg{width:21px;height:21px;stroke-width:2;}
+  .fabsheet-item .fabsheet-sub{display:block;font-size:11.5px;font-weight:500;color:#8296a8;margin-top:1px;}
+  .fabsheet-item .fabsheet-tx{flex:1;min-width:0;}
+  .fabsheet-chev{color:#c7d0e0;flex-shrink:0;}
+  .fabsheet-chev svg{width:18px;height:18px;stroke-width:2.4;}
+
+  /* Sub-sheet Generate Invoice */
+  .gi-field{margin-bottom:13px;}
+  .gi-lbl{display:block;font-size:11.5px;font-weight:700;color:#6b7a97;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;}
+  .gi-row{display:flex;gap:10px;}
+  .gi-sel,.gi-inp{width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:14px;color:#1f3849;background:#fff;outline:none;-webkit-appearance:none;appearance:none;}
+  .gi-sel:focus,.gi-inp:focus{border-color:#0ea5e9;}
+  .gi-scope{display:flex;gap:8px;margin-bottom:4px;}
+  .gi-scope-opt{flex:1;padding:11px 8px;border:1.5px solid #e2e8f0;border-radius:12px;text-align:center;font-size:12.5px;font-weight:700;color:#6b7a97;cursor:pointer;background:#fff;transition:all .12s;}
+  .gi-scope-opt.on{border-color:#0ea5e9;background:#e0f2fe;color:#0284c7;}
+  .gi-picker{margin-top:10px;}
+  .gi-search{width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:12px;font-family:inherit;font-size:13.5px;outline:none;margin-bottom:8px;}
+  .gi-search:focus{border-color:#0ea5e9;}
+  .gi-results{max-height:180px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .gi-cust{display:flex;align-items:center;gap:10px;padding:9px 6px;border-radius:10px;cursor:pointer;}
+  .gi-cust:active{background:#f1f6ff;}
+  .gi-cust-chk{width:20px;height:20px;border-radius:6px;border:1.5px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;}
+  .gi-cust.sel .gi-cust-chk{background:#0ea5e9;border-color:#0ea5e9;}
+  .gi-cust-nm{font-size:13px;font-weight:600;color:#1f3849;line-height:1.25;}
+  .gi-cust-cid{font-size:11px;color:#8296a8;}
+  .gi-selcount{font-size:11.5px;color:#0284c7;font-weight:700;margin:8px 2px 0;}
+  .gi-actions{display:flex;gap:10px;margin-top:16px;}
+  .gi-btn{flex:1;padding:13px;border:none;border-radius:13px;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;}
+  .gi-btn-cancel{background:#eef1f6;color:#5a6885;}
+  .gi-btn-go{background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#fff;box-shadow:0 8px 18px -8px rgba(14,165,233,.6);}
+  .gi-btn:disabled{opacity:.6;}
+</style>
+
+<!-- TOP NAV STICKY — akan dipindah ke dalam .wrap via JS agar sticky ke scroll container -->
+<div class="mtop" id="mTop">
+  <button class="mtop-hamb" onclick="mdrOpen()" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <button class="mtop-search" onclick="msearchOpen()" aria-label="Cari">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Cari pelanggan, invoice, paket…</span>
+  </button>
+  <button class="mtop-bell" id="mTopBell" onclick="mnotifToggle(event)" aria-label="Notifikasi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="dot" id="mTopBellDot">0</span>
+  </button>
+  <a class="mtop-av" id="mTopAv" href="/mobile/profile" aria-label="Profil"><% if (_uavatar) { %><img src="<%= _uavatar %>" alt="Profil" onerror="this.remove()"><% } else { %><%= _uname.charAt(0).toUpperCase() %><% } %></a>
+</div>
+
+<!-- PANEL NOTIFIKASI (dropdown) -->
+<div class="mnotif-overlay" id="mNotifOverlay" onclick="mnotifClose()"></div>
+<div class="mnotif" id="mNotif">
+  <div class="mnotif-head">
+    <span>Notifikasi</span>
+    <button class="mnotif-readall" id="mNotifReadAll" onclick="mnotifReadAll()">Tandai dibaca</button>
+  </div>
+  <div class="mnotif-body" id="mNotifBody">
+    <div class="mnotif-spin"></div>
+  </div>
+  <a class="mnotif-foot" href="/mobile/reminder">Lihat semua di Reminder →</a>
+</div>
+
+<!-- OVERLAY PENCARIAN GLOBAL -->
+<div class="msearch" id="mSearch">
+  <div class="msearch-bar">
+    <button class="msearch-back" onclick="msearchClose()" aria-label="Kembali">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div class="msearch-field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="mSearchInput" placeholder="Cari pelanggan, invoice, paket…" autocomplete="off" oninput="msearchInput()">
+      <button class="msearch-clear" id="mSearchClear" onclick="msearchClearText()" aria-label="Hapus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="msearch-body" id="mSearchBody">
+    <div class="msearch-hint">Ketik untuk mencari pelanggan (nama / ID / no. HP), atau nama paket. Tap hasil untuk membuka detailnya.</div>
+  </div>
+</div>
+
+<button class="mdr-hamb" onclick="mdrOpen()" aria-label="Menu" style="display:none">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<div class="mdr-overlay" id="mdrOverlay" onclick="mdrClose()"></div>
+
+<nav class="mdr" id="mdrPanel">
+  <div class="mdr-head">
+    <%
+      // Ikuti pengaturan brand dari halaman Setting (Tampilan & Brand), sama
+      // seperti sidebar desktop. brandMode: logo_only | name_logo | name_tagline | default.
+      var _brandMode = locals.brandMode  || (locals.appSettings && locals.appSettings.brand_mode)  || 'name_tagline';
+      var _brandName = locals.appName    || (locals.appSettings && locals.appSettings.app_name)    || _app;
+      var _brandTag  = locals.appTagline || (locals.appSettings && locals.appSettings.app_tagline) || 'Panel Owner';
+      var _brandLogo = locals.logoUrl    || (locals.appSettings && locals.appSettings.logo_url)    || '';
+    %>
+    <% if (_brandMode === 'logo_only' && _brandLogo) { %>
+      <img src="<%= _brandLogo %>" alt="<%= _brandName %>" style="height:38px;max-width:180px;object-fit:contain;">
+    <% } else if (_brandMode === 'name_logo' && _brandLogo) { %>
+      <img src="<%= _brandLogo %>" alt="logo" style="height:36px;width:42px;object-fit:contain;flex-shrink:0;border-radius:10px;">
+      <div><div class="mdr-brand-t"><%= _brandName %></div></div>
+    <% } else if (_brandLogo && _brandMode !== 'name_tagline') { %>
+      <img src="<%= _brandLogo %>" alt="logo" style="height:36px;width:42px;object-fit:contain;flex-shrink:0;border-radius:10px;">
+      <div><div class="mdr-brand-t"><%= _brandName %></div></div>
+    <% } else { %>
+      <div class="mdr-logo"><%= _brandName.charAt(0).toUpperCase() %></div>
+      <div>
+        <div class="mdr-brand-t"><%= _brandName %></div>
+        <% if (_brandMode === 'name_tagline' && _brandTag) { %>
+        <div class="mdr-brand-s"><%= _brandTag %></div>
+        <% } %>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="mdr-body">
+    <div class="mdr-group">Menu Utama</div>
+    <a class="mdr-item<%= _on('m-home') %>" href="/mobile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Beranda
+    </a>
+    <a class="mdr-item<%= _on('m-customers') %>" href="/mobile/customers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Pelanggan
+    </a>
+    <a class="mdr-item<%= _on('m-payments') %>" href="/mobile/payments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Pembayaran
+    </a>
+    <a class="mdr-item<%= _on('m-invoice') %>" href="/mobile/invoice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Invoice
+    </a>
+    <a class="mdr-item<%= _on('m-reminder') %>" href="/mobile/reminder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Reminder Tagihan
+    </a>
+    <a class="mdr-item<%= _on('m-wa') %>" href="/mobile/wa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      WhatsApp Gateway
+    </a>
+    <a class="mdr-item<%= _on('m-ticket') %>" href="/mobile/ticket">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2z"/></svg>
+      Tiket
+    </a>
+
+    <div class="mdr-group">Laporan</div>
+    <a class="mdr-item<%= _on('m-keuangan') %>" href="/mobile/keuangan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Keuangan
+    </a>
+    <a class="mdr-item<%= _on('m-finance') %>" href="/mobile/finance">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+      Laporan Keuangan
+    </a>
+
+    <div class="mdr-group">Jaringan</div>
+    <a class="mdr-item<%= _on('m-monitoring') %>" href="/mobile/monitoring">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      Monitoring
+    </a>
+    <a class="mdr-item<%= _on('m-queue') %>" href="/mobile/queue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+      Simple Queue
+    </a>
+    <a class="mdr-item<%= _on('m-isolir') %>" href="/mobile/isolir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      Isolir
+    </a>
+    <a class="mdr-item<%= _on('m-hotspot') %>" href="/mobile/hotspot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      Hotspot
+    </a>
+    <a class="mdr-item<%= _on('m-voucher') %>" href="/mobile/voucher">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2z"/></svg>
+      Voucher
+    </a>
+    <a class="mdr-item<%= _on('m-packages') %>" href="/mobile/packages">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Paket Layanan
+    </a>
+    <a class="mdr-item<%= _on('m-assets') %>" href="/mobile/assets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Aset & Inventaris
+    </a>
+    <a class="mdr-item<%= _on('m-hotspot-binding') %>" href="/mobile/hotspot-binding">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+      Hotspot Binding
+    </a>
+    <a class="mdr-item<%= _on('m-host') %>" href="/mobile/host">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+      Host Terdeteksi
+    </a>
+    <a class="mdr-item<%= _on('m-infrastructure') %>" href="/mobile/infrastructure">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6M12 22v-6M4.93 10.93l1.41 1.41M17.66 11.66l1.41-1.41M2 18h2M20 18h2"/><circle cx="12" cy="12" r="3"/></svg>
+      Infrastruktur
+    </a>
+    <a class="mdr-item<%= _on('m-noc') %>" href="/mobile/noc">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+      NOC / Jaringan
+    </a>
+  </div>
+
+  <div class="mdr-foot">
+    <div class="mdr-user">
+      <div class="mdr-uav"><% if (_uavatar) { %><img src="<%= _uavatar %>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"><% } else { %><%= _uname.charAt(0).toUpperCase() %><% } %></div>
+      <div style="min-width:0;">
+        <div class="mdr-uname"><%= _uname %></div>
+        <% if (_uemail) { %><div class="mdr-uemail"><%= _uemail %></div><% } %>
+      </div>
+    </div>
+    <button class="mdr-logout" onclick="mdrLogout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Keluar
+    </button>
+  </div>
+</nav>
+
+<!-- ═══════════ FAB ACTION SHEET (menu tombol +) ═══════════ -->
+<div class="fabsheet-ov" id="fabOv" onclick="FabSheet.close()"></div>
+<div class="fabsheet" id="fabSheet" role="dialog" aria-label="Menu tambah cepat">
+  <div class="fabsheet-grip"></div>
+  <div class="fabsheet-h">Tambah Cepat</div>
+  <a class="fabsheet-item" href="/mobile/customers?add=1">
+    <span class="fabsheet-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
+    <span class="fabsheet-tx">Tambah Pelanggan<span class="fabsheet-sub">Daftarkan pelanggan baru</span></span>
+    <span class="fabsheet-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  </a>
+  <a class="fabsheet-item" href="/mobile/payment-new">
+    <span class="fabsheet-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+    <span class="fabsheet-tx">Catat Pembayaran<span class="fabsheet-sub">Terima & catat pembayaran</span></span>
+    <span class="fabsheet-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  </a>
+  <a class="fabsheet-item" href="/mobile/keuangan?expense=1">
+    <span class="fabsheet-ic" style="background:#fde4e4;color:#e2585f;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></span>
+    <span class="fabsheet-tx">Catat Pengeluaran<span class="fabsheet-sub">Jumlah, kategori, keterangan</span></span>
+    <span class="fabsheet-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  </a>
+  <button class="fabsheet-item" onclick="FabSheet.openGenerate()">
+    <span class="fabsheet-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></span>
+    <span class="fabsheet-tx">Generate Invoice<span class="fabsheet-sub">Semua · periode · pelanggan</span></span>
+    <span class="fabsheet-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  </button>
+  <a class="fabsheet-item" href="/mobile/queue?add=1">
+    <span class="fabsheet-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+    <span class="fabsheet-tx">Tambah Simple Queue<span class="fabsheet-sub">Buat limit bandwidth baru</span></span>
+    <span class="fabsheet-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+  </a>
+</div>
+
+<!-- Sub-sheet: Generate Invoice -->
+<div class="fabsheet-ov" id="giOv" onclick="FabSheet.closeGenerate()"></div>
+<div class="fabsheet" id="giSheet" role="dialog" aria-label="Generate Invoice">
+  <div class="fabsheet-grip"></div>
+  <div class="fabsheet-h">Generate Invoice</div>
+  <div class="gi-field">
+    <span class="gi-lbl">Periode</span>
+    <div class="gi-row">
+      <select class="gi-sel" id="giMonth"></select>
+      <select class="gi-sel" id="giYear"></select>
+    </div>
+  </div>
+  <div class="gi-field">
+    <span class="gi-lbl">Cakupan</span>
+    <div class="gi-scope">
+      <div class="gi-scope-opt on" id="giScopeAll" onclick="FabSheet.setScope('all')">Semua Pelanggan</div>
+      <div class="gi-scope-opt" id="giScopeSel" onclick="FabSheet.setScope('selected')">Pilih Pelanggan</div>
+    </div>
+    <div class="gi-picker" id="giPicker" style="display:none;">
+      <input type="text" class="gi-search" id="giSearch" placeholder="Cari nama / ID pelanggan…" oninput="FabSheet.searchCust()">
+      <div class="gi-results" id="giResults"></div>
+      <div class="gi-selcount" id="giSelCount"></div>
+    </div>
+  </div>
+  <div class="gi-actions">
+    <button class="gi-btn gi-btn-cancel" onclick="FabSheet.closeGenerate()">Batal</button>
+    <button class="gi-btn gi-btn-go" id="giGoBtn" onclick="FabSheet.doGenerate()">Generate</button>
+  </div>
+</div>
+
+<script>
+  /* ═════════════ FAB ACTION SHEET (menu tombol +) ═════════════ */
+  window.FabSheet = (function(){
+    function _tok(){ var ls=localStorage.getItem('token'); if(ls)return ls; var m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    function _toast(msg, ok){
+      try{ if(window.toast){ window.toast(msg, ok?'ok':'err'); return; } }catch(_){}
+      try{ if(window.flynToast){ window.flynToast(msg); return; } }catch(_){}
+      alert(msg);
+    }
+    var _scope='all', _sel={}, _searchTimer=null, _fmtRp=function(n){ return 'Rp '+Number(n||0).toLocaleString('id-ID'); };
+
+    function open(){
+      document.getElementById('fabOv').classList.add('open');
+      document.getElementById('fabSheet').classList.add('open');
+    }
+    function close(){
+      document.getElementById('fabOv').classList.remove('open');
+      document.getElementById('fabSheet').classList.remove('open');
+    }
+    function _fillPeriods(){
+      var mSel=document.getElementById('giMonth'), ySel=document.getElementById('giYear');
+      if(mSel && !mSel._filled){
+        var MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+        var now=new Date(), cm=now.getMonth(), cy=now.getFullYear();
+        mSel.innerHTML=MN.map(function(m,i){ return '<option value="'+(i+1)+'"'+(i===cm?' selected':'')+'>'+m+'</option>'; }).join('');
+        var yrs=''; for(var y=cy-1;y<=cy+1;y++){ yrs+='<option value="'+y+'"'+(y===cy?' selected':'')+'>'+y+'</option>'; }
+        ySel.innerHTML=yrs;
+        mSel._filled=true;
+      }
+    }
+    var _giOnDone=null;
+    function openGenerate(preset){
+      close();
+      _scope='all'; _sel={};
+      _fillPeriods();
+      setScope('all');
+      // Pre-fill periode bila dipanggil dari halaman yg punya konteks bulan/tahun
+      // (mis. halaman invoice yg sedang memfilter bulan tertentu).
+      _giOnDone = (preset && typeof preset.onDone==='function') ? preset.onDone : null;
+      if(preset && preset.month){ var mm=document.getElementById('giMonth'); if(mm) mm.value=String(parseInt(preset.month,10)); }
+      if(preset && preset.year){
+        var yy=document.getElementById('giYear');
+        if(yy){
+          var yv=String(parseInt(preset.year,10));
+          // Tambahkan opsi tahun bila di luar rentang default (mis. lihat periode lama).
+          if(!Array.prototype.some.call(yy.options, function(o){ return o.value===yv; })){
+            var opt=document.createElement('option'); opt.value=yv; opt.textContent=yv; yy.appendChild(opt);
+          }
+          yy.value=yv;
+        }
+      }
+      var s=document.getElementById('giSearch'); if(s) s.value='';
+      var r=document.getElementById('giResults'); if(r) r.innerHTML='';
+      _renderSelCount();
+      setTimeout(function(){
+        document.getElementById('giOv').classList.add('open');
+        document.getElementById('giSheet').classList.add('open');
+      }, 180);
+    }
+    function closeGenerate(){
+      document.getElementById('giOv').classList.remove('open');
+      document.getElementById('giSheet').classList.remove('open');
+    }
+    function setScope(sc){
+      _scope=sc;
+      document.getElementById('giScopeAll').classList.toggle('on', sc==='all');
+      document.getElementById('giScopeSel').classList.toggle('on', sc==='selected');
+      document.getElementById('giPicker').style.display = sc==='selected' ? 'block' : 'none';
+    }
+    function searchCust(){
+      clearTimeout(_searchTimer);
+      _searchTimer=setTimeout(_doSearch, 260);
+    }
+    async function _doSearch(){
+      var q=(document.getElementById('giSearch').value||'').trim();
+      var box=document.getElementById('giResults');
+      if(!q){ box.innerHTML=''; return; }
+      try{
+        var t=_tok();
+        var r=await fetch('/api/customers?search='+encodeURIComponent(q)+'&limit=15',{credentials:'include',headers:t?{'Authorization':'Bearer '+t}:{}});
+        var j=await r.json();
+        var list=(j&&(j.data||j.customers||j.rows))||[];
+        if(!Array.isArray(list)) list=[];
+        if(!list.length){ box.innerHTML='<div style="font-size:12px;color:#8296a8;padding:8px 6px;">Tidak ada hasil.</div>'; return; }
+        box.innerHTML=list.map(function(c){
+          var id=c.id, nm=c.name||'-', cid=c.customer_id||'';
+          var on=!!_sel[id];
+          return '<div class="gi-cust'+(on?' sel':'')+'" onclick="FabSheet.toggleCust('+id+',\''+String(nm).replace(/'/g,"\\'")+'\',\''+String(cid).replace(/'/g,"\\'")+'\')">'
+            +'<span class="gi-cust-chk"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>'
+            +'<div><div class="gi-cust-nm">'+_esc(nm)+'</div><div class="gi-cust-cid">'+_esc(cid)+'</div></div></div>';
+        }).join('');
+      }catch(e){ box.innerHTML='<div style="font-size:12px;color:#f2545b;padding:8px 6px;">Gagal memuat pelanggan.</div>'; }
+    }
+    function _esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    function toggleCust(id, nm, cid){
+      if(_sel[id]) delete _sel[id]; else _sel[id]={id:id,name:nm,customer_id:cid};
+      _doSearch(); _renderSelCount();
+    }
+    function _renderSelCount(){
+      var n=Object.keys(_sel).length;
+      var el=document.getElementById('giSelCount');
+      if(el) el.textContent = n ? (n+' pelanggan dipilih') : '';
+    }
+    async function doGenerate(){
+      var btn=document.getElementById('giGoBtn');
+      var month=parseInt(document.getElementById('giMonth').value,10);
+      var year=parseInt(document.getElementById('giYear').value,10);
+      var payload={ month:month, year:year };
+      if(_scope==='selected'){
+        var ids=Object.keys(_sel).map(Number).filter(Boolean);
+        if(!ids.length){ _toast('Pilih minimal satu pelanggan dulu.', false); return; }
+        payload.customer_ids=ids;
+      }
+      btn.disabled=true; btn.textContent='Generating…';
+      try{
+        var t=_tok();
+        var r=await fetch('/api/billing/generate',{method:'POST',credentials:'include',headers:Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}),body:JSON.stringify(payload)});
+        var j=await r.json();
+        if(j&&j.success){
+          var created=(j.data&&j.data.created)||0;
+          _toast(j.message || ('Berhasil generate '+created+' invoice'), created>0);
+          closeGenerate();
+          // Refresh halaman pemanggil (mis. daftar invoice) bila ada callback.
+          try{ if(_giOnDone) _giOnDone(created, {month:month, year:year}); }catch(_){}
+        }else{
+          _toast((j&&j.message)||'Gagal generate invoice', false);
+        }
+      }catch(e){ _toast('Gagal generate invoice: '+(e.message||e), false); }
+      btn.disabled=false; btn.textContent='Generate';
+    }
+
+    // Auto-buka add-sheet bila halaman dibuka dgn ?add=1 (dari menu FAB).
+    function _autoOpenAdd(){
+      try{
+        var p=new URLSearchParams(location.search);
+        if(p.get('add')==='1'){
+          // Halaman customers punya openAdd(); queue punya openAdd()/openCreate().
+          setTimeout(function(){
+            if(typeof window.openAdd==='function') window.openAdd();
+            else if(typeof window.openCreate==='function') window.openCreate();
+            else if(typeof window.openQueueAdd==='function') window.openQueueAdd();
+          }, 350);
+        }
+        if(p.get('expense')==='1'){
+          // Halaman keuangan punya openExpense() untuk sheet catat pengeluaran.
+          setTimeout(function(){ if(typeof window.openExpense==='function') window.openExpense(); }, 350);
+        }
+      }catch(_){}
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _autoOpenAdd);
+    else _autoOpenAdd();
+
+    return { open:open, close:close, openGenerate:openGenerate, closeGenerate:closeGenerate,
+             setScope:setScope, searchCust:searchCust, toggleCust:toggleCust, doGenerate:doGenerate };
+  })();
+
+  /* Jaring pengaman: pastikan drawer & overlay dalam keadaan TERTUTUP saat
+     halaman dimuat. Kalau mobile-shell.css gagal dimuat / masih cache basi,
+     tanpa ini drawer bisa tampil terbuka permanen dan tak bisa ditutup. */
+  (function(){
+    function forceClosed(){
+      var p=document.getElementById('mdrPanel');
+      var o=document.getElementById('mdrOverlay');
+      if(p) p.classList.remove('open');
+      if(o) o.classList.remove('open');
+      document.body.style.overflow='';
+      var w=document.querySelector('.wrap'); if(w) w.style.overflow='';
+    }
+    forceClosed();
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded', forceClosed);
+    }
+    window.addEventListener('pageshow', forceClosed);   // saat kembali via bfcache
+  })();
+
+  function _mdrScroller(){ return document.querySelector('.wrap') || document.body; }
+  function mdrOpen(){
+    document.getElementById('mdrPanel').classList.add('open');
+    document.getElementById('mdrOverlay').classList.add('open');
+    var s=_mdrScroller(); s.style.overflow='hidden'; document.body.style.overflow='hidden';
+  }
+  function mdrClose(){
+    document.getElementById('mdrPanel').classList.remove('open');
+    document.getElementById('mdrOverlay').classList.remove('open');
+    var s=_mdrScroller(); s.style.overflow=''; document.body.style.overflow='';
+  }
+  // ══════════ ANTI-SKELETON-STUCK (error state global) ══════════
+  // Kalau setelah beberapa detik masih ada elemen .skel di layar, kemungkinan
+  // besar pemuatan data gagal (API error / jaringan). Tampilkan banner "muat
+  // ulang" supaya pengguna tak menatap skeleton selamanya. Berlaku di semua
+  // halaman tanpa perlu mengubah logika masing-masing.
+  (function(){
+    var shown=false;
+    function checkStuck(){
+      if(shown) return;
+      var skel=document.querySelector('.wrap .skel');
+      if(skel){
+        shown=true;
+        var b=document.createElement('div');
+        b.id='loadErrBanner';
+        b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h,66px) + env(safe-area-inset-bottom) + 16px);max-width:calc(var(--shell-max,480px) - 40px);width:calc(100% - 40px);background:#1F3849;color:#fff;padding:12px 16px;border-radius:13px;font-size:12.5px;font-weight:600;z-index:800;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 10px 30px -8px rgba(0,0,0,.4);';
+        b.innerHTML='<span>Sebagian data gagal dimuat.</span><button style="background:#0ea5e9;color:#fff;border:none;padding:7px 14px;border-radius:9px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;" onclick="location.reload()">Muat ulang</button>';
+        document.body.appendChild(b);
+      }
+    }
+    // Cek pada 8 dtk; kalau data sudah terisi (skel hilang) tak muncul apa-apa.
+    setTimeout(checkStuck, 8000);
+  })();
+
+  async function mdrLogout(){
+    try{
+      var t=(function(){ var ls=localStorage.getItem('token'); if(ls)return ls; var m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; })();
+      await fetch('/api/auth/logout',{method:'POST',credentials:'include',headers:t?{'Authorization':'Bearer '+t}:{}});
+    }catch(e){}
+    try{ localStorage.removeItem('token'); }catch(e){}
+    try{ localStorage.removeItem('flyn_prefer_mobile'); }catch(e){}
+    document.cookie='token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    location.href='/login';
+  }
+  /* ══════════════════ NATIVE-FEEL: TOMBOL BACK ANDROID ══════════════════
+     Kelola tombol back seperti app native:
+     - Kalau ada overlay terbuka (search/notif/drawer/chat/modal) → tutup itu dulu.
+     - Kalau di halaman utama (/mobile) → konfirmasi keluar (bukan langsung keluar).
+     - Selain itu → mundur ke halaman sebelumnya seperti biasa.
+     Pakai satu "back-guard" state di history agar back pertama tak langsung
+     keluar app. */
+  (function(){
+    // Daftar penutup overlay, urut prioritas. Kembalikan true kalau menutup sesuatu.
+    function closeTopOverlay(){
+      var checks=[
+        ['mSearch', function(){ if(typeof msearchClose==='function') msearchClose(); }],
+        ['mNotif',  function(){ if(typeof mnotifClose==='function') mnotifClose(); }],
+        ['chatScreen', function(){ if(typeof closeChat==='function') closeChat(); }],
+        ['mediaOv', function(){ if(typeof chatCancelMedia==='function') chatCancelMedia(); }],
+        ['delOv', function(){ if(typeof closeDeleteDevice==='function') closeDeleteDevice(); }],
+        ['addOv', function(){ if(typeof closeAddDevice==='function') closeAddDevice(); }],
+        ['qrOv', function(){ if(typeof qrClose==='function') qrClose(); }],
+        ['lightbox', function(){ if(typeof closeLightbox==='function') closeLightbox(); }],
+        ['dtOv', function(){ if(typeof closeDetail==='function') closeDetail(); }],
+        ['adOv', function(){ if(typeof closeCreate==='function') closeCreate(); }],
+        ['fmOv', function(){ if(typeof closeForm==='function') closeForm(); }],
+        ['cfOv', function(){ if(typeof closeConfirm==='function') closeConfirm(); }],
+        ['mdrPanel', function(){ if(typeof mdrClose==='function') mdrClose(); }]
+      ];
+      for(var i=0;i<checks.length;i++){
+        var el=document.getElementById(checks[i][0]);
+        if(el && el.classList.contains('open')){ try{ checks[i][1](); }catch(_){ } return true; }
+      }
+      // overlay generic .ov.open / .cf-overlay.open (per-halaman)
+      var g=document.querySelector('.ov.open, .cf-overlay.open, .pn-overlay.open, .dm-overlay.open');
+      if(g){ g.classList.remove('open'); return true; }
+      return false;
+    }
+
+    // Apakah ini halaman "root" (tab utama bottom-nav) → back = konfirmasi keluar.
+    function isRootPage(){
+      var p=location.pathname.replace(/\/+$/,'');
+      return ['/mobile','/mobile/customers','/mobile/payments','/mobile/finance','/mobile/monitoring'].indexOf(p)>=0;
+    }
+
+    var _exitToastAt=0;
+    // Selalu ada satu state penyangga supaya back pertama ditangkap, bukan keluar app.
+    try{ history.pushState({flynGuard:true}, ''); }catch(_){ }
+
+    window.addEventListener('popstate', function(){
+      // 1) Tutup overlay teratas kalau ada.
+      if(closeTopOverlay()){
+        try{ history.pushState({flynGuard:true}, ''); }catch(_){ }
+        haptic(8);
+        return;
+      }
+      // 2) Halaman root: konfirmasi keluar (tekan back 2x dlm 2 detik).
+      if(isRootPage()){
+        var now=Date.now();
+        if(now-_exitToastAt < 2000){
+          // Biarkan back benar-benar keluar app (jangan push guard lagi).
+          if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App){
+            try{ Capacitor.Plugins.App.exitApp(); return; }catch(_){ }
+          }
+          history.back();
+          return;
+        }
+        _exitToastAt=now;
+        _nativeToast('Tekan sekali lagi untuk keluar');
+        try{ history.pushState({flynGuard:true}, ''); }catch(_){ }
+        return;
+      }
+      // 3) Halaman non-root: mundur normal.
+      if(document.referrer && document.referrer.indexOf(location.host)>=0){ history.back(); }
+      else { location.href='/mobile'; }
+    });
+  })();
+
+  // Toast ringan (dipakai back-exit) — mandiri, tak bergantung toast per-halaman.
+  function _nativeToast(msg){
+    var t=document.getElementById('flynNativeToast');
+    if(!t){ t=document.createElement('div'); t.id='flynNativeToast';
+      t.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(80px + env(safe-area-inset-bottom));background:rgba(26,43,74,.94);color:#fff;padding:11px 20px;border-radius:100px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:opacity .2s;pointer-events:none;max-width:80%;text-align:center;font-family:inherit;';
+      document.body.appendChild(t);
+    }
+    t.textContent=msg; t.style.opacity='1';
+    clearTimeout(t._to); t._to=setTimeout(function(){ t.style.opacity='0'; }, 1800);
+  }
+
+  /* ══════════════════ TOP NAV STICKY ══════════════════ */
+  function _tokenTop(){ var ls=localStorage.getItem('token'); if(ls)return ls; var m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+  async function _apiTop(url){
+    try{
+      var t=_tokenTop();
+      var r=await fetch(url,{credentials:'include',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'}, t?{'Authorization':'Bearer '+t}:{})});
+      if(!r.ok) return null;
+      return await r.json();
+    }catch(e){ return null; }
+  }
+
+  (function initTopNav(){
+    var mtop=document.getElementById('mTop');
+    var wrap=document.querySelector('.wrap');
+    if(!mtop||!wrap) return;
+
+    // Pindahkan top nav menjadi anak PERTAMA .wrap supaya sticky ke scroll container
+    wrap.insertBefore(mtop, wrap.firstChild);
+
+    // Sembunyikan .topbar lama milik halaman (mis. home) agar tidak dobel.
+    // Hanya dijalankan di halaman yang memuat top nav global ini.
+    try{
+      wrap.querySelectorAll(':scope > .topbar').forEach(function(el){ el.style.display='none'; });
+    }catch(_){
+      // fallback untuk browser lawas tanpa :scope
+      Array.prototype.forEach.call(wrap.children, function(el){
+        if(el.classList && el.classList.contains('topbar')) el.style.display='none';
+      });
+    }
+
+    // Bayangan muncul saat konten discroll
+    wrap.addEventListener('scroll', function(){
+      if(wrap.scrollTop>4) mtop.classList.add('scrolled'); else mtop.classList.remove('scrolled');
+    }, {passive:true});
+
+    // Avatar: pakai foto profil kalau ada, jika tidak inisial nama.
+    // Cache-buster (?t=) mengikuti pola halaman profil agar foto baru langsung tampil.
+    _apiTop('/api/auth/profile').then(function(j){
+      var u=j&&(j.data||j.user||j);
+      if(!u) return;
+      var av=document.getElementById('mTopAv');
+      if(!av) return;
+      if(u.avatar){ av.innerHTML='<img src="'+u.avatar+'?t='+Date.now()+'" alt="Profil" onerror="this.remove()">'; }
+      else { av.textContent=(u.name?u.name.charAt(0):'U').toUpperCase(); }
+    });
+
+    // Badge notifikasi (jumlah belum dibaca) — refresh awal + berkala
+    _mnRefreshBadge();
+    setInterval(function(){ if(document.visibilityState==='visible') _mnRefreshBadge(); }, 60000);
+  })();
+
+  function _mnRefreshBadge(){
+    _apiTop('/api/notifications/unread-count').then(function(j){
+      var n=j&&(j.data&&j.data.count!=null?j.data.count:(j.count!=null?j.count:0));
+      _mnotifSetBadge(n||0);
+    }).catch(function(){});
+  }
+
+  /* ══════════════════ PANEL NOTIFIKASI ══════════════════ */
+  var _mnLoaded=false;
+  function _mnotifSetBadge(n){
+    var dot=document.getElementById('mTopBellDot');
+    if(!dot) return;
+    if(n>0){ dot.textContent=(n>99?'99+':n); dot.classList.add('show'); }
+    else { dot.classList.remove('show'); }
+  }
+  function _mnTimeAgo(ts){
+    if(!ts) return '';
+    try{
+      var d=new Date(ts);
+      if(isNaN(d.getTime())){
+        var mm=String(ts).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+        if(mm){ d=new Date(Date.UTC(+mm[1],+mm[2]-1,+mm[3],+mm[4],+mm[5],+mm[6])); }
+      }
+      if(isNaN(d.getTime())) return '';
+      var s=Math.floor((Date.now()-d.getTime())/1000);
+      if(s<0) s=0;
+      if(s<60) return 'Baru saja';
+      var m=Math.floor(s/60); if(m<60) return m+' menit lalu';
+      var h=Math.floor(m/60); if(h<24) return h+' jam lalu';
+      var dy=Math.floor(h/24); if(dy<7) return dy+' hari lalu';
+      return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+    }catch(e){ return ''; }
+  }
+  function _mnIcon(sev){
+    var s=(sev||'info').toLowerCase();
+    if(s==='warning') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    if(s==='error'||s==='critical') return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+  }
+  function mnotifToggle(ev){
+    if(ev){ ev.stopPropagation(); }
+    var p=document.getElementById('mNotif');
+    if(p.classList.contains('open')){ mnotifClose(); return; }
+    document.getElementById('mNotifOverlay').classList.add('open');
+    p.classList.add('open');
+    if(!_mnLoaded){ _mnotifLoad(); }
+  }
+  function mnotifClose(){
+    document.getElementById('mNotif').classList.remove('open');
+    document.getElementById('mNotifOverlay').classList.remove('open');
+    _mnRefreshBadge(); // badge menyesuaikan setelah user membaca notif
+  }
+  async function _mnotifLoad(){
+    var body=document.getElementById('mNotifBody');
+    var j=await _apiTop('/api/notifications?limit=15');
+    _mnLoaded=true;
+    var rows=[];
+    if(j){ var d=j.data!=null?j.data:j; rows=Array.isArray(d)?d:(d&&d.rows?d.rows:[]); }
+    if(!rows.length){
+      body.innerHTML='<div class="mnotif-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div>Belum ada notifikasi</div></div>';
+      return;
+    }
+    var html='';
+    rows.forEach(function(n){
+      var sev=(n.severity||n.type||'info');
+      var cls=(sev==='critical'?'critical':(sev==='error'?'error':(sev==='warning'?'warning':'info')));
+      var unread=!(n.is_read);
+      var href=_mnMapUrl(n.action_url||n.link, n.type);
+      html+='<a class="mnotif-item'+(unread?' unread':'')+'" href="'+_msEsc(href)+'" onclick="_mnMarkRead('+(n.id!=null?n.id:'null')+')">'
+          + '<div class="mnotif-ic '+cls+'">'+_mnIcon(sev)+'</div>'
+          + '<div style="min-width:0;flex:1;">'
+          +   '<div class="mnotif-tt">'+_msEsc(n.title||'Notifikasi')+'</div>'
+          +   (n.message?'<div class="mnotif-ms">'+_msEsc(n.message)+'</div>':'')
+          +   '<div class="mnotif-tm">'+_msEsc(_mnTimeAgo(n.created_at||n.createdAt))+'</div>'
+          + '</div></a>';
+    });
+    body.innerHTML=html;
+  }
+  // Petakan notifikasi → halaman mobile yang setara.
+  // Prioritas: cocokkan berdasarkan TYPE dulu (andal, selalu ada), lalu URL,
+  // baru fallback. Notif lama sering punya link kosong, jadi type yang menentukan.
+  function _mnMapUrl(url, type){
+    var t=(type||'').toLowerCase();
+    // Berdasarkan tipe notif
+    if(t.indexOf('wa')>=0 || t.indexOf('whatsapp')>=0 || t.indexOf('chat')>=0) return '/mobile/wa';
+    if(t==='overdue' || t==='due_today' || t==='due_soon') return '/mobile/reminder';
+    if(t.indexOf('invoice')>=0 || t.indexOf('billing')>=0 || t.indexOf('unpaid')>=0) return '/mobile/invoice';
+    if(t.indexOf('payment')>=0 || t.indexOf('bayar')>=0) return '/mobile/payments';
+    if(t.indexOf('ticket')>=0 || t.indexOf('tiket')>=0) return '/mobile/ticket';
+    if(t.indexOf('ont')>=0 || t.indexOf('olt')>=0 || t.indexOf('device')>=0 || t.indexOf('snmp')>=0) return '/mobile/noc';
+    if(t.indexOf('customer')>=0 || t.indexOf('registration')>=0 || t.indexOf('sales')>=0) return '/mobile/customers';
+    // Berdasarkan URL (kalau ada)
+    if(url){
+      if(url.indexOf('/mobile/')===0) return url; // sudah mobile
+      if(url.indexOf('wa')>=0 || url.indexOf('whatsapp')>=0) return '/mobile/wa';
+      if(url.indexOf('billing')>=0 || url.indexOf('invoice')>=0) return '/mobile/invoice';
+      if(url.indexOf('payment')>=0) return '/mobile/payments';
+      if(url.indexOf('ticket')>=0) return '/mobile/ticket';
+      if(url.indexOf('ont')>=0 || url.indexOf('olt')>=0 || url.indexOf('noc')>=0) return '/mobile/noc';
+      if(url.indexOf('customer')>=0) return '/mobile/customers';
+      if(url.indexOf('reminder')>=0) return '/mobile/reminder';
+    }
+    return '/mobile/reminder';
+  }
+  // Tandai satu notif dibaca saat diklik (best-effort, tak menghalangi navigasi).
+  function _mnMarkRead(id){
+    if(id==null) return;
+    try{ var t=_tokenTop(); fetch('/api/notifications/'+id+'/read',{method:'PUT',credentials:'include',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'}, t?{'Authorization':'Bearer '+t}:{})}); }catch(e){}
+  }
+  async function mnotifReadAll(){
+    var t=_tokenTop();
+    try{
+      await fetch('/api/notifications/read-all',{method:'PUT',credentials:'include',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'}, t?{'Authorization':'Bearer '+t}:{})});
+    }catch(e){}
+    _mnotifSetBadge(0);
+    // hilangkan highlight unread di panel
+    var items=document.querySelectorAll('#mNotifBody .mnotif-item.unread');
+    Array.prototype.forEach.call(items,function(el){ el.classList.remove('unread'); });
+  }
+
+  /* ══════════════════ OVERLAY PENCARIAN GLOBAL ══════════════════ */
+  var _msTimer=null, _msSeq=0;
+  function msearchOpen(){
+    var ms=document.getElementById('mSearch'); ms.classList.add('open');
+    document.body.style.overflow='hidden';
+    setTimeout(function(){ var i=document.getElementById('mSearchInput'); if(i) i.focus(); }, 80);
+  }
+  function msearchClose(){
+    document.getElementById('mSearch').classList.remove('open');
+    document.body.style.overflow='';
+  }
+  function msearchClearText(){
+    var i=document.getElementById('mSearchInput'); i.value=''; i.focus();
+    document.getElementById('mSearchClear').classList.remove('show');
+    _msRenderHint();
+  }
+  function _msEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function _msRenderHint(){
+    document.getElementById('mSearchBody').innerHTML='<div class="msearch-hint">Ketik untuk mencari pelanggan (nama / ID / no. HP), atau nama paket. Tap hasil untuk membuka detailnya.</div>';
+  }
+  function _msSpin(){ document.getElementById('mSearchBody').innerHTML='<div class="msearch-spin"></div>'; }
+
+  function msearchInput(){
+    var q=document.getElementById('mSearchInput').value.trim();
+    document.getElementById('mSearchClear').classList.toggle('show', q.length>0);
+    if(_msTimer) clearTimeout(_msTimer);
+    if(!q){ _msRenderHint(); return; }
+    if(q.length<2){ return; }
+    _msSpin();
+    _msTimer=setTimeout(function(){ _msDoSearch(q); }, 280);
+  }
+
+  async function _msDoSearch(q){
+    var seq=++_msSeq;
+    var enc=encodeURIComponent(q);
+    var results=await Promise.all([
+      _apiTop('/api/customers?search='+enc+'&limit=8'),
+      _apiTop('/api/packages'),
+      _apiTop('/api/billing/invoices?search='+enc+'&limit=6')
+    ]);
+    if(seq!==_msSeq) return; // hasil kadaluarsa (user sudah ketik lagi)
+
+    var custRes=results[0], pkgRes=results[1], invRes=results[2];
+    var custs=[];
+    if(custRes){ var cd=custRes.data!=null?custRes.data:custRes; custs=Array.isArray(cd)?cd:(cd&&cd.rows?cd.rows:(cd&&cd.customers?cd.customers:[])); }
+    var pkgs=[];
+    if(pkgRes){ var pd=pkgRes.data!=null?pkgRes.data:pkgRes; var arr=Array.isArray(pd)?pd:(pd&&pd.rows?pd.rows:[]);
+      var ql=q.toLowerCase();
+      pkgs=arr.filter(function(p){ return (p.name||'').toLowerCase().indexOf(ql)>=0; }).slice(0,6);
+    }
+    var invs=[];
+    if(invRes){ var ivd=invRes.data!=null?invRes.data:invRes; invs=Array.isArray(ivd)?ivd:(ivd&&ivd.rows?ivd.rows:[]); invs=invs.slice(0,6); }
+
+    var html='';
+    if(custs.length){
+      html+='<div class="msearch-sec">Pelanggan</div>';
+      custs.forEach(function(c){
+        var nm=c.name||'Pelanggan';
+        var sub=[c.customer_id,c.phone].filter(Boolean).join(' · ');
+        html+='<a class="msearch-item" href="/mobile/customers?focus='+encodeURIComponent(c.id!=null?c.id:'')+'">'
+            + '<div class="msearch-ic cust">'+_msEsc(nm.charAt(0).toUpperCase())+'</div>'
+            + '<div style="min-width:0;"><div class="msearch-tt">'+_msEsc(nm)+'</div><div class="msearch-ss">'+_msEsc(sub||'—')+'</div></div></a>';
+      });
+    }
+    if(invs.length){
+      html+='<div class="msearch-sec">Invoice</div>';
+      invs.forEach(function(iv){
+        var no=iv.invoice_number||iv.number||('#'+(iv.id||''));
+        var who=(iv.customer&&iv.customer.name)||iv.customer_name||'';
+        var amt=(iv.total!=null?iv.total:(iv.amount!=null?iv.amount:null));
+        var st=(iv.status||'').toLowerCase();
+        var stTxt=st==='paid'?'Lunas':(st==='overdue'?'Lewat tempo':(st==='unpaid'?'Belum bayar':st));
+        var sub=[who, amt!=null?('Rp'+Number(amt).toLocaleString('id-ID')):'', stTxt].filter(Boolean).join(' · ');
+        html+='<a class="msearch-item" href="/mobile/invoice">'
+            + '<div class="msearch-ic inv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'
+            + '<div style="min-width:0;"><div class="msearch-tt">'+_msEsc(no)+'</div><div class="msearch-ss">'+_msEsc(sub||'—')+'</div></div></a>';
+      });
+    }
+    if(pkgs.length){
+      html+='<div class="msearch-sec">Paket</div>';
+      pkgs.forEach(function(p){
+        var price=(p.price!=null)?('Rp'+Number(p.price).toLocaleString('id-ID')):'';
+        var spd=(p.speed_down!=null)?(p.speed_down+' Mbps'):(p.speed?(p.speed+' Mbps'):'');
+        var sub=[spd,price].filter(Boolean).join(' · ');
+        html+='<a class="msearch-item" href="/mobile/packages">'
+            + '<div class="msearch-ic pkg">P</div>'
+            + '<div style="min-width:0;"><div class="msearch-tt">'+_msEsc(p.name||'Paket')+'</div><div class="msearch-ss">'+_msEsc(sub||'—')+'</div></div></a>';
+      });
+    }
+    if(!html){
+      html='<div class="msearch-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><div>Tidak ada hasil untuk "'+_msEsc(q)+'"</div></div>';
+    }
+    document.getElementById('mSearchBody').innerHTML=html;
+  }
+
+  /* ── Scroll-lock global ───────────────────────────────────────────────
+     Karena .wrap yang men-scroll (bukan body), kode lama yang mengunci scroll
+     lewat document.body.style.overflow='hidden' (bottom sheet di customers/
+     payments/hotspot) perlu ikut mengunci .wrap. Observer ini menyinkronkan
+     overflow body → .wrap otomatis tanpa mengubah script tiap halaman. */
+  (function(){
+    var wrap = document.querySelector('.wrap');
+    if(!wrap || !window.MutationObserver) return;
+    var obs = new MutationObserver(function(){
+      var ov = document.body.style.overflow;
+      if(ov === 'hidden'){ if(wrap.style.overflow !== 'hidden') wrap.style.overflow='hidden'; }
+      else { if(wrap.style.overflow === 'hidden') wrap.style.overflow=''; }
+    });
+    obs.observe(document.body, { attributes:true, attributeFilter:['style'] });
+  })();
+
+  /* ══════════════════ NATIVE-FEEL: HAPTIC ══════════════════
+     Getar halus saat interaksi. Pakai Capacitor Haptics kalau ada (APK),
+     fallback ke navigator.vibrate (WebView Android). Aman di web (no-op). */
+  function haptic(ms){
+    try{
+      if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics){
+        var style = ms>=20?'Medium':(ms>=12?'Light':'Light');
+        Capacitor.Plugins.Haptics.impact({ style: style });
+        return;
+      }
+      if(navigator.vibrate){ navigator.vibrate(ms||10); }
+    }catch(_){ }
+  }
+  // Getar otomatis di elemen interaktif umum (tombol, tab, item daftar, nav).
+  document.addEventListener('click', function(e){
+    var el=e.target.closest('button, .tab, .bn-item, .mdr-item, .conv, .svc, .kpi, a[href], .fab, .head-add, [data-haptic]');
+    if(!el) return;
+    if(el.hasAttribute('disabled')) return;
+    haptic(el.matches('.fab, .send-btn, .btn-con, .send-btn') ? 16 : 9);
+  }, true);
+
+  /* ══════════════════ NATIVE-FEEL: RIPPLE ══════════════════
+     Efek sentuh material pada tombol & item yang bisa ditekan. */
+  (function(){
+    var style=document.createElement('style');
+    style.textContent=
+      '.flyn-ripple-host{position:relative;overflow:hidden;}'+
+      '.flyn-ripple{position:absolute;border-radius:50%;transform:scale(0);opacity:.35;'+
+      'background:currentColor;pointer-events:none;animation:flynRipple .55s ease-out forwards;mix-blend-mode:multiply;}'+
+      '@keyframes flynRipple{to{transform:scale(2.4);opacity:0;}}'+
+      '@media (prefers-reduced-motion:reduce){.flyn-ripple{display:none;}}';
+    document.head.appendChild(style);
+
+    document.addEventListener('pointerdown', function(e){
+      var el=e.target.closest('button, .tab, .bn-item, .mdr-item, .conv, .svc, .fab, .head-add, .add-dev-btn, .send-btn');
+      if(!el || el.hasAttribute('disabled')) return;
+      var rect=el.getBoundingClientRect();
+      var size=Math.max(rect.width, rect.height);
+      var host=el;
+      if(!host.classList.contains('flyn-ripple-host')) host.classList.add('flyn-ripple-host');
+      var r=document.createElement('span');
+      r.className='flyn-ripple';
+      r.style.width=r.style.height=size+'px';
+      r.style.left=(e.clientX-rect.left-size/2)+'px';
+      r.style.top=(e.clientY-rect.top-size/2)+'px';
+      host.appendChild(r);
+      setTimeout(function(){ if(r.parentNode) r.parentNode.removeChild(r); }, 560);
+    }, true);
+  })();
+
+  /* ══════════════════ NATIVE-FEEL: TRANSISI HALAMAN ══════════════════
+     Fade+slide halus saat masuk halaman & saat pindah via link internal,
+     sehingga navigasi terasa seperti app native, bukan reload web. */
+  (function(){
+    var wrap=document.querySelector('.wrap');
+    if(wrap){
+      wrap.style.animation='flynPageIn .26s ease';
+    }
+    var st=document.createElement('style');
+    st.textContent='@keyframes flynPageIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}'+
+      '@keyframes flynPageOut{from{opacity:1;}to{opacity:0;transform:translateY(-6px);}}'+
+      '@media (prefers-reduced-motion:reduce){.wrap{animation:none !important;}}';
+    document.head.appendChild(st);
+
+    // Intersepsi navigasi internal utk animasi keluar singkat (tanpa memblokir).
+    document.addEventListener('click', function(e){
+      var a=e.target.closest('a[href]');
+      if(!a) return;
+      if(a.hasAttribute('onclick')) return;                 // sudah dihandle JS halaman
+      if(e.defaultPrevented) return;
+      var href=a.getAttribute('href')||'';
+      if(a.target==='_blank' || href.charAt(0)==='#' || /^(https?:|mailto:|tel:|javascript:)/i.test(href)) return;
+      if(href.indexOf('/mobile')!==0) return;               // hanya antar halaman mobile
+      if(a.hasAttribute('data-no-transition')) return;
+      if(location.pathname===href){ e.preventDefault(); return; }
+      e.preventDefault();
+      // Kalau drawer terbuka, tutup dulu biar transisi bersih.
+      if(typeof mdrClose==='function'){ try{ mdrClose(); }catch(_){ } }
+      if(wrap) wrap.style.animation='flynPageOut .16s ease forwards';
+      setTimeout(function(){ location.href=href; }, 140);
+    }, true);
+  })();
+
+  /* ══════════════════ NATIVE-FEEL: SPLASH BRIDGE ══════════════════
+     Splash native sesungguhnya diatur plugin Capacitor SplashScreen (di sisi
+     APK). Di sini kita sembunyikan splash native begitu web siap, supaya tak
+     ada layar putih kosong (flash) sebelum konten tampil. */
+  (function(){
+    function hideNativeSplash(){
+      try{
+        if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.SplashScreen){
+          Capacitor.Plugins.SplashScreen.hide();
+        }
+      }catch(_){ }
+    }
+    if(document.readyState==='complete') hideNativeSplash();
+    else window.addEventListener('load', hideNativeSplash);
+  })();
+
+  /* ══════════════════ NATIVE-FEEL: STATUS BAR & VIEWPORT ══════════════════
+     Set warna status bar APK agar serasi dengan header (bukan hitam default). */
+  (function(){
+    try{
+      if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.StatusBar){
+        Capacitor.Plugins.StatusBar.setStyle({ style: 'DARK' });      // teks gelap
+        Capacitor.Plugins.StatusBar.setBackgroundColor({ color: '#ffffff' });
+        Capacitor.Plugins.StatusBar.setOverlaysWebView({ overlay: false });
+      }
+    }catch(_){ }
+  })();
+</script>

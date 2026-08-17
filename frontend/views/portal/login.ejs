@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e40af">
+  <title>Customer Portal — Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --font:'Plus Jakarta Sans',sans-serif;
+      --blue:#2563eb;--blue2:#1d4ed8;--blue3:#1e40af;--blue-dark:#0b1e4f;
+      --teal:#06b6d4;
+      --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+      --text:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+      --red:#ef4444;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;}
+    body{
+      font-family:var(--font);
+      background:var(--blue-dark);
+      color:var(--text);
+      min-height:100dvh;
+      max-width:480px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+      overflow-x:hidden;
+    }
+
+    /* ═══ HERO (bg image + overlay gradient blue) ═══ */
+    .hero{
+      position:relative;
+      background:linear-gradient(160deg,#1e40af 0%,#2563eb 55%,#0284c7 100%);
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      padding:22px 24px 94px;
+      color:#fff;
+      flex-shrink:0;
+      min-height:280px;
+      overflow:hidden;
+      transition:opacity .4s;
+    }
+    /* Overlay gradient (always applied, opacity dari setting) */
+    .hero::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(155deg, rgba(11,30,79,var(--hero-top-op,.85)) 0%, rgba(30,64,175,var(--hero-mid-op,.75)) 45%, rgba(37,99,235,var(--hero-bot-op,.65)) 100%);
+      z-index:1;
+      pointer-events:none;
+      transition:opacity .3s;
+    }
+    /* Decorative blobs */
+    .hero::after{
+      content:'';position:absolute;top:-60px;right:-40px;width:220px;height:220px;
+      background:radial-gradient(circle,rgba(6,182,212,.28),transparent 70%);
+      border-radius:50%;z-index:1;pointer-events:none;
+    }
+    .hero-content{
+      position:relative;z-index:2;
+      display:flex;flex-direction:column;height:100%;
+    }
+
+    /* Top bar with back button */
+    .top-bar{
+      display:flex;align-items:center;margin-bottom:42px;
+    }
+    .back-btn{
+      width:38px;height:38px;border-radius:12px;
+      background:rgba(255,255,255,.18);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.22);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;font-size:16px;
+      transition:all .2s;
+    }
+    .back-btn:hover{background:rgba(255,255,255,.28);transform:translateX(-2px);}
+    .back-btn svg{width:18px;height:18px;}
+
+    /* Brand block — 6 modes */
+    .brand-block{
+      text-align:center;
+      padding:12px 0 0;
+    }
+    .brand-lockup{
+      display:flex;align-items:center;justify-content:center;gap:12px;
+      margin-bottom:8px;
+    }
+
+    /* Mode 1: text-only — no logo */
+    .bm-text .brand-lockup-logo{display:none;}
+
+    /* Mode 2: inline lockup — small logo beside name */
+    .bm-inline .brand-lockup-logo{
+      width:38px;height:38px;border-radius:10px;
+      background:#fff;padding:5px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 14px rgba(0,0,0,.15);
+    }
+    .bm-inline .brand-lockup-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+    .bm-inline .brand-lockup-logo svg{width:22px;height:22px;color:var(--blue3);}
+    .bm-inline .brand-name{font-size:30px;margin-bottom:0;}
+
+    /* Mode 3: solid chip — logo in white rounded box ABOVE name */
+    .bm-chip .brand-lockup{display:block;margin-bottom:0;}
+    .bm-chip .brand-lockup-logo{
+      width:60px;height:60px;border-radius:14px;
+      background:#fff;padding:10px;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 14px;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+    }
+    .bm-chip .brand-lockup-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+    .bm-chip .brand-lockup-logo svg{width:32px;height:32px;color:var(--blue3);}
+
+    /* Mode 4: glass — original frosted glass look */
+    .bm-glass .brand-lockup{display:block;margin-bottom:0;}
+    .bm-glass .brand-lockup-logo{
+      width:64px;height:64px;border-radius:18px;
+      background:rgba(255,255,255,.18);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 14px;padding:10px;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+    }
+    .bm-glass .brand-lockup-logo img{max-width:100%;max-height:100%;object-fit:contain;border-radius:10px;}
+    .bm-glass .brand-lockup-logo svg{width:32px;height:32px;color:#fff;}
+
+    /* Mode 5: circular badge */
+    .bm-circle .brand-lockup{display:block;margin-bottom:0;}
+    .bm-circle .brand-lockup-logo{
+      width:68px;height:68px;border-radius:50%;
+      background:#fff;padding:13px;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 14px;
+      box-shadow:0 0 0 4px rgba(255,255,255,.22), 0 8px 24px rgba(0,0,0,.2);
+    }
+    .bm-circle .brand-lockup-logo img{max-width:100%;max-height:100%;object-fit:contain;border-radius:50%;}
+    .bm-circle .brand-lockup-logo svg{width:32px;height:32px;color:var(--blue3);}
+
+    /* Mode 6: logo only — big logo, hide brand name */
+    .bm-logo-only .brand-lockup{display:block;margin-bottom:0;}
+    .bm-logo-only .brand-lockup-logo{
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 14px;height:60px;
+    }
+    .bm-logo-only .brand-lockup-logo img{max-height:60px;max-width:220px;object-fit:contain;filter:drop-shadow(0 2px 12px rgba(0,0,0,.25));}
+    .bm-logo-only .brand-lockup-logo svg{width:48px;height:48px;color:#fff;}
+    .bm-logo-only .brand-name{display:none;}
+
+    .brand-name{
+      font-size:34px;font-weight:900;
+      letter-spacing:-.6px;line-height:1.1;
+      margin-bottom:8px;
+      text-shadow:0 2px 12px rgba(0,0,0,.2);
+    }
+    .brand-tag{
+      font-size:13.5px;font-weight:500;
+      color:rgba(255,255,255,.85);
+      letter-spacing:.1px;
+    }
+
+    /* ═══ SHEET (rounded, overlapping hero) ═══ */
+    .sheet{
+      background:#fff;
+      border-radius:30px 30px 0 0;
+      padding:30px 24px 20px;
+      margin-top:-40px;
+      position:relative;
+      z-index:3;
+      flex:1;
+      display:flex;flex-direction:column;
+      box-shadow:0 -10px 30px rgba(0,0,0,.12);
+    }
+
+    /* Drag handle (optional visual touch) */
+    .sheet::before{
+      content:'';display:block;
+      width:44px;height:4px;border-radius:2px;
+      background:#e2e8f0;
+      margin:0 auto 20px;
+    }
+
+    .welcome{text-align:center;margin-bottom:26px;}
+    .welcome h2{
+      font-size:26px;font-weight:800;
+      color:var(--text);
+      letter-spacing:-.5px;
+      margin-bottom:6px;
+    }
+    .welcome p{
+      font-size:13px;
+      color:var(--muted);
+      font-weight:500;
+    }
+
+    /* Error msg */
+    .error-msg{
+      display:none;
+      background:#fef2f2;border:1px solid #fecaca;
+      color:#991b1b;font-size:12.5px;font-weight:600;
+      padding:11px 14px;border-radius:12px;
+      margin-bottom:14px;line-height:1.45;
+    }
+
+    /* Form */
+    .form-group{margin-bottom:14px;}
+    .input-card{
+      background:#f8fafc;
+      border:1.5px solid #e2e8f0;
+      border-radius:14px;
+      padding:12px 16px;
+      transition:all .2s;
+    }
+    .input-card:focus-within{
+      border-color:var(--blue);
+      background:#fff;
+      box-shadow:0 0 0 4px rgba(37,99,235,.08);
+    }
+    .input-label{
+      font-size:11px;font-weight:700;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.3px;
+      margin-bottom:3px;
+    }
+    .input-row{
+      display:flex;align-items:center;gap:8px;
+    }
+    .input-row input{
+      flex:1;border:none;outline:none;background:transparent;
+      font-family:inherit;
+      font-size:15px;font-weight:600;
+      color:var(--text);
+      padding:2px 0;
+    }
+    .input-row input::placeholder{color:var(--muted2);font-weight:500;}
+    .toggle-pw{
+      background:none;border:none;cursor:pointer;
+      color:var(--muted);padding:4px;
+      display:flex;align-items:center;justify-content:center;
+      transition:color .2s;
+    }
+    .toggle-pw:hover{color:var(--blue);}
+    .toggle-pw svg{width:20px;height:20px;}
+
+    /* Submit button */
+    .btn-login{
+      width:100%;
+      background:linear-gradient(135deg,var(--blue),var(--blue2));
+      color:#fff;border:none;
+      padding:15px;border-radius:14px;
+      font-size:15px;font-weight:700;
+      font-family:inherit;
+      cursor:pointer;
+      transition:all .2s;
+      position:relative;overflow:hidden;
+      margin-top:18px;
+      box-shadow:0 10px 24px rgba(37,99,235,.35);
+      display:flex;align-items:center;justify-content:center;
+      min-height:52px;
+    }
+    .btn-login:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 30px rgba(37,99,235,.45);}
+    .btn-login:active{transform:translateY(0);}
+    .btn-login:disabled{opacity:.75;cursor:not-allowed;transform:none;}
+
+    .spinner{
+      display:none;width:20px;height:20px;
+      border:2.5px solid rgba(255,255,255,.35);
+      border-top-color:#fff;border-radius:50%;
+      animation:spin .6s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* Forgot */
+    .forgot{text-align:center;margin-top:16px;}
+    .forgot a{
+      color:var(--muted);font-size:13px;font-weight:600;
+      text-decoration:none;transition:color .2s;
+    }
+    .forgot a:hover{color:var(--blue);}
+
+    /* Hint */
+    .hint{
+      background:#eff6ff;border:1px solid #bfdbfe;
+      border-radius:12px;padding:12px 14px;
+      margin-top:20px;
+      font-size:11.5px;color:#1e40af;
+      line-height:1.55;text-align:center;
+    }
+    .hint strong{color:#1e3a8a;font-weight:700;}
+
+    /* Help footer */
+    .help-footer{
+      margin-top:16px;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      flex-wrap:wrap;
+    }
+    .help-txt{font-size:13px;color:var(--muted);font-weight:500;}
+    .help-btn{
+      display:inline-flex;align-items:center;gap:6px;
+      background:linear-gradient(135deg,var(--blue2),var(--blue3));
+      color:#fff;text-decoration:none;
+      padding:8px 14px;border-radius:20px;
+      font-size:12.5px;font-weight:700;
+      transition:all .2s;
+      box-shadow:0 4px 10px rgba(30,64,175,.25);
+    }
+    .help-btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(30,64,175,.35);}
+    .help-btn svg{width:14px;height:14px;}
+
+    /* Legal footer (Syarat & Ketentuan) */
+    .legal-footer{
+      margin-top:auto;padding-top:20px;text-align:center;
+      min-height:18px;
+    }
+    .legal-footer a{
+      color:var(--muted);font-size:12px;font-weight:600;
+      text-decoration:none;transition:color .2s;
+      border-bottom:1px solid transparent;padding-bottom:1px;
+    }
+    .legal-footer a:hover{color:var(--blue);border-bottom-color:var(--blue);}
+
+    /* Responsive */
+    @media(max-width:380px){
+      .brand-name{font-size:28px;}
+      .welcome h2{font-size:22px;}
+      .sheet{padding:26px 20px 18px;}
+      .hero{padding:18px 18px 88px;min-height:260px;}
+    }
+    @media(min-height:740px){.hint{margin-top:28px;}}
+  </style>
+</head>
+<body>
+  <!-- ════════════════════════════════════════════════════════════════
+       Auto-restore portal session — pattern sama dengan /login admin.
+       Cek localStorage `portal_token`, kalau ada panggil
+       /portal/api/auth/restore-cookie. Kalau valid → redirect ke
+       /portal/dashboard tanpa input password.
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="portalLoginShade" style="position:fixed;inset:0;background:#0a1428;z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px;color:#94a3b8;font-family:Inter,sans-serif;font-size:13px;">
+      <div style="width:32px;height:32px;border:3px solid rgba(148,163,184,.2);border-top-color:#3b82f6;border-radius:50%;animation:plspin 0.8s linear infinite;"></div>
+      <div>Memulihkan sesi…</div>
+    </div>
+  </div>
+  <style>@keyframes plspin{to{transform:rotate(360deg)}}</style>
+  <script>
+    (async function tryRestorePortalSession() {
+      const shade = document.getElementById('portalLoginShade');
+      try {
+        const t = localStorage.getItem('portal_token');
+        if (!t || t === 'null' || t === 'undefined') {
+          shade.remove();
+          return;
+        }
+        const r = await fetch('/portal/api/auth/restore-cookie', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + t, 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.success && j.redirect) {
+            window.location.replace(j.redirect);
+            return;
+          }
+        }
+        localStorage.removeItem('portal_token');
+        localStorage.removeItem('portal_customer');
+      } catch (_) { /* network err — fallback ke form */ }
+      shade.remove();
+    })();
+  </script>
+
+  <!-- ═══ HERO (dynamic bg image + overlay) ═══ -->
+  <div class="hero" id="heroSection">
+    <div class="hero-content">
+      <div class="top-bar">
+        
+        </button>
+      </div>
+
+      <div class="brand-block bm-inline" id="brandBlock">
+        <div class="brand-lockup">
+          <div class="brand-lockup-logo" id="brandLogo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a10 10 0 0 1 10 10M12 2a10 10 0 0 0-10 10M12 22a10 10 0 0 1-10-10M12 22a10 10 0 0 0 10-10"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div class="brand-name" id="portalBrand">Customer Portal</div>
+        </div>
+        <div class="brand-tag" id="portalTag">Akses layanan internet Anda</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SHEET (white, rounded) ═══ -->
+  <div class="sheet">
+    <div class="welcome">
+      <h2 id="welcomeTitle">Welcome Back</h2>
+      <p id="welcomeSub">Masukkan detail akun Anda</p>
+    </div>
+
+    <div class="error-msg" id="errMsg"></div>
+
+    <div class="form-group">
+      <div class="input-card">
+        <div class="input-label">ID Pelanggan / No. HP</div>
+        <div class="input-row">
+          <input type="text" id="inputCID" placeholder="CID001 atau 08xxxxxxxxxx" autocomplete="username" autofocus>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="input-card">
+        <div class="input-label">Password</div>
+        <div class="input-row">
+          <input type="password" id="inputPW" placeholder="Password Anda" autocomplete="current-password">
+          <button type="button" class="toggle-pw" onclick="togglePassword()" aria-label="Show password">
+            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-login" id="btnLogin" onclick="doLogin()">
+      <span id="btnText">Sign in</span>
+      <div class="spinner" id="btnSpinner"></div>
+    </button>
+
+    <div class="forgot">
+      <a href="javascript:void(0)" onclick="forgotPw()">Lupa password?</a>
+    </div>
+
+    <div class="hint">
+      <strong>Pertama kali login?</strong><br>
+      Gunakan ID Pelanggan dan nomor HP yang terdaftar sebagai password.
+    </div>
+
+    <div class="help-footer">
+      <span class="help-txt">Butuh bantuan?</span>
+      <a href="javascript:void(0)" class="help-btn" onclick="contactCS()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+        Hubungi CS
+      </a>
+    </div>
+
+    <div class="legal-footer" id="legalFooter">
+      <a href="#" id="termsLink" target="_blank" rel="noopener" style="display:none">Syarat &amp; Ketentuan</a>
+    </div>
+  </div>
+
+<script>
+var _CS_WA = '';
+
+// ── Load brand/hero from public meta endpoint ──
+(async function loadMeta(){
+  try {
+    var r = await fetch('/portal/api/public/meta');
+    var j = await r.json();
+    if (!j.success || !j.data) return;
+    var m = j.data;
+
+    if (m.brand_name)     document.getElementById('portalBrand').textContent = m.brand_name;
+    if (m.tagline)        document.getElementById('portalTag').textContent   = m.tagline;
+    if (m.welcome_title)  document.getElementById('welcomeTitle').textContent = m.welcome_title;
+    if (m.welcome_sub)    document.getElementById('welcomeSub').textContent   = m.welcome_sub;
+    _CS_WA = m.company_whatsapp || '';
+
+    // Link Syarat & Ketentuan (tampil hanya bila URL diisi di pengaturan).
+    if (m.terms_url) {
+      var tl = document.getElementById('termsLink');
+      tl.href = m.terms_url;
+      if (m.terms_label) tl.textContent = m.terms_label;
+      tl.style.display = 'inline-block';
+    }
+
+    // Logo di brand circle — bangun lewat DOM (bukan innerHTML) & tolak skema
+    // berbahaya seperti javascript:/data: untuk mencegah XSS via setting logo_url.
+    if (m.logo_url && /^(https?:\/\/|\/)/i.test(m.logo_url)) {
+      var bl = document.getElementById('brandLogo');
+      var img = document.createElement('img');
+      img.src = m.logo_url;
+      img.alt = 'logo';
+      bl.textContent = '';
+      bl.appendChild(img);
+    }
+
+    // Apply logo mode (6 opsi: text | inline | chip | glass | circle | logo-only)
+    var mode = m.logo_mode || 'inline';
+    var validModes = ['text','inline','chip','glass','circle','logo-only'];
+    if (validModes.indexOf(mode) === -1) mode = 'inline';
+    var bb = document.getElementById('brandBlock');
+    if (bb) {
+      validModes.forEach(function(x){ bb.classList.remove('bm-' + x); });
+      bb.classList.add('bm-' + mode);
+    }
+
+    // Hero background image
+    if (m.hero_image) {
+      var hero = document.getElementById('heroSection');
+      // Preload biar smooth
+      var img = new Image();
+      img.onload = function(){
+        hero.style.backgroundImage = 'url("' + m.hero_image + '")';
+      };
+      img.src = m.hero_image;
+
+      // Apply overlay opacity (0-1) → gradient blue dengan opacity tersebut
+      var ov = parseFloat(m.hero_overlay);
+      if (!isNaN(ov) && ov >= 0 && ov <= 1) {
+        document.documentElement.style.setProperty('--hero-top-op', Math.min(1, ov + 0.3));
+        document.documentElement.style.setProperty('--hero-mid-op', ov);
+        document.documentElement.style.setProperty('--hero-bot-op', Math.max(0, ov - 0.15));
+      }
+    }
+
+    // Title page
+    if (m.brand_name) document.title = m.brand_name + ' — Login';
+  } catch(e) { /* silent */ }
+})();
+
+function togglePassword(){
+  var pw = document.getElementById('inputPW');
+  var eye = document.getElementById('eyeIcon');
+  if(pw.type === 'password'){
+    pw.type = 'text';
+    eye.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  } else {
+    pw.type = 'password';
+    eye.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+}
+
+function goBack(){
+  if(window.history.length > 1) window.history.back();
+  else window.location.href = '/';
+}
+
+function contactCS(){
+  if (_CS_WA) {
+    window.open('https://wa.me/' + _CS_WA, '_blank');
+  } else {
+    alert('Nomor CS belum disetel. Silakan coba lagi nanti.');
+  }
+}
+
+function forgotPw(){
+  if (_CS_WA) {
+    var msg = encodeURIComponent('Halo, saya lupa password portal customer. Mohon bantuan reset.');
+    window.open('https://wa.me/' + _CS_WA + '?text=' + msg, '_blank');
+  } else {
+    alert('Silakan hubungi CS untuk reset password.');
+  }
+}
+
+// Enter key navigation
+document.getElementById('inputCID').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') document.getElementById('inputPW').focus();
+});
+document.getElementById('inputPW').addEventListener('keydown', function(e){
+  if(e.key === 'Enter') doLogin();
+});
+
+async function doLogin(){
+  var cid = document.getElementById('inputCID').value.trim();
+  var pw  = document.getElementById('inputPW').value;
+  var err = document.getElementById('errMsg');
+  var btn = document.getElementById('btnLogin');
+  var txt = document.getElementById('btnText');
+  var sp  = document.getElementById('btnSpinner');
+
+  if(!cid || !pw){
+    err.textContent = 'ID Pelanggan dan Password wajib diisi';
+    err.style.display = 'block';
+    return;
+  }
+
+  err.style.display = 'none';
+  btn.disabled = true;
+  txt.style.display = 'none';
+  sp.style.display = 'block';
+
+  try {
+    var r = await fetch('/portal/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: cid, password: pw })
+    });
+    var j = await r.json();
+
+    if(!j.success){
+      err.textContent = j.message || 'Login gagal';
+      err.style.display = 'block';
+    } else {
+      localStorage.setItem('portal_token', j.token);
+      localStorage.setItem('portal_customer', JSON.stringify(j.customer));
+      document.cookie = 'portal_token=' + j.token + ';path=/portal;max-age=86400;SameSite=Lax';
+      window.location.href = '/portal/dashboard';
+    }
+  } catch (e) {
+    err.textContent = 'Tidak dapat terhubung ke server';
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    txt.style.display = '';
+    sp.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>

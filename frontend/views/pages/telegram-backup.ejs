@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/telegram-shared.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+    <div class="et-page">
+
+      <!-- Header -->
+      <div class="et-hdr">
+        <div>
+          <div class="et-title">
+            Telegram Backup
+          </div>
+          <div class="et-sub">Backup konfigurasi MikroTik & kirim file-nya langsung ke Telegram — terjadwal otomatis</div>
+        </div>
+        <div class="et-actions">
+          <button class="et-btn et-btn-tg" id="btnRunNow" onclick="runNow()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Backup Sekarang
+          </button>
+          <button class="et-btn et-btn-primary" id="btnSave" onclick="saveAll()">
+            <svg id="btnSaveIcon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="btnSaveLabel">Simpan Perubahan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat strip -->
+      <div class="rm-strip">
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Status Jadwal</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scStatus" style="font-size:19px;">—</div>
+            <div class="rm-sc-meta"><span class="rm-status-dot" id="scStatusDot" style="background:#cbd5e1;"></span><span class="rm-sc-sub" id="scStatusSub">memuat…</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Frekuensi</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scFreq" style="font-size:19px;">Harian</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-blue" id="scFreqPill">03:00</span><span class="rm-sc-sub">jam backup</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Router Dipilih</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scRouters">0</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-teal" id="scRoutersPill">0 router</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Terakhir Backup</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scLast" style="font-size:16px;">—</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-grey" id="scLastPill">belum ada</span></div></div></div>
+        </div>
+      </div>
+
+      <div id="tgWarn" class="tg-banner" style="display:none;">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z"/></svg>
+        <span id="tgWarnText"></span>
+        <a href="/telegram" class="tg-banner-link">Buka Telegram Center →</a>
+      </div>
+
+      <!-- Mobile tabs -->
+      <div class="et-mtabs">
+        <button type="button" class="et-mtab active" data-mtab="edit" onclick="mtab('edit')">Pengaturan</button>
+        <button type="button" class="et-mtab" data-mtab="prev" onclick="mtab('prev')">Preview</button>
+      </div>
+
+      <div class="et-grid m-edit tg-grid-2" id="etGrid">
+        <!-- LEFT -->
+        <div class="et-editor-col">
+          <!-- Schedule -->
+          <div class="et-card" style="margin-bottom:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Jadwal Backup
+              <label class="et-switch sw-blue" style="margin-left:auto;" title="Aktifkan jadwal otomatis">
+                <input type="checkbox" id="bk-enabled" onchange="onAnyChange();refreshStatus()"><span class="et-track"></span>
+              </label>
+            </div>
+            <div class="et-editor">
+              <div class="et-field">
+                <div class="et-label">Frekuensi</div>
+                <select class="et-sel" id="bk-frequency" onchange="onAnyChange();onFreqChange()">
+                  <option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option>
+                </select>
+              </div>
+              <div class="tg-row2">
+                <div class="et-field">
+                  <div class="et-label">Jam Backup</div>
+                  <input type="time" class="et-inp" id="bk-time" onchange="onAnyChange();refreshStatus()">
+                </div>
+                <div class="et-field" id="bk-dow-wrap" style="display:none;">
+                  <div class="et-label">Hari (mingguan)</div>
+                  <select class="et-sel" id="bk-dow" onchange="onAnyChange()">
+                    <option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option>
+                    <option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option><option value="0">Minggu</option>
+                  </select>
+                </div>
+                <div class="et-field" id="bk-dom-wrap" style="display:none;">
+                  <div class="et-label">Tanggal (bulanan)</div>
+                  <select class="et-sel" id="bk-dom" onchange="onAnyChange()"></select>
+                </div>
+              </div>
+              <label class="tg-check" id="bk-binary-row" style="margin-bottom:14px;">
+                <span class="tg-check-ic" style="background:rgba(34,158,217,.13)"><svg width="17" height="17" fill="none" stroke="#229ED9" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></span>
+                <span class="tg-check-tx"><div class="tg-check-t">Sertakan file biner (.backup)</div><div class="tg-check-d">Selain .rsc — restore total termasuk user/password</div></span>
+                <label class="et-switch"><input type="checkbox" id="bk-binary" onchange="onAnyChange();syncCheck(this)"><span class="et-track"></span></label>
+              </label>
+              <div class="et-field" style="margin-bottom:0;">
+                <div class="et-label">Tujuan Chat ID <span style="font-weight:600;color:#94a3b8;">(opsional)</span></div>
+                <input type="text" class="et-inp" id="bk-chat" placeholder="Kosongkan = pakai Chat ID utama" oninput="onAnyChange()">
+                <div class="et-hint">Disarankan grup privat/arsip. Multi: pisah koma.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Router selection -->
+          <div class="et-card" style="margin-bottom:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01"/></svg>
+              Pilih Router
+              <span class="cnt" id="bk-router-cnt">0</span>
+            </div>
+            <div class="et-editor">
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button class="et-link-btn" onclick="selectAllRouters(true)">Pilih semua</button>
+                <button class="et-link-btn" onclick="selectAllRouters(false)">Kosongkan</button>
+                <span style="margin-left:auto;font-size:11px;color:#94a3b8;">Kosong = semua router aktif</span>
+              </div>
+              <div id="bk-routers"><div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px;">Memuat router…</div></div>
+            </div>
+          </div>
+
+          <!-- Caption -->
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h6m-6 8l-4-4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v14z"/></svg>
+              Caption File (opsional)
+            </div>
+            <div class="et-editor">
+              <div class="et-hint" style="margin-bottom:8px;">Keterangan yang menyertai tiap file. Kosongkan untuk format bawaan.</div>
+              <div class="tg-ph-row" id="bk-phs"></div>
+              <textarea id="bk-caption" class="et-ta" style="min-height:100px;" placeholder="Mis: 💾 Backup {router} ({ip})&#10;File: {file} · {ukuran}&#10;{tanggal}" oninput="onAnyChange();renderPreview()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT preview -->
+        <div class="et-preview-col">
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Kiriman
+            </div>
+            <div class="tg-cat-tag"><span class="rm-status-dot" style="background:#229ED9;"></span><span>Contoh file backup di Telegram</span></div>
+            <div class="tg-chat">
+              <div class="tg-bar">
+                <div class="tg-av"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></div>
+                <div class="tg-meta"><div class="tg-name">Bot Backup</div><div class="tg-status">bot</div></div>
+              </div>
+              <div class="tg-body">
+                <div class="tg-doc">
+                  <div class="tg-doc-ic"><svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                  <div class="tg-doc-m"><div class="tg-doc-n" id="docName">Router-Utama_2026-06-16.rsc</div><div class="tg-doc-s" id="docSize">42.5 KB · RSC</div></div>
+                </div>
+                <div class="tg-bubble" id="tgBubble"><div class="tg-text" id="tgText"></div><div class="tg-time" id="tgTime">00.00</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </main>
+  </div>
+</div>
+
+<!-- Result modal -->
+<div id="resultModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card"><div class="rm-icon" id="rmIcon"></div>
+    <div class="rm-title" id="rmTitle">Berhasil</div>
+    <div class="rm-msg" id="rmMsg"></div>
+    <button class="et-btn et-btn-primary rm-ok" onclick="closeResult()">Selesai</button>
+  </div>
+</div>
+
+<script>window.__COMPANY = <%- JSON.stringify(appName || 'ISP') %>;</script>
+<script src="/js/app.js"></script>
+<script src="/js/telegram-backup.js"></script>
+</body>
+</html>

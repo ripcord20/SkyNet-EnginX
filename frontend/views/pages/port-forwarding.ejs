@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --pf-p:#0284c7; --pf-p-l:#f0f9ff;
+      --pf-green:#16a34a; --pf-green-l:#f0fdf4;
+      --pf-red:#dc2626; --pf-red-l:#fef2f2;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .pf { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    .pf-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .pf-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .pf-hdr-l p { font-size:13px; color:var(--muted); margin:0; }
+    .pf-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-primary { background:var(--pf-p); border-color:var(--pf-p); color:#fff; }
+    .btn-primary:hover { background:#0369a1; }
+    .btn-red { background:var(--pf-red); border-color:var(--pf-red); color:#fff; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    .pf-info { display:flex; gap:10px; align-items:flex-start; background:var(--pf-p-l); border:1.5px solid #bae6fd; border-radius:12px; padding:12px 14px; margin-bottom:18px; font-size:12.5px; color:#075985; }
+    .pf-info svg { width:18px; height:18px; flex-shrink:0; margin-top:1px; }
+
+    .pf-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; margin-bottom:20px; }
+    .pf-tbl-hdr { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .pf-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .pf-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+    .pf-filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .pf-filters select, .pf-filters input { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; outline:none; background:#f8fafc; font-family:inherit; }
+
+    table.pf-table { width:100%; border-collapse:collapse; }
+    .pf-table thead tr { background:#f8fafc; }
+    .pf-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .pf-table tbody tr { border-bottom:1px solid #f8fafc; }
+    .pf-table tbody tr:hover { background:#f8fafc; }
+    .pf-table tbody tr:last-child { border-bottom:none; }
+    .pf-table td { padding:11px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+    .mono { font-family:monospace; font-size:12px; }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-blue { background:var(--pf-p-l); color:var(--pf-p); }
+    .badge-gray { background:#f1f5f9; color:var(--muted); }
+    .arrow-sep { color:var(--faint); margin:0 6px; }
+    .row-actions { display:flex; gap:6px; justify-content:flex-end; }
+    .icon-btn { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:pointer; color:#64748b; }
+    .icon-btn:hover { background:#f8fafc; color:#0f172a; }
+    .icon-btn svg { width:14px; height:14px; }
+    .icon-btn.danger:hover { background:var(--pf-red-l); color:var(--pf-red); border-color:#fecaca; }
+
+    .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
+    .tbl-empty svg { width:34px; height:34px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { margin:0; font-size:13px; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    .modal-hdr { padding:18px 22px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; }
+    .modal-hdr h3 { margin:0; font-size:15px; font-weight:700; }
+    .modal-close { cursor:pointer; color:var(--faint); background:none; border:none; padding:4px; }
+    .modal-body { padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .modal-ftr { padding:16px 22px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; outline:none; background:#f8fafc; color:var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--pf-p); background:#fff; box-shadow:0 0 0 3px #0284c714; }
+    .field-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  </style>
+</head>
+<body>
+<div class="app-layout pf">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="pf-hdr">
+        <div class="pf-hdr-l">
+          <h1>Port Forwarding</h1>
+          <p>Daftar konsolidasi seluruh port forward dari semua NAS mode WireGuard dalam satu tabel</p>
+        </div>
+        <div class="pf-hdr-r">
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-primary btn-sm" id="btnAddForward">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Port Forward Baru
+          </button>
+        </div>
+      </div>
+
+      <div class="pf-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+        <div>Port forwarding hanya berlaku untuk NAS dengan mode koneksi <b>WireGuard</b> (router tanpa IP publik, di-DNAT lewat tunnel). NAS mode <b>Direct</b> memakai IP publiknya sendiri sehingga tidak memerlukan port forward.</div>
+      </div>
+
+      <div class="pf-tbl-wrap">
+        <div class="pf-tbl-hdr">
+          <div class="pf-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pf-p)" stroke-width="2.5"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+            Port Forward <span class="pf-count" id="pfCount">0</span>
+          </div>
+          <div class="pf-filters">
+            <input type="text" id="filterSearch" placeholder="Cari NAS / situs / port..." style="min-width:200px;">
+            <select id="filterSite"><option value="">Semua Situs</option></select>
+            <select id="filterProto">
+              <option value="">Semua Protokol</option>
+              <option value="tcp">TCP</option>
+              <option value="udp">UDP</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="pf-table">
+            <thead><tr><th>Situs</th><th>NAS</th><th>Publik</th><th></th><th>Target (Tunnel)</th><th>Protokol</th><th>Keterangan</th><th style="text-align:right">Aksi</th></tr></thead>
+            <tbody id="pfTbody"><tr><td colspan="8"><div class="tbl-empty"><p>Memuat...</p></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Port Forward Baru -->
+<div class="modal-overlay" id="pfModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Port Forward Baru</h3><button class="modal-close" onclick="closeModal('pfModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>NAS (mode WireGuard)</label>
+        <select id="pfNasSelect"></select>
+        <div class="field-hint">Hanya NAS bertipe koneksi WireGuard yang bisa diberi port forward</div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Port Publik</label><input type="text" id="pfPublicPort" placeholder="8728" class="mono"></div>
+        <div class="field"><label>Port Target (di NAS)</label><input type="text" id="pfTargetPort" placeholder="8728" class="mono"></div>
+      </div>
+      <div class="field">
+        <label>Protokol</label>
+        <select id="pfProtocol"><option value="tcp">TCP</option><option value="udp">UDP</option></select>
+      </div>
+      <div class="field"><label>Keterangan (opsional)</label><input type="text" id="pfDescription" placeholder="mis. Winbox API"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('pfModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveForward">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/port-forwarding.js"></script>
+</body>
+</html>

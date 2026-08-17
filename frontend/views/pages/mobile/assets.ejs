@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#0f9d63;--amber:#f5a623;--red:#f2545b;--violet:#8b7cf6;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px;display:flex;align-items:center;justify-content:space-between;}
+    .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;box-shadow:0 5px 14px -8px rgba(30,60,120,.2);}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:0 16px 20px;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    .anim{opacity:0;animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) forwards;}
+    /* Nilai aset hero */
+    .val-card{border-radius:18px;padding:17px 18px;margin-bottom:14px;color:#fff;background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 12px 26px -14px rgba(14,120,200,.5);}
+    .val-top{font-size:11.5px;font-weight:700;opacity:.95;margin-bottom:8px;display:flex;align-items:center;gap:7px;}
+    .val-top svg{width:16px;height:16px;}
+    .val-num{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1;}
+    .val-sub{font-size:11px;opacity:.85;margin-top:8px;font-weight:500;}
+    /* Donut komposisi */
+    .comp-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 16px;margin-bottom:14px;box-shadow:0 8px 20px -15px rgba(30,60,120,.26);}
+    .comp-title{font-size:12.5px;font-weight:800;color:#3a4a68;margin-bottom:13px;}
+    .comp-main{display:flex;align-items:center;gap:17px;}
+    .comp-donut{position:relative;width:104px;height:104px;flex-shrink:0;}
+    .comp-donut svg{width:104px;height:104px;transform:rotate(-90deg);}
+    .comp-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .comp-center b{font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1;} .comp-center span{font-size:8.5px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px;}
+    .comp-legend{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+    .lg-row{display:flex;align-items:center;gap:9px;font-size:12px;}
+    .lg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;} .lg-name{color:#5a6885;font-weight:600;} .lg-val{margin-left:auto;font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+    .search-wrap{position:relative;margin-bottom:12px;}
+    .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);}
+    .search-wrap input{width:100%;padding:13px 14px 13px 42px;border:none;background:#fff;border-radius:15px;font-size:14px;font-family:inherit;outline:none;box-shadow:0 5px 14px -9px rgba(30,60,120,.16);}
+    .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+    .chips::-webkit-scrollbar{display:none;}
+    .chip{flex-shrink:0;padding:8px 15px;border:none;background:#fff;border-radius:100px;font-size:12.5px;font-weight:700;color:#5a6885;cursor:pointer;box-shadow:0 4px 10px -7px rgba(30,60,120,.2);}
+    .chip.sel{background:var(--blue);color:#fff;}
+    .ast{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #eef1f6;border-radius:15px;padding:13px 14px;margin-bottom:10px;box-shadow:0 6px 16px -13px rgba(30,60,120,.2);}
+    .ast-ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+    .ast-ic svg{width:22px;height:22px;}
+    .ast-photo{background-size:cover;background-position:center;background-repeat:no-repeat;}
+    .ast-body{flex:1;min-width:0;} .ast-t{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ast-s{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ast-r{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px;} .ast-badge{font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:100px;white-space:nowrap;}
+    .ast-price{font-size:11px;color:#3a4a68;font-weight:700;font-variant-numeric:tabular-nums;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .sheet-ov{position:fixed;inset:0;background:rgba(20,35,60,.5);opacity:0;pointer-events:none;transition:opacity .28s;z-index:500;}
+    .sheet-ov.open{opacity:1;pointer-events:auto;}
+    .sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);z-index:501;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);}
+    .sheet.open{transform:translateY(0);}
+    .sheet-hd{position:sticky;top:0;background:#fff;padding:16px 20px 12px;border-bottom:1px solid #f1f4f9;display:flex;align-items:center;justify-content:space-between;z-index:2;}
+    .sheet-hd h3{font-size:16px;font-weight:800;} .sheet-x{width:32px;height:32px;border-radius:10px;background:#f4f6fa;border:none;color:#6b7a97;font-size:18px;cursor:pointer;}
+    .sheet-bd{padding:16px 20px 22px;}
+    .photo-box{position:relative;width:100%;height:160px;border:2px dashed #d3dce8;border-radius:14px;margin-bottom:16px;cursor:pointer;overflow:hidden;background:#f7faff;display:flex;align-items:center;justify-content:center;}
+    .photo-preview{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;}
+    .photo-hint{display:flex;flex-direction:column;align-items:center;gap:8px;color:#94a0b8;font-size:12.5px;font-weight:600;z-index:1;}
+    .photo-hint svg{width:32px;height:32px;}
+    .photo-box.has-photo{border-style:solid;border-color:#e6ebf3;}
+    .photo-box.has-photo .photo-hint{display:none;}
+    .photo-clear{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(20,35,60,.6);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:2;display:flex;align-items:center;justify-content:center;}
+    .photo-uploading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue);z-index:3;}
+    .fg{margin-bottom:14px;} .fg label{display:block;font-size:12px;font-weight:700;color:#3a4a68;margin-bottom:6px;}
+    .fg input,.fg select,.fg textarea{width:100%;padding:12px 13px;border:1px solid #e6ebf3;border-radius:12px;font-size:14px;font-family:inherit;outline:none;background:#fff;}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);}
+    .fg-row{display:flex;gap:10px;} .fg-row .fg{flex:1;}
+    .save-btn{width:100%;padding:14px;border:none;border-radius:14px;background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;margin-top:6px;}
+    .save-btn:disabled{opacity:.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:700;opacity:0;transition:opacity .25s;pointer-events:none;}
+    .toast.show{opacity:1;} .toast.ok{background:#0f9d63;} .toast.err{background:#d13b42;}
+    .fab{position:fixed;right:calc(50% - 260px + 20px);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);border:none;color:#fff;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);cursor:pointer;z-index:200;display:flex;align-items:center;justify-content:center;}
+    @media(max-width:559px){.fab{right:20px;}} .fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--blue);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="htitle">Aset & Inventaris</div><div class="hsub" id="astSub">Perangkat & barang</div></div>
+      <div class="refresh" id="refreshBtn" onclick="loadAssets(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+    <div class="content">
+      <div class="val-card anim">
+        <div class="val-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9M14 17H5M17 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>Total Nilai Aset</div>
+        <div class="val-num" id="valTotal">–</div>
+        <div class="val-sub" id="valSub">Memuat…</div>
+      </div>
+
+      <div class="comp-card anim">
+        <div class="comp-title">Komposisi Status Aset</div>
+        <div class="comp-main">
+          <div class="comp-donut" id="astDonut"></div>
+          <div class="comp-legend" id="astLegend"></div>
+        </div>
+      </div>
+
+      <div class="search-wrap anim">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="astSearch" placeholder="Cari nama, kode, serial, brand…">
+      </div>
+      <div class="chips anim" id="statusChips">
+        <div class="chip sel" data-status="">Semua</div>
+        <div class="chip" data-status="active">Terpasang</div>
+        <div class="chip" data-status="storage">Gudang</div>
+        <div class="chip" data-status="repair">Servis</div>
+        <div class="chip" data-status="damaged">Rusak</div>
+      </div>
+      <div id="astList" class="anim">
+        <div class="ast"><div class="skel" style="width:44px;height:44px;border-radius:12px;"></div><div class="ast-body"><div class="skel" style="width:130px;height:13px;margin-bottom:6px;"></div><div class="skel" style="width:90px;height:10px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="openForm()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+
+  <div class="sheet-ov" id="sheetOv" onclick="if(event.target===this)closeForm()"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-hd"><h3 id="sheetTitle">Tambah Aset</h3><button class="sheet-x" onclick="closeForm()">&times;</button></div>
+    <div class="sheet-bd">
+      <div class="photo-box" id="photoBox" onclick="document.getElementById('fPhoto').click()">
+        <div class="photo-preview" id="photoPreview"></div>
+        <div class="photo-hint" id="photoHint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Ketuk untuk tambah foto</span>
+        </div>
+        <button type="button" class="photo-clear" id="photoClear" onclick="event.stopPropagation();clearPhoto()" style="display:none;">&times;</button>
+      </div>
+      <input type="file" id="fPhoto" accept="image/*" style="display:none" onchange="onPhotoPick(this)">
+      <div class="fg"><label>Nama Aset *</label><input type="text" id="fName" placeholder="mis. Router RB5009"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Kode Aset</label><input type="text" id="fCode" placeholder="AST-001"></div>
+        <div class="fg"><label>Kategori</label><select id="fCat"><option value="">— pilih —</option></select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Brand</label><input type="text" id="fBrand" placeholder="MikroTik"></div>
+        <div class="fg"><label>Model</label><input type="text" id="fModel" placeholder="RB5009"></div>
+      </div>
+      <div class="fg"><label>Serial Number</label><input type="text" id="fSerial" placeholder="Opsional"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Status</label><select id="fStatus"><option value="active">Terpasang</option><option value="storage">Gudang</option><option value="repair">Servis</option><option value="damaged">Rusak</option><option value="inactive">Nonaktif</option><option value="disposed">Dibuang</option><option value="lost">Hilang</option></select></div>
+        <div class="fg"><label>Kondisi</label><select id="fCond"><option value="new">Baru</option><option value="good">Baik</option><option value="fair">Cukup</option><option value="poor">Buruk</option></select></div>
+      </div>
+      <div class="fg"><label>Harga Beli (Rp)</label><input type="number" id="fPrice" inputmode="numeric" placeholder="0"></div>
+      <div class="fg"><label>Lokasi</label><input type="text" id="fLoc" placeholder="mis. Gudang / Tower A"></div>
+      <div class="fg"><label>Catatan</label><textarea id="fNotes" rows="2" placeholder="Opsional"></textarea></div>
+      <button class="save-btn" id="saveBtn" onclick="saveAsset()">Simpan Aset</button>
+    </div>
+  </div>
+
+  <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg><span>Monitor</span></a>
+    </div>
+  </nav>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,opts){ const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}); try{ const r=await fetch(url,Object.assign({credentials:'include',headers},opts||{})); if(r.status===401){location.href='/login';return null;} const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;} }catch(e){return null;} }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function fmtRp(n){ n=Number(n)||0; return 'Rp '+n.toLocaleString('id-ID'); }
+    function fmtRpShort(n){ n=Number(n)||0; if(n>=1000000000)return 'Rp '+(n/1000000000).toFixed(1).replace('.0','')+'M'; if(n>=1000000)return 'Rp '+(n/1000000).toFixed(1).replace('.0','')+'jt'; if(n>=1000)return 'Rp '+Math.round(n/1000)+'rb'; return 'Rp '+n.toLocaleString('id-ID'); }
+    function toast(m,t){ const el=document.getElementById('toast'); el.textContent=m; el.className='toast show'+(t?' '+t:''); setTimeout(()=>el.classList.remove('show'),2400); }
+    let _status='', _search='', _editId=null, _cats=[], _allById={}, _photoFile=null;
+
+    const ST_LABEL={active:'Terpasang',storage:'Gudang',repair:'Servis',damaged:'Rusak',inactive:'Nonaktif',disposed:'Dibuang',lost:'Hilang'};
+    const ST_COLOR={active:'#0f9d63',storage:'#0ea5e9',repair:'#f5a623',damaged:'#f2545b',inactive:'#94a0b8',disposed:'#64748b',lost:'#8b7cf6'};
+    function stBadgeStyle(s){ const c=ST_COLOR[s]||'#94a0b8'; return 'background:'+c+'22;color:'+c+';'; }
+
+    async function loadStats(){
+      const j=await api('/api/assets/stats');
+      if(j&&j.success&&j.data){ const d=j.data;
+        document.getElementById('valTotal').textContent=fmtRp(d.total_value||0);
+        document.getElementById('valSub').textContent=(d.total||0)+' aset terdaftar';
+        renderDonut(d.by_status||{}, d.total||0);
+      }
+    }
+    function renderDonut(byStatus, total){
+      const order=['active','storage','repair','damaged','inactive','disposed','lost'];
+      const items=order.filter(s=>byStatus[s]>0).map(s=>({k:ST_LABEL[s],v:byStatus[s],col:ST_COLOR[s]}));
+      const el=document.getElementById('astDonut');
+      const R=44,C=2*Math.PI*R; let segs='',acc=0;
+      items.forEach(function(it){ const frac=total>0?it.v/total:0; const len=frac*C;
+        segs+='<circle cx="52" cy="52" r="'+R+'" fill="none" stroke="'+it.col+'" stroke-width="11" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-acc*C).toFixed(2)+'"/>'; acc+=frac; });
+      el.innerHTML='<svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="'+R+'" fill="none" stroke="#eef2f7" stroke-width="11"/>'+segs+'</svg>'+
+        '<div class="comp-center"><b>'+total+'</b><span>Aset</span></div>';
+      document.getElementById('astLegend').innerHTML=items.length?items.map(function(it){ const pct=total>0?Math.round(it.v/total*100):0;
+        return '<div class="lg-row"><span class="lg-dot" style="background:'+it.col+';"></span><span class="lg-name">'+it.k+'</span><span class="lg-val">'+it.v+' · '+pct+'%</span></div>'; }).join('')
+        : '<div style="color:#9aa7bd;font-size:12px;">Belum ada aset</div>';
+    }
+    // Peta nama-ikon (dari DB, mis. 'olt','router','device') → SVG path.
+    // DB menyimpan icon sebagai teks nama, jadi jangan tampilkan mentah.
+    const ICONS={
+      router:'<path d="M6.5 6.5h11M6.5 6.5a2 2 0 100 4h11a2 2 0 100-4"/><rect x="3" y="12" width="18" height="8" rx="2"/><line x1="7" y1="16" x2="7" y2="16"/><line x1="11" y1="16" x2="11" y2="16"/>',
+      olt:'<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><line x1="7" y1="7" x2="7" y2="7"/><line x1="7" y1="17" x2="7" y2="17"/><line x1="11" y1="7" x2="17" y2="7"/><line x1="11" y1="17" x2="17" y2="17"/>',
+      ont:'<rect x="4" y="7" width="16" height="10" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/><line x1="8" y1="12" x2="8" y2="12"/>',
+      onu:'<rect x="4" y="7" width="16" height="10" rx="2"/><path d="M8 7V5a4 4 0 018 0v2"/><line x1="8" y1="12" x2="8" y2="12"/>',
+      cable:'<path d="M4 9a2 2 0 012-2h1V5h2v2h.5a2 2 0 012 2v1a2 2 0 01-2 2H9m6 0h1a2 2 0 012 2v1a2 2 0 01-2 2h-.5v2h-2v-2H14"/>',
+      kabel:'<path d="M4 9a2 2 0 012-2h1V5h2v2h.5a2 2 0 012 2v1a2 2 0 01-2 2H9m6 0h1a2 2 0 012 2v1a2 2 0 01-2 2h-.5v2h-2v-2H14"/>',
+      server:'<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><line x1="7" y1="7.5" x2="7" y2="7.5"/><line x1="7" y1="16.5" x2="7" y2="16.5"/>',
+      antenna:'<path d="M12 20v-8M8.5 8a5 5 0 017 0M6 5.5a9 9 0 0112 0"/><circle cx="12" cy="10.5" r="1.5"/>',
+      tool:'<path d="M14.7 6.3a4 4 0 01-5.6 5.6l-4.8 4.8a1.5 1.5 0 002.1 2.1l4.8-4.8a4 4 0 005.6-5.6l-2.3 2.3-2.1-2.1z"/>',
+      tools:'<path d="M14.7 6.3a4 4 0 01-5.6 5.6l-4.8 4.8a1.5 1.5 0 002.1 2.1l4.8-4.8a4 4 0 005.6-5.6l-2.3 2.3-2.1-2.1z"/>',
+      device:'<rect x="4" y="4" width="16" height="16" rx="2"/><line x1="8" y1="8" x2="8" y2="8"/>',
+      box:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22" x2="12" y2="12"/>'
+    };
+    function iconSvg(name){
+      const key=String(name||'').toLowerCase().trim();
+      const path=ICONS[key]||ICONS.box;
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+    }
+    // Thumbnail aset: foto kalau ada, kalau tidak ikon kategori berwarna.
+    function astThumb(a){
+      const col=(a.category&&a.category.color)||'#0ea5e9';
+      if(a.photo_url){
+        return '<div class="ast-ic ast-photo" style="background-image:url('+esc(a.photo_url)+');"></div>';
+      }
+      return '<div class="ast-ic" style="background:'+col+'1a;color:'+col+';">'+iconSvg(a.category&&a.category.icon)+'</div>';
+    }
+    function astCard(a){
+      const cat=a.category; const st=a.status||'active';
+      const sub=[a.asset_code, (a.brand||'')+(a.model?(' '+a.model):'')].filter(Boolean).join(' · ');
+      const owner=a.customer?(' → '+a.customer.name):(a.location?(' · '+a.location):'');
+      return '<div class="ast" onclick=\'openForm('+JSON.stringify(a.id)+')\'>'+astThumb(a)+
+        '<div class="ast-body"><div class="ast-t">'+esc(a.name||'Aset')+'</div><div class="ast-s">'+esc(sub||'—')+esc(owner)+'</div></div>'+
+        '<div class="ast-r"><span class="ast-badge" style="'+stBadgeStyle(st)+'">'+esc(ST_LABEL[st]||st)+'</span>'+
+        (a.purchase_price?'<div class="ast-price">'+fmtRpShort(a.purchase_price)+'</div>':'')+'</div></div>';
+    }
+    async function loadAssets(manual){
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+      loadStats();
+      const qs=new URLSearchParams(); qs.set('limit','100');
+      if(_status)qs.set('status',_status); if(_search)qs.set('search',_search);
+      const j=await api('/api/assets?'+qs.toString());
+      const rows=(j&&j.success)?(Array.isArray(j.data)?j.data:(j.data&&j.data.rows?j.data.rows:[])):[];
+      _allById={}; rows.forEach(r=>{ _allById[r.id]=r; });
+      const total=(j&&j.pagination)?j.pagination.total:rows.length;
+      document.getElementById('astSub').textContent=total+' aset';
+      const list=document.getElementById('astList');
+      list.innerHTML=rows.length?rows.map(astCard).join(''):'<div class="empty">'+(_search?'Tidak ada hasil':'Belum ada aset. Ketuk + untuk menambah.')+'</div>';
+      if(manual) setTimeout(()=>btn.classList.remove('spin'),600);
+    }
+    async function loadCats(){
+      const j=await api('/api/assets/categories');
+      _cats=(j&&j.success)?(Array.isArray(j.data)?j.data:[]):[];
+      const sel=document.getElementById('fCat');
+      sel.innerHTML='<option value="">— pilih —</option>'+_cats.map(c=>'<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+    }
+
+    document.getElementById('statusChips').addEventListener('click',function(e){ const c=e.target.closest('.chip'); if(!c)return; this.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); _status=c.dataset.status||''; loadAssets(false); });
+    let _st=null;
+    document.getElementById('astSearch').addEventListener('input',function(){ clearTimeout(_st); _search=this.value.trim(); _st=setTimeout(()=>loadAssets(false),300); });
+
+    // ── Form ──
+    function openForm(id){
+      _editId=(id!=null)?id:null;
+      document.getElementById('sheetTitle').textContent=_editId?'Edit Aset':'Tambah Aset';
+      const a=_editId?_allById[_editId]:null;
+      document.getElementById('fName').value=a?(a.name||''):'';
+      document.getElementById('fCode').value=a?(a.asset_code||''):'';
+      // Kode dibuat otomatis oleh server saat tambah baru
+      const codeInp=document.getElementById('fCode');
+      if(_editId){ codeInp.readOnly=false; codeInp.placeholder='AST-001'; codeInp.style.opacity='1'; }
+      else { codeInp.readOnly=true; codeInp.value=''; codeInp.placeholder='Otomatis dibuat server'; codeInp.style.opacity='.6'; }
+      document.getElementById('fCat').value=a&&a.category?a.category.id:'';
+      document.getElementById('fBrand').value=a?(a.brand||''):'';
+      document.getElementById('fModel').value=a?(a.model||''):'';
+      document.getElementById('fSerial').value=a?(a.serial_number||''):'';
+      document.getElementById('fStatus').value=a?(a.status||'active'):'active';
+      document.getElementById('fCond').value=a?(a.condition||'good'):'good';
+      document.getElementById('fPrice').value=a?(a.purchase_price||''):'';
+      document.getElementById('fLoc').value=a?(a.location||''):'';
+      document.getElementById('fNotes').value=a?(a.notes||''):'';
+      // Foto: tampilkan yang tersimpan (edit) atau kosong (tambah)
+      _photoFile=null;
+      setPhotoPreview(a&&a.photo_url?a.photo_url:'');
+      document.getElementById('fPhoto').value='';
+      document.getElementById('sheetOv').classList.add('open');
+      document.getElementById('sheet').classList.add('open');
+      document.body.style.overflow='hidden';
+    }
+    function closeForm(){ document.getElementById('sheetOv').classList.remove('open'); document.getElementById('sheet').classList.remove('open'); document.body.style.overflow=''; }
+    function setPhotoPreview(url){
+      const box=document.getElementById('photoBox'), pv=document.getElementById('photoPreview'), clr=document.getElementById('photoClear');
+      if(url){ pv.style.backgroundImage='url('+url+')'; box.classList.add('has-photo'); clr.style.display='flex'; }
+      else{ pv.style.backgroundImage=''; box.classList.remove('has-photo'); clr.style.display='none'; }
+    }
+    function onPhotoPick(inp){
+      const f=inp.files&&inp.files[0]; if(!f)return;
+      if(f.size>5*1024*1024){ toast('Foto maksimal 5 MB','err'); inp.value=''; return; }
+      _photoFile=f;
+      const rd=new FileReader(); rd.onload=e=>setPhotoPreview(e.target.result); rd.readAsDataURL(f);
+    }
+    function clearPhoto(){ _photoFile=null; document.getElementById('fPhoto').value=''; setPhotoPreview(''); }
+    async function uploadPhoto(assetId){
+      if(!_photoFile)return true;
+      const fd=new FormData(); fd.append('photo', _photoFile);
+      const t=getToken();
+      const box=document.getElementById('photoBox');
+      const ov=document.createElement('div'); ov.className='photo-uploading'; ov.textContent='Mengupload foto…'; box.appendChild(ov);
+      try{
+        const r=await fetch('/api/assets/'+assetId+'/photo',{ method:'POST', credentials:'include', headers: t?{'Authorization':'Bearer '+t}:{}, body:fd });
+        const j=await r.json().catch(()=>null);
+        ov.remove();
+        return !!(j&&j.success);
+      }catch(e){ ov.remove(); return false; }
+    }
+    async function saveAsset(){
+      const name=document.getElementById('fName').value.trim();
+      if(!name){ toast('Nama aset wajib diisi','err'); return; }
+      const body={ name,
+        asset_code:document.getElementById('fCode').value.trim()||null,
+        category_id:document.getElementById('fCat').value||null,
+        brand:document.getElementById('fBrand').value.trim()||null,
+        model:document.getElementById('fModel').value.trim()||null,
+        serial_number:document.getElementById('fSerial').value.trim()||null,
+        status:document.getElementById('fStatus').value,
+        condition:document.getElementById('fCond').value,
+        purchase_price:parseInt(document.getElementById('fPrice').value)||null,
+        location:document.getElementById('fLoc').value.trim()||null,
+        notes:document.getElementById('fNotes').value.trim()||null };
+      const btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='Menyimpan…';
+      const url=_editId?('/api/assets/'+_editId):'/api/assets';
+      const j=await api(url,{ method:_editId?'PUT':'POST', body:JSON.stringify(body) });
+      if(!(j&&j.success)){ btn.disabled=false; btn.textContent='Simpan Aset'; toast((j&&j.message)||'Gagal menyimpan aset','err'); return; }
+      // Upload foto kalau ada file baru dipilih
+      const savedId=_editId||(j.data&&j.data.id)||(j.id);
+      if(_photoFile && savedId){ btn.textContent='Mengupload foto…'; const ok=await uploadPhoto(savedId); if(!ok)toast('Aset tersimpan, tapi foto gagal diupload','err'); }
+      btn.disabled=false; btn.textContent='Simpan Aset';
+      toast(_editId?'Aset diperbarui':'Aset ditambahkan','ok'); closeForm(); loadAssets(false);
+    }
+
+    // Deklarasi _allById dipakai untuk edit form (diisi di loadAssets).
+
+    loadCats();
+    loadAssets(false);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#25d366;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;}
+    .head{padding:6px 20px 16px;}
+    .htitle{font-size:22px;font-weight:800;letter-spacing:-.4px;display:flex;align-items:center;gap:9px;}
+    .htitle .ti{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#25d366,#12915f);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .htitle .ti svg{width:18px;height:18px;}
+    .hsub{font-size:12.5px;color:#6b7a97;margin-top:4px;font-weight:500;}
+    /* KPI — kartu gradien lembut */
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+    .kpi{background:#fff;border-radius:17px;padding:15px 10px 13px;box-shadow:0 8px 20px -14px rgba(30,60,120,.3);text-align:center;position:relative;overflow:hidden;border:1px solid #f0f3f9;}
+    .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+    .kpi.g::before{background:linear-gradient(90deg,#25d366,#12915f);} .kpi.b::before{background:linear-gradient(90deg,#0ea5e9,#0284c7);} .kpi.t::before{background:linear-gradient(90deg,#38bdf8,#0284c7);}
+    .kpi-val{font-size:21px;font-weight:800;letter-spacing:-.6px;line-height:1;}
+    .kpi-lbl{font-size:10px;color:var(--muted);margin-top:6px;font-weight:600;letter-spacing:.1px;}
+    .kpi.g .kpi-val{color:var(--green);}.kpi.b .kpi-val{color:var(--blue);}.kpi.t .kpi-val{color:var(--teal);}
+    /* Tabs — pill segmented */
+    .tabs{display:flex;background:#e6ebf3;border-radius:100px;padding:4px;gap:2px;margin-bottom:16px;}
+    .tab{flex:1;text-align:center;padding:9px 4px;border-radius:100px;font-size:12.5px;font-weight:700;color:#6b7a97;cursor:pointer;transition:.18s;border:none;background:none;font-family:inherit;}
+    .tab.active{background:#fff;color:var(--blue);box-shadow:0 3px 8px -3px rgba(30,60,120,.22);}
+    .pane{display:none;animation:fadeUp .3s ease;} .pane.show{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+    .content{padding:0 16px 20px;}
+    /* Jaring pengaman: semua SVG di halaman ini punya batas wajar agar
+       tidak pernah membesar memenuhi layar bila selektor spesifik terlewat. */
+    .wrap svg, .bottomnav svg{max-width:100%;max-height:48px;}
+    .chat-screen svg, .ov svg{max-width:100%;max-height:26px;}
+    .dev-ic svg,.btn svg,.send-btn svg,.bn-item svg,.empty svg,.st svg{max-height:none;}
+    /* Device cards */
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .dev{background:#fff;border-radius:15px;padding:14px 15px;box-shadow:0 5px 14px -9px rgba(30,60,120,.14);}
+    .dev-top{display:flex;align-items:center;gap:12px;}
+    .dev-ic{width:44px;height:44px;border-radius:13px;background:#e8f9ef;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .dev-ic svg{width:22px;height:22px;}
+    .dev-body{flex:1;min-width:0;}
+    .dev-name{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dev-meta{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dev-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+    .tag{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.3px;}
+    .tag.prov{background:#e2eefb;color:#5a6885;}
+    .st{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:4px 10px;border-radius:100px;}
+    .st .d{width:7px;height:7px;border-radius:50%;}
+    .st.on{background:#e8f9ef;color:#12915f;} .st.on .d{background:var(--green);}
+    .st.off{background:#fde5e6;color:#d13b42;} .st.off .d{background:var(--red);}
+    .st.wait{background:#fdf1dc;color:#b9781a;} .st.wait .d{background:var(--amber);}
+    .dev-actions{display:flex;gap:8px;margin-top:12px;}
+    .btn-del{flex:0 0 auto;width:44px;padding:11px 0;background:#fde5e6;color:#d13b42;}
+    .btn-del:active{background:#fbd3d5;}
+    .del-ic{width:54px;height:54px;border-radius:50%;background:#fde5e6;color:#d13b42;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+    .del-ic svg{width:26px;height:26px;}
+    .modal-danger{padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#f2545b,#d13b42);color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;}
+    .modal-danger:disabled{opacity:.6;}
+    .btn{flex:1;padding:11px;border-radius:11px;border:none;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .btn svg{width:15px;height:15px;}
+    .btn-con{background:linear-gradient(135deg,#25d366,#12915f);color:#fff;}
+    .btn-dis{background:#fde5e6;color:#d13b42;}
+    .btn:disabled{opacity:.5;cursor:not-allowed;}
+    /* Form */
+    .fld{margin-bottom:14px;}
+    .fld label{display:block;font-size:12px;font-weight:700;color:#5a6885;margin-bottom:7px;}
+    .fld select,.fld input,.fld textarea{width:100%;border:1.5px solid #e6ebf3;background:#fff;border-radius:12px;padding:12px 14px;font-size:13.5px;font-family:inherit;color:var(--ink);outline:none;}
+    .fld select:focus,.fld input:focus,.fld textarea:focus{border-color:var(--blue);}
+    .fld textarea{min-height:110px;resize:vertical;line-height:1.5;}
+    .cust-box{position:relative;}
+    .cust-res{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border-radius:12px;box-shadow:0 12px 30px -8px rgba(23,43,84,.25);z-index:20;max-height:240px;overflow-y:auto;display:none;}
+    .cust-res.show{display:block;}
+    .cust-item{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;border-bottom:1px solid #f4f7fb;}
+    .cust-item:active{background:#f4f7fb;}
+    .cust-av{width:34px;height:34px;border-radius:10px;background:#e2f0ff;color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+    .cust-nm{font-size:13px;font-weight:700;}
+    .cust-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+    .send-btn{width:100%;padding:14px;border-radius:13px;border:none;background:linear-gradient(135deg,#25d366,#12915f);color:#fff;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .send-btn:disabled{opacity:.55;}
+    .send-btn svg{width:18px;height:18px;}
+    .hintbox{background:#f5f9ff;border:1px solid #e2ecfb;border-radius:12px;padding:12px 14px;font-size:12px;color:#5a6885;line-height:1.55;margin-bottom:14px;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{width:44px;height:44px;color:#c7d0e0;margin-bottom:12px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    /* QR modal */
+    .ov{position:fixed;inset:0;z-index:700;background:rgba(15,27,74,.55);opacity:0;visibility:hidden;transition:opacity .2s;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .ov.open{opacity:1;visibility:visible;}
+    .modal{background:#fff;border-radius:20px;max-width:340px;width:100%;padding:22px 20px;text-align:center;transform:scale(.94);transition:transform .2s;}
+    .ov.open .modal{transform:scale(1);}
+    .modal h3{font-size:16px;font-weight:800;margin-bottom:4px;}
+    .modal p{font-size:12.5px;color:#6b7a97;margin-bottom:16px;line-height:1.5;}
+    .qr-wrap{width:230px;height:230px;margin:0 auto 16px;border-radius:14px;background:#f5f7fb;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .qr-wrap img{width:100%;height:100%;object-fit:contain;}
+    .qr-spin{width:34px;height:34px;border:3px solid #e7edf6;border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .modal-close{width:100%;padding:12px;border-radius:12px;border:none;background:#f0f3f9;color:#5a6885;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:800;opacity:0;transition:opacity .25s;pointer-events:none;max-width:88%;text-align:center;}
+    .toast.show{opacity:1;} .toast.err{background:#d13b42;} .toast.ok{background:#12915f;}
+    /* Bottom nav — WAJIB agar ikon SVG tidak membesar */
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;}
+    .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    /* Header add button */
+    .head-add{width:42px;height:42px;border-radius:13px;flex-shrink:0;border:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 16px -8px rgba(47,111,237,.5);}
+    .head-add svg{width:20px;height:20px;}
+    .add-dev-btn{width:100%;padding:13px;border-radius:13px;border:1.5px dashed #b9c6de;background:#f5f9ff;color:var(--blue);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;}
+    .add-dev-btn svg{width:17px;height:17px;}
+    .modal-ok{padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer;}
+    .modal-ok:disabled{opacity:.6;}
+    .nd-hint{font-size:11px;color:#6b7a97;line-height:1.5;margin-top:6px;background:#f5f9ff;border:1px solid #e2ecfb;border-radius:9px;padding:9px 11px;}
+    /* Chat: conversation list */
+    .chat-select{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:6px 8px 6px 14px;margin-bottom:12px;box-shadow:0 4px 12px -8px rgba(30,60,120,.18);}
+    .chat-select-lbl{font-size:11px;font-weight:800;color:#7c93a0;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+    .chat-select select{flex:1;border:none;background:none;font-size:14px;font-weight:700;font-family:inherit;color:var(--ink);outline:none;padding:8px 6px;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a0b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:26px;}
+    .chat-search{position:relative;margin-bottom:14px;}
+    .chat-search input{width:100%;border:1px solid #eef1f6;background:#fff;border-radius:100px;padding:12px 16px 12px 42px;font-size:13px;font-family:inherit;color:var(--ink);box-shadow:0 4px 12px -8px rgba(30,60,120,.18);outline:none;transition:.15s;}
+    .chat-search input:focus{border-color:#cdddf7;}
+    .chat-search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted);}
+    .conv-list{display:flex;flex-direction:column;gap:2px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 8px 22px -14px rgba(30,60,120,.28);border:1px solid #f0f3f9;}
+    .conv{display:flex;align-items:center;gap:13px;padding:13px 15px;cursor:pointer;transition:background .12s;border-bottom:1px solid #f4f7fb;}
+    .conv:last-child{border-bottom:none;}
+    .conv:active{background:#f4f9f6;}
+    .conv-av{width:50px;height:50px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#25d366,#12915f);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:19px;overflow:hidden;box-shadow:0 4px 10px -4px rgba(18,145,95,.5);}
+    .conv-av img{width:100%;height:100%;object-fit:cover;}
+    .conv-main{flex:1;min-width:0;}
+    .conv-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
+    .conv-nm{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#111b21;}
+    .conv-tm{font-size:11px;color:var(--muted);flex-shrink:0;font-weight:500;}
+    .conv-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:3px;}
+    .conv-last{font-size:12.5px;color:#667781;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+    .conv-badge{background:#e2f0ff;color:var(--blue);font-size:9px;font-weight:800;padding:2px 8px;border-radius:100px;flex-shrink:0;}
+    .conv-empty{padding:44px 20px;text-align:center;color:var(--muted);font-size:13px;background:#fff;border-radius:18px;box-shadow:0 8px 22px -14px rgba(30,60,120,.28);}
+    /* Chat thread screen */
+    .chat-screen{position:fixed;top:0;bottom:0;left:50%;width:100%;max-width:var(--shell-max,480px);transform:translateX(-50%) translateY(100%);z-index:900;background:#eae6df;display:flex;flex-direction:column;transition:transform .25s;}
+    .chat-screen.open{transform:translateX(-50%) translateY(0);}
+    .chat-hd{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;background:var(--blue);color:#fff;}
+    .chat-back{width:36px;height:36px;border:none;background:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+    .chat-back svg{width:22px;height:22px;}
+    .chat-hd-av{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;overflow:hidden;}
+    .chat-hd-av img{width:100%;height:100%;object-fit:cover;}
+    .chat-hd-nm{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .chat-hd-sub{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .chat-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px;display:flex;flex-direction:column;gap:3px;background-color:#efe7de;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='%23d9cfc3' fill-opacity='0.28'%3E%3Ccircle cx='12' cy='12' r='1.5'/%3E%3Ccircle cx='40' cy='28' r='1.5'/%3E%3Ccircle cx='24' cy='48' r='1.5'/%3E%3C/g%3E%3C/svg%3E");}
+    .bub{max-width:82%;padding:6px 9px 5px;border-radius:9px;font-size:14px;line-height:1.35;position:relative;word-wrap:break-word;box-shadow:0 1px .5px rgba(11,20,26,.13);}
+    .bub.in{align-self:flex-start;background:#fff;border-top-left-radius:2px;color:#111b21;}
+    .bub.out{align-self:flex-end;background:#d9fdd3;border-top-right-radius:2px;color:#111b21;}
+    .bub-txt{white-space:pre-wrap;}
+    .bub-media{margin:-1px -5px 3px;border-radius:7px;overflow:hidden;}
+    .bub-media img{width:100%;max-width:240px;display:block;border-radius:7px;cursor:pointer;}
+    .bub-time{font-size:10.5px;color:#667781;text-align:right;margin-top:1px;display:flex;align-items:center;gap:3px;justify-content:flex-end;line-height:1;}
+    .bub.out .bub-time{color:#527a63;}
+    .bub-time .ck{font-size:11px;} .bub-time .ck.read{color:#53bdeb;} .bub-time .ck.fail{color:#f2545b;}
+    .chat-daydiv{align-self:center;background:#fff;color:#54656f;font-size:11px;font-weight:600;padding:5px 13px;border-radius:8px;margin:8px 0;box-shadow:0 1px .5px rgba(11,20,26,.13);}
+    .chat-empty{margin:auto;text-align:center;color:#54656f;font-size:13px;padding:20px;background:rgba(255,255,255,.7);border-radius:12px;}
+    .chat-input{display:flex;align-items:flex-end;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:#f0f2f5;}
+    /* Attachment menu */
+    .attach-menu{position:absolute;bottom:calc(64px + env(safe-area-inset-bottom));left:12px;right:12px;background:#fff;border-radius:16px;box-shadow:0 12px 34px -8px rgba(23,43,84,.34);padding:16px;display:none;grid-template-columns:repeat(4,1fr);gap:10px;z-index:5;}
+    .attach-menu.open{display:grid;animation:fadeUp .18s ease;}
+    .attach-opt{border:none;background:none;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;font-size:11px;font-weight:600;color:#54656f;}
+    .attach-ic{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;}
+    .attach-ic svg{width:23px;height:23px;}
+    .attach-ic.cam{background:linear-gradient(135deg,#ef5da8,#d6336c);}
+    .attach-ic.gal{background:linear-gradient(135deg,#a855f7,#7c3aed);}
+    .attach-ic.vid{background:linear-gradient(135deg,#fb7185,#e11d48);}
+    .attach-ic.doc{background:linear-gradient(135deg,#3b82f6,#2563eb);}
+    .chat-attach{width:40px;height:40px;border:none;background:none;color:#54656f;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+    .chat-attach svg{width:22px;height:22px;}
+    .chat-input textarea{flex:1;border:none;background:#fff;border-radius:20px;padding:10px 15px;font-size:13.5px;font-family:inherit;resize:none;max-height:100px;outline:none;line-height:1.4;}
+    .chat-send{width:44px;height:44px;border-radius:50%;border:none;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+    .chat-send svg{width:19px;height:19px;}
+    .chat-send:disabled{opacity:.55;}
+    .media-prev{width:100%;height:200px;border-radius:12px;background:#f5f7fb;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .media-prev img{width:100%;height:100%;object-fit:contain;}
+    .media-prev .file-ic{text-align:center;color:#6b7a97;font-size:12px;}
+    .lightbox-o{}
+    #lightbox{display:flex;align-items:center;justify-content:center;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div class="htitle"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>WhatsApp</div>
+        <div class="hsub">Device, chat, kirim pesan & reminder</div>
+      </div>
+      <button class="head-add" onclick="openAddDevice()" aria-label="Tambah Device">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="content">
+      <div class="kpi-grid">
+        <div class="kpi g"><div class="kpi-val" id="kSess">–</div><div class="kpi-lbl">Device Aktif</div></div>
+        <div class="kpi b"><div class="kpi-val" id="kToday">–</div><div class="kpi-lbl">Pesan Hari Ini</div></div>
+        <div class="kpi t"><div class="kpi-val" id="kSent">–</div><div class="kpi-lbl">Total Terkirim</div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-p="dev" onclick="switchTab('dev')">Device</button>
+        <button class="tab" data-p="chat" onclick="switchTab('chat')">Chat</button>
+        <button class="tab" data-p="send" onclick="switchTab('send')">Kirim</button>
+        <button class="tab" data-p="rem" onclick="switchTab('rem')">Reminder</button>
+      </div>
+
+      <!-- PANE: CHAT -->
+      <div class="pane" id="paneChat">
+        <div class="chat-select">
+          <span class="chat-select-lbl">Device</span>
+          <select id="chatSession" onchange="loadConversations()"><option value="">Memuat…</option></select>
+        </div>
+        <div class="chat-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="convSearch" placeholder="Cari nama atau nomor…" oninput="renderConversations()">
+        </div>
+        <div class="conv-list" id="convList">
+          <div class="conv"><div class="skel" style="width:50px;height:50px;border-radius:50%;"></div><div style="flex:1;"><div class="skel" style="width:120px;height:13px;"></div><div class="skel" style="width:180px;height:10px;margin-top:7px;"></div></div></div>
+          <div class="conv"><div class="skel" style="width:50px;height:50px;border-radius:50%;"></div><div style="flex:1;"><div class="skel" style="width:120px;height:13px;"></div><div class="skel" style="width:180px;height:10px;margin-top:7px;"></div></div></div>
+        </div>
+      </div>
+
+      <!-- PANE: DEVICE -->
+      <div class="pane show" id="paneDev">
+        <button class="add-dev-btn" onclick="openAddDevice()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Tambah Device WhatsApp
+        </button>
+        <div class="list" id="devList">
+          <div class="dev"><div class="dev-top"><div class="skel" style="width:44px;height:44px;border-radius:13px;"></div><div class="dev-body"><div class="skel" style="width:120px;height:14px;"></div><div class="skel" style="width:80px;height:10px;margin-top:6px;"></div></div></div></div>
+          <div class="dev"><div class="dev-top"><div class="skel" style="width:44px;height:44px;border-radius:13px;"></div><div class="dev-body"><div class="skel" style="width:120px;height:14px;"></div><div class="skel" style="width:80px;height:10px;margin-top:6px;"></div></div></div></div>
+        </div>
+      </div>
+
+      <!-- PANE: KIRIM PESAN -->
+      <div class="pane" id="paneSend">
+        <div class="fld">
+          <label>Device Pengirim</label>
+          <select id="sendSession"><option value="">Memuat device…</option></select>
+        </div>
+        <div class="fld cust-box">
+          <label>Tujuan (cari pelanggan / ketik nomor)</label>
+          <input type="text" id="sendTo" placeholder="Nama pelanggan atau 08xxxxxxxxxx" autocomplete="off" oninput="custSearch()">
+          <div class="cust-res" id="custRes"></div>
+        </div>
+        <div class="fld">
+          <label>Pesan</label>
+          <textarea id="sendMsg" placeholder="Tulis pesan WhatsApp…"></textarea>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="doSend()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          Kirim Pesan
+        </button>
+      </div>
+
+      <!-- PANE: REMINDER -->
+      <div class="pane" id="paneRem">
+        <div class="hintbox">Kirim reminder tagihan otomatis ke pelanggan yang <b>jatuh tempo</b> dan <b>lewat tempo</b> via WhatsApp. Isi pesan mengikuti template reminder yang aktif.</div>
+        <div class="fld">
+          <label>Device Pengirim</label>
+          <select id="remSession"><option value="">Memuat device…</option></select>
+        </div>
+        <div class="fld">
+          <label>Kirim untuk yang jatuh tempo dalam</label>
+          <select id="remDays">
+            <option value="0">Hari ini (H-0)</option>
+            <option value="1">1 hari lagi (H-1)</option>
+            <option value="3" selected>3 hari lagi (H-3)</option>
+            <option value="7">7 hari lagi (H-7)</option>
+          </select>
+        </div>
+        <button class="send-btn" id="remBtn" onclick="doReminder()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          Kirim Reminder Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+
+  <!-- QR MODAL -->
+  <div class="ov" id="qrOv">
+    <div class="modal">
+      <h3 id="qrTitle">Scan QR WhatsApp</h3>
+      <p>Buka WhatsApp → Perangkat Tertaut → Tautkan Perangkat, lalu scan kode di bawah.</p>
+      <div class="qr-wrap" id="qrWrap"><div class="qr-spin"></div></div>
+      <button class="modal-close" onclick="qrClose()">Tutup</button>
+    </div>
+  </div>
+
+  <!-- MODAL KONFIRMASI HAPUS DEVICE -->
+  <div class="ov" id="delOv" style="z-index:1150;">
+    <div class="modal">
+      <div class="del-ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </div>
+      <h3>Hapus Device?</h3>
+      <p>Device <b id="delName">—</b> akan dihapus beserta <b>seluruh riwayat chat</b> dan aturan auto-reply-nya. Tindakan ini tidak bisa dibatalkan.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="modal-close" style="flex:1;" onclick="closeDeleteDevice()">Batal</button>
+        <button class="modal-danger" id="delOk" style="flex:1;" onclick="doDeleteDevice()">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH DEVICE -->
+  <div class="ov" id="addOv">
+    <div class="modal" style="max-width:380px;text-align:left;max-height:86vh;overflow-y:auto;">
+      <h3 style="text-align:center;">Tambah Device WhatsApp</h3>
+      <div class="fld" style="margin-top:16px;">
+        <label>Nama Device</label>
+        <input type="text" id="ndName" placeholder="Contoh: CS Utama, Billing">
+      </div>
+      <div class="fld">
+        <label>Provider Gateway</label>
+        <select id="ndProvider" onchange="ndToggleProvider()">
+          <option value="baileys">Baileys (scan QR — gratis)</option>
+          <option value="fonnte">Fonnte (API token — berbayar)</option>
+          <option value="waha">WAHA (self-hosted — scan QR)</option>
+        </select>
+      </div>
+      <div class="fld nd-fonnte" style="display:none;">
+        <label>Token Fonnte</label>
+        <input type="text" id="ndFonnteToken" placeholder="Token dari dashboard Fonnte">
+        <div class="nd-hint">Ambil di dashboard.fonnte.com → Device → Token. Multi-token (pisah koma) berfungsi sebagai rotator. Isi Webhook URL di Fonnte agar bisa terima pesan masuk.</div>
+      </div>
+      <div class="nd-waha" style="display:none;">
+        <div class="fld"><label>URL WAHA</label><input type="text" id="ndWahaUrl" placeholder="http://127.0.0.1:3001"></div>
+        <div class="fld"><label>API Key WAHA</label><input type="text" id="ndWahaKey" placeholder="WHATSAPP_API_KEY di container WAHA"></div>
+        <div class="fld"><label>Nama Session di WAHA</label><input type="text" id="ndWahaSession" placeholder="default" value="default"></div>
+        <div class="nd-hint">Satu instance WAHA bisa menampung banyak session; beri nama unik per nomor. Webhook didaftarkan otomatis saat session dibuat (butuh APP_URL terisi).</div>
+      </div>
+      <div class="fld">
+        <label>Catatan (opsional)</label>
+        <input type="text" id="ndNotes" placeholder="Nomor yang dipakai, dll">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button class="modal-close" style="flex:1;" onclick="closeAddDevice()">Batal</button>
+        <button class="modal-ok" id="ndSave" style="flex:1;" onclick="saveNewDevice()">Buat Device</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LAYAR CHAT THREAD (full) -->
+  <div class="chat-screen" id="chatScreen">
+    <div class="chat-hd">
+      <button class="chat-back" onclick="closeChat()" aria-label="Kembali">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <div class="chat-hd-av" id="chatHdAv">?</div>
+      <div style="flex:1;min-width:0;">
+        <div class="chat-hd-nm" id="chatHdNm">—</div>
+        <div class="chat-hd-sub" id="chatHdSub">—</div>
+      </div>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <!-- Attachment menu (WA-style) -->
+    <div class="attach-menu" id="attachMenu">
+      <button class="attach-opt" onclick="chatOpenPicker('camera')">
+        <span class="attach-ic cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+        <span>Kamera</span>
+      </button>
+      <button class="attach-opt" onclick="chatOpenPicker('gallery')">
+        <span class="attach-ic gal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+        <span>Galeri</span>
+      </button>
+      <button class="attach-opt" onclick="chatOpenPicker('video')">
+        <span class="attach-ic vid"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
+        <span>Video</span>
+      </button>
+      <button class="attach-opt" onclick="chatOpenPicker('document')">
+        <span class="attach-ic doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        <span>Dokumen</span>
+      </button>
+    </div>
+    <div class="chat-input">
+      <button class="chat-attach" id="chatAttachBtn" onclick="toggleAttachMenu()" aria-label="Lampiran">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <!-- input file terpisah per sumber -->
+      <input type="file" id="fileCamera"   accept="image/*"                capture="environment" style="display:none;" onchange="chatPickFile(this)">
+      <input type="file" id="fileGallery"  accept="image/*"                style="display:none;" onchange="chatPickFile(this)">
+      <input type="file" id="fileVideo"    accept="video/*"                style="display:none;" onchange="chatPickFile(this)">
+      <input type="file" id="fileDocument" accept="*/*"                    style="display:none;" onchange="chatPickFile(this)">
+      <textarea id="chatText" rows="1" placeholder="Ketik pesan…" oninput="chatAutoGrow(this)"></textarea>
+      <button class="chat-send" id="chatSendBtn" onclick="chatSend()" aria-label="Kirim">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL PREVIEW MEDIA sebelum kirim -->
+  <div class="ov" id="mediaOv" style="z-index:1100;">
+    <div class="modal" style="max-width:360px;">
+      <h3>Kirim Media</h3>
+      <div class="media-prev" id="mediaPrev"></div>
+      <input type="text" id="mediaCaption" placeholder="Tambahkan caption (opsional)" style="width:100%;border:1.5px solid #e6ebf3;border-radius:12px;padding:12px 14px;font-size:13.5px;font-family:inherit;margin:12px 0;outline:none;">
+      <div style="display:flex;gap:10px;">
+        <button class="modal-close" style="flex:1;" onclick="chatCancelMedia()">Batal</button>
+        <button class="modal-ok" id="mediaSendBtn" style="flex:1;" onclick="chatSendMedia()">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX gambar -->
+  <div class="ov" id="lightbox" onclick="this.classList.remove('open')" style="z-index:1200;">
+    <img id="lightboxImg" src="" alt="" style="max-width:92vw;max-height:88vh;border-radius:10px;object-fit:contain;">
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,method,body){
+      const t=getToken();
+      const headers=Object.assign({'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'}, t?{'Authorization':'Bearer '+t}:{});
+      try{
+        const opt={credentials:'include',headers,method:method||'GET'};
+        if(body) opt.body=JSON.stringify(body);
+        const r=await fetch(url,opt);
+        if(r.status===401){ location.href='/login?next=/mobile/wa'; return null; }
+        const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;}
+      }catch(e){ return null; }
+    }
+    function toast(m,type){ const t=document.getElementById('toast'); t.textContent=m; t.className='toast show'+(type?(' '+type):''); setTimeout(()=>t.classList.remove('show'),2600); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    var SESSIONS=[];
+
+    function switchTab(p){
+      document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.p===p));
+      document.getElementById('paneDev').classList.toggle('show', p==='dev');
+      document.getElementById('paneChat').classList.toggle('show', p==='chat');
+      document.getElementById('paneSend').classList.toggle('show', p==='send');
+      document.getElementById('paneRem').classList.toggle('show', p==='rem');
+      if(p==='chat' && !_convLoadedOnce){ loadConversations(); }
+    }
+
+    function statusOf(s){
+      var st=(s.runtime_status||s.status||'disconnected').toLowerCase();
+      if(st==='connected') return {cls:'on', label:'Terhubung'};
+      // 'connecting' pada WAHA sering berarti sedang dipulihkan otomatis
+      if(st==='connecting'||st==='qr'){
+        var isWaha=(s.provider||'').toLowerCase()==='waha';
+        return {cls:'wait', label: isWaha ? 'Memulihkan…' : 'Menunggu'};
+      }
+      return {cls:'off', label:'Terputus'};
+    }
+    function provLabel(p){ p=(p||'baileys').toLowerCase(); return p==='fonnte'?'Fonnte':(p==='waha'?'WAHA':'Baileys'); }
+
+    function renderDevices(){
+      var list=document.getElementById('devList');
+      if(!SESSIONS.length){
+        list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><div>Belum ada device WhatsApp.<br>Tambah device dengan tombol + di atas.</div></div>';
+        return;
+      }
+      list.innerHTML=SESSIONS.map(function(s){
+        var st=statusOf(s);
+        var connected=st.cls==='on';
+        var healing=(st.cls==='wait');
+        var phone=s.phone_number?('+'+String(s.phone_number).replace(/[^0-9]/g,'')):'Belum tertaut';
+        var prov=(s.provider||'baileys').toLowerCase();
+        // Baileys DAN WAHA sama-sama butuh scan QR. Hanya Fonnte yang tidak
+        // (cukup verifikasi token). Sebelumnya WAHA dianggap tanpa QR → QR tak
+        // pernah muncul, jadi koneksi tak pernah selesai.
+        var needsQr = (prov==='baileys' || prov==='waha');
+        var staleTag = s.status_stale ? '<span class="tag" style="background:#fdf1dc;color:#b9781a;">status terakhir</span>' : '';
+        var sid=esc(s.session_id);
+        var nameEsc=esc(s.name||'Device').replace(/'/g,'&#39;');
+
+        var connBtn;
+        if(connected){
+          connBtn='<button class="btn btn-dis" onclick="doDisconnect(\''+sid+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>Putuskan</button>';
+        } else if(healing){
+          connBtn='<button class="btn btn-con" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>Memulihkan…</button>';
+        } else {
+          connBtn='<button class="btn btn-con" onclick="doConnect(\''+sid+'\','+(needsQr?'true':'false')+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>'+(needsQr?'Hubungkan (QR)':'Hubungkan')+'</button>';
+        }
+        // Tombol hapus device (selalu tersedia)
+        var delBtn='<button class="btn btn-del" onclick="askDeleteDevice(\''+sid+'\',\''+nameEsc+'\')" aria-label="Hapus device"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>';
+
+        return '<div class="dev">'
+          + '<div class="dev-top">'
+          +   '<div class="dev-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>'
+          +   '<div class="dev-body"><div class="dev-name">'+esc(s.name||'Device')+'</div><div class="dev-meta">'+esc(phone)+'</div>'
+          +     '<div class="dev-tags"><span class="tag prov">'+esc(provLabel(s.provider))+'</span>'+staleTag+'</div></div>'
+          +   '<span class="st '+st.cls+'"><span class="d"></span>'+st.label+'</span>'
+          + '</div>'
+          + '<div class="dev-actions">'+connBtn+delBtn+'</div>'
+          + '</div>';
+      }).join('');
+    }
+
+    function fillSessionSelects(){
+      var opts='<option value="">Pilih device…</option>'+SESSIONS.map(function(s){
+        var st=statusOf(s); var dis=st.cls!=='on';
+        return '<option value="'+esc(s.session_id)+'"'+(dis?' disabled':'')+'>'+esc(s.name||s.session_id)+(dis?' (terputus)':'')+'</option>';
+      }).join('');
+      var ss=document.getElementById('sendSession'), rs=document.getElementById('remSession'), cs=document.getElementById('chatSession');
+      ss.innerHTML=opts; rs.innerHTML=opts;
+      if(cs){ var prev=cs.value; cs.innerHTML=opts; if(prev) cs.value=prev; }
+      // auto-pilih device pertama yang terhubung
+      var firstOn=SESSIONS.find(function(s){ return statusOf(s).cls==='on'; });
+      if(firstOn){ ss.value=firstOn.session_id; rs.value=firstOn.session_id; if(cs && !cs.value) cs.value=firstOn.session_id; }
+    }
+
+    async function loadStats(){
+      var j=await api('/api/wa/stats');
+      if(j&&j.success){ var d=j.data||{};
+        document.getElementById('kSess').textContent=(d.connectedSessions!=null?d.connectedSessions:0)+'/'+(d.totalSessions!=null?d.totalSessions:0);
+        document.getElementById('kToday').textContent=d.todayMessages!=null?d.todayMessages:0;
+        document.getElementById('kSent').textContent=d.totalSent!=null?d.totalSent:0;
+      }
+    }
+    async function loadSessions(){
+      var j=await api('/api/wa/sessions');
+      SESSIONS=(j&&j.success&&Array.isArray(j.data))?j.data:[];
+      renderDevices(); fillSessionSelects();
+    }
+
+    /* ── Connect / Disconnect ── */
+    var _qrTimer=null, _qrSession=null;
+    async function doConnect(sid, needsQr){
+      toast('Menghubungkan…');
+      var j=await api('/api/wa/sessions/'+encodeURIComponent(sid)+'/connect','POST',{});
+
+      // Gagal menghubungi gateway (mis. container WAHA mati) → tampilkan
+      // pesan diagnostik dari server apa adanya, jangan buka QR sia-sia.
+      if(!(j&&j.success)){
+        toast((j&&j.message)||'Gagal menghubungkan','err');
+        setTimeout(function(){ loadSessions(); loadStats(); }, 600);
+        return;
+      }
+
+      if(!needsQr){
+        // Fonnte: hasil langsung, tanpa QR
+        toast(j.message||'Device terhubung','ok');
+        setTimeout(function(){ loadSessions(); loadStats(); }, 800);
+        return;
+      }
+
+      // Sudah terhubung (auth lama masih valid) → tak perlu QR
+      if(/sudah terhubung/i.test(j.message||'')){
+        toast(j.message,'ok');
+        setTimeout(function(){ loadSessions(); loadStats(); }, 600);
+        return;
+      }
+
+      // Baileys & WAHA: buka modal QR + polling
+      _qrSession=sid;
+      document.getElementById('qrWrap').innerHTML='<div class="qr-spin"></div>';
+      document.getElementById('qrTitle').textContent='Scan QR WhatsApp';
+      document.getElementById('qrOv').classList.add('open');
+      document.body.style.overflow='hidden';
+      pollQr();
+    }
+    var _qrTries=0;
+    async function pollQr(){
+      if(!_qrSession) return;
+      var j=await api('/api/wa/sessions/'+encodeURIComponent(_qrSession)+'/qr');
+      var d=(j&&j.data)||{};
+
+      // Berhasil tertaut
+      if(d.status==='connected'){
+        qrClose(); toast('Device berhasil terhubung','ok');
+        loadSessions(); loadStats(); return;
+      }
+
+      // QR sudah siap → tampilkan
+      if(d.qr_image){
+        document.getElementById('qrWrap').innerHTML='<img src="'+d.qr_image+'" alt="QR WhatsApp">';
+        document.getElementById('qrTitle').textContent='Scan QR WhatsApp';
+      } else if(d.qr_pending || d.status==='connecting'){
+        // WAHA/Baileys butuh ~5-15 dtk menyiapkan QR — tampilkan progres, jangan
+        // biarkan user menatap layar kosong.
+        document.getElementById('qrTitle').textContent='Menyiapkan QR…';
+      } else if(d.status==='disconnected' && _qrTries>4){
+        // Gateway menolak/tidak menyiapkan QR setelah beberapa kali → berhenti.
+        qrClose();
+        toast((d.error ? ('Gagal: '+d.error) : 'Gateway tidak menyiapkan QR. Cek apakah container WAHA jalan.'),'err');
+        loadSessions(); return;
+      }
+
+      // Batas waktu ~2 menit (48 x 2,5 dtk) supaya tidak polling selamanya.
+      if(++_qrTries > 48){
+        qrClose();
+        toast('Waktu scan QR habis. Coba hubungkan lagi.','err');
+        loadSessions(); return;
+      }
+      _qrTimer=setTimeout(pollQr, 2500);
+    }
+    function qrClose(){
+      if(_qrTimer){ clearTimeout(_qrTimer); _qrTimer=null; }
+      _qrSession=null; _qrTries=0;
+      document.getElementById('qrOv').classList.remove('open');
+      document.body.style.overflow='';
+    }
+    async function doDisconnect(sid){
+      toast('Memutuskan…');
+      var j=await api('/api/wa/sessions/'+encodeURIComponent(sid)+'/disconnect','POST',{});
+      if(j&&j.success){ toast('Device diputuskan','ok'); } else { toast((j&&j.message)||'Gagal memutuskan','err'); }
+      setTimeout(function(){ loadSessions(); loadStats(); }, 600);
+    }
+
+    /* ── Hapus device ── */
+    var _delSid=null;
+    function askDeleteDevice(sid, name){
+      _delSid=sid;
+      document.getElementById('delName').textContent=name||'device ini';
+      document.getElementById('delOv').classList.add('open');
+      document.body.style.overflow='hidden';
+    }
+    function closeDeleteDevice(){
+      _delSid=null;
+      document.getElementById('delOv').classList.remove('open');
+      document.body.style.overflow='';
+    }
+    async function doDeleteDevice(){
+      if(!_delSid) return;
+      var btn=document.getElementById('delOk'); btn.disabled=true; btn.textContent='Menghapus…';
+      var j=await api('/api/wa/sessions/'+encodeURIComponent(_delSid),'DELETE');
+      btn.disabled=false; btn.textContent='Ya, Hapus';
+      closeDeleteDevice();
+      if(j&&j.success){ toast('Device dihapus','ok'); loadSessions(); loadStats(); }
+      else { toast((j&&j.message)||'Gagal menghapus device','err'); }
+    }
+
+    /* ── Kirim pesan: cari pelanggan ── */
+    var _custTimer=null, _custSeq=0;
+    function custSearch(){
+      var q=document.getElementById('sendTo').value.trim();
+      var box=document.getElementById('custRes');
+      if(_custTimer) clearTimeout(_custTimer);
+      // kalau user mengetik nomor (angka), jangan search
+      if(/^[0-9+\s-]+$/.test(q) || q.length<2){ box.classList.remove('show'); return; }
+      _custTimer=setTimeout(async function(){
+        var seq=++_custSeq;
+        var j=await api('/api/wa/search-customer?q='+encodeURIComponent(q));
+        if(seq!==_custSeq) return;
+        var rows=(j&&j.success&&Array.isArray(j.data))?j.data:[];
+        if(!rows.length){ box.classList.remove('show'); box.innerHTML=''; return; }
+        box.innerHTML=rows.map(function(c){
+          var nm=c.name||'Pelanggan';
+          var phRaw=c.phone||'';
+          var phDigits=String(phRaw).replace(/[^0-9]/g,'');
+          var nmAttr=esc(nm).replace(/'/g,'&#39;');
+          return '<div class="cust-item" onclick="pickCust(&#39;'+phDigits+'&#39;,&#39;'+nmAttr+'&#39;)">'
+               + '<div class="cust-av">'+esc(nm.charAt(0).toUpperCase())+'</div>'
+               + '<div><div class="cust-nm">'+esc(nm)+'</div><div class="cust-sub">'+esc(c.customer_id||'')+' · '+esc(phRaw||'-')+'</div></div></div>';
+        }).join('');
+        box.classList.add('show');
+      }, 300);
+    }
+    function pickCust(phone,name){
+      document.getElementById('sendTo').value=phone;
+      document.getElementById('custRes').classList.remove('show');
+      toast('Tujuan: '+name);
+    }
+    document.addEventListener('click',function(e){
+      var box=document.getElementById('custRes'); var inp=document.getElementById('sendTo');
+      if(box && !box.contains(e.target) && e.target!==inp) box.classList.remove('show');
+    });
+
+    async function doSend(){
+      var sid=document.getElementById('sendSession').value;
+      var to=document.getElementById('sendTo').value.trim().replace(/[^0-9]/g,'');
+      var msg=document.getElementById('sendMsg').value.trim();
+      if(!sid){ toast('Pilih device pengirim','err'); return; }
+      if(!to){ toast('Isi nomor tujuan','err'); return; }
+      if(!msg){ toast('Tulis pesan dulu','err'); return; }
+      var btn=document.getElementById('sendBtn'); btn.disabled=true; var old=btn.innerHTML; btn.innerHTML='Mengirim…';
+      var j=await api('/api/wa/send','POST',{session_id:sid, to:to, message:msg});
+      btn.disabled=false; btn.innerHTML=old;
+      if(j&&j.success){ toast('Pesan terkirim','ok'); document.getElementById('sendMsg').value=''; loadStats(); }
+      else { toast((j&&j.message)||'Gagal mengirim pesan','err'); }
+    }
+
+    async function doReminder(){
+      var sid=document.getElementById('remSession').value;
+      var days=document.getElementById('remDays').value;
+      if(!sid){ toast('Pilih device pengirim','err'); return; }
+      var btn=document.getElementById('remBtn'); btn.disabled=true; var old=btn.innerHTML; btn.innerHTML='Mengirim reminder…';
+      var j=await api('/api/wa/reminders','POST',{session_id:sid, days_before:Number(days)});
+      btn.disabled=false; btn.innerHTML=old;
+      if(j&&j.success){
+        toast(j.message||'Reminder sedang diproses','ok');
+        loadStats();
+      } else { toast((j&&j.message)||'Gagal mengirim reminder','err'); }
+    }
+
+    document.getElementById('qrOv').addEventListener('click',function(e){ if(e.target===this) qrClose(); });
+
+    /* ══════════════ TAMBAH DEVICE ══════════════ */
+    function openAddDevice(){ document.getElementById('addOv').classList.add('open'); document.body.style.overflow='hidden'; ndToggleProvider(); }
+    function closeAddDevice(){ document.getElementById('addOv').classList.remove('open'); document.body.style.overflow=''; }
+    function ndToggleProvider(){
+      var p=document.getElementById('ndProvider').value;
+      document.querySelector('.nd-fonnte').style.display = p==='fonnte'?'block':'none';
+      document.querySelector('.nd-waha').style.display   = p==='waha'?'block':'none';
+    }
+    async function saveNewDevice(){
+      var name=document.getElementById('ndName').value.trim();
+      var provider=document.getElementById('ndProvider').value;
+      if(!name){ toast('Nama device wajib diisi','err'); return; }
+      var body={ name:name, provider:provider, notes:document.getElementById('ndNotes').value.trim() };
+      if(provider==='fonnte'){
+        var tok=document.getElementById('ndFonnteToken').value.trim();
+        if(!tok){ toast('Token Fonnte wajib diisi','err'); return; }
+        body.fonnte_token=tok;
+      }
+      if(provider==='waha'){
+        var url=document.getElementById('ndWahaUrl').value.trim();
+        if(!url){ toast('URL WAHA wajib diisi','err'); return; }
+        if(!/^https?:\/\//i.test(url)){ toast('URL WAHA harus diawali http:// atau https://','err'); return; }
+        body.waha_url=url;
+        body.waha_api_key=document.getElementById('ndWahaKey').value.trim();
+        body.waha_session=document.getElementById('ndWahaSession').value.trim()||'default';
+      }
+      var btn=document.getElementById('ndSave'); btn.disabled=true; btn.textContent='Menyimpan…';
+      var j=await api('/api/wa/sessions','POST',body);
+      btn.disabled=false; btn.textContent='Buat Device';
+      if(j&&j.success){
+        toast('Device dibuat. Hubungkan untuk mulai.','ok');
+        closeAddDevice();
+        document.getElementById('ndName').value=''; document.getElementById('ndNotes').value='';
+        document.getElementById('ndFonnteToken').value=''; document.getElementById('ndWahaUrl').value=''; document.getElementById('ndWahaKey').value='';
+        loadSessions(); loadStats();
+      } else { toast((j&&j.message)||'Gagal membuat device','err'); }
+    }
+
+    /* ══════════════ CHAT: DAFTAR PERCAKAPAN ══════════════ */
+    var CONVS=[], MSGS=[], _convLoadedOnce=false, _picCache={}, _activeContact=null;
+
+    function digits(s){ return String(s||'').replace(/[^0-9]/g,''); }
+    function last9(s){ return digits(s).slice(-9); }
+
+    async function loadConversations(){
+      var sid=document.getElementById('chatSession').value;
+      var listEl=document.getElementById('convList');
+      if(!sid){ listEl.innerHTML='<div class="chat-empty" style="margin:30px auto;">Pilih device dulu untuk melihat percakapan.</div>'; return; }
+      _convLoadedOnce=true;
+      listEl.innerHTML='<div class="conv"><div class="skel" style="width:46px;height:46px;border-radius:50%;"></div><div style="flex:1;"><div class="skel" style="width:120px;height:13px;"></div><div class="skel" style="width:180px;height:10px;margin-top:7px;"></div></div></div>';
+      var j=await api('/api/wa/conversations?session_id='+encodeURIComponent(sid));
+      MSGS=(j&&j.success&&Array.isArray(j.data))?j.data:[];
+      // Kelompokkan pesan per kontak (last9)
+      var map={};
+      MSGS.forEach(function(m){
+        var contactRaw=(m.direction==='inbound'?m.from_number:m.to_number)||'';
+        var key=last9(contactRaw); if(!key) return;
+        if(!map[key]){ map[key]={key:key, number:digits(contactRaw), name:null, customer:null, last:m, count:0}; }
+        var g=map[key];
+        var mt=parseDate(_ts(m)), gt=parseDate(_ts(g.last));
+        if(mt && (!gt || mt>gt)) g.last=m;
+        if(m.customer) g.customer=m.customer;
+        if(!g.name && m.push_name && m.direction==='inbound') g.name=m.push_name;
+        g.count++;
+      });
+      CONVS=Object.keys(map).map(function(k){ return map[k]; })
+        .sort(function(a,b){ return (parseDate(_ts(b.last))||0)-(parseDate(_ts(a.last))||0); });
+      renderConversations();
+    }
+
+    function _convTime(ts){
+      var d=parseDate(ts); if(!d) return '';
+      var t=new Date(); var y=new Date(); y.setDate(t.getDate()-1);
+      if(d.toDateString()===t.toDateString()) return d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      if(d.toDateString()===y.toDateString()) return 'Kemarin';
+      var diff=(t-d)/86400000;
+      if(diff<7) return d.toLocaleDateString('id-ID',{weekday:'short'});
+      return d.toLocaleDateString('id-ID',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    }
+    function renderConversations(){
+      var q=(document.getElementById('convSearch').value||'').trim().toLowerCase();
+      var rows=CONVS;
+      if(q){ rows=CONVS.filter(function(c){
+        var nm=(c.customer&&c.customer.name)||c.name||c.number;
+        return (nm+' '+c.number).toLowerCase().indexOf(q)>=0;
+      }); }
+      var el=document.getElementById('convList');
+      if(!rows.length){
+        el.innerHTML='<div class="conv-empty">'+(q?'Tidak ada hasil':'Belum ada percakapan di device ini')+'</div>';
+        return;
+      }
+      el.innerHTML=rows.map(function(c){
+        var nm=(c.customer&&c.customer.name)||c.name||('+'+c.number);
+        var lastTxt=_preview(c.last);
+        var tm=_convTime(_ts(c.last));
+        var init=(nm.charAt(0)||'?').toUpperCase();
+        var badge=(c.customer)?'<span class="conv-badge">'+esc(c.customer.customer_id||'Pelanggan')+'</span>':'';
+        return '<div class="conv" onclick="openChat(\''+c.key+'\')">'
+          + '<div class="conv-av" data-num="'+esc(c.number)+'">'+esc(init)+'</div>'
+          + '<div class="conv-main"><div class="conv-top"><span class="conv-nm">'+esc(nm)+'</span><span class="conv-tm">'+esc(tm)+'</span></div>'
+          + '<div class="conv-bottom"><span class="conv-last">'+esc(lastTxt)+'</span>'+badge+'</div></div></div>';
+      }).join('');
+      loadConvPics();
+    }
+    function _preview(m){
+      if(!m) return '';
+      var t=(m.message_type||'text');
+      var pfx=(m.direction==='outbound'?'Anda: ':'');
+      if(t==='image'||/\.(jpg|jpeg|png|webp|gif)($|\?)/i.test(m.media_url||'')) return pfx+'📷 Foto';
+      if(t==='video'||/\.(mp4|3gp|mov)($|\?)/i.test(m.media_url||'')) return pfx+'🎥 Video';
+      if(t==='audio') return pfx+'🎙️ Audio';
+      if(t==='document') return pfx+'📄 Dokumen';
+      return pfx+(m.message||'');
+    }
+    // Muat foto profil untuk avatar di daftar chat. Dijalankan bertahap
+    // (staggered) supaya tidak menembak puluhan request sekaligus yang bisa
+    // lambat / kena rate-limit WhatsApp. Hasilnya di-cache per nomor.
+    var _picQueue=[], _picBusy=false;
+    async function loadConvPics(){
+      var sid=document.getElementById('chatSession').value; if(!sid) return;
+      var avs=document.querySelectorAll('.conv-av[data-num]');
+      Array.prototype.forEach.call(avs, function(av){
+        var num=av.getAttribute('data-num'); if(!num) return;
+        if(_picCache[num]===false) return;                 // sudah dicek, tak ada foto
+        if(_picCache[num]){ av.innerHTML='<img src="'+_picCache[num]+'" onerror="this.remove()">'; return; }
+        _picQueue.push({num:num});                          // antre untuk di-fetch
+      });
+      _drainPicQueue(sid);
+    }
+    async function _drainPicQueue(sid){
+      if(_picBusy) return; _picBusy=true;
+      while(_picQueue.length){
+        var item=_picQueue.shift(); var num=item.num;
+        if(_picCache[num]!==undefined){ _applyConvPic(num); continue; }
+        try{
+          var j=await api('/api/wa/profile-picture?session_id='+encodeURIComponent(sid)+'&number='+encodeURIComponent(num));
+          if(j&&j.success&&j.url){
+            _picCache[num]='/api/wa/profile-picture-img?session_id='+encodeURIComponent(sid)+'&number='+encodeURIComponent(num);
+          } else { _picCache[num]=false; }
+        }catch(e){ _picCache[num]=false; }
+        _applyConvPic(num);
+        await new Promise(function(r){ setTimeout(r,180); });  // jeda antar request
+      }
+      _picBusy=false;
+    }
+    function _applyConvPic(num){
+      if(!_picCache[num]) return;
+      var els=document.querySelectorAll('.conv-av[data-num="'+num+'"]');
+      Array.prototype.forEach.call(els, function(el){
+        if(el.querySelector('img')) return;
+        el.innerHTML='<img src="'+_picCache[num]+'" onerror="this.remove()">';
+      });
+    }
+
+    /* ══════════════ CHAT: THREAD ══════════════ */
+    function openChat(key){
+      var conv=CONVS.find(function(c){ return c.key===key; });
+      if(!conv) return;
+      _activeContact=conv;
+      var nm=(conv.customer&&conv.customer.name)||conv.name||('+'+conv.number);
+      document.getElementById('chatHdNm').textContent=nm;
+      document.getElementById('chatHdSub').textContent='+'+conv.number+(conv.customer&&conv.customer.package&&conv.customer.package.name?(' · '+conv.customer.package.name):'');
+      var av=document.getElementById('chatHdAv'); av.textContent=(nm.charAt(0)||'?').toUpperCase();
+      // thread pesan utk kontak ini (urут naik)
+      var thread=MSGS.filter(function(m){
+        var contactRaw=(m.direction==='inbound'?m.from_number:m.to_number)||'';
+        return last9(contactRaw)===key;
+      }).sort(function(a,b){ return (parseDate(_ts(a))||0)-(parseDate(_ts(b))||0); });
+      renderThread(thread);
+      var scr=document.getElementById('chatScreen'); scr.classList.add('open'); document.body.style.overflow='hidden';
+      // foto profil di header
+      loadHeaderPic(conv.number, av);
+    }
+    function closeChat(){ document.getElementById('chatScreen').classList.remove('open'); document.body.style.overflow=''; _activeContact=null; closeAttachMenu(); }
+
+    function renderThread(thread){
+      var body=document.getElementById('chatBody');
+      if(!thread.length){ body.innerHTML='<div class="chat-empty">Belum ada pesan. Mulai percakapan di bawah.</div>'; return; }
+      var html=''; var lastDay='';
+      thread.forEach(function(m){
+        var day=_day(_ts(m));
+        if(day && day!==lastDay){ html+='<div class="chat-daydiv">'+esc(day)+'</div>'; lastDay=day; }
+        html+=bubble(m);
+      });
+      body.innerHTML=html;
+      body.scrollTop=body.scrollHeight;
+    }
+    function bubble(m){
+      var out=(m.direction==='outbound');
+      var media='';
+      var url=m.media_url||'';
+      var t=(m.message_type||'text');
+      var isImg=(t==='image')||/\.(jpg|jpeg|png|webp|gif)($|\?)/i.test(url);
+      var isVid=(t==='video')||/\.(mp4|3gp|mov)($|\?)/i.test(url);
+      if(url && isImg){ media='<div class="bub-media"><img src="'+esc(url)+'" onclick="showLightbox(\''+esc(url).replace(/'/g,'')+'\')" loading="lazy" alt="Foto"></div>'; }
+      else if(url && isVid){ media='<div class="bub-media"><video src="'+esc(url)+'" controls style="width:100%;max-width:230px;border-radius:9px;"></video></div>'; }
+      else if(url && t==='document'){ media='<a href="'+esc(url)+'" target="_blank" style="display:block;font-size:12px;color:#0ea5e9;margin-bottom:4px;">📄 Buka dokumen</a>'; }
+      var txt=m.message?('<div class="bub-txt">'+esc(m.message).replace(/\n/g,'<br>')+'</div>'):'';
+      var ck='';
+      if(out){
+        var mark=(m.status==='read')?'<span class="ck read">✓✓</span>':(m.status==='delivered')?'<span class="ck">✓✓</span>':(m.status==='failed')?'<span class="ck fail">✕</span>':(m.status==='pending')?'<span class="ck">🕐</span>':'<span class="ck">✓</span>';
+        ck=mark;
+      }
+      return '<div class="bub '+(out?'out':'in')+'">'+media+txt+'<div class="bub-time">'+esc(_clock(_ts(m)))+ck+'</div></div>';
+    }
+
+    async function loadHeaderPic(number, avEl){
+      var sid=document.getElementById('chatSession').value;
+      if(_picCache[number]===false) return;
+      if(_picCache[number]){ avEl.innerHTML='<img src="'+_picCache[number]+'">'; return; }
+      try{
+        var j=await api('/api/wa/profile-picture?session_id='+encodeURIComponent(sid)+'&number='+encodeURIComponent(number));
+        if(j&&j.success&&j.url){
+          var proxied='/api/wa/profile-picture-img?session_id='+encodeURIComponent(sid)+'&number='+encodeURIComponent(number);
+          _picCache[number]=proxied;
+          avEl.innerHTML='<img src="'+proxied+'" onerror="this.remove()">';
+        } else { _picCache[number]=false; }
+      }catch(e){ _picCache[number]=false; }
+    }
+
+    function chatAutoGrow(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
+
+    async function chatSend(){
+      if(!_activeContact) return;
+      var txt=document.getElementById('chatText').value.trim();
+      if(!txt) return;
+      var sid=document.getElementById('chatSession').value;
+      var to=_activeContact.number;
+      var btn=document.getElementById('chatSendBtn'); btn.disabled=true;
+      // optimistic bubble
+      var tmp={direction:'outbound', message:txt, created_at:new Date().toISOString(), status:'pending', message_type:'text'};
+      _appendBubble(tmp);
+      document.getElementById('chatText').value=''; chatAutoGrow(document.getElementById('chatText'));
+      var j=await api('/api/wa/send','POST',{session_id:sid, to:to, message:txt});
+      btn.disabled=false;
+      if(!(j&&j.success)){ toast((j&&j.message)||'Gagal mengirim','err'); }
+      else { loadStats(); _scheduleConvRefresh(); }
+    }
+    function _appendBubble(m){
+      var body=document.getElementById('chatBody');
+      var empty=body.querySelector('.chat-empty'); if(empty) body.innerHTML='';
+      body.insertAdjacentHTML('beforeend', bubble(m));
+      body.scrollTop=body.scrollHeight;
+    }
+
+    /* ── Kirim media ── */
+    var _pendingFile=null;
+    function toggleAttachMenu(){ document.getElementById('attachMenu').classList.toggle('open'); }
+    function closeAttachMenu(){ document.getElementById('attachMenu').classList.remove('open'); }
+    function chatOpenPicker(kind){
+      closeAttachMenu();
+      var id = kind==='camera'?'fileCamera':kind==='gallery'?'fileGallery':kind==='video'?'fileVideo':'fileDocument';
+      var el=document.getElementById(id);
+      if(el){ el.value=''; el.click(); }
+    }
+    function chatPickFile(input){
+      var f=input.files&&input.files[0]; if(!f) return;
+      // Batas 64MB — samakan dengan backend (WA Web)
+      if(f.size>64*1024*1024){ toast('Ukuran file maksimal 64MB','err'); input.value=''; return; }
+      _pendingFile=f;
+      var prev=document.getElementById('mediaPrev');
+      var type=f.type||'';
+      if(/^image\//.test(type)){
+        prev.innerHTML='<img src="'+URL.createObjectURL(f)+'" alt="preview">';
+      } else if(/^video\//.test(type)){
+        prev.innerHTML='<video src="'+URL.createObjectURL(f)+'" controls playsinline style="width:100%;height:100%;object-fit:contain;background:#000;"></video>';
+      } else {
+        var kb=f.size>1048576?((f.size/1048576).toFixed(1)+' MB'):Math.max(1,Math.round(f.size/1024))+' KB';
+        prev.innerHTML='<div class="file-ic"><div style="font-size:38px;">📄</div><div style="font-weight:700;margin-top:6px;word-break:break-all;">'+esc(f.name)+'</div><div style="color:#7c93a0;margin-top:2px;">'+kb+'</div></div>';
+      }
+      document.getElementById('mediaCaption').value='';
+      document.getElementById('mediaOv').classList.add('open'); document.body.style.overflow='hidden';
+      input.value='';
+    }
+    function chatCancelMedia(){ _pendingFile=null; document.getElementById('mediaOv').classList.remove('open'); document.body.style.overflow=''; }
+    async function chatSendMedia(){
+      if(!_pendingFile){ toast('Tidak ada file dipilih','err'); return; }
+      if(!_activeContact){ toast('Buka percakapan dulu','err'); return; }
+      var sid=document.getElementById('chatSession').value;
+      if(!sid){ toast('Device tidak terpilih','err'); return; }
+      var cap=document.getElementById('mediaCaption').value.trim();
+      var btn=document.getElementById('mediaSendBtn'); btn.disabled=true; btn.textContent='Mengirim…';
+      var fd=new FormData();
+      fd.append('file',_pendingFile); fd.append('session_id',sid); fd.append('to',_activeContact.number); if(cap) fd.append('caption',cap);
+      var t=getToken();
+      var fileType=_pendingFile.type||'';
+      var objUrl=URL.createObjectURL(_pendingFile);
+      try{
+        var r=await fetch('/api/wa/send-media',{method:'POST',credentials:'include',headers:Object.assign({'X-Requested-With':'XMLHttpRequest'}, t?{'Authorization':'Bearer '+t}:{}),body:fd});
+        if(r.status===401){ location.href='/login?next=/mobile/wa'; return; }
+        var txt=await r.text(); var j=null; try{ j=txt?JSON.parse(txt):null; }catch(_){}
+        if(r.ok&&j&&j.success){
+          toast('Media terkirim','ok');
+          var mt=/^image\//.test(fileType)?'image':(/^video\//.test(fileType)?'video':'document');
+          _appendBubble({direction:'outbound',message:cap,media_url:objUrl,message_type:mt,created_at:new Date().toISOString(),status:'sent'});
+          loadStats(); _scheduleConvRefresh();
+          chatCancelMedia();
+        } else {
+          var msg=(j&&j.message)?j.message:('Gagal mengirim media'+(r.status?(' ('+r.status+')'):''));
+          toast(msg,'err');
+        }
+      }catch(e){ toast('Gagal mengirim media: '+(e&&e.message?e.message:'jaringan'),'err'); }
+      btn.disabled=false; btn.textContent='Kirim';
+    }
+
+    function showLightbox(url){ document.getElementById('lightboxImg').src=url; document.getElementById('lightbox').classList.add('open'); }
+
+    /* ── util waktu ── */
+    // Parser tanggal tahan-banting (ISO, MySQL "YYYY-MM-DD HH:mm:ss", offset).
+    // WebView sering gagal parse format MySQL dengan spasi → hasilkan Invalid Date.
+    function parseDate(val){
+      if(!val) return null;
+      if(val instanceof Date) return isNaN(val)?null:val;
+      if(typeof val==='number') return new Date(val);
+      var s=String(val).trim();
+      var d=new Date(s); if(!isNaN(d)) return d;
+      d=new Date(s.replace(' ','T')); if(!isNaN(d)) return d;
+      d=new Date(s.replace(' ','T').replace(/(\+\d{2})(\d{2})$/,'$1:$2')); if(!isNaN(d)) return d;
+      return null;
+    }
+    function _ts(m){ return (m && (m.created_at || m.createdAt || m.sent_at)) || null; }
+    function _clock(ts){ var d=parseDate(ts); return d?d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):''; }
+    function _day(ts){
+      var d=parseDate(ts); if(!d) return '';
+      var t=new Date(); var y=new Date(); y.setDate(t.getDate()-1);
+      if(d.toDateString()===t.toDateString()) return 'Hari ini';
+      if(d.toDateString()===y.toDateString()) return 'Kemarin';
+      return d.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+    }
+
+    document.getElementById('addOv').addEventListener('click',function(e){ if(e.target===this) closeAddDevice(); });
+    document.getElementById('delOv').addEventListener('click',function(e){ if(e.target===this) closeDeleteDevice(); });
+    document.getElementById('mediaOv').addEventListener('click',function(e){ if(e.target===this) chatCancelMedia(); });
+    document.getElementById('chatBody').addEventListener('click',function(){ closeAttachMenu(); });
+
+    /* ══════════════ REALTIME (socket.io) ══════════════ */
+    var _wsock=null, _refreshTimer=null;
+    function _currentSid(){ return document.getElementById('chatSession').value || ''; }
+
+    function setupSocket(){
+      if(typeof io==='undefined') return; // socket.io client tak termuat
+      try{
+        _wsock = io({ auth:{ token:getToken() } });
+      }catch(e){ return; }
+
+      _wsock.onAny(function(event, data){
+        var sid=_currentSid();
+
+        // Status koneksi device berubah → segarkan daftar device + stats
+        if(event.indexOf('wa:status:')===0){ loadSessions(); loadStats(); return; }
+        // QR (kalau modal QR sedang terbuka utk session ini)
+        if(_qrSession && event==='wa:qr:'+_qrSession && data && data.qrImage){
+          document.getElementById('qrWrap').innerHTML='<img src="'+data.qrImage+'" alt="QR WhatsApp">';
+          return;
+        }
+        if(event==='wa:session:deleted'){ loadSessions(); loadStats(); return; }
+        // Rekonsiliasi: cron menaikkan pesan pending lama → sent. Segarkan thread
+        // supaya jam pending berubah jadi centang tanpa perlu reload.
+        if(event==='wa:reconciled'){ if(sid) _scheduleConvRefresh(); return; }
+
+        if(!sid) return;
+        if(event==='wa:message:'+sid){ loadStats(); _scheduleConvRefresh(); return; }
+        if(event==='wa:ack:'+sid){ _scheduleConvRefresh(); return; }
+      });
+    }
+
+    function _scheduleConvRefresh(){
+      if(_refreshTimer) clearTimeout(_refreshTimer);
+      _refreshTimer=setTimeout(function(){ _refreshConversationsRealtime(); }, 500);
+    }
+    async function _refreshConversationsRealtime(){
+      var sid=_currentSid(); if(!sid) return;
+      var j=await api('/api/wa/conversations?session_id='+encodeURIComponent(sid));
+      if(!(j&&j.success&&Array.isArray(j.data))) return;
+      MSGS=j.data;
+      var map={};
+      MSGS.forEach(function(m){
+        var contactRaw=(m.direction==='inbound'?m.from_number:m.to_number)||'';
+        var key=last9(contactRaw); if(!key) return;
+        if(!map[key]){ map[key]={key:key, number:digits(contactRaw), name:null, customer:null, last:m, count:0}; }
+        var g=map[key];
+        var mt=parseDate(_ts(m)), gt=parseDate(_ts(g.last));
+        if(mt && (!gt || mt>gt)) g.last=m;
+        if(m.customer) g.customer=m.customer;
+        if(!g.name && m.push_name && m.direction==='inbound') g.name=m.push_name;
+        g.count++;
+      });
+      CONVS=Object.keys(map).map(function(k){ return map[k]; })
+        .sort(function(a,b){ return (parseDate(_ts(b.last))||0)-(parseDate(_ts(a.last))||0); });
+      renderConversations();
+      if(_activeContact){
+        var key=_activeContact.key;
+        var thread=MSGS.filter(function(m){ var cr=(m.direction==='inbound'?m.from_number:m.to_number)||''; return last9(cr)===key; })
+          .sort(function(a,b){ return (parseDate(_ts(a))||0)-(parseDate(_ts(b))||0); });
+        var body=document.getElementById('chatBody');
+        var atBottom=(body.scrollHeight-body.scrollTop-body.clientHeight)<90;
+        renderThread(thread);
+        if(atBottom) body.scrollTop=body.scrollHeight;
+      }
+    }
+
+    setupSocket();
+    loadStats(); loadSessions();
+
+    /* Segarkan status saat halaman kembali aktif (user balik dari app lain).
+       Tanpa ini, status yang tampil bisa basi setelah app lama di-background. */
+    document.addEventListener('visibilitychange', function(){
+      if(document.visibilityState==='visible'){ loadSessions(); loadStats(); }
+    });
+
+    /* Jaring pengaman: poll status ringan tiap 60 dtk kalau halaman terlihat.
+       Socket sudah menangani sebagian besar update; ini hanya cadangan bila
+       koneksi socket sempat putus. */
+    setInterval(function(){
+      if(document.visibilityState==='visible') loadSessions();
+    }, 60000);
+  </script>
+</body>
+</html>

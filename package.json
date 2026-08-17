@@ -1,0 +1,59 @@
+{
+  "name": "FLAYNET.COM",
+  "version": "1.0.0",
+  "description": "Web-Based ISP Management System - ISP NetOps",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "seed": "node backend/seeds/index.js",
+    "migrate": "npx sequelize-cli db:migrate",
+    "build:css": "npx tailwindcss -i frontend/public/css/input.css -o frontend/public/css/output.css --watch"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "6.7.24",
+    "axios": "^1.6.2",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.4",
+    "express-validator": "^7.0.1",
+    "firebase-admin": "^13.8.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.29.4",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.5",
+    "net-snmp": "^3.26.1",
+    "node-cron": "^3.0.3",
+    "node-routeros": "^1.6.8",
+    "nodemailer": "^6.9.7",
+    "pdfkit": "^0.13.0",
+    "pino": "^8.21.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "radius": "^1.1.4",
+    "sequelize": "^6.35.0",
+    "socket.io": "^4.7.2",
+    "ssh2": "^1.17.0",
+    "telnet-client": "^2.2.13",
+    "uuid": "^9.0.0",
+    "web-push": "^3.6.7",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "sequelize-cli": "^6.6.2",
+    "tailwindcss": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

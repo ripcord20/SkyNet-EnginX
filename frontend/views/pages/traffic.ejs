@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --tf-blue:#2563eb; --tf-blue-d:#1d4ed8; --tf-blue-l:#eff6ff;
+      --tf-green:#16a34a; --tf-green-d:#15803d; --tf-green-l:#f0fdf4;
+      --tf-red:#dc2626;   --tf-red-d:#b91c1c;   --tf-red-l:#fef2f2;
+      --tf-amber:#d97706; --tf-amber-d:#b45309; --tf-amber-l:#fffbeb;
+      --tf-teal:#0891b2;  --tf-teal-d:#0e7490;  --tf-teal-l:#ecfeff;
+      --tf-orange:#ea580c;--tf-orange-l:#fff7ed;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .tf { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .tf-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .tf-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .tf-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .tf-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue  { background:var(--tf-blue); border-color:var(--tf-blue); color:#fff; }
+    .btn-blue:hover { background:var(--tf-blue-d); }
+    .btn-sm    { padding:6px 12px; font-size:12px; border-radius:8px; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; background:var(--tf-green-l); border:1px solid #bbf7d0; color:var(--tf-green); }
+    .live-chip .ldot { width:7px; height:7px; border-radius:50%; background:var(--tf-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS — single strip with dividers ── */
+    .tf-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    /* grid breakpoints — see responsive block below */
+
+    .tf-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: default;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .tf-card:last-child { border-right: none; }
+    .tf-card:hover { background: #fafbff; }
+
+    /* ── Active state — biru solid ── */
+    .tf-card.tc-active { background: #2563eb; border-color: #2563eb; cursor: pointer; }
+    .tf-card.tc-active:hover { background: #1d4ed8; }
+    .tf-card.tc-active .card-lbl    { color: rgba(255,255,255,.70); }
+    .tf-card.tc-active .card-val    { color: #fff; }
+    .tf-card.tc-active .card-sub    { color: rgba(255,255,255,.60); }
+    .tf-card.tc-active .card-pill   { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .tf-card.tc-active .sp-line     { stroke: rgba(255,255,255,.70) !important; }
+    .tf-card.tc-active .sp-fill     { fill: rgba(255,255,255,.12) !important; }
+    .tf-card.tc-active .sp-dot      { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; }
+
+    /* body row: angka kiri + sparkline kanan */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+
+    /* meta: pill + sub */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+    }
+    .card-pill svg { width:7px; height:7px; fill:currentColor; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-orange { background:#ffedd5; color:#c2410c; }
+    .pill-neu    { background:#f1f5f9; color:#64748b; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+
+    /* ── Responsive stat cards ── */
+    @media(max-width:700px) {
+      .tf-cards { grid-template-columns:repeat(2,1fr); }
+      .tf-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .tf-card:nth-child(odd) { border-right: 1px solid #e8eaed; }
+      .tf-card:nth-child(even) { border-right: none; }
+      .tf-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .tf-cards { grid-template-columns:1fr; }
+      .tf-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .tf-card:last-child { border-bottom: none; }
+    }
+    .tf-card.tc-active { border-color: #2563eb; }
+
+
+    /* ── CONTROLS BAR ── */
+    .tf-ctrl { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); padding:13px 18px; margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .tf-ctrl-label { font-size:13px; font-weight:700; color:var(--text); }
+    .tf-ctrl-btns  { display:flex; gap:6px; }
+    .ctrl-link { font-size:12px; font-weight:600; color:var(--tf-blue); cursor:pointer; background:none; border:none; font-family:inherit; padding:0; text-decoration:underline; }
+    .ctrl-link.muted { color:var(--muted); }
+    .sel-count { font-size:12px; color:var(--faint); font-weight:500; }
+    .ctrl-r { margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .interval-wrap { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+    .interval-wrap select { padding:5px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:#f8fafc; outline:none; color:#374151; cursor:pointer; }
+    .interval-wrap select:focus { border-color:var(--tf-blue); }
+
+    /* ── INTERFACE GRID ── */
+    .iface-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px; margin-bottom:20px; }
+
+    .iface-card {
+      background:#fff; border:1px solid #e8eaed; border-radius:14px;
+      padding:14px 16px 12px; cursor:pointer; transition:all .18s ease;
+      position:relative; overflow:hidden; display:flex; flex-direction:column; gap:10px;
+    }
+    .iface-card::before {
+      content:''; position:absolute; left:0; top:0; bottom:0;
+      width:3px; background:transparent; transition:background .18s;
+    }
+    .iface-card:hover { border-color:#cbd5e1; transform:translateY(-1px); box-shadow:0 4px 14px -4px rgba(15,23,42,.08); }
+    
+    .iface-card.card-down { opacity:.55; }
+    .iface-card.card-down::before { background:#cbd5e1; }
+
+    /* HEADER: status dot + name + type */
+    .iface-top { display:flex; align-items:center; gap:8px; min-width:0; }
+    .iface-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .dot-up   { background:#22c55e; box-shadow:0 0 0 3px #dcfce7; }
+    .dot-down { background:#cbd5e1; }
+    .iface-name { font-size:13.5px; font-weight:700; color:var(--text); letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
+    .iface-type-badge { font-size:9.5px; font-weight:700; background:#f1f5f9; color:#64748b; border-radius:4px; padding:2px 6px; text-transform:uppercase; letter-spacing:.03em; flex-shrink:0; }
+    .track-tag { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; color:var(--faint); flex-shrink:0; padding:2px 6px; border-radius:4px; background:#f8fafc; text-transform:uppercase; letter-spacing:.04em; }
+    .track-tag.active { color:#fff; background:var(--tf-blue); }
+    .track-tag svg { width:9px; height:9px; stroke-width:3; }
+
+    .iface-comment { font-size:11px; color:#94a3b8; margin:-4px 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; }
+
+    /* ── BODY: RX & TX side-by-side, number as hero ── */
+    .iface-rates { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .rate-cell  { display:flex; flex-direction:column; gap:3px; min-width:0; }
+    .rate-head  { display:flex; align-items:center; gap:4px; }
+    .rate-arrow { width:14px; height:14px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .rate-arrow svg { width:8px; height:8px; stroke-width:3; }
+    .rate-arrow.arrow-rx { background:#dbeafe; color:#1d4ed8; }
+    .rate-arrow.arrow-tx { background:#ffedd5; color:#c2410c; }
+    .rate-lbl  { font-size:9.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
+    .rate-val  { font-size:15px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; line-height:1.1; }
+    .rate-val.rx { color:#1d4ed8; }
+    .rate-val.tx { color:#c2410c; }
+    .rate-unit { font-size:10px; font-weight:600; color:#94a3b8; margin-left:2px; }
+
+    /* Mini sparkline inline, subtle */
+    .rate-spark { height:18px; margin-top:2px; }
+    .rate-spark svg { width:100%; height:100%; display:block; }
+    .rsp-line { stroke-width:1.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .rsp-fill { stroke:none; }
+
+    /* FOOTER */
+    .iface-footer {
+      display:flex; justify-content:space-between; align-items:center;
+      padding-top:8px; border-top:1px dashed #eef2f7; gap:8px;
+    }
+    .iface-mac   { font-size:10px; color:#94a3b8; font-family:'Geist Mono',ui-monospace,Menlo,monospace; letter-spacing:-.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .status-pill { font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:10px; text-transform:uppercase; letter-spacing:.04em; flex-shrink:0; }
+    .pill-running { background:#dcfce7; color:#15803d; }
+    .pill-down    { background:#f1f5f9; color:#94a3b8; }
+
+    /* ── CHART SECTION (ApexCharts modern) ── */
+    .chart-section { background:#fff; border:1px solid #e8eaed; border-radius:var(--rc); overflow:hidden; margin-bottom:20px; transition:border-color .15s; }
+    .chart-section:hover { border-color:#cbd5e1; }
+    .chart-hdr { padding:14px 20px 12px; border-bottom:1px solid #f0f4f8; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    .chart-hdr-l { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .chart-hdr-l h3 { font-size:11px; font-weight:700; color:var(--muted); margin:0; text-transform:uppercase; letter-spacing:.06em; }
+    .chart-mini-legend { display:flex; align-items:center; gap:4px; font-size:9.5px; font-weight:700; }
+    .chart-mini-legend.rx { color:#06b6d4; }
+    .chart-mini-legend.tx { color:#f59e0b; }
+    .chart-mini-legend .swatch-line { width:20px; height:2px; display:inline-block; border-radius:2px; }
+    .chart-mini-legend.rx .swatch-line { background:#06b6d4; }
+    .chart-mini-legend.tx .swatch-line { background:#f59e0b; }
+
+    .chart-stats { display:flex; gap:10px; flex-wrap:wrap; }
+    .chart-stat { display:flex; align-items:baseline; gap:3px; }
+    .chart-stat-lbl { font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
+    .chart-stat-val { font-size:11px; font-weight:700; font-family:'Geist Mono',ui-monospace,Menlo,monospace; color:var(--text); }
+    .chart-stat-val.rx-color { color:#06b6d4; }
+    .chart-stat-val.tx-color { color:#f59e0b; }
+
+    /* Time range buttons */
+    .tc-time-btns { display:flex; gap:3px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:3px; }
+    .tc-time-btn { padding:4px 10px; border:none; background:transparent; color:#64748b; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .tc-time-btn.active { background:var(--tf-blue); color:#fff; }
+
+    /* Chart mode toggle (Aggregate / Per Interface) */
+    .tc-mode-btns { display:flex; gap:3px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; padding:3px; }
+    .tc-mode-btn  { padding:4px 10px; border:none; background:transparent; color:#64748b; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .15s; display:inline-flex; align-items:center; gap:4px; }
+    .tc-mode-btn svg { width:11px; height:11px; }
+    .tc-mode-btn.active { background:#0f172a; color:#fff; }
+
+    /* Per-interface legend chips */
+    .per-if-legend { display:flex; flex-wrap:wrap; gap:6px; padding:8px 14px 4px; border-top:1px solid #f0f4f8; }
+    .per-if-chip { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; color:#334155; background:#f8fafc; border:1px solid #e2e8f0; border-radius:20px; padding:2px 9px; }
+    .per-if-swatch { width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+    /* Live pulse chip di chart header */
+    .chart-live { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:20px; background:#fee2e2; color:#dc2626; font-size:10px; font-weight:800; letter-spacing:.04em; border:1px solid #fecaca; text-transform:uppercase; }
+    .chart-live .live-dot { width:6px; height:6px; border-radius:50%; background:#dc2626; animation:pulse 2s ease-in-out infinite; }
+
+    .chart-body { padding:8px 12px 12px; }
+    .chart-area { height:360px; }
+
+    /* Empty state */
+    .empty-chart { height:360px; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; color:var(--faint); }
+    .empty-chart svg { width:32px; height:32px; opacity:.4; }
+    .empty-chart p { font-size:13px; margin:0; }
+
+    @media(max-width:768px) {
+      .chart-hdr { flex-direction:column; align-items:flex-start; }
+      .chart-stats { gap:8px; }
+      .chart-stat-val { font-size:10.5px; }
+    }
+
+    /* Loading */
+    .loading-state { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--faint); font-size:13px; }
+
+    @media(max-width:768px) {
+      .iface-grid { grid-template-columns:1fr; }
+      .tf-ctrl { gap:8px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout tf">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="tf-hdr">
+        <div class="tf-hdr-l">
+          <h1>
+            Interface Traffic
+          </h1>
+          <p>Monitor traffic real-time semua interface Mikrotik</p>
+        </div>
+        <div class="tf-hdr-r">
+          <!-- MikroTik device selector — render via /js/mikrotik-selector.js -->
+          <div id="mtSelectorMount"></div>
+
+          <div class="interval-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            <select id="pollInterval">
+              <option value="2000">2s</option>
+              <option value="5000" selected>5s</option>
+              <option value="10000">10s</option>
+            </select>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="tf-cards">
+
+        <!-- Running -->
+        <div class="tf-card" id="tc-running" data-filter="running" onclick="tcClick(this)">
+          <div class="card-lbl">Running</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sumRunning">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="pill-running">
+                  <svg viewBox="0 0 10 10"><path d="M5 1l4 8H1z"/></svg>—
+                </span>
+                <span class="card-sub">Interface aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-running" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-running-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-running-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-running-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Down -->
+        <div class="tf-card" id="tc-down" data-filter="down" onclick="tcClick(this)">
+          <div class="card-lbl">Down</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sumDown">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="pill-down">
+                  <svg viewBox="0 0 10 10"><path d="M5 9L1 1h8z"/></svg>—
+                </span>
+                <span class="card-sub">Interface mati</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-down" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-down-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-down-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-down-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total RX -->
+        <div class="tf-card" id="tc-rx" data-filter="rx" onclick="tcClick(this)">
+          <div class="card-lbl">Total RX</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sumRx">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="pill-rx">↓ Mbps</span>
+                <span class="card-sub">Download agregat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-rx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-rx-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-rx-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-rx-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total TX -->
+        <div class="tf-card" id="tc-tx" data-filter="tx" onclick="tcClick(this)">
+          <div class="card-lbl">Total TX</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sumTx">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-orange" id="pill-tx">↑ Mbps</span>
+                <span class="card-sub">Upload agregat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-tx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-tx-fill" d="" fill="#ea580c" opacity=".12"/>
+                <path class="sp-line" id="sp-tx-line" d="" stroke="#ea580c"/>
+                <circle class="sp-dot" id="sp-tx-dot" r="2.5" fill="#ea580c"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live chart -->
+      <div class="chart-section" id="mainChartSection">
+        <div class="chart-hdr">
+          <div class="chart-hdr-l">
+            <h3>Real Time Traffic</h3>
+            <span class="chart-mini-legend rx" id="legend-rx-agg"><span class="swatch-line" style="background:#06b6d4"></span>RX</span>
+            <span class="chart-mini-legend tx" id="legend-tx-agg" style="color:#f59e0b"><span class="swatch-line" style="background:#f59e0b"></span>TX</span>
+          </div>
+          <div class="chart-hdr-r" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="chart-stats" id="chartAggStats">
+              <span class="chart-stat"><span class="chart-stat-lbl">↓ RX</span><span class="chart-stat-val rx-color" id="tc-rx-cur" style="color:#06b6d4">0</span></span>
+              <span class="chart-stat"><span class="chart-stat-lbl">↑ TX</span><span class="chart-stat-val tx-color" id="tc-tx-cur" style="color:#f59e0b">0</span></span>
+              <span class="chart-stat"><span class="chart-stat-lbl">avg↓</span><span class="chart-stat-val" id="tc-rx-avg">0</span></span>
+              <span class="chart-stat"><span class="chart-stat-lbl">avg↑</span><span class="chart-stat-val" id="tc-tx-avg">0</span></span>
+              <span class="chart-stat"><span class="chart-stat-lbl">max↓</span><span class="chart-stat-val" id="tc-rx-max">0</span></span>
+              <span class="chart-stat"><span class="chart-stat-lbl">max↑</span><span class="chart-stat-val" id="tc-tx-max">0</span></span>
+            </div>
+            <div class="tc-mode-btns" id="tc-mode-btns" title="Tampilan Chart">
+              <button class="tc-mode-btn active" data-mode="aggregate" title="Total gabungan semua interface">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 17l5-6 4 4 7-9"/></svg>
+                Aggregate
+              </button>
+              <button class="tc-mode-btn" data-mode="per-interface" title="Per interface breakdown">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+                Per Interface
+              </button>
+            </div>
+            <div class="tc-time-btns" id="tc-time-btns">
+              <button class="tc-time-btn active" data-min="1">1m</button>
+              <button class="tc-time-btn" data-min="5">5m</button>
+              <button class="tc-time-btn" data-min="10">10m</button>
+              <button class="tc-time-btn" data-min="30">30m</button>
+            </div>
+          </div>
+        </div>
+        <div class="per-if-legend" id="chartPerIfLegend" style="display:none;"></div>
+        <div class="chart-body">
+          <div class="empty-chart" id="emptyChart">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            <p>Pilih interface di bawah untuk mulai tracking</p>
+          </div>
+          <div class="chart-area" id="mainChart" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="tf-ctrl">
+        <span class="tf-ctrl-label">Interfaces</span>
+        <button class="ctrl-link" id="btnSelectAll">Select All</button>
+        <button class="ctrl-link muted" id="btnClearAll">Clear</button>
+        <span class="sel-count" id="selectedCount">0 selected untuk live chart</span>
+        <div class="ctrl-r">
+          <span style="font-size:12px;color:var(--faint);" id="ifaceCount"></span>
+        </div>
+      </div>
+
+      <!-- Interface grid -->
+      <div class="iface-grid" id="ifaceGrid">
+        <div class="loading-state">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;margin-bottom:8px"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          <br>Memuat interfaces...
+        </div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/mikrotik-selector.js"></script>
+<script src="/js/traffic.js"></script>
+
+<script>
+/* ── Traffic stat card sparkline helper ── */
+(function(){
+  const W=72, H=36;
+  const history = { running:[], down:[], rx:[], tx:[] };
+  const MAX = 20;
+
+  function sparkPath(vals, color) {
+    if (!vals || vals.length < 2) return;
+    const mn=Math.min(...vals), mx=Math.max(...vals), rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W, H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i) return 'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1], cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1], fp=pts[0];
+    const fill=d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z';
+    return { d, fill, dot: lp };
+  }
+
+  function updateSpark(id, vals, color) {
+    const sp = sparkPath(vals, color);
+    if (!sp) return;
+    const fillEl = document.getElementById(id+'-fill');
+    const lineEl = document.getElementById(id+'-line');
+    const dotEl  = document.getElementById(id+'-dot');
+    if (fillEl) fillEl.setAttribute('d', sp.fill);
+    if (lineEl) lineEl.setAttribute('d', sp.d);
+    if (dotEl)  { dotEl.setAttribute('cx', sp.dot[0].toFixed(1)); dotEl.setAttribute('cy', sp.dot[1].toFixed(1)); }
+  }
+
+  function push(key, val) {
+    history[key].push(val);
+    if (history[key].length > MAX) history[key].shift();
+  }
+
+  // Observe DOM changes on stat values and update sparklines + pills
+  function readNum(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const txt = el.textContent.replace(/[^\d.]/g,'');
+    return parseFloat(txt) || 0;
+  }
+
+  function updatePill(pillId, curr, prev, type) {
+    const el = document.getElementById(pillId);
+    if (!el) return;
+    if (prev == null) return;
+    const diff = curr - prev;
+    if (type === 'count') {
+      // For interface counts: just show number
+      el.textContent = curr;
+      return;
+    }
+    // For rates: show Mbps change
+    const sign = diff > 0 ? '+' : '';
+    el.textContent = sign + diff.toFixed(1) + ' Mbps';
+  }
+
+  let prevVals = null;
+
+  window._tfUpdateCards = function() {
+    const vals = {
+      running: readNum('sumRunning'),
+      down:    readNum('sumDown'),
+      rx:      readNum('sumRx'),
+      tx:      readNum('sumTx'),
+    };
+
+    push('running', vals.running);
+    push('down',    vals.down);
+    push('rx',      vals.rx);
+    push('tx',      vals.tx);
+
+    updateSpark('sp-running', history.running, '#16a34a');
+    updateSpark('sp-down',    history.down,    '#dc2626');
+    updateSpark('sp-rx',      history.rx,      '#2563eb');
+    updateSpark('sp-tx',      history.tx,      '#ea580c');
+
+    // Update pills
+    const pillRunning = document.getElementById('pill-running');
+    const pillDown    = document.getElementById('pill-down');
+    const pillRx      = document.getElementById('pill-rx');
+    const pillTx      = document.getElementById('pill-tx');
+    if (pillRunning) pillRunning.textContent = vals.running + ' aktif';
+    if (pillDown)    pillDown.textContent    = vals.down + ' mati';
+    if (pillRx)      pillRx.textContent      = '↓ ' + vals.rx.toFixed(1) + ' Mbps';
+    if (pillTx)      pillTx.textContent      = '↑ ' + vals.tx.toFixed(1) + ' Mbps';
+
+    prevVals = vals;
+  };
+
+  // Hook: observe stat value elements untuk auto-update sparkline setiap kali traffic.js update DOM
+  function observeEl(id, cb) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new MutationObserver(cb).observe(el, { childList:true, characterData:true, subtree:true });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    observeEl('sumRunning', function() { setTimeout(window._tfUpdateCards, 50); });
+    observeEl('sumRx',      function() { setTimeout(window._tfUpdateCards, 50); });
+    window._tfUpdateCards();
+  });
+})();
+</script>
+
+<script>
+/* ── Stat card click — active state ── */
+function tcClick(el) {
+  const cards = document.querySelectorAll('.tf-card[data-filter]');
+  const wasActive = el.classList.contains('tc-active');
+
+  // Toggle off jika sudah active (klik lagi = reset)
+  cards.forEach(c => {
+    c.classList.remove('tc-active');
+    // Restore sparkline warna asli
+    const colors = { running:'#16a34a', down:'#dc2626', rx:'#2563eb', tx:'#ea580c' };
+    const f = c.dataset.filter;
+    const line = c.querySelector('.sp-line');
+    const fill = c.querySelector('.sp-fill');
+    const dot  = c.querySelector('.sp-dot');
+    if (line) line.style.stroke = colors[f] || '';
+    if (fill) fill.style.fill   = colors[f] || '';
+    if (dot)  dot.style.fill    = colors[f] || '';
+  });
+
+  if (!wasActive) {
+    el.classList.add('tc-active');
+    // Sparkline jadi putih saat active
+    const line = el.querySelector('.sp-line');
+    const fill = el.querySelector('.sp-fill');
+    const dot  = el.querySelector('.sp-dot');
+    if (line) line.style.stroke = 'rgba(255,255,255,.70)';
+    if (fill) fill.style.fill   = 'rgba(255,255,255,.12)';
+    if (dot)  dot.style.fill    = '#fff';
+  }
+
+  // Filter iface-card berdasarkan status (opsional visual feedback)
+  const filter = wasActive ? null : el.dataset.filter;
+  filterIfaceCards(filter);
+}
+
+function filterIfaceCards(filter) {
+  const cards = document.querySelectorAll('.iface-card');
+  if (!cards.length) return;
+
+  cards.forEach(c => {
+    if (!filter || filter === 'rx' || filter === 'tx') {
+      // rx/tx: tampilkan semua, tidak ada status filter
+      c.style.opacity = '';
+      c.style.transition = '';
+      return;
+    }
+    const isDown    = c.classList.contains('card-down');
+    const isRunning = !isDown;
+    if (filter === 'running') {
+      c.style.opacity    = isRunning ? '1' : '0.25';
+      c.style.transition = 'opacity .2s';
+    } else if (filter === 'down') {
+      c.style.opacity    = isDown ? '1' : '0.25';
+      c.style.transition = 'opacity .2s';
+    }
+  });
+}
+</script>
+</body>
+</html>

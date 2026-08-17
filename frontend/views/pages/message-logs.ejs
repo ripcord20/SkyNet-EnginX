@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    :root{
+      --a-bg:#f6f8fc; --a-card:#ffffff; --a-border:#eaeef6; --a-line:#f1f4fa;
+      --a-text:#16203a; --a-muted:#7c879c; --a-soft:#aab2c4;
+      --a-blue:#2563eb; --a-blue2:#3b82f6; --a-blue-soft:#eef3ff;
+      --a-teal:#0fb6a3; --a-teal2:#14b8a6; --a-teal-soft:#e6faf6;
+      --a-green:#10b981; --a-red:#ef4444; --a-amber:#f59e0b;
+    }
+    *{box-sizing:border-box;}
+    body{background:var(--a-bg);font-family:'DM Sans',sans-serif;color:var(--a-text);}
+    .page-content{padding:22px 26px 44px;}
+
+    .a-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+    .a-h1{font-size:23px;font-weight:800;letter-spacing:-.02em;}
+    .a-h1-sub{font-size:13px;color:var(--a-muted);font-weight:500;margin-top:3px;letter-spacing:0;}
+    .a-head-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .a-btn{font-family:inherit;font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 15px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:7px;border:1px solid var(--a-border);background:#fff;color:var(--a-text);transition:all .15s;}
+    .a-btn:hover{border-color:var(--a-soft);}
+    .a-btn.solid{background:var(--a-blue);color:#fff;border:none;}
+    .a-btn.solid:hover{background:#1d4ed8;}
+    .a-btn:disabled{opacity:.5;cursor:default;}
+
+    .a-sec{display:flex;align-items:center;justify-content:space-between;margin:0 0 13px;}
+    .a-sec-t{font-size:15px;font-weight:800;letter-spacing:-.01em;}
+
+    /* delivery cards */
+    .a-deliv{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+    @media(max-width:1080px){.a-deliv{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:560px){.a-deliv{grid-template-columns:1fr;}}
+    .a-dc{background:var(--a-card);border:1px solid var(--a-border);border-radius:16px;padding:16px 17px 8px;position:relative;overflow:hidden;cursor:pointer;transition:transform .14s,box-shadow .14s,background .18s,border-color .14s;}
+    .a-dc:hover{transform:translateY(-2px);box-shadow:0 8px 22px -8px rgba(22,32,58,.22);}
+    .a-dc:hover:not(.sel){border-color:#c9d6ee;}
+    /* highlight (gradient biru) — dipakai untuk kartu terpilih */
+    .a-dc.hl,.a-dc.sel{background:linear-gradient(150deg,var(--a-blue) 0%,#4f6ef0 55%,var(--a-teal) 165%);border:none;color:#fff;}
+    .a-dc.sel{box-shadow:0 10px 26px -8px rgba(37,99,235,.5);}
+    .a-dc-top{display:flex;align-items:center;justify-content:space-between;}
+    .a-dc-lbl{font-size:12.5px;font-weight:700;color:var(--a-muted);}
+    .a-dc.hl .a-dc-lbl,.a-dc.sel .a-dc-lbl{color:rgba(255,255,255,.9);}
+    .a-dc-i{color:var(--a-soft);}
+    .a-dc.hl .a-dc-i,.a-dc.sel .a-dc-i{color:rgba(255,255,255,.7);}
+    .a-dc-val{display:flex;align-items:baseline;gap:9px;margin-top:11px;}
+    .a-dc-num{font-size:29px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+    .a-dc-delta{font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;}
+    .a-dc-delta.up{color:var(--a-green);background:#e7f9f1;}
+    .a-dc-delta.down{color:var(--a-red);background:#fdecec;}
+    .a-dc.hl .a-dc-delta,.a-dc.sel .a-dc-delta{background:rgba(255,255,255,.22);color:#fff;}
+    .a-dc-sub{font-size:11.5px;font-weight:600;color:var(--a-soft);margin-top:7px;}
+    .a-dc.hl .a-dc-sub,.a-dc.sel .a-dc-sub{color:rgba(255,255,255,.82);}
+    .a-dc-spark{height:42px;margin:6px -2px 0;}
+    /* badge filter aktif di pojok kartu */
+    .a-dc-flag{position:absolute;top:11px;right:13px;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+      background:rgba(255,255,255,.25);color:#fff;padding:2px 7px;border-radius:20px;display:none;}
+    .a-dc.sel .a-dc-flag{display:inline-block;}
+
+    /* chart panels */
+    .a-row{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:24px;}
+    @media(max-width:900px){.a-row{grid-template-columns:1fr;}}
+    .a-card{background:var(--a-card);border:1px solid var(--a-border);border-radius:18px;padding:18px 20px;}
+    .a-card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:10px;}
+    .a-card-t{font-size:14.5px;font-weight:800;display:flex;align-items:center;gap:8px;}
+    .a-legend{display:flex;gap:15px;align-items:center;font-size:12px;font-weight:600;color:var(--a-muted);flex-wrap:wrap;}
+    .a-legend span{display:inline-flex;align-items:center;gap:6px;}
+    .a-legend i{width:9px;height:9px;border-radius:50%;}
+    .a-rangebtns{display:inline-flex;background:#f3f6fc;border-radius:9px;padding:3px;gap:2px;}
+    .a-rangebtns button{border:none;background:none;font-family:inherit;font-size:12px;font-weight:700;color:var(--a-muted);padding:6px 12px;border-radius:7px;cursor:pointer;}
+    .a-rangebtns button.on{background:#fff;color:var(--a-blue);box-shadow:0 1px 3px rgba(22,32,58,.08);}
+
+    .a-donut-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin-top:4px;}
+    .a-donut-c{position:absolute;text-align:center;pointer-events:none;}
+    .a-donut-c .big{font-size:27px;font-weight:800;letter-spacing:-.02em;}
+    .a-donut-c .cap{font-size:11px;font-weight:600;color:var(--a-muted);margin-top:1px;}
+    .a-dlegend{display:flex;flex-wrap:wrap;gap:12px 18px;justify-content:center;margin-top:10px;font-size:12px;font-weight:600;color:var(--a-muted);}
+    .a-dlegend span{display:inline-flex;align-items:center;gap:7px;}
+    .a-dlegend i{width:9px;height:9px;border-radius:50%;}
+
+    /* table card */
+    .a-tcard{background:var(--a-card);border:1px solid var(--a-border);border-radius:18px;padding:18px 20px;}
+    .a-tabs{display:inline-flex;background:#f3f6fc;border-radius:10px;padding:3px;gap:2px;}
+    .a-tabs button{border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--a-muted);padding:7px 16px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+    .a-tabs button.on{background:#fff;color:var(--a-blue);box-shadow:0 1px 3px rgba(22,32,58,.08);}
+    .a-tabs .cnt{font-size:10px;font-weight:800;background:#eef3ff;color:var(--a-blue);padding:1px 7px;border-radius:20px;}
+    .a-tabs button.on .cnt{background:var(--a-blue-soft);}
+    .a-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;}
+    .a-search{display:flex;align-items:center;gap:7px;border:1px solid var(--a-border);border-radius:10px;padding:8px 12px;background:#fff;min-width:170px;}
+    .a-search input{border:none;outline:none;font-family:inherit;font-size:13px;width:100%;color:var(--a-text);background:transparent;}
+    .a-fi{font-family:inherit;font-size:12.5px;border:1px solid var(--a-border);border-radius:10px;padding:8px 11px;background:#fff;color:var(--a-text);outline:none;}
+    .a-fi:focus{border-color:var(--a-blue);}
+
+    .a-tbl{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px;}
+    .a-tbl thead th{text-align:left;padding:11px 12px;font-size:11px;font-weight:700;color:var(--a-soft);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--a-line);white-space:nowrap;}
+    .a-tbl tbody td{padding:12px;border-bottom:1px solid var(--a-line);vertical-align:middle;}
+    .a-tbl tbody tr:last-child td{border-bottom:none;}
+    .a-tbl tbody tr:hover{background:#fafcff;cursor:pointer;}
+    .a-phone{font-family:'DM Mono',monospace;font-size:12.5px;color:#374151;font-weight:500;}
+    .a-msg{font-family:'DM Mono',monospace;font-size:11.5px;color:#475569;line-height:1.5;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .a-st{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+    .a-st::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+    .st-sent{background:#e7f9f1;color:#0a8f5f;} .st-failed{background:#fdecec;color:#dc2626;}
+    .st-pending{background:#fff4e0;color:#d97706;} .st-in{background:var(--a-blue-soft);color:var(--a-blue);}
+    .a-tc{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+    .tc-text{background:var(--a-blue-soft);color:var(--a-blue);} .tc-image{background:#fff4e0;color:#d97706;}
+    .tc-document{background:var(--a-teal-soft);color:#0a8f80;} .tc-audio{background:#fce7f3;color:#be185d;}
+    .a-when{font-size:11.5px;color:var(--a-muted);white-space:nowrap;}
+
+    .a-empty{text-align:center;color:var(--a-soft);padding:34px;font-size:13px;}
+    .a-empty svg{width:34px;height:34px;margin-bottom:8px;opacity:.4;}
+    .a-skel{color:var(--a-soft);text-align:center;padding:26px;font-size:13px;}
+
+    /* pagination */
+    .a-pg{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--a-line);flex-wrap:wrap;gap:8px;}
+    .a-pg-info{font-size:12px;color:var(--a-muted);}
+    .a-pg-btns{display:flex;gap:4px;}
+    .a-pg-btn{padding:5px 11px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--a-border);background:#fff;color:var(--a-text);transition:all .12s;}
+    .a-pg-btn:hover:not(:disabled){background:#f4f8ff;}
+    .a-pg-btn.on{background:var(--a-blue);border-color:var(--a-blue);color:#fff;}
+    .a-pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+    .a-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--a-text);color:#fff;padding:13px 22px;border-radius:13px;font-size:13px;font-weight:600;z-index:10002;transition:all .3s;box-shadow:0 16px 36px rgba(22,32,58,.26);pointer-events:none;max-width:90vw;}
+    .a-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .a-toast.err{background:#b91c1c;}
+
+    /* modal */
+    .a-modal{display:none;position:fixed;inset:0;background:rgba(13,27,62,.5);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+    .a-modal.show{display:flex;}
+    .a-modal-box{background:#fff;border-radius:20px;width:100%;max-width:560px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(13,27,62,.28);}
+    .a-modal-h{padding:16px 20px;border-bottom:1px solid var(--a-border);display:flex;align-items:center;justify-content:space-between;}
+    .a-modal-b{padding:18px;overflow-y:auto;}
+    .a-modal-msg{font-family:'DM Mono',monospace;font-size:12.5px;white-space:pre-wrap;line-height:1.8;background:#f7f9fd;border-radius:12px;padding:14px;border:1px solid var(--a-border);color:#1a1a1a;word-break:break-word;}
+    .a-lbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--a-muted);margin-bottom:6px;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="a-head">
+        <div>
+          <div class="a-h1">Message Logs</div>
+          <div class="a-h1-sub">Riwayat pengiriman &amp; penerimaan pesan WhatsApp secara global</div>
+        </div>
+        <div class="a-head-r">
+          <button class="a-btn" onclick="exportLogs()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export CSV
+          </button>
+          <button class="a-btn solid" onclick="reloadAll()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg>
+            Muat Ulang
+          </button>
+        </div>
+      </div>
+
+      <!-- Delivery cards -->
+      <div class="a-sec"><div class="a-sec-t">Ringkasan Pengiriman</div></div>
+      <div class="a-deliv" id="deliv">
+        <div class="a-dc"><div class="a-skel">Memuat…</div></div>
+        <div class="a-dc"><div class="a-skel">&nbsp;</div></div>
+        <div class="a-dc"><div class="a-skel">&nbsp;</div></div>
+        <div class="a-dc"><div class="a-skel">&nbsp;</div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="a-row">
+        <div class="a-card">
+          <div class="a-card-h">
+            <div class="a-card-t">Aktivitas Pengiriman</div>
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <div class="a-legend">
+                <span><i style="background:#2563eb;"></i>Keluar</span>
+                <span><i style="background:#0fb6a3;"></i>Masuk</span>
+                <span><i style="background:#ef4444;"></i>Gagal</span>
+              </div>
+              <div class="a-rangebtns">
+                <button class="on" id="days7"  onclick="setChartDays(7,this)">7 hari</button>
+                <button id="days14" onclick="setChartDays(14,this)">14 hari</button>
+                <button id="days30" onclick="setChartDays(30,this)">30 hari</button>
+              </div>
+            </div>
+          </div>
+          <div id="trendChart" style="min-height:280px;"></div>
+        </div>
+
+        <div class="a-card">
+          <div class="a-card-h"><div class="a-card-t">Komposisi Status</div></div>
+          <div class="a-donut-wrap">
+            <div id="statusDonut" style="width:100%;"></div>
+            <div class="a-donut-c" id="statusCenter"><div class="big">—</div><div class="cap">total pesan</div></div>
+          </div>
+          <div class="a-dlegend" id="statusLegend"></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="a-tcard">
+        <div class="a-card-h" style="margin-bottom:6px;">
+          <div class="a-tabs">
+            <button class="on" id="tabOut" onclick="switchTab('outgoing',this)">Pesan Keluar <span class="cnt" id="tabOutCount">–</span></button>
+            <button id="tabIn" onclick="switchTab('incoming',this)">Pesan Masuk <span class="cnt" id="tabInCount">–</span></button>
+          </div>
+          <div class="a-tools">
+            <div class="a-search">
+              <svg width="15" height="15" fill="none" stroke="#aab2c4" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4-4"/></svg>
+              <input id="filterSearch" placeholder="Cari nomor / pesan…" oninput="onFilterChange()">
+            </div>
+            <select class="a-fi" id="filterStatus" onchange="onFilterChange()">
+              <option value="">Semua Status</option>
+              <option value="sent">Terkirim</option>
+              <option value="failed">Gagal</option>
+            </select>
+            <select class="a-fi" id="filterType" onchange="onFilterChange()">
+              <option value="">Semua Tipe</option>
+              <option value="text">Teks</option>
+              <option value="image">Gambar</option>
+              <option value="document">Dokumen</option>
+            </select>
+            <input type="date" class="a-fi" id="filterDateFrom" onchange="onFilterChange()" title="Dari tanggal">
+            <input type="date" class="a-fi" id="filterDateTo" onchange="onFilterChange()" title="Sampai tanggal">
+            <button class="a-btn" onclick="resetFilters()">Reset</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="a-tbl" id="logTable">
+            <thead id="logTableHead"></thead>
+            <tbody id="logTableBody"><tr><td colspan="7"><div class="a-skel">Memuat…</div></td></tr></tbody>
+          </table>
+        </div>
+        <div class="a-pg">
+          <div class="a-pg-info" id="pgInfo">–</div>
+          <div class="a-pg-btns" id="pgBtns"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Detail modal -->
+<div class="a-modal" id="msgModal" onclick="if(event.target===this)closeModal()">
+  <div class="a-modal-box">
+    <div class="a-modal-h">
+      <div>
+        <div style="font-size:14px;font-weight:800;color:#16203a;">Detail Pesan</div>
+        <div style="font-size:12px;color:var(--a-muted);" id="modalMeta">–</div>
+      </div>
+      <button onclick="closeModal()" style="width:30px;height:30px;border-radius:8px;border:1px solid var(--a-border);background:#f4f8ff;cursor:pointer;color:var(--a-muted);font-size:16px;">×</button>
+    </div>
+    <div class="a-modal-b">
+      <div class="a-lbl">Isi Pesan</div>
+      <div class="a-modal-msg" id="modalMsg">–</div>
+      <div id="modalApiResp" style="margin-top:14px;display:none;">
+        <div class="a-lbl">API Response</div>
+        <div class="a-modal-msg" id="modalApi" style="font-size:11px;color:#64748b;max-height:140px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="a-toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/message-logs.js"></script>
+</body>
+</html>

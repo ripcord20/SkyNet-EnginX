@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/telegram-shared.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+    <div class="et-page">
+
+      <!-- Header -->
+      <div class="et-hdr">
+        <div>
+          <div class="et-title">
+            Telegram Report
+          </div>
+          <div class="et-sub">Kirim ringkasan operasional harian ke Telegram — terjadwal otomatis, dengan preview langsung</div>
+        </div>
+        <div class="et-actions">
+          <button class="et-btn et-btn-tg" id="btnSendNow" onclick="sendNow()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Kirim Sekarang
+          </button>
+          <button class="et-btn et-btn-primary" id="btnSave" onclick="saveAll()">
+            <svg id="btnSaveIcon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="btnSaveLabel">Simpan Perubahan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat strip -->
+      <div class="rm-strip">
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Status Jadwal</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scStatus" style="font-size:19px;">—</div>
+            <div class="rm-sc-meta"><span class="rm-status-dot" id="scStatusDot" style="background:#cbd5e1;"></span><span class="rm-sc-sub" id="scStatusSub">memuat…</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Frekuensi</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scFreq" style="font-size:19px;">Harian</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-blue" id="scFreqPill">07:00</span><span class="rm-sc-sub">jam kirim</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Blok Konten</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scBlocks">0</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-teal" id="scBlocksPill">0/5</span><span class="rm-sc-sub">dipilih</span></div></div></div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Terakhir Kirim</div>
+          <div class="rm-sc-body"><div><div class="rm-sc-val" id="scLast" style="font-size:16px;">—</div>
+            <div class="rm-sc-meta"><span class="rm-sc-pill pill-grey" id="scLastPill">belum ada</span></div></div></div>
+        </div>
+      </div>
+
+      <div id="tgWarn" class="tg-banner" style="display:none;">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-2.99l-6.93-12a2 2 0 00-3.48 0l-6.93 12A2 2 0 005.07 19z"/></svg>
+        <span id="tgWarnText"></span>
+        <a href="/telegram" class="tg-banner-link">Buka Telegram Center →</a>
+      </div>
+
+      <!-- Mobile tabs -->
+      <div class="et-mtabs">
+        <button type="button" class="et-mtab active" data-mtab="edit" onclick="mtab('edit')">Pengaturan</button>
+        <button type="button" class="et-mtab" data-mtab="prev" onclick="mtab('prev')">Preview</button>
+      </div>
+
+      <div class="et-grid m-edit tg-grid-2" id="etGrid">
+        <!-- LEFT: settings -->
+        <div class="et-editor-col">
+          <!-- Schedule -->
+          <div class="et-card" style="margin-bottom:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+              Jadwal Pengiriman
+              <label class="et-switch sw-blue" style="margin-left:auto;" title="Aktifkan jadwal otomatis">
+                <input type="checkbox" id="rp-enabled" onchange="onAnyChange();refreshStatus()"><span class="et-track"></span>
+              </label>
+            </div>
+            <div class="et-editor">
+              <div class="et-field">
+                <div class="et-label">Frekuensi</div>
+                <select class="et-sel" id="rp-frequency" onchange="onAnyChange();onFreqChange()">
+                  <option value="daily">Harian</option>
+                  <option value="weekly">Mingguan</option>
+                  <option value="monthly">Bulanan</option>
+                </select>
+              </div>
+              <div class="tg-row2">
+                <div class="et-field">
+                  <div class="et-label">Jam Kirim</div>
+                  <input type="time" class="et-inp" id="rp-time" onchange="onAnyChange();refreshStatus()">
+                </div>
+                <div class="et-field" id="rp-dow-wrap" style="display:none;">
+                  <div class="et-label">Hari (mingguan)</div>
+                  <select class="et-sel" id="rp-dow" onchange="onAnyChange()">
+                    <option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option>
+                    <option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option><option value="0">Minggu</option>
+                  </select>
+                </div>
+                <div class="et-field" id="rp-dom-wrap" style="display:none;">
+                  <div class="et-label">Tanggal (bulanan)</div>
+                  <select class="et-sel" id="rp-dom" onchange="onAnyChange()"></select>
+                </div>
+              </div>
+              <div class="et-field" style="margin-bottom:0;">
+                <div class="et-label">Tujuan Chat ID <span style="font-weight:600;color:#94a3b8;">(opsional)</span></div>
+                <input type="text" class="et-inp" id="rp-chat" placeholder="Kosongkan = pakai Chat ID utama" oninput="onAnyChange()">
+                <div class="et-hint">Isi untuk kirim report ke grup berbeda (mis. grup owner). Multi: pisah koma.</div>
+              </div>
+
+              <!-- Opsi lanjutan -->
+              <div class="rp-opt-list">
+                <label class="rp-opt">
+                  <span class="rp-opt-tx"><div class="rp-opt-t">Blok perbandingan</div><div class="rp-opt-d">Tampilkan ▲▼ vs periode sebelumnya</div></span>
+                  <span class="et-switch sw-blue"><input type="checkbox" id="rp-compare" onchange="onAnyChange();schedulePreview()"><span class="et-track"></span></span>
+                </label>
+                <label class="rp-opt">
+                  <span class="rp-opt-tx"><div class="rp-opt-t">Tombol "Lihat Dashboard"</div><div class="rp-opt-d">Inline keyboard deep-link (butuh URL aplikasi)</div></span>
+                  <span class="et-switch sw-blue"><input type="checkbox" id="rp-show-button" onchange="onAnyChange()"><span class="et-track"></span></span>
+                </label>
+                <label class="rp-opt">
+                  <span class="rp-opt-tx"><div class="rp-opt-t">Notifikasi bila gagal</div><div class="rp-opt-d">Kirim peringatan ke Chat ID utama saat gagal kirim</div></span>
+                  <span class="et-switch sw-blue"><input type="checkbox" id="rp-notify-fail" onchange="onAnyChange()"><span class="et-track"></span></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content blocks -->
+          <div class="et-card" style="margin-bottom:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+              Konten Report
+            </div>
+            <div class="et-editor" id="rp-blocks"></div>
+          </div>
+
+          <!-- Template -->
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Template (opsional)
+            </div>
+            <div class="et-editor">
+              <div class="et-hint" style="margin-bottom:8px;">Kosongkan untuk pakai format bawaan. Isi untuk kustom penuh — klik placeholder untuk menyisipkan.</div>
+              <div class="tg-ph-row" id="rp-phs"></div>
+              <textarea id="rp-template" class="et-ta" placeholder="Mis: 📊 Laporan {tanggal}&#10;Pelanggan baru: {pelanggan_baru}&#10;Uang masuk: {uang_masuk}" oninput="onAnyChange();schedulePreview()"></textarea>
+              <div class="et-editor-foot">
+                <button class="et-link-btn" onclick="clearTemplate()">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-9 0v14a2 2 0 002 2h6a2 2 0 002-2V6"/></svg>
+                  Kosongkan (pakai bawaan)
+                </button>
+                <span class="rp-charcount" id="rp-charcount">— / 4096 karakter</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: preview -->
+        <div class="et-preview-col">
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Langsung
+              <button onclick="schedulePreview(true)" title="Muat ulang" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#229ED9;font-size:11px;font-weight:800;">↻ Refresh</button>
+            </div>
+            <div class="tg-cat-tag"><span class="rm-status-dot" style="background:#229ED9;"></span><span>Ringkasan Operasional · data hari ini</span></div>
+            <div class="tg-chat">
+              <div class="tg-bar">
+                <div class="tg-av"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg></div>
+                <div class="tg-meta"><div class="tg-name">Bot Report</div><div class="tg-status">bot</div></div>
+              </div>
+              <div class="tg-body">
+                <div class="tg-empty" id="tgEmpty">Memuat preview…</div>
+                <div class="tg-bubble" id="tgBubble" style="display:none;">
+                  <div class="tg-text" id="tgText"></div>
+                  <div class="tg-time" id="tgTime">00.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Riwayat pengiriman -->
+          <div class="et-card" style="margin-top:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Riwayat Pengiriman
+              <button onclick="RP.refreshHistory()" title="Muat ulang" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#229ED9;font-size:11px;font-weight:800;">↻ Refresh</button>
+            </div>
+            <div class="rp-history" id="rp-history">
+              <div class="rp-hist-empty">Memuat riwayat…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </main>
+  </div>
+</div>
+
+<!-- Result modal -->
+<div id="resultModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card"><div class="rm-icon" id="rmIcon"></div>
+    <div class="rm-title" id="rmTitle">Berhasil</div>
+    <div class="rm-msg" id="rmMsg"></div>
+    <button class="et-btn et-btn-primary rm-ok" onclick="closeResult()">Selesai</button>
+  </div>
+</div>
+
+<script>window.__COMPANY = <%- JSON.stringify(appName || 'ISP') %>;</script>
+<script src="/js/app.js"></script>
+<script src="/js/telegram-report.js"></script>
+</body>
+</html>

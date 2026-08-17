@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Ticketing System' %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       ROOT VARIABLES
+    ═══════════════════════════════════════════════════════ */
+    :root {
+      --ot-blue:#1a6ef5; --ot-blue-d:#0047cc;
+      --ot-cyan:#00c2f0; --ot-cyan-d:#0091b8;
+      --ot-green:#00d4a4; --ot-green-d:#00a07a;
+      --ot-orange:#ff8800; --ot-orange-d:#cc6600;
+      --border:#e0e7f3; --text:#0d1b3e; --muted:#6b7fa8;
+    }
+    
+    * { box-sizing:border-box; }
+    .ot { font-family:'Plus Jakarta Sans',sans-serif; background:#eef2f9; }
+
+    /* ═══════════════════════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════════════════════ */
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .ot-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .ot-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    /* ═══════════════════════════════════════════════════════
+       BUTTONS
+    ═══════════════════════════════════════════════════════ */
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:inherit; }
+    .btn svg { width:15px; height:15px; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; }
+    .btn-blue  { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); }
+
+    /* ═══════════════════════════════════════════════════════
+       STAT CARDS
+    ═══════════════════════════════════════════════════════ */
+    /* ── STAT CARDS — single strip ── */
+    .fin-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .fin-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .fin-card:last-child { border-right: none; }
+    .fin-card:hover { background: #fafbff; }
+    .fin-card.tc-active { background: #2563eb; border-color: #2563eb; }
+    .fin-card.tc-active:hover { background: #1d4ed8; }
+    .fin-card.tc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .fin-card.tc-active .card-val  { color: #fff; }
+    .fin-card.tc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .fin-card.tc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fin-card.tc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .fin-card.tc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .fin-card.tc-active .sp-dot    { fill: #fff !important; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill { display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-cyan   { background:#cffafe; color:#0e7490; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-orange { background:#ffedd5; color:#c2410c; }
+    .card-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .fin-grid { grid-template-columns:repeat(2,1fr); }
+      .fin-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .fin-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .fin-card:nth-child(even) { border-right:none; }
+      .fin-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .fin-grid { grid-template-columns:1fr; }
+      .fin-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FILTER & TABLE
+    ═══════════════════════════════════════════════════════ */
+    .ot-filter-wrap { background:#fff; border:1.5px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:20px; }
+    .ot-filter-hdr { padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; }
+    .filter-title { font-size:12px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px; }
+    .filter-title svg { width:14px; height:14px; }
+    .ot-filter-body { padding:16px; }
+    .filter-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    @media(max-width:1200px){ .filter-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:600px){ .filter-grid { grid-template-columns:1fr; } }
+    
+    .filter-col { display:flex; flex-direction:column; gap:6px; }
+    .filter-label { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+    .filter-input, .filter-select { padding:10px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; background:#f8fafc; color:var(--text); outline:none; transition:all .15s; width:100%; }
+    .filter-input:focus, .filter-select:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+
+    .ot-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:16px; overflow:hidden; }
+    .ot-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ot-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ot-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    .ot-table { width:100%; border-collapse:collapse; }
+    .ot-table thead tr { background:#f8fafc; }
+    .ot-table th { padding:10px 14px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .ot-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; cursor:pointer; }
+    .ot-table tbody tr:hover { background:#f8fafc; }
+    .ot-table td { padding:10px 14px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .status-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; border:1px solid; }
+    .pill-open { background:#fffbeb; color:#92400e; border-color:#fcd34d; }
+    .pill-in_progress { background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+    .pill-closed { background:#f1f5f9; color:#475569; border-color:#cbd5e1; }
+
+    /* Badge Kategori */
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+    .badge-type-gangguan { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
+    .badge-type-request { background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe; }
+    .badge-type-installation { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
+    .badge-type-maintenance { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+
+    /* Alert */
+    .alert-area-top { margin-bottom:16px; }
+    .alert { background:#fff; border-radius:12px; padding:14px 18px; box-shadow:0 8px 24px rgba(0,0,0,.15); border-left:4px solid; display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+    .alert.success { border-left-color:#16a34a; background:#f0fdf4; }
+    .alert.error { border-left-color:#dc2626; background:#fef2f2; }
+    .alert-text { font-size:13px; color:var(--text); font-weight:500; flex:1; }
+
+    /* ═══════════════════════════════════════════════════════
+       MODAL STYLING - COMPLETE FIX
+    ═══════════════════════════════════════════════════════ */
+    #createModal { 
+      display:none; 
+      position:fixed; 
+      inset:0; 
+      background:rgba(13,27,62,.65); 
+      backdrop-filter:blur(8px); 
+      z-index:9999; 
+      align-items:center; 
+      justify-content:center; 
+    }
+    #createModal.show { display:flex !important; }
+    
+    @keyframes slideUp { 
+      from{opacity:0;transform:translateY(30px)} 
+      to{opacity:1;transform:translateY(0)} 
+    }
+    
+    .modal-box { 
+      background:#fff; 
+      border-radius:24px; 
+      max-width:560px; 
+      width:90%; 
+      max-height:90vh; 
+      overflow:hidden; 
+      box-shadow:0 24px 64px rgba(13,27,62,.2); 
+      animation:slideUp .4s ease; 
+    }
+    
+    .modal-hdr { 
+      background:linear-gradient(135deg, #1a6ef5, #0047cc); 
+      padding:24px 28px; 
+      position:relative; 
+    }
+    
+    .modal-hdr h2 { 
+      font-size:20px; 
+      font-weight:800; 
+      color:#fff; 
+      margin:0; 
+      display:flex; 
+      align-items:center; 
+      gap:10px; 
+    }
+    
+    .modal-hdr h2 svg {
+      width:20px;
+      height:20px;
+      stroke:currentColor;
+    }
+    
+    .modal-close { 
+      position:absolute; 
+      top:20px; 
+      right:20px; 
+      background:rgba(255,255,255,.15); 
+      width:36px; 
+      height:36px; 
+      border-radius:10px; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      cursor:pointer;
+      border:none;
+      transition:background .2s;
+    }
+    
+    .modal-close:hover {
+      background:rgba(255,255,255,.25);
+    }
+    
+    .modal-close svg {
+      width:16px;
+      height:16px;
+      stroke:white;
+      stroke-width:2.5;
+    }
+    
+    .modal-body { 
+      padding:28px; 
+      max-height:calc(90vh - 200px); 
+      overflow-y:auto; 
+    }
+    
+    .modal-footer { 
+      padding:20px 28px; 
+      border-top:1px solid #f1f5f9; 
+      display:flex; 
+      gap:10px; 
+      justify-content:flex-end; 
+    }
+
+    /* ═══ FORM ELEMENTS ═══ */
+    .form-group { 
+      margin-bottom: 20px; 
+    }
+
+    .form-label { 
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-label svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* Input With Icon */
+    .input-with-icon {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-with-icon svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .input-with-icon input {
+      padding-left: 42px !important;
+    }
+
+    /* Form Input */
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e7f3;
+      border-radius: 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #f8fafc;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .form-input:focus {
+      border-color: #1a6ef5;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26, 110, 245, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Form Textarea */
+    .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e0e7f3;
+      border-radius: 12px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #f8fafc;
+      color: #0f172a;
+      outline: none;
+      transition: all 0.15s;
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-textarea:focus {
+      border-color: #1a6ef5;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26, 110, 245, 0.1);
+    }
+
+    .form-textarea::placeholder {
+      color: #94a3b8;
+    }
+
+    /* ═══ TYPE CARDS ═══ */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .type-card {
+      border: 2px solid #e0e7f3;
+      border-radius: 10px;
+      padding: 10px 8px;
+      cursor: pointer;
+      background: #f8fafc;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .type-card input[type="radio"] {
+      display: none;
+    }
+
+    .type-card:hover {
+      border-color: #1a6ef5;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 110, 245, 0.15);
+    }
+
+    .type-card.active {
+      border-color: #1a6ef5;
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(26, 110, 245, 0.1);
+    }
+
+    .type-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #eff6ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .type-card:hover .type-icon,
+    .type-card.active .type-icon {
+      background: #1a6ef5;
+    }
+
+    .type-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: #1a6ef5;
+      transition: stroke 0.2s;
+    }
+
+    .type-card:hover .type-icon svg,
+    .type-card.active .type-icon svg {
+      stroke: #fff;
+    }
+
+    .type-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    /* ═══ PRIORITY CARDS ═══ */
+    .priority-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .priority-card {
+      border: 2px solid #e0e7f3;
+      border-radius: 10px;
+      padding: 10px 8px;
+      cursor: pointer;
+      background: #f8fafc;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .priority-card input[type="radio"] {
+      display: none;
+    }
+
+    .priority-card:hover {
+      border-color: #1a6ef5;
+      background: #eff6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(26, 110, 245, 0.15);
+    }
+
+    .priority-card.active {
+      border-color: #1a6ef5;
+      background: #eff6ff;
+      box-shadow: 0 0 0 3px rgba(26, 110, 245, 0.1);
+    }
+
+    .priority-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .priority-card:hover .priority-icon,
+    .priority-card.active .priority-icon {
+      background: #1a6ef5;
+    }
+
+    .priority-icon svg {
+      width: 18px;
+      height: 18px;
+      transition: all 0.2s;
+    }
+
+    .priority-card:hover .priority-icon svg,
+    .priority-card.active .priority-icon svg {
+      stroke: #fff;
+    }
+
+    .priority-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .priority-desc {
+      font-size: 9px;
+      color: #64748b;
+    }
+
+    /* ═══ CUSTOMER INFO ═══ */
+    #customerInfo {
+      display: none;
+      margin-top: 12px;
+      padding: 14px 16px;
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      border-radius: 12px;
+    }
+
+    /* ═══ CUSTOMER DROPDOWN ═══ */
+    #customerDropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1.5px solid #e0e7f3;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+
+    .cust-item { 
+      padding: 12px 14px; 
+      cursor: pointer; 
+      border-bottom: 1px solid #f1f5f9; 
+      transition: background 0.15s;
+    }
+
+    .cust-item:last-child { 
+      border-bottom: none; 
+    }
+
+    .cust-item:hover { 
+      background: #f4f8ff; 
+    }
+
+    .ci-name { 
+      font-weight: 600; 
+      color: #0f172a; 
+      font-size: 13px; 
+      margin-bottom: 3px;
+    }
+
+    .ci-sub { 
+      font-size: 11px; 
+      color: #64748b; 
+    }
+
+    /* ═══ MODAL BUTTONS ═══ */
+    .btn-modern {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 2px solid;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-modern svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      flex-shrink: 0;
+    }
+
+    .btn-cancel {
+      background: #fff;
+      border-color: #e0e7f3;
+      color: #374151;
+    }
+
+    .btn-cancel:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, #1a6ef5, #0047cc);
+      border-color: #1a6ef5;
+      color: #fff;
+    }
+
+    .btn-save:hover {
+      background: linear-gradient(135deg, #0047cc, #003399);
+      border-color: #0047cc;
+      box-shadow: 0 4px 12px rgba(26, 110, 245, 0.3);
+    }
+
+    /* ═══ DELETE MODAL ═══ */
+    #deleteModal { 
+      display:none; 
+      position:fixed; 
+      inset:0; 
+      background:rgba(13,27,62,.65); 
+      backdrop-filter:blur(8px); 
+      z-index:10000; 
+      align-items:center; 
+      justify-content:center; 
+    }
+    #deleteModal.show { display:flex !important; }
+
+    .delete-box {
+      background: #fff;
+      border-radius: 20px;
+      max-width: 420px;
+      width: 90%;
+      padding: 28px;
+      animation: slideUp 0.3s ease;
+    }
+
+    .delete-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: #fef2f2;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .delete-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: #dc2626;
+      stroke-width: 2;
+    }
+
+    .delete-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0f172a;
+      text-align: center;
+      margin: 0 0 8px;
+    }
+
+    .delete-message {
+      font-size: 13px;
+      color: #64748b;
+      text-align: center;
+      line-height: 1.6;
+      margin: 0 0 24px;
+    }
+
+    .delete-message strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .delete-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-delete {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+
+    .btn-delete:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-action-delete {
+      padding: 4px 10px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      color: #dc2626;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-action-delete:hover {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 600px) {
+      .type-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .priority-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .modal-box {
+        max-width: 95%;
+      }
+      
+      .btn-modern {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content ot">
+
+      <!-- Alert Area -->
+      <div class="alert-area-top" id="alertAreaTop"></div>
+
+      <!-- Header -->
+      <div class="ot-hdr">
+        <div class="ot-hdr-l">
+          <h1>Ticketing System</h1>
+          <p>Manajemen ticket support dan gangguan</p>
+        </div>
+        <div class="ot-hdr-r">
+          
+          <button class="btn btn-blue" onclick="showCreateModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Buat Ticket
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="fin-grid">
+
+        <!-- Total -->
+        <div class="fin-card tc-active" id="tc-all" data-filter="" onclick="tcCardClick(this,'')">
+          <div class="card-lbl">Total Tickets</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-total">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="tc-pill-all">— ticket</span>
+                <span class="card-sub">Semua ticket</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-all" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-all-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-all-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-all-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Open -->
+        <div class="fin-card" id="tc-open" data-filter="open" onclick="tcCardClick(this,'open')">
+          <div class="card-lbl">Open</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-open">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-cyan" id="tc-pill-open">— ticket</span>
+                <span class="card-sub">Menunggu penanganan</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-open" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-open-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-open-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-open-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="fin-card" id="tc-inprog" data-filter="in_progress" onclick="tcCardClick(this,'in_progress')">
+          <div class="card-lbl">In Progress</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-in_progress">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="tc-pill-inprog">— ticket</span>
+                <span class="card-sub">Sedang ditangani</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-inprog" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-inprog-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-inprog-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-inprog-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closed -->
+        <div class="fin-card" id="tc-closed" data-filter="closed" onclick="tcCardClick(this,'closed')">
+          <div class="card-lbl">Closed</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-closed">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-orange" id="tc-pill-closed">— ticket</span>
+                <span class="card-sub">Ticket selesai</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-closed" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-closed-fill" d="" fill="#ea580c" opacity=".12"/>
+                <path class="sp-line" id="sp-closed-line" d="" stroke="#ea580c"/>
+                <circle class="sp-dot" id="sp-closed-dot" r="2.5" fill="#ea580c"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Filter Section -->
+      <div class="ot-filter-wrap">
+        <div class="ot-filter-hdr">
+          <div class="filter-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            Filter & Pencarian
+          </div>
+        </div>
+        <div class="ot-filter-body">
+          <div class="filter-grid">
+            <div class="filter-col">
+              <label class="filter-label">STATUS</label>
+              <select class="filter-select" id="filterStatus" onchange="loadTickets()">
+                <option value="">Semua Status</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="pending">Pending</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            <div class="filter-col">
+              <label class="filter-label">KATEGORI</label>
+              <select class="filter-select" id="filterType" onchange="loadTickets()">
+                <option value="">Semua Kategori</option>
+                <option value="gangguan">Gangguan</option>
+                <option value="request">Request</option>
+                <option value="installation">Installation</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+            <div class="filter-col">
+              <label class="filter-label">PRIORITAS</label>
+              <select class="filter-select" id="filterPriority" onchange="loadTickets()">
+                <option value="">Semua Prioritas</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="filter-col">
+              <label class="filter-label">PENCARIAN</label>
+              <input type="text" class="filter-input" id="filterSearch" placeholder="Cari ticket..." oninput="loadTickets()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="ot-tbl-wrap">
+        <div class="ot-tbl-hdr">
+          <div class="ot-tbl-title">
+            Daftar Tickets
+            <span class="ot-count" id="ticket-count">0</span>
+          </div>
+        </div>
+
+        <table class="ot-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>ID</th>
+              <th>Tanggal</th>
+              <th>Pelanggan</th>
+              <th>Kategori</th>
+              <th>Judul</th>
+              <th>Status</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="ticketTableBody">
+            <tr>
+              <td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;">
+                Tidak ada ticket ditemukan
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- CREATE TICKET MODAL -->
+<div id="createModal" onclick="if(event.target===this)closeCreateModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-hdr">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Buat Ticket Baru
+      </h2>
+      <button class="modal-close" onclick="closeCreateModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <form id="createTicketForm" onsubmit="submitTicket(event)">
+      <div class="modal-body">
+        
+        <!-- Judul -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7h16M4 12h16M4 17h10"/>
+            </svg>
+            Judul Ticket
+          </label>
+          <div class="input-with-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <input type="text" name="title" class="form-input" required placeholder="Contoh: Internet mati sejak pagi">
+          </div>
+        </div>
+
+        <!-- Deskripsi -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Deskripsi Detail
+          </label>
+          <textarea name="description" class="form-textarea" required placeholder="Jelaskan masalah secara detail...&#10;&#10;Contoh: Internet tidak bisa connect sejak jam 8 pagi. Sudah coba restart modem tapi tetap tidak bisa."></textarea>
+        </div>
+
+        <!-- Customer Search -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Pelanggan (Opsional)
+          </label>
+          <div style="position:relative;">
+            <div class="input-with-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input 
+                type="text" 
+                id="customerSearch" 
+                class="form-input"
+                autocomplete="off"
+                placeholder="Ketik nama pelanggan..."
+                oninput="searchCustomers(this.value)">
+            </div>
+            
+            <div id="customerDropdown"></div>
+            <input type="hidden" id="selectedCustomerId" name="customer_id">
+            
+            <div id="customerInfo" style="display:none;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                  <div style="font-weight:600;color:#0f172a;" id="custName"></div>
+                  <div style="font-size:11px;color:#64748b;margin-top:2px;" id="custDetails"></div>
+                </div>
+                <button type="button" onclick="clearCustomer()" style="background:transparent;border:none;color:#64748b;cursor:pointer;padding:4px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kategori -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            Kategori
+          </label>
+          <div class="type-grid">
+            <label class="type-card" onclick="selectType(this, 'gangguan')">
+              <input type="radio" name="type" value="gangguan" required>
+              <div class="type-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div class="type-name">Gangguan</div>
+            </label>
+
+            <label class="type-card" onclick="selectType(this, 'request')">
+              <input type="radio" name="type" value="request">
+              <div class="type-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <div class="type-name">Request</div>
+            </label>
+
+            <label class="type-card" onclick="selectType(this, 'installation')">
+              <input type="radio" name="type" value="installation">
+              <div class="type-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+              </div>
+              <div class="type-name">Installation</div>
+            </label>
+
+            <label class="type-card" onclick="selectType(this, 'maintenance')">
+              <input type="radio" name="type" value="maintenance">
+              <div class="type-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
+              <div class="type-name">Maintenance</div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Prioritas -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Tingkat Prioritas
+          </label>
+          <div class="priority-grid">
+            <label class="priority-card" onclick="selectPriority(this, 'low')">
+              <input type="radio" name="priority" value="low" required>
+              <div class="priority-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                  <path d="M3 21l18-18M3 21h18M3 21V3"/>
+                </svg>
+              </div>
+              <div class="priority-name">Low</div>
+              <div class="priority-desc">72 jam SLA</div>
+            </label>
+
+            <label class="priority-card" onclick="selectPriority(this, 'medium')">
+              <input type="radio" name="priority" value="medium">
+              <div class="priority-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                  <path d="M3 12l18-6M3 12h18M3 12l18 6"/>
+                </svg>
+              </div>
+              <div class="priority-name">Medium</div>
+              <div class="priority-desc">24 jam SLA</div>
+            </label>
+
+            <label class="priority-card" onclick="selectPriority(this, 'high')">
+              <input type="radio" name="priority" value="high">
+              <div class="priority-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2">
+                  <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <div class="priority-name">High</div>
+              <div class="priority-desc">8 jam SLA</div>
+            </label>
+
+            <label class="priority-card" onclick="selectPriority(this, 'critical')">
+              <input type="radio" name="priority" value="critical">
+              <div class="priority-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+                  <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div class="priority-name">Critical</div>
+              <div class="priority-desc">2 jam SLA</div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-modern btn-cancel" onclick="closeCreateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Batal
+        </button>
+        <button type="submit" class="btn-modern btn-save">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Simpan Ticket
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="delete-box" onclick="event.stopPropagation()">
+    <div class="delete-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    </div>
+    <h3 class="delete-title">Hapus Ticket?</h3>
+    <p class="delete-message">
+      Ticket <strong id="deleteTicketId"></strong> akan dihapus permanen. 
+      Tindakan ini tidak dapat dibatalkan.
+    </p>
+    <div class="delete-actions">
+      <button type="button" class="btn-modern btn-cancel" onclick="closeDeleteModal()">
+        Batal
+      </button>
+      <button type="button" class="btn-modern btn-delete" onclick="confirmDelete()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Ya, Hapus Ticket
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let currentFilters = {
+  status: '',
+  type: '',
+  priority: '',
+  search: ''
+};
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  loadStatistics();
+
+  // Deep-link: auto-apply filter dari URL query param `?status=open`
+  // Dipakai NOC Dashboard untuk link langsung ke filter tertentu.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const sel = document.getElementById('filterStatus');
+    if (status && sel) {
+      const validValues = Array.from(sel.options).map(o => o.value);
+      if (validValues.includes(status)) sel.value = status;
+    }
+  } catch(_) { /* abaikan */ }
+
+  loadTickets();
+});
+
+// ═══════════════════════════════════════════════════════
+// MODAL FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+function showCreateModal() {
+  document.getElementById('createModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCreateModal() {
+  document.getElementById('createModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+  
+  // Reset form
+  document.getElementById('createTicketForm').reset();
+  document.querySelectorAll('.type-card, .priority-card').forEach(c => c.classList.remove('active'));
+  clearCustomer();
+}
+
+// Type Selection
+function selectType(card, value) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  card.querySelector('input[type="radio"]').checked = true;
+}
+
+// Priority Selection
+function selectPriority(card, value) {
+  document.querySelectorAll('.priority-card').forEach(c => c.classList.remove('active'));
+  card.classList.add('active');
+  card.querySelector('input[type="radio"]').checked = true;
+}
+
+// Close modal on ESC
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeCreateModal();
+    closeDeleteModal();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// DELETE TICKET
+// ═══════════════════════════════════════════════════════
+
+let ticketToDelete = null;
+
+function showDeleteModal(ticketId, ticketNumber) {
+  ticketToDelete = ticketId;
+  document.getElementById('deleteTicketId').textContent = `#${String(ticketNumber || ticketId).padStart(4, '0')}`;
+  document.getElementById('deleteModal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteModal() {
+  document.getElementById('deleteModal').classList.remove('show');
+  document.body.style.overflow = 'auto';
+  ticketToDelete = null;
+}
+
+async function confirmDelete() {
+  if (!ticketToDelete) return;
+  
+  try {
+    const response = await fetch(`/api/tickets/${ticketToDelete}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      closeDeleteModal();
+      showAlert('Ticket berhasil dihapus!', 'success');
+      loadStatistics();
+      loadTickets();
+    } else {
+      showAlert('Error: ' + (result.message || 'Gagal menghapus ticket'), 'error');
+    }
+  } catch (error) {
+    console.error('Error deleting ticket:', error);
+    showAlert('Error: ' + error.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CUSTOMER SEARCH
+// ═══════════════════════════════════════════════════════
+
+let searchTimeout;
+
+async function searchCustomers(query) {
+  clearTimeout(searchTimeout);
+  
+  const dropdown = document.getElementById('customerDropdown');
+  
+  if (!query || query.length < 2) {
+    dropdown.style.display = 'none';
+    dropdown.innerHTML = '';
+    return;
+  }
+  
+  searchTimeout = setTimeout(async () => {
+    try {
+      const response = await fetch(`/api/tickets/customers/search?q=${encodeURIComponent(query)}`);
+      const result = await response.json();
+      
+      if (result.success && result.data.length > 0) {
+        dropdown.innerHTML = result.data.map(customer => `
+          <div class="cust-item" onclick="selectCustomer(${customer.id}, '${customer.name}', '${customer.phone || ''}', '${customer.address || ''}')">
+            <div class="ci-name">${customer.name}</div>
+            <div class="ci-sub">${customer.phone || ''} ${customer.address ? '• ' + customer.address : ''}</div>
+          </div>
+        `).join('');
+        dropdown.style.display = 'block';
+      } else {
+        dropdown.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Error searching customers:', error);
+    }
+  }, 300);
+}
+
+function selectCustomer(id, name, phone, address) {
+  document.getElementById('selectedCustomerId').value = id;
+  document.getElementById('customerSearch').value = name;
+  document.getElementById('custName').textContent = name;
+  document.getElementById('custDetails').textContent = `${phone || ''} ${address ? '• ' + address : ''}`;
+  document.getElementById('customerInfo').style.display = 'block';
+  document.getElementById('customerDropdown').style.display = 'none';
+}
+
+function clearCustomer() {
+  document.getElementById('selectedCustomerId').value = '';
+  document.getElementById('customerSearch').value = '';
+  document.getElementById('customerInfo').style.display = 'none';
+  document.getElementById('customerDropdown').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// SUBMIT TICKET
+// ═══════════════════════════════════════════════════════
+
+async function submitTicket(event) {
+  event.preventDefault();
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  const data = Object.fromEntries(formData.entries());
+  
+  data.status = 'open';
+  
+  const customerId = document.getElementById('selectedCustomerId').value;
+  if (customerId) {
+    data.customer_id = parseInt(customerId);
+  }
+  
+  try {
+    const response = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      closeCreateModal();
+      showAlert('Ticket berhasil dibuat!', 'success');
+      loadStatistics();
+      loadTickets();
+    } else {
+      showAlert('Error: ' + (result.message || 'Gagal membuat ticket'), 'error');
+    }
+  } catch (error) {
+    console.error('Error creating ticket:', error);
+    showAlert('Error: ' + error.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════════════════════
+
+async function loadStatistics() {
+  try {
+    const response = await fetch('/api/tickets/stats');
+    const result = await response.json();
+    
+    if (result.success) {
+      const stats = result.data;
+      const total       = stats.total       || 0;
+      const open        = stats.open        || 0;
+      const in_progress = stats.in_progress || 0;
+      const pending     = stats.pending     || 0;
+      const resolved    = stats.resolved    || 0;
+      const closed      = stats.closed      || 0;
+      // Jika API belum return closed (server lama), hitung dari sisa
+      const closedVal = (closed + resolved) > 0
+        ? closed + resolved
+        : Math.max(0, total - open - in_progress - pending);
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-open').textContent = open;
+      document.getElementById('stat-in_progress').textContent = in_progress + pending;
+      document.getElementById('stat-closed').textContent = closedVal;
+    }
+  } catch (error) {
+    console.error('Error loading statistics:', error);
+  }
+}
+
+async function loadTickets() {
+  const status = document.getElementById('filterStatus').value;
+  const type = document.getElementById('filterType').value;
+  const priority = document.getElementById('filterPriority').value;
+  const search = document.getElementById('filterSearch').value;
+  
+  const params = new URLSearchParams();
+  if (status) params.append('status', status);
+  if (type) params.append('type', type);
+  if (priority) params.append('priority', priority);
+  if (search) params.append('search', search);
+  
+  try {
+    const response = await fetch(`/api/tickets?${params.toString()}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      renderTickets(result.data);
+      document.getElementById('ticket-count').textContent = result.total || 0;
+    }
+  } catch (error) {
+    console.error('Error loading tickets:', error);
+  }
+}
+
+function renderTickets(tickets) {
+  const tbody = document.getElementById('ticketTableBody');
+  
+  if (tickets.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
+          Tidak ada ticket ditemukan
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = tickets.map((ticket, index) => `
+    <tr onclick="window.location.href='/tickets/${ticket.id}'">
+      <td>${index + 1}</td>
+      <td style="font-family:monospace;font-weight:700;">#${String(ticket.id).padStart(4, '0')}</td>
+      <td style="font-size:12px;color:#64748b;">${formatDateLong(ticket.created_at)}</td>
+      <td>${ticket.customer?.name || '-'}</td>
+      <td>
+        <span class="badge badge-type-${ticket.type || 'gangguan'}" style="font-size:11px;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap;">
+          ${typeLabel(ticket.type)}
+        </span>
+      </td>
+      <td>${ticket.title}</td>
+      <td>
+        <span class="status-pill pill-${ticket.status}">
+          ${ticket.status.replace('_', ' ')}
+        </span>
+      </td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button onclick="event.stopPropagation();window.location.href='/tickets/${ticket.id}'" style="padding:4px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e40af;font-size:11px;font-weight:600;cursor:pointer;">
+            Detail
+          </button>
+          <button onclick="event.stopPropagation();showDeleteModal(${ticket.id}, ${ticket.id})" class="btn-action-delete">
+            Hapus
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function quickFilter(status) {
+  document.getElementById('filterStatus').value = status;
+  loadTickets();
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════
+
+function showAlert(message, type = 'success') {
+  const alertArea = document.getElementById('alertAreaTop');
+  const icon = type === 'success' 
+    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
+    : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  
+  const alertId = 'alert-' + Date.now();
+  const alertEl = document.createElement('div');
+  alertEl.id = alertId;
+  alertEl.innerHTML = `
+    <div class="alert ${type}">
+      ${icon}
+      <span class="alert-text">${message}</span>
+    </div>
+  `;
+  alertArea.appendChild(alertEl);
+  setTimeout(() => alertEl.remove(), 5000);
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '—';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '—';
+  
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Baru saja';
+  if (diffMins < 60) return `${diffMins} menit lalu`;
+  if (diffHours < 24) return `${diffHours} jam lalu`;
+  if (diffDays < 7) return `${diffDays} hari lalu`;
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+function formatDateLong(dateString) {
+  if (!dateString) return '—';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '—';
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Oct', 'Nov', 'Des'];
+  
+  const day = date.getDate();
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day} ${month} ${year}, ${hours}:${minutes}`;
+}
+
+function typeLabel(type) {
+  const labels = {
+    'gangguan': 'Gangguan',
+    'request': 'Request',
+    'installation': 'Installation',
+    'maintenance': 'Maintenance'
+  };
+  return labels[type] || type;
+}
+</script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={all:[],open:[],inprog:[],closed:[]};
+  const COLORS={all:'#2563eb',open:'#0891b2',inprog:'#16a34a',closed:'#ea580c'};
+  const IDS={all:'stat-total',open:'stat-open',inprog:'stat-in_progress',closed:'stat-closed'};
+
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(IDS).forEach(k=>{
+      const v=rn(IDS[k]);
+      hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      const p=document.getElementById('tc-pill-'+k);if(p)p.textContent=v+' ticket';
+    });
+  }
+  window._tcUpd=upd;
+  Object.values(IDS).forEach(id=>{
+    const e=document.getElementById(id);
+    if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});
+  });
+  document.addEventListener('DOMContentLoaded',upd);
+})();
+
+function tcCardClick(el, filter){
+  const cards=document.querySelectorAll('.fin-card[data-filter]');
+  const COLORS={all:'#2563eb',open:'#0891b2',inprog:'#16a34a',closed:'#ea580c'};
+  const KEY_MAP={'':'all','open':'open','in_progress':'inprog','closed':'closed'};
+
+  cards.forEach(c=>{
+    c.classList.remove('tc-active');
+    const k=KEY_MAP[c.dataset.filter]||'all';
+    const col=COLORS[k]||'#64748b';
+    const l=c.querySelector('.sp-line'),f=c.querySelector('.sp-fill'),d=c.querySelector('.sp-dot');
+    if(l)l.style.stroke=col;if(f)f.style.fill=col;if(d)d.style.fill=col;
+  });
+  el.classList.add('tc-active');
+  const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+  if(l)l.style.stroke='rgba(255,255,255,.70)';
+  if(f)f.style.fill='rgba(255,255,255,.12)';
+  if(d)d.style.fill='#fff';
+
+  // Trigger filter asli
+  if(typeof quickFilter==='function') quickFilter(filter);
+}
+</script>
+</body>
+</html>

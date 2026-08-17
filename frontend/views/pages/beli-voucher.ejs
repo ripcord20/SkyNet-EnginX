@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1565e0">
+  <title><%= title %></title>
+  <% if (brand.favicon) { %><link rel="icon" href="<%= brand.favicon %>"><% } %>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      /* Palet biru — disamakan dengan halaman login /reseller */
+      --bg:#f3f6fb;--card:#fff;--ink:#0f1b34;--muted:#64748b;--muted2:#94a3b8;--line:#eef1f7;
+      --blue:#1f8bff;--blue-deep:#1565e0;--blue-dark:#0e4fb8;
+      --blue-soft:#e7f1ff;--blue-soft2:#f2f7ff;
+      --mint:#1f8bff;--mint-deep:#1565e0;
+      --green:#16a34a;--amber:#e08a00;--red:#e5484d;
+      --grad:linear-gradient(150deg,#1f8bff 0%,#1565e0 55%,#0e4fb8 100%);
+      --shadow-sm:0 4px 16px rgba(31,139,255,.06);
+      --shadow-md:0 12px 30px rgba(31,139,255,.08);
+      --shadow-blue:0 12px 26px rgba(31,122,255,.30);
+    }
+    html,body{height:100%;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);
+      min-height:100dvh;-webkit-font-smoothing:antialiased;line-height:1.45;}
+    .mono{font-family:'DM Mono',monospace;}
+    .wrap{max-width:480px;margin:0 auto;padding-bottom:120px;min-height:100dvh;background:var(--bg);}
+
+    /* ── Hero (biru bersih dengan lengkung bawah halus) ── */
+    .hero{background:var(--grad);color:#fff;padding:26px 22px 70px;position:relative;overflow:hidden;
+      border-radius:0 0 30px 30px;}
+    /* Foto background tipis — sumber sama dgn halaman pendaftaran/login reseller (register_bg_url) */
+    .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;
+      opacity:.18;mix-blend-mode:luminosity;pointer-events:none;z-index:0;}
+    .hero-bg::after{content:"";position:absolute;inset:0;
+      background:linear-gradient(150deg,rgba(31,139,255,.55) 0%,rgba(21,101,224,.6) 55%,rgba(14,79,184,.62) 100%);}
+    .hero::after{content:"";position:absolute;top:-90px;right:-80px;width:260px;height:260px;
+      background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none;z-index:1;}
+    .hero::before{content:"";position:absolute;bottom:-50px;left:-70px;width:220px;height:220px;
+      background:radial-gradient(circle,rgba(255,255,255,.08),transparent 72%);pointer-events:none;z-index:1;}
+    .hero-brand{font-size:12.5px;font-weight:700;letter-spacing:.05em;opacity:.95;position:relative;z-index:2;
+      text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;
+      background:rgba(255,255,255,.16);padding:6px 12px;border-radius:999px;}
+    .hero h1{font-size:27px;font-weight:800;letter-spacing:-.8px;position:relative;z-index:2;line-height:1.12;margin-top:16px;}
+    .hero p{font-size:13.5px;opacity:.92;margin-top:8px;position:relative;z-index:2;max-width:330px;line-height:1.5;}
+
+    /* ── Promo card (glass halus) ── */
+    .promo-card{position:relative;z-index:2;margin-top:22px;background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.24);border-radius:20px;padding:16px 18px;
+      display:flex;align-items:center;justify-content:space-between;gap:14px;backdrop-filter:blur(6px);}
+    .promo-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;}
+    .promo-title{font-size:19px;font-weight:800;letter-spacing:-.4px;margin-top:3px;}
+    .promo-desc{font-size:11.5px;opacity:.85;margin-top:3px;line-height:1.4;}
+    .promo-ic{width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,.2);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;}
+
+    /* ── Category quick menu (ikon bulat warna) ── */
+    .cats{position:relative;z-index:3;margin:-36px 14px 4px;background:#fff;border-radius:22px;
+      padding:18px 8px;box-shadow:var(--shadow-md);border:1px solid #f2f5fa;
+      display:flex;justify-content:space-around;align-items:flex-start;gap:6px;}
+    .cat{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;
+      -webkit-tap-highlight-color:transparent;padding:4px 2px;border-radius:14px;transition:background .14s;}
+    .cat:active{background:#f4f8fe;}
+    .cat-ic{width:50px;height:50px;border-radius:17px;display:flex;align-items:center;justify-content:center;
+      color:#fff;box-shadow:0 6px 14px rgba(31,122,255,.16);}
+    .cat-t{font-size:11px;font-weight:700;color:#475467;text-align:center;line-height:1.2;letter-spacing:-.1px;}
+    .c-blue{background:linear-gradient(135deg,#3f9bff,#1f7aff);}
+    .c-green{background:linear-gradient(135deg,#34d399,#16a34a);box-shadow:0 6px 14px rgba(22,163,74,.2);}
+    .c-amber{background:linear-gradient(135deg,#ffc97a,#e8923c);box-shadow:0 6px 14px rgba(232,146,60,.2);}
+    .c-purpleish{background:linear-gradient(135deg,#5fa8ff,#2f6bff);box-shadow:0 6px 14px rgba(47,107,255,.2);}
+
+    /* ── Monthly install banner (slideshow) ── */
+    .monthly-banner{display:flex;align-items:center;gap:13px;margin:14px 14px 2px;text-decoration:none;
+      background:linear-gradient(120deg,#1565e0,#1f8bff);color:#fff;border-radius:20px;padding:15px 16px;
+      box-shadow:0 12px 26px rgba(21,101,224,.3);-webkit-tap-highlight-color:transparent;
+      position:relative;overflow:hidden;min-height:74px;}
+    .monthly-banner::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;
+      background:radial-gradient(circle,rgba(255,255,255,.14),transparent 70%);pointer-events:none;}
+    .mb-track{flex:1;min-width:0;position:relative;height:44px;z-index:1;}
+    .mb-slide{position:absolute;inset:0;display:flex;align-items:center;gap:13px;
+      opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease;pointer-events:none;}
+    .mb-slide.active{opacity:1;transform:translateY(0);pointer-events:auto;}
+    .mb-ic{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.2);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;}
+    .mb-body{flex:1;min-width:0;}
+    .mb-t{font-size:14.5px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mb-s{font-size:11.5px;opacity:.92;margin-top:2px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mb-arrow{flex-shrink:0;position:relative;z-index:1;opacity:.9;}
+    .mb-dots{position:absolute;bottom:7px;left:0;right:0;display:flex;justify-content:center;gap:5px;z-index:2;}
+    .mb-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.45);transition:all .3s;}
+    .mb-dot.on{background:#fff;width:16px;border-radius:3px;}
+
+    /* ── Panel ── */
+    .panel{margin:16px 14px 0;position:relative;z-index:2;}
+    .card{background:var(--card);border-radius:24px;padding:20px 18px;margin-bottom:14px;
+      box-shadow:var(--shadow-md);border:1px solid #f2f5fa;}
+
+    .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .sec-title{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+    .sec-step{font-size:11px;font-weight:700;color:var(--blue);background:var(--blue-soft);
+      padding:5px 12px;border-radius:999px;letter-spacing:.02em;}
+
+    /* ── Package list rows ── */
+    .plist{display:flex;flex-direction:column;gap:4px;}
+    .prow{display:flex;align-items:center;gap:13px;padding:13px 10px;cursor:pointer;position:relative;
+      border-radius:16px;border:1.5px solid transparent;transition:all .16s;-webkit-tap-highlight-color:transparent;}
+    .prow:not(.sel):active{background:var(--blue-soft2);}
+    .prow.sel{background:var(--blue-soft2);border-color:var(--blue);
+      box-shadow:0 8px 20px rgba(31,122,255,.12);}
+    .p-ic{width:46px;height:46px;border-radius:50%;border:1.6px solid var(--line);flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;color:var(--blue);background:#f6faff;transition:all .16s;}
+    .prow.sel .p-ic{background:var(--grad);color:#fff;border-color:transparent;
+      box-shadow:0 6px 14px rgba(31,122,255,.32);}
+    .p-body{flex:1;min-width:0;}
+    .p-name{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:-.1px;}
+    .p-quota{font-size:17px;font-weight:800;letter-spacing:-.4px;margin-top:1px;color:var(--ink);}
+    .p-quota .sub{font-size:12px;font-weight:600;color:var(--muted2);}
+    .p-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+    .p-price{font-size:16px;font-weight:800;letter-spacing:-.4px;color:var(--blue);font-family:'DM Mono',monospace;}
+    .p-badge{font-size:9.5px;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:3px 9px;
+      border-radius:8px;letter-spacing:.03em;text-transform:uppercase;}
+    .prow.sel .p-badge{background:var(--mint);color:#fff;}
+
+    /* ── Payment method ── */
+    .pm{display:flex;gap:11px;}
+    .pm-opt{flex:1;border:1.6px solid var(--line);border-radius:18px;padding:16px 12px;cursor:pointer;
+      text-align:center;transition:all .16s;-webkit-tap-highlight-color:transparent;background:#fff;}
+    .pm-opt.sel{border-color:var(--blue);background:var(--blue-soft2);box-shadow:0 8px 18px rgba(31,122,255,.12);}
+    .pm-opt .pic{width:44px;height:44px;margin:0 auto 9px;border-radius:50%;border:1.6px solid var(--line);
+      background:#f6faff;color:var(--blue);display:flex;align-items:center;justify-content:center;transition:all .16s;}
+    .pm-opt.sel .pic{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 6px 14px rgba(31,122,255,.3);}
+    .pm-opt .t{font-size:13.5px;font-weight:800;letter-spacing:-.2px;}
+    .pm-opt .s{font-size:10.5px;color:var(--muted);margin-top:3px;font-weight:500;line-height:1.35;}
+    .pm-opt.disabled{opacity:.45;pointer-events:none;}
+
+    /* ── Form fields ── */
+    .field{margin-bottom:14px;}
+    .field:last-child{margin-bottom:0;}
+    .field label{display:block;font-size:12px;font-weight:700;color:#475467;margin-bottom:8px;}
+    .field label .req{color:var(--red);}
+    .input{width:100%;height:52px;border:1.6px solid var(--line);border-radius:15px;padding:0 16px;
+      font-family:'DM Sans',sans-serif;font-size:14.5px;color:var(--ink);background:#f8fafd;outline:none;transition:all .16s;}
+    .input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(31,122,255,.12);}
+    .input::placeholder{color:#aab4c6;}
+    .wa-row{display:flex;gap:9px;}
+    .wa-cc{height:52px;display:flex;align-items:center;padding:0 14px;border:1.6px solid var(--line);
+      border-radius:15px;font-size:14px;font-weight:700;color:#475467;background:#f1f4f9;flex-shrink:0;gap:5px;}
+    .hint{font-size:11px;color:var(--muted2);margin-top:8px;line-height:1.45;}
+
+    /* ── Sticky checkout bar ── */
+    .bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.97);
+      backdrop-filter:blur(12px);border-top:1px solid var(--line);
+      padding:13px 18px calc(13px + env(safe-area-inset-bottom));box-shadow:0 -8px 28px rgba(31,122,255,.08);}
+    .bar-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:14px;}
+    .bar-total{flex:1;min-width:0;}
+    .bar-total .l{font-size:11px;color:var(--muted2);font-weight:600;}
+    .bar-total .v{font-size:23px;font-weight:800;letter-spacing:-.7px;font-family:'DM Mono',monospace;
+      color:var(--ink);line-height:1.1;}
+    .btn-buy{flex-shrink:0;border:none;border-radius:17px;padding:0 26px;height:54px;font-family:inherit;
+      font-size:15.5px;font-weight:800;letter-spacing:-.2px;color:#fff;cursor:pointer;background:var(--grad);
+      box-shadow:var(--shadow-blue);transition:all .15s;display:flex;align-items:center;gap:9px;}
+    .btn-buy:active{transform:scale(.97);}
+    .btn-buy:disabled{opacity:.45;box-shadow:none;cursor:not-allowed;}
+
+    /* ── How-to strip ── */
+    .howto{margin:2px 14px 16px;background:#fff;border:1px solid #f2f5fa;border-radius:20px;padding:18px;
+      box-shadow:var(--shadow-sm);}
+    .howto .ht-title{font-size:11.5px;font-weight:800;color:#475467;margin-bottom:14px;letter-spacing:.04em;}
+    .howto ol{list-style:none;counter-reset:ht;}
+    .howto li{counter-increment:ht;position:relative;padding-left:34px;font-size:12.5px;color:#5a6781;
+      margin-bottom:12px;line-height:1.45;}
+    .howto li:last-child{margin-bottom:0;}
+    .howto li::before{content:counter(ht);position:absolute;left:0;top:-2px;width:23px;height:23px;
+      border-radius:50%;background:var(--blue-soft);color:var(--blue);font-size:11px;font-weight:800;
+      font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;}
+
+    .foot{text-align:center;padding:8px 24px 26px;font-size:11px;color:#aeb6c6;line-height:1.7;}
+    .foot a{color:var(--blue);text-decoration:none;font-weight:600;}
+
+    /* ── Modal / sheet ── */
+    .modal{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center;
+      background:rgba(15,27,45,.5);backdrop-filter:blur(3px);}
+    .modal.show{display:flex;animation:fade .2s;}
+    @keyframes fade{from{opacity:0}to{opacity:1}}
+    .sheet{background:#fff;width:100%;max-width:480px;border-radius:28px 28px 0 0;
+      padding:22px 18px calc(22px + env(safe-area-inset-bottom));max-height:88dvh;overflow-y:auto;
+      animation:up .28s cubic-bezier(.2,.8,.2,1);}
+    @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .sheet-grip{width:40px;height:4px;border-radius:3px;background:#e1e6ef;margin:0 auto 17px;}
+    .sheet h3{font-size:18px;font-weight:800;letter-spacing:-.3px;}
+    .sheet .sub{font-size:12.5px;color:var(--muted);margin-top:4px;margin-bottom:17px;}
+    .acct{border:1.4px solid var(--line);border-radius:16px;padding:13px 14px;margin-bottom:10px;
+      display:flex;align-items:center;gap:12px;background:#fafcff;}
+    .acct .ai{width:44px;height:44px;border-radius:13px;background:var(--blue-soft);color:var(--blue);
+      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;
+      text-transform:uppercase;overflow:hidden;}
+    .acct .ai img{width:100%;height:100%;object-fit:contain;}
+    .acct .ab{flex:1;min-width:0;}
+    .acct .ap{font-size:13.5px;font-weight:800;}
+    .acct .an{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;color:var(--blue);margin-top:2px;
+      display:flex;align-items:center;gap:8px;}
+    .acct .ao{font-size:11px;color:var(--muted2);margin-top:1px;}
+    .copy-btn{border:none;background:var(--blue-soft);color:var(--blue);border-radius:9px;padding:4px 10px;
+      font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .pay-amount{background:var(--blue-soft2);border:1.4px solid var(--blue-soft);border-radius:18px;
+      padding:16px;text-align:center;margin-bottom:17px;}
+    .pay-amount .l{font-size:11px;color:var(--muted2);font-weight:600;}
+    .pay-amount .v{font-size:27px;font-weight:800;letter-spacing:-.9px;font-family:'DM Mono',monospace;color:var(--blue);}
+    .upload-zone{border:1.6px dashed #c2d6f0;border-radius:16px;padding:19px;text-align:center;cursor:pointer;
+      background:#f8fbff;transition:all .15s;margin-bottom:14px;}
+    .upload-zone:active{background:#eef5ff;}
+    .upload-zone .uz-ic{color:var(--blue);margin-bottom:7px;}
+    .upload-zone .uz-t{font-size:13px;font-weight:700;color:#475467;}
+    .upload-zone .uz-s{font-size:11px;color:var(--muted2);margin-top:2px;}
+    .upload-zone.has{border-style:solid;border-color:var(--green);background:#f0fbf5;}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:52px;border:none;
+      border-radius:16px;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:10px;text-decoration:none;}
+    .btn-primary{background:var(--grad);color:#fff;box-shadow:var(--shadow-blue);}
+    .btn-wa{background:linear-gradient(135deg,#2bd06a,#1bb46a);color:#fff;box-shadow:0 12px 26px rgba(27,180,106,.26);}
+    .btn-ghost{background:#f1f4f9;color:#475467;}
+    .btn:active{transform:scale(.98);}
+    .tripay-list{display:flex;flex-direction:column;gap:8px;max-height:52dvh;overflow-y:auto;}
+    .tp-item{display:flex;align-items:center;gap:12px;border:1.4px solid var(--line);border-radius:15px;
+      padding:12px 14px;cursor:pointer;transition:all .14s;}
+    .tp-item:active{background:var(--blue-soft2);border-color:var(--blue);}
+    .tp-item img{height:24px;width:auto;max-width:54px;object-fit:contain;}
+    .tp-item .tn{font-size:13.5px;font-weight:700;flex:1;}
+    .tp-item .tf{font-size:11px;color:var(--muted2);font-family:'DM Mono',monospace;}
+    .spin{width:40px;height:40px;border:3.5px solid #e3ecf7;border-top-color:var(--blue);
+      border-radius:50%;animation:spin .8s linear infinite;margin:8px auto;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);z-index:90;
+      background:#0f1b2d;color:#fff;padding:12px 19px;border-radius:14px;font-size:13px;font-weight:600;
+      opacity:0;transition:all .25s;max-width:90%;text-align:center;box-shadow:0 8px 26px rgba(0,0,0,.22);}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .toast.err{background:var(--red);}
+
+    .skel{background:linear-gradient(90deg,#eef3fa 25%,#e2eaf5 50%,#eef3fa 75%);background-size:200% 100%;
+      animation:sk 1.3s infinite;border-radius:16px;height:72px;margin-bottom:4px;}
+    @keyframes sk{to{background-position:-200% 0}}
+    .empty{text-align:center;padding:26px 10px;color:var(--muted2);font-size:13px;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="hero">
+    <% if (brand.bg) { %>
+    <div class="hero-bg" style="background-image:url('<%= brand.bg %>')"></div>
+    <% } %>
+    <div class="hero-brand"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg><%= brand.name %></div>
+    <h1>Beli Voucher WiFi</h1>
+    <p>Pilih paket, isi data, bayar. Voucher langsung dikirim ke WhatsApp &amp; email kamu.</p>
+
+    <!-- Promo card -->
+    <div class="promo-card">
+      <div class="promo-left">
+        <div class="promo-eyebrow">Voucher Internet</div>
+        <div class="promo-title">Akses cepat &amp; instan</div>
+        <div class="promo-desc">Pilih paket di bawah, bayar, langsung konek.</div>
+      </div>
+      <div class="promo-ic">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category quick menu -->
+  <div class="cats">
+    <a class="cat" href="#paket" onclick="scrollToPaket(event)">
+      <span class="cat-ic c-blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 6v12" stroke-dasharray="2 2"/></svg></span>
+      <span class="cat-t">Voucher</span>
+    </a>
+    <% if (brand.monthlyCta && brand.monthlyCta.enabled) { %>
+    <a class="cat" href="<%= brand.monthlyCta.url %>"<% if (brand.monthlyCta.url.indexOf('http')===0) { %> target="_blank"<% } %>>
+      <span class="cat-ic c-green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+      <span class="cat-t">Pasang Bulanan</span>
+    </a>
+    <% } %>
+    <% if (brand.whatsapp) { %>
+    <a class="cat" href="https://wa.me/<%= brand.whatsapp %>" target="_blank">
+      <span class="cat-ic c-amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+      <span class="cat-t">Bantuan</span>
+    </a>
+    <% } %>
+    <a class="cat" href="#cara" onclick="scrollToCara(event)">
+      <span class="cat-ic c-purpleish"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+      <span class="cat-t">Cara Beli</span>
+    </a>
+  </div>
+
+  <!-- Banner CTA Pasang WiFi Bulanan — slideshow otomatis -->
+  <% if (brand.monthlyCta && brand.monthlyCta.enabled && brand.monthlyCta.slides && brand.monthlyCta.slides.length) { %>
+  <%
+    var mIcons = {
+      home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+      gift: '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+      infinity: '<path d="M18.178 8c-2.072 0-3.678 1.79-4.178 4-.5-2.21-2.106-4-4.178-4C7.234 8 5.5 9.79 5.5 12s1.734 4 4.144 4c2.072 0 3.678-1.79 4.178-4 .5 2.21 2.106 4 4.178 4 2.41 0 4.144-1.79 4.144-4s-1.734-4-4.144-4z"/>',
+      bolt: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'
+    };
+  %>
+  <a class="monthly-banner" id="monthlyBanner" href="<%= brand.monthlyCta.url %>"<% if (brand.monthlyCta.url.indexOf('http')===0) { %> target="_blank"<% } %>>
+    <div class="mb-track" id="mbTrack">
+      <% brand.monthlyCta.slides.forEach(function(s, i){ %>
+      <div class="mb-slide<%= i===0 ? ' active' : '' %>">
+        <div class="mb-ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><%- mIcons[s.icon] || mIcons.home %></svg></div>
+        <div class="mb-body">
+          <div class="mb-t"><%= s.title %></div>
+          <div class="mb-s"><%= s.subtitle %></div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <svg class="mb-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    <% if (brand.monthlyCta.slides.length > 1) { %>
+    <div class="mb-dots" id="mbDots">
+      <% brand.monthlyCta.slides.forEach(function(s, i){ %><span class="mb-dot<%= i===0 ? ' on' : '' %>"></span><% }); %>
+    </div>
+    <% } %>
+  </a>
+  <% } %>
+
+  <div class="panel" id="paket">
+
+    <!-- Paket -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-title">Pilih Paket</div>
+        <div class="sec-step">Langkah 1</div>
+      </div>
+      <div class="plist" id="tickets">
+        <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      </div>
+    </div>
+
+    <!-- Data pembeli -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-title">Data Pembeli</div>
+        <div class="sec-step">Langkah 2</div>
+      </div>
+      <div class="field">
+        <label>Nama <span class="req">*</span></label>
+        <input class="input" id="fName" type="text" placeholder="Nama lengkap" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>No. WhatsApp</label>
+        <div class="wa-row">
+          <div class="wa-cc">🇮🇩 +62</div>
+          <input class="input" id="fWa" type="tel" inputmode="numeric" placeholder="81234567890" autocomplete="tel">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input class="input" id="fEmail" type="email" placeholder="nama@email.com" autocomplete="email">
+      </div>
+      <div class="hint">Isi minimal salah satu — WhatsApp atau Email — untuk menerima voucher.</div>
+    </div>
+
+    <!-- Metode pembayaran -->
+    <div class="card">
+      <div class="sec-head">
+        <div class="sec-title">Metode Pembayaran</div>
+        <div class="sec-step">Langkah 3</div>
+      </div>
+      <div class="pm">
+        <div class="pm-opt" id="pmGateway" data-m="gateway" onclick="selectMethod('gateway')">
+          <div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+          <div class="t">Bayar Otomatis</div>
+          <div class="s">QRIS / VA / e-wallet, instan</div>
+        </div>
+        <div class="pm-opt" id="pmManual" data-m="manual" onclick="selectMethod('manual')">
+          <div class="pic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M7 17h10"/></svg></div>
+          <div class="t">Transfer Manual</div>
+          <div class="s">Kirim bukti, konfirmasi via WA</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- How to -->
+  <div class="howto" id="cara">
+    <div class="ht-title">CARA PEMBELIAN</div>
+    <ol>
+      <li>Pilih paket voucher yang kamu inginkan.</li>
+      <li>Isi data pembeli (WhatsApp / email).</li>
+      <li>Pilih metode bayar lalu selesaikan pembayaran.</li>
+      <li>Kode voucher otomatis dikirim ke WhatsApp / email.</li>
+    </ol>
+  </div>
+
+  <div class="foot">
+    <%= brand.name %><% if (brand.address) { %> · <%= brand.address %><% } %><br>
+    <% if (brand.whatsapp) { %>Butuh bantuan? <a href="https://wa.me/<%= brand.whatsapp %>" target="_blank">Chat Admin</a><% } %>
+  </div>
+</div>
+
+<!-- Sticky checkout bar -->
+<div class="bar">
+  <div class="bar-inner">
+    <div class="bar-total">
+      <div class="l">Total Bayar</div>
+      <div class="v" id="barTotal">Rp —</div>
+    </div>
+    <button class="btn-buy" id="btnBuy" onclick="checkout()" disabled>
+      Beli Sekarang
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Manual transfer sheet -->
+<div class="modal" id="modalManual">
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <h3>Transfer Manual</h3>
+    <div class="sub">Transfer sesuai nominal, lalu unggah bukti atau konfirmasi via WhatsApp.</div>
+    <div class="pay-amount">
+      <div class="l">Jumlah yang harus ditransfer</div>
+      <div class="v" id="manualAmount">Rp —</div>
+    </div>
+    <div id="manualAccounts"></div>
+    <input type="file" id="proofFile" accept="image/*,application/pdf" style="display:none" onchange="onProofPick(this)">
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('proofFile').click()">
+      <div class="uz-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+      <div class="uz-t" id="uzText">Unggah bukti transfer</div>
+      <div class="uz-s">JPG, PNG, atau PDF — maks 5 MB</div>
+    </div>
+    <button class="btn btn-primary" id="btnProof" onclick="submitProof()">Kirim Bukti Transfer</button>
+    <a class="btn btn-wa" id="btnWaConfirm" target="_blank">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.6.1-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.5-.3-.5.3-.5.8-1.6.1-.2 0-.4 0-.5 0-.1-.6-1.5-.8-2-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 .9-1 2.3s1 2.7 1.2 2.9c.1.2 2 3.1 4.9 4.3 1.8.8 2.5.8 3.4.7.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 0 0-8.5 15.2L2 22l4.9-1.3A10 10 0 1 0 12 2zm0 18a8 8 0 0 1-4.1-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20z"/></svg>
+      Sudah Transfer? Konfirmasi via WhatsApp
+    </a>
+    <button class="btn btn-ghost" onclick="closeModal('modalManual')">Tutup</button>
+  </div>
+</div>
+
+<!-- Tripay channel picker -->
+<div class="modal" id="modalTripay">
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <h3>Pilih Metode Pembayaran</h3>
+    <div class="sub">Pilih channel pembayaran yang kamu inginkan.</div>
+    <div class="tripay-list" id="tripayList"><div class="spin"></div></div>
+    <button class="btn btn-ghost" onclick="closeModal('modalTripay')">Batal</button>
+  </div>
+</div>
+
+<!-- Loading sheet -->
+<div class="modal" id="modalLoading">
+  <div class="sheet" style="text-align:center;padding-bottom:34px;">
+    <div class="sheet-grip"></div>
+    <div class="spin"></div>
+    <h3 id="loadTitle" style="margin-top:10px;">Memproses…</h3>
+    <div class="sub" id="loadSub" style="margin-bottom:0;">Mohon tunggu sebentar.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var PACKAGES = [], SELECTED = null, METHOD = null, CONFIG = null;
+  var ORDER = null, PROOF = null;
+
+  function rp(n){ return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+  function scrollToPaket(e){ if(e) e.preventDefault(); var el=document.getElementById('paket'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function scrollToCara(e){ if(e) e.preventDefault(); var el=document.getElementById('cara'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+
+  // ── Slideshow banner "Pasang WiFi Bulanan" (auto) ──
+  (function initMonthlySlider(){
+    var track=document.getElementById('mbTrack'); if(!track) return;
+    var slides=track.querySelectorAll('.mb-slide');
+    var dots=document.querySelectorAll('#mbDots .mb-dot');
+    if(slides.length<2) return;
+    var idx=0, timer=null;
+    function show(n){
+      idx=(n+slides.length)%slides.length;
+      slides.forEach(function(s,i){ s.classList.toggle('active', i===idx); });
+      dots.forEach(function(d,i){ d.classList.toggle('on', i===idx); });
+    }
+    function next(){ show(idx+1); }
+    function start(){ stop(); timer=setInterval(next, 4000); }
+    function stop(){ if(timer){ clearInterval(timer); timer=null; } }
+    start();
+    // Pause saat tab tidak terlihat (hemat & rapi).
+    document.addEventListener('visibilitychange', function(){ document.hidden ? stop() : start(); });
+  })();
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function toast(m,err){ var t=document.getElementById('toast'); t.textContent=m; t.className='toast show'+(err?' err':''); clearTimeout(t._t); t._t=setTimeout(function(){t.className='toast';},2800); }
+  function openModal(id){ document.getElementById(id).classList.add('show'); }
+  function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+  // ── Load data ──
+  async function init(){
+    try {
+      var [pkgRes, cfgRes] = await Promise.all([
+        fetch('/pub/voucher/packages').then(r=>r.json()),
+        fetch('/pub/voucher/config').then(r=>r.json())
+      ]);
+      CONFIG = cfgRes.success ? cfgRes.data : {};
+      PACKAGES = pkgRes.success ? pkgRes.data : [];
+      renderPackages();
+      setupMethods();
+    } catch(e){
+      document.getElementById('tickets').innerHTML = '<div class="empty">Gagal memuat paket. Coba muat ulang halaman.</div>';
+    }
+  }
+
+  function renderPackages(){
+    var box = document.getElementById('tickets');
+    if (!PACKAGES.length){ box.innerHTML = '<div class="empty"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#c2cde0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 6v12" stroke-dasharray="2 2"/></svg><br>Belum ada paket voucher tersedia.<br><span style="font-size:11.5px;opacity:.8">Silakan cek kembali nanti.</span></div>'; return; }
+    box.innerHTML = PACKAGES.map(function(p){
+      var dur = p.duration_label ? esc(p.duration_label) : 'Voucher WiFi';
+      return '<div class="prow" data-id="'+p.id+'" onclick="selectPkg('+p.id+')">'
+        + '<div class="p-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>'
+        + '<div class="p-body">'
+        +   '<div class="p-name">'+dur+'</div>'
+        +   '<div class="p-quota">'+esc(p.name)+'</div>'
+        + '</div>'
+        + '<div class="p-right">'
+        +   '<div class="p-price">'+rp(p.price)+'</div>'
+        +   '<span class="p-badge">Voucher</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function selectPkg(id){
+    SELECTED = PACKAGES.find(function(p){return p.id==id;}) || null;
+    document.querySelectorAll('.prow').forEach(function(el){
+      el.classList.toggle('sel', el.getAttribute('data-id')==id);
+    });
+    refreshBar();
+  }
+
+  // ── Methods ──
+  function setupMethods(){
+    var gwEnabled = CONFIG && CONFIG.gateway_enabled;
+    var hasManual = CONFIG && CONFIG.payment_accounts && CONFIG.payment_accounts.length;
+    if (!gwEnabled){ document.getElementById('pmGateway').classList.add('disabled'); }
+    if (!hasManual && !(CONFIG && CONFIG.company_whatsapp)){ document.getElementById('pmManual').classList.add('disabled'); }
+    // Auto-select satu yang tersedia.
+    if (gwEnabled) selectMethod('gateway');
+    else if (hasManual || (CONFIG && CONFIG.company_whatsapp)) selectMethod('manual');
+  }
+  function selectMethod(m){
+    if (document.getElementById(m==='gateway'?'pmGateway':'pmManual').classList.contains('disabled')) return;
+    METHOD = m;
+    document.getElementById('pmGateway').classList.toggle('sel', m==='gateway');
+    document.getElementById('pmManual').classList.toggle('sel', m==='manual');
+    refreshBar();
+  }
+
+  function refreshBar(){
+    var t = SELECTED ? SELECTED.price : 0;
+    document.getElementById('barTotal').textContent = SELECTED ? rp(t) : 'Rp —';
+    document.getElementById('btnBuy').disabled = !(SELECTED && METHOD);
+  }
+
+  // ── Checkout ──
+  function validate(){
+    if (!SELECTED){ toast('Pilih paket dulu', true); return null; }
+    if (!METHOD){ toast('Pilih metode pembayaran', true); return null; }
+    var name = document.getElementById('fName').value.trim();
+    var wa = document.getElementById('fWa').value.trim();
+    var email = document.getElementById('fEmail').value.trim();
+    if (!name){ toast('Nama wajib diisi', true); document.getElementById('fName').focus(); return null; }
+    if (!wa && !email){ toast('Isi No. WhatsApp atau Email', true); document.getElementById('fWa').focus(); return null; }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast('Format email tidak valid', true); return null; }
+    return { package_id: SELECTED.id, buyer_name: name, buyer_wa: wa, buyer_email: email, payment_method: METHOD };
+  }
+
+  async function checkout(){
+    var data = validate(); if (!data) return;
+    document.getElementById('btnBuy').disabled = true;
+    showLoading('Membuat order…','Sedang menyiapkan pesanan kamu.');
+    try {
+      var r = await fetch('/pub/voucher/order', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+      var j = await r.json();
+      if (!j.success){ closeModal('modalLoading'); toast(j.message||'Gagal membuat order', true); document.getElementById('btnBuy').disabled=false; return; }
+      ORDER = j.data;
+      if (METHOD === 'manual') { closeModal('modalLoading'); return startManual(); }
+      return startGateway();
+    } catch(e){
+      closeModal('modalLoading'); toast('Terjadi kesalahan jaringan', true); document.getElementById('btnBuy').disabled=false;
+    }
+  }
+
+  function showLoading(t,s){ document.getElementById('loadTitle').textContent=t; document.getElementById('loadSub').textContent=s||''; openModal('modalLoading'); }
+
+  // ── Gateway flow ──
+  async function startGateway(){
+    // Tripay perlu pilih channel dulu.
+    if (CONFIG.gateway_provider === 'tripay'){ closeModal('modalLoading'); return openTripay(); }
+    showLoading('Menghubungkan ke pembayaran…','Mohon tunggu.');
+    await doPay({});
+  }
+
+  async function doPay(extra){
+    try {
+      var body = Object.assign({ mode:'gateway' }, extra||{});
+      var r = await fetch('/pub/voucher/'+ORDER.order_code+'/pay', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+      var j = await r.json();
+      closeModal('modalLoading');
+      if (!j.success){ toast(j.message||'Gagal memproses pembayaran', true); document.getElementById('btnBuy').disabled=false; return; }
+      var statusUrl = '/beli-voucher/status/' + ORDER.order_code;
+      if (j.mode==='midtrans' && j.snap_token){
+        try { await loadSnap(j.client_key, j.env); } catch(e){ if (j.snap_url){ location.href=j.snap_url; return; } }
+        window.snap.pay(j.snap_token, {
+          onSuccess:function(){ location.href=statusUrl; },
+          onPending:function(){ location.href=statusUrl; },
+          onError:function(){ location.href=statusUrl; },
+          onClose:function(){ toast('Pembayaran belum selesai. Lanjutkan kapan saja.'); document.getElementById('btnBuy').disabled=false; }
+        });
+        return;
+      }
+      if (j.payment_url){ location.href = j.payment_url; return; }
+      toast('Respons gateway tidak dikenali', true); document.getElementById('btnBuy').disabled=false;
+    } catch(e){ closeModal('modalLoading'); toast('Kesalahan jaringan', true); document.getElementById('btnBuy').disabled=false; }
+  }
+
+  var SNAP_LOADING=false;
+  function loadSnap(clientKey, env){
+    return new Promise(function(resolve,reject){
+      if (window.snap) return resolve();
+      var s=document.createElement('script');
+      s.src=(env==='production')?'https://app.midtrans.com/snap/snap.js':'https://app.sandbox.midtrans.com/snap/snap.js';
+      s.setAttribute('data-client-key', clientKey||'');
+      s.onload=function(){resolve();}; s.onerror=function(){reject(new Error('snap'));};
+      document.head.appendChild(s);
+    });
+  }
+
+  // ── Tripay channels ──
+  async function openTripay(){
+    openModal('modalTripay');
+    var list=document.getElementById('tripayList'); list.innerHTML='<div class="spin"></div>';
+    try {
+      var r=await fetch('/pub/voucher/tripay-channels'); var j=await r.json();
+      var ch=(j.data||[]).filter(function(c){return c.active!==false;});
+      if (!ch.length){ list.innerHTML='<div class="empty">Channel tidak tersedia.</div>'; return; }
+      list.innerHTML=ch.map(function(c){
+        var fee = (c.total_fee && (c.total_fee.flat||c.total_fee.percent)) ? '+ biaya' : '';
+        return '<div class="tp-item" onclick="pickTripay(\''+esc(c.code)+'\')">'
+          + (c.icon_url?'<img src="'+esc(c.icon_url)+'" alt="">':'')
+          + '<div class="tn">'+esc(c.name)+'</div><div class="tf">'+fee+'</div></div>';
+      }).join('');
+    } catch(e){ list.innerHTML='<div class="empty">Gagal memuat channel.</div>'; }
+  }
+  function pickTripay(code){ closeModal('modalTripay'); showLoading('Menghubungkan ke pembayaran…','Mohon tunggu.'); doPay({ tripay_method: code }); }
+
+  // ── Manual flow ──
+  async function startManual(){
+    var r = await fetch('/pub/voucher/'+ORDER.order_code+'/pay', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ mode:'manual' }) });
+    var j = await r.json();
+    document.getElementById('btnBuy').disabled = false;
+    if (!j.success){ toast(j.message||'Gagal', true); return; }
+    document.getElementById('manualAmount').textContent = rp(j.amount);
+    var accts = j.payment_accounts || [];
+    var box = document.getElementById('manualAccounts');
+    box.innerHTML = accts.length ? accts.map(function(a){
+      var label = (a.provider||a.type||'').toUpperCase();
+      return '<div class="acct">'
+        + '<div class="ai">'+(a.logo_url?'<img src="'+esc(a.logo_url)+'">':esc(label.slice(0,4)))+'</div>'
+        + '<div class="ab"><div class="ap">'+esc(a.provider||a.type)+'</div>'
+        + '<div class="an">'+esc(a.account_number)+' <button class="copy-btn" onclick="copyTxt(\''+esc(a.account_number)+'\')">Salin</button></div>'
+        + '<div class="ao">a.n. '+esc(a.account_owner||'-')+'</div></div></div>';
+    }).join('') : '<div class="empty" style="padding:12px">Belum ada rekening. Gunakan tombol WhatsApp di bawah.</div>';
+    var wa = document.getElementById('btnWaConfirm');
+    if (j.wa_url){ wa.href=j.wa_url; wa.style.display='flex'; } else { wa.style.display='none'; }
+    PROOF=null;
+    document.getElementById('uploadZone').classList.remove('has');
+    document.getElementById('uzText').textContent='Unggah bukti transfer';
+    openModal('modalManual');
+  }
+
+  function copyTxt(t){ navigator.clipboard.writeText(t).then(function(){toast('Nomor disalin');}).catch(function(){}); }
+  function onProofPick(inp){
+    if (!inp.files || !inp.files[0]) return;
+    PROOF = inp.files[0];
+    document.getElementById('uploadZone').classList.add('has');
+    document.getElementById('uzText').textContent = PROOF.name.length>28 ? PROOF.name.slice(0,25)+'…' : PROOF.name;
+  }
+  async function submitProof(){
+    if (!PROOF){ toast('Pilih file bukti dulu', true); return; }
+    var btn=document.getElementById('btnProof'); btn.disabled=true; btn.textContent='Mengirim…';
+    try {
+      var fd=new FormData(); fd.append('proof', PROOF);
+      var r=await fetch('/pub/voucher/'+ORDER.order_code+'/proof', { method:'POST', body:fd });
+      var j=await r.json();
+      btn.disabled=false; btn.textContent='Kirim Bukti Transfer';
+      if (!j.success){ toast(j.message||'Gagal mengunggah', true); return; }
+      closeModal('modalManual');
+      location.href='/beli-voucher/status/'+ORDER.order_code;
+    } catch(e){ btn.disabled=false; btn.textContent='Kirim Bukti Transfer'; toast('Kesalahan jaringan', true); }
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" id="dmHtml">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    /* ── Theme variables ───────────────────────────────────── */
+    :root {
+      --dm-bg:        #f0f4f8;
+      --dm-card:      #ffffff;
+      --dm-border:    #e2e8f0;
+      --dm-text:      #1e293b;
+      --dm-muted:     #64748b;
+      --dm-panel:     #f8fafc;
+      --dm-accent:    #1e78ff;
+    }
+    .dark-mode {
+      --dm-bg:        #0f1117;
+      --dm-card:      #1a1d27;
+      --dm-border:    #2a2d3e;
+      --dm-text:      #e2e8f0;
+      --dm-muted:     #8892a4;
+      --dm-panel:     #141720;
+      --dm-accent:    #3b82f6;
+    }
+
+    body { background: var(--dm-bg); color: var(--dm-text); transition: background .2s, color .2s; }
+
+    /* ── Header ────────────────────────────────────────────── */
+    /* ── Modern Header ──────────────────────────────────────── */
+    .dm-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      background: var(--dm-card);
+      border: 1px solid var(--dm-border);
+      border-radius: 14px;
+      padding: 14px 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .dark-mode .dm-header { box-shadow: 0 2px 12px rgba(0,0,0,.25); }
+    .dm-header-left { display:flex; align-items:center; gap:12px; }
+    .dm-header-icon {
+      width:40px; height:40px; border-radius:10px;
+      background: linear-gradient(135deg,#1e78ff,#0052cc);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      box-shadow: 0 4px 12px rgba(30,120,255,.3);
+    }
+    .dm-header-icon svg { stroke:#fff; fill:none; stroke-width:2; }
+    .dm-header-text h1 { font-size:16px; font-weight:800; margin:0 0 2px; letter-spacing:-.3px; }
+    .dm-header-text p  { font-size:11px; color:var(--dm-muted); margin:0; }
+    .dm-header-right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    /* Device selector */
+    .dm-device-select {
+      padding: 7px 12px; border: 1.5px solid var(--dm-border);
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      background: var(--dm-card); color: var(--dm-text);
+      cursor: pointer; min-width: 190px; max-width: 260px; outline:none;
+      transition: border-color .15s;
+    }
+    .dm-device-select:focus { border-color: #1e78ff; }
+
+    /* Interval pills */
+    .dm-interval-btns { display:flex; gap:2px; background:var(--dm-panel); border-radius:8px; padding:3px; border:1px solid var(--dm-border); }
+    .dm-int-btn { padding:5px 11px; border:none; background:transparent; border-radius:6px; font-size:11px; font-weight:700; color:var(--dm-muted); cursor:pointer; transition:all .15s; font-family:inherit; }
+    .dm-int-btn.active { background:#1e78ff; color:#fff; box-shadow:0 2px 6px rgba(30,120,255,.3); }
+
+    /* Dark toggle */
+    .dm-theme-btn { width:34px; height:34px; border-radius:8px; border:1.5px solid var(--dm-border); background:var(--dm-card); color:var(--dm-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+    .dm-theme-btn:hover { border-color:#1e78ff; color:#1e78ff; }
+
+    /* Live badge */
+    .dm-live { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #22c55e; }
+    .dm-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: dmPulse 1.5s infinite; }
+    @keyframes dmPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+
+    /* ── Status bar ────────────────────────────────────────── */
+    .dm-status-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      background: var(--dm-card); border: 1px solid var(--dm-border);
+      border-radius: 12px; padding: 14px 18px;
+      margin-bottom: 20px; align-items: center;
+    }
+    .dm-status-item { display: flex; flex-direction: column; min-width: 100px; }
+    .dm-status-lbl  { font-size: 10px; font-weight: 700; color: var(--dm-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .dm-status-val  { font-size: 14px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .dm-sep { width: 1px; height: 36px; background: var(--dm-border); margin: 0 4px; }
+    .dm-status-online  { color: #22c55e; }
+    .dm-status-offline { color: #ef4444; }
+    .dm-status-warning { color: #f59e0b; }
+
+    /* ── Grid layout ───────────────────────────────────────── */
+    .dm-grid-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+    .dm-grid-mid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .dm-grid-bot { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 14px; }
+    .dm-grid-iface { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+
+    @media (max-width: 900px) {
+      .dm-grid-top { grid-template-columns: repeat(2, 1fr); }
+      .dm-grid-mid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 500px) {
+      .dm-grid-top { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ── Panel card ────────────────────────────────────────── */
+    .dm-panel {
+      background: var(--dm-card);
+      border: 1px solid var(--dm-border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+      transition: background .2s, border-color .2s;
+    }
+    .dm-panel-title {
+      font-size: 11px; font-weight: 700; color: var(--dm-muted);
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .dm-panel-title svg { opacity: .6; }
+
+    /* ── Gauge panels ──────────────────────────────────────── */
+    .dm-gauge-wrap {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 4px 0 0;
+    }
+    .dm-gauge-val {
+      font-size: 28px; font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      line-height: 1; margin-top: 4px;
+    }
+    .dm-gauge-sub { font-size: 11px; color: var(--dm-muted); margin-top: 3px; }
+
+    /* Color coding */
+    .clr-ok      { color: #22c55e; }
+    .clr-warn    { color: #f59e0b; }
+    .clr-danger  { color: #ef4444; }
+    .clr-blue    { color: #3b82f6; }
+    .clr-orange  { color: #f97316; }
+
+    /* ── Stat number panels ────────────────────────────────── */
+    .dm-stat-big { font-size: 36px; font-weight: 800; font-family: 'JetBrains Mono', monospace; line-height: 1.1; }
+    .dm-stat-unit { font-size: 13px; color: var(--dm-muted); font-weight: 600; margin-top: 2px; }
+    .dm-mini-chart { margin-top: 8px; min-height: 50px; }
+
+    /* ── Interface table ───────────────────────────────────── */
+    .dm-iface-card {
+      background: var(--dm-panel);
+      border: 1px solid var(--dm-border);
+      border-radius: 10px; padding: 12px 14px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .dm-iface-header { display: flex; align-items: center; justify-content: space-between; }
+    .dm-iface-name { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+    .dm-iface-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+    .dm-iface-dot.down { background: #ef4444; }
+    .dm-iface-traffic { display: flex; gap: 16px; }
+    .dm-iface-rx, .dm-iface-tx { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .dm-arrow-rx { color: #3b82f6; }
+    .dm-arrow-tx { color: #f97316; }
+
+    /* ── No device selected ────────────────────────────────── */
+    .dm-empty {
+      text-align: center; padding: 80px 20px;
+      color: var(--dm-muted); font-size: 14px;
+    }
+    .dm-empty svg { opacity: .3; margin-bottom: 14px; }
+
+    /* ── Loading skeleton ──────────────────────────────────── */
+    .dm-skeleton {
+      background: linear-gradient(90deg, var(--dm-border) 25%, var(--dm-panel) 50%, var(--dm-border) 75%);
+      background-size: 200% 100%;
+      animation: dmSkel 1.4s infinite;
+      border-radius: 6px; height: 20px;
+    }
+    @keyframes dmSkel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── History chart panel ───────────────────────────────── */
+    .dm-chart-panel { padding-bottom: 8px; }
+    .dm-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .dm-chart-tabs { display: flex; gap: 3px; }
+    .dm-chart-tab { padding: 3px 10px; border: 1px solid var(--dm-border); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; background: transparent; color: var(--dm-muted); transition: all .15s; }
+    .dm-chart-tab.active { background: var(--dm-accent); color: #fff; border-color: var(--dm-accent); }
+
+    /* ── Protocol badge ────────────────────────────────────── */
+    .proto-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700;
+    }
+    .proto-badge.api  { background: rgba(30,120,255,.12); color: #1e78ff; }
+    .proto-badge.snmp { background: rgba(34,197,94,.12); color: #16a34a; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- ── Header ─────────────────────────────────────────── -->
+      <div class="dm-header">
+        <div class="dm-header-left">
+          
+          <div class="dm-header-text">
+            <h1>Device Monitor</h1>
+            <p>Realtime — CPU · RAM · Disk · Traffic</p>
+          </div>
+        </div>
+        <div class="dm-header-right">
+          <div class="dm-live" id="dmLive" style="display:none">
+            
+          </div>
+          <select class="dm-device-select" id="deviceSelect" onchange="selectDevice(this.value)">
+            <option value="">— Pilih Device —</option>
+          </select>
+          <div class="dm-interval-btns">
+            <button class="dm-int-btn active" data-ms="3000">3s</button>
+            <button class="dm-int-btn" data-ms="5000">5s</button>
+            <button class="dm-int-btn" data-ms="10000">10s</button>
+            <button class="dm-int-btn" data-ms="30000">30s</button>
+          </div>
+          <button class="dm-theme-btn" id="themeToggle" onclick="toggleDmTheme()" title="Toggle dark mode">
+            <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+          </button>
+          <button onclick="openAddDevice()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;background:#1e78ff;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(30,120,255,.3);transition:all .15s;" onmouseover="this.style.background='#0052cc'" onmouseout="this.style.background='#1e78ff'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Device
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Empty state ─────────────────────────────────────── -->
+      <div id="dmEmpty">
+        <div class="dm-empty">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h.01M10 8h4"/></svg>
+          <div style="font-weight:700;font-size:16px;margin-bottom:6px;">Pilih device untuk monitoring</div>
+          <div>Data CPU, RAM, Disk, dan Traffic akan tampil realtime</div>
+        </div>
+      </div>
+
+      <!-- ── Dashboard panels ────────────────────────────────── -->
+      <div id="dmDashboard" style="display:none;">
+
+        <!-- Status bar -->
+        <div class="dm-status-bar" id="dmStatusBar">
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Device</span>
+            <span class="dm-status-val" id="sbName">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">IP</span>
+            <span class="dm-status-val" id="sbIp">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Status</span>
+            <span class="dm-status-val" id="sbStatus">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Uptime</span>
+            <span class="dm-status-val" id="sbUptime">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Firmware</span>
+            <span class="dm-status-val" id="sbFirmware" style="font-size:12px;">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Protokol</span>
+            <span class="dm-status-val" id="sbProto">—</span>
+          </div>
+          <div class="dm-sep"></div>
+          <div class="dm-status-item">
+            <span class="dm-status-lbl">Last Poll</span>
+            <span class="dm-status-val" id="sbLastPoll" style="font-size:12px;">—</span>
+          </div>
+        </div>
+
+        <!-- Row 1: Gauge cards -->
+        <div class="dm-grid-top">
+          <!-- CPU Gauge -->
+          <div class="dm-panel">
+            <div class="dm-panel-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+              CPU Load
+            </div>
+            <div class="dm-gauge-wrap">
+              <div id="cpuGaugeChart" style="min-height:140px;width:100%;"></div>
+              <div class="dm-gauge-val" id="cpuVal">0<span style="font-size:16px;">%</span></div>
+              <div class="dm-gauge-sub" id="cpuSub">Router</div>
+            </div>
+          </div>
+
+          <!-- RAM Gauge -->
+          <div class="dm-panel">
+            <div class="dm-panel-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 8V6M10 8V6M14 8V6M18 8V6M6 16v2M10 16v2M14 16v2M18 16v2"/></svg>
+              RAM Usage
+            </div>
+            <div class="dm-gauge-wrap">
+              <div id="ramGaugeChart" style="min-height:140px;width:100%;"></div>
+              <div class="dm-gauge-val" id="ramVal">0<span style="font-size:16px;">%</span></div>
+              <div class="dm-gauge-sub" id="ramSub">0 / 0 MB</div>
+            </div>
+          </div>
+
+          <!-- Disk Gauge -->
+          <div class="dm-panel">
+            <div class="dm-panel-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              Disk Usage
+            </div>
+            <div class="dm-gauge-wrap">
+              <div id="diskGaugeChart" style="min-height:140px;width:100%;"></div>
+              <div class="dm-gauge-val" id="diskVal">0<span style="font-size:16px;">%</span></div>
+              <div class="dm-gauge-sub" id="diskSub">Flash / HDD</div>
+            </div>
+          </div>
+
+          <!-- Traffic summary -->
+          <div class="dm-panel">
+            <div class="dm-panel-title">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+              Total Traffic
+            </div>
+            <div style="margin-top:8px;">
+              <div style="margin-bottom:12px;">
+                <div style="font-size:10px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">↓ RX Download</div>
+                <div class="dm-stat-big clr-blue" id="rxVal">0.00</div>
+                <div class="dm-stat-unit">Mbps</div>
+              </div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">↑ TX Upload</div>
+                <div class="dm-stat-big clr-orange" id="txVal">0.00</div>
+                <div class="dm-stat-unit">Mbps</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Grafana-style Chart Grid ──────────────────────── -->
+        <div class="gf-toolbar">
+          <span class="gf-toolbar-title">Performance Metrics</span>
+          <div class="gf-time-btns" id="gfTimeBtns">
+            <button class="gf-time-btn active" data-h="0.083">5m</button>
+            <button class="gf-time-btn" data-h="1">1h</button>
+            <button class="gf-time-btn" data-h="6">6h</button>
+            <button class="gf-time-btn" data-h="24">24h</button>
+          </div>
+        </div>
+
+        <div class="gf-grid">
+          <!-- Panel 1: CPU -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">CPU Usage</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl">cur</span><span class="gf-stat-val" id="gfCpuCur" style="color:#f9a825;">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">avg</span><span class="gf-stat-val" id="gfCpuAvg">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">max</span><span class="gf-stat-val" id="gfCpuMax">0%</span></span>
+              </div>
+            </div>
+            <div id="gfCpuChart" class="gf-chart-area"></div>
+          </div>
+
+          <!-- Panel 2: RAM -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">Memory Usage</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl">cur</span><span class="gf-stat-val" id="gfRamCur" style="color:#7986cb;">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">avg</span><span class="gf-stat-val" id="gfRamAvg">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">max</span><span class="gf-stat-val" id="gfRamMax">0%</span></span>
+              </div>
+            </div>
+            <div id="gfRamChart" class="gf-chart-area"></div>
+          </div>
+
+          <!-- Panel 3: Disk -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">Disk Usage</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl">cur</span><span class="gf-stat-val" id="gfDiskCur" style="color:#ef5350;">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">avg</span><span class="gf-stat-val" id="gfDiskAvg">0%</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">max</span><span class="gf-stat-val" id="gfDiskMax">0%</span></span>
+              </div>
+            </div>
+            <div id="gfDiskChart" class="gf-chart-area"></div>
+          </div>
+
+          <!-- Panel 4: RX Traffic -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">RX Download</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl">cur</span><span class="gf-stat-val" id="gfRxCur" style="color:#4dd0e1;">0 Mbps</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">avg</span><span class="gf-stat-val" id="gfRxAvg">0</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">max</span><span class="gf-stat-val" id="gfRxMax">0</span></span>
+              </div>
+            </div>
+            <div id="gfRxChart" class="gf-chart-area"></div>
+          </div>
+
+          <!-- Panel 5: TX Traffic -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">TX Upload</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl">cur</span><span class="gf-stat-val" id="gfTxCur" style="color:#ff8a65;">0 Mbps</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">avg</span><span class="gf-stat-val" id="gfTxAvg">0</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl">max</span><span class="gf-stat-val" id="gfTxMax">0</span></span>
+              </div>
+            </div>
+            <div id="gfTxChart" class="gf-chart-area"></div>
+          </div>
+
+          <!-- Panel 6: Combined Traffic -->
+          <div class="gf-panel">
+            <div class="gf-panel-header">
+              <span class="gf-panel-title">Traffic Overview (RX + TX)</span>
+              <div class="gf-panel-stats">
+                <span class="gf-stat"><span class="gf-stat-lbl" style="color:#4dd0e1;">↓ RX</span><span class="gf-stat-val" id="gfTotalRx" style="color:#4dd0e1;">0</span></span>
+                <span class="gf-stat"><span class="gf-stat-lbl" style="color:#ff8a65;">↑ TX</span><span class="gf-stat-val" id="gfTotalTx" style="color:#ff8a65;">0</span></span>
+              </div>
+            </div>
+            <div id="gfCombinedChart" class="gf-chart-area"></div>
+          </div>
+        </div>
+
+        <!-- Row 3: Interface cards -->
+        <div class="dm-panel" style="margin-bottom:14px;">
+          <div class="dm-panel-title">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8M10 14h5"/></svg>
+            Interface Status
+          </div>
+          <div class="dm-grid-iface" id="ifaceGrid">
+            <div style="color:var(--dm-muted);font-size:13px;">Memuat interface...</div>
+          </div>
+        </div>
+
+      </div><!-- /dmDashboard -->
+
+    </main>
+  </div>
+</div>
+<style>
+/* ── Grafana-style Chart Grid ──────────────────────────── */
+.gf-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.gf-toolbar-title { font-size:12px; font-weight:700; color:var(--dm-muted); text-transform:uppercase; letter-spacing:.07em; }
+.gf-time-btns { display:flex; gap:2px; }
+.gf-time-btn { padding:4px 12px; border:1px solid var(--dm-border); background:transparent; border-radius:4px; font-size:11px; font-weight:700; color:var(--dm-muted); cursor:pointer; transition:all .15s; font-family:inherit; }
+.gf-time-btn.active { background:var(--dm-accent); color:#fff; border-color:var(--dm-accent); }
+.gf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px; }
+@media(max-width:1100px){ .gf-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:650px) { .gf-grid { grid-template-columns:1fr; } }
+.gf-panel { background:var(--dm-card); border:1px solid var(--dm-border); border-radius:4px; overflow:hidden; transition:border-color .15s; }
+.dark-mode .gf-panel { background:#141720; border-color:#1e2130; }
+.gf-panel:hover { border-color:var(--dm-accent); }
+.gf-panel-header { display:flex; align-items:center; justify-content:space-between; padding:7px 12px 5px; border-bottom:1px solid var(--dm-border); }
+.dark-mode .gf-panel-header { border-bottom-color:#1e2130; }
+.gf-panel-title { font-size:11px; font-weight:700; color:var(--dm-muted); text-transform:uppercase; letter-spacing:.06em; }
+.gf-panel-stats { display:flex; gap:10px; }
+.gf-stat { display:flex; align-items:baseline; gap:3px; }
+.gf-stat-lbl { font-size:9px; font-weight:700; color:var(--dm-muted); text-transform:uppercase; }
+.gf-stat-val { font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--dm-text); }
+.gf-chart-area { height:140px; }
+
+/* ── Device Modal ─────────────────────────────────────────── */
+.dm-modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.5); z-index: 2000;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.dm-modal-overlay.show { display: flex; }
+.dm-modal {
+  background: #fff; border-radius: 16px;
+  padding: 28px 28px 24px; width: 92%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  animation: dmModalIn .2s ease;
+}
+.dark-mode .dm-modal { background: #1a1d27; color: #e2e8f0; border: 1px solid #2a2d3e; }
+@keyframes dmModalIn { from{opacity:0;transform:translateY(14px)scale(.97)} to{opacity:1;transform:none} }
+.dm-modal-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.dm-modal-hdr h3 { font-size:16px; font-weight:800; margin:0; }
+.dm-modal-close { width:30px;height:30px;border-radius:8px;border:none;background:var(--dm-panel,#f8fafc);cursor:pointer;font-size:18px;color:var(--dm-muted,#64748b);display:flex;align-items:center;justify-content:center; }
+.dm-modal-close:hover { background:#f0f4ff; color:#ef4444; }
+
+/* Protocol tabs */
+.dm-proto-tabs { display:flex; gap:0; margin-bottom:18px; border:1.5px solid var(--dm-border,#e2e8f0); border-radius:10px; overflow:hidden; }
+.dm-proto-tab {
+  flex:1; padding:9px; font-size:13px; font-weight:700; cursor:pointer;
+  border:none; background:transparent; color:var(--dm-muted,#64748b);
+  transition:all .15s; display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.dm-proto-tab.active { background:#1e78ff; color:#fff; }
+.dark-mode .dm-proto-tab { color:#8892a4; }
+.dark-mode .dm-proto-tab.active { background:#1e78ff; color:#fff; }
+
+/* Form */
+.dm-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+.dm-form-grid.single { grid-template-columns:1fr; }
+.dm-fg { display:flex; flex-direction:column; gap:4px; }
+.dm-fg label { font-size:11px; font-weight:700; color:var(--dm-muted,#64748b); text-transform:uppercase; letter-spacing:.05em; }
+.dm-fg input, .dm-fg select {
+  padding:9px 12px; border:1.5px solid var(--dm-border,#e2e8f0);
+  border-radius:8px; font-size:13px; font-family:inherit;
+  background:#fff; color:#1e293b; transition:border-color .15s;
+}
+.dark-mode .dm-fg input, .dark-mode .dm-fg select { background:#141720; color:#e2e8f0; border-color:#2a2d3e; }
+.dm-fg input:focus, .dm-fg select:focus { outline:none; border-color:#1e78ff; }
+.dm-form-sep { font-size:10px; font-weight:700; color:var(--dm-muted,#94a3b8); text-transform:uppercase; letter-spacing:.06em; margin:14px 0 8px; border-bottom:1px solid var(--dm-border,#e2e8f0); padding-bottom:5px; }
+
+/* Test connection result */
+.dm-test-result {
+  padding:10px 14px; border-radius:8px; font-size:13px; font-weight:600;
+  display:none; margin-bottom:12px; align-items:center; gap:8px;
+}
+.dm-test-result.ok   { background:#f0fdf4; color:#16a34a; border:1.5px solid #bbf7d0; display:flex; }
+.dm-test-result.fail { background:#fef2f2; color:#dc2626; border:1.5px solid #fecaca; display:flex; }
+
+/* Device list in header area */
+.dm-device-actions { display:flex; gap:6px; align-items:center; }
+.dm-edit-btn, .dm-del-btn {
+  padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700;
+  cursor:pointer; border:1.5px solid; transition:all .15s;
+}
+.dm-edit-btn { border-color:#e2e8f0; background:#fff; color:#374151; }
+.dm-edit-btn:hover { border-color:#1e78ff; color:#1e78ff; }
+.dm-del-btn { border-color:#fecaca; background:#fff; color:#ef4444; }
+.dm-del-btn:hover { background:#fef2f2; }
+</style>
+
+<!-- ═══════════════════════ MODAL ADD/EDIT DEVICE ══════════════════════ -->
+<div class="dm-modal-overlay" id="deviceModal">
+  <div class="dm-modal">
+    <div class="dm-modal-hdr">
+      <h3 id="modalTitle">Tambah Device</h3>
+      <button class="dm-modal-close" onclick="closeDeviceModal()">✕</button>
+    </div>
+
+    <!-- Protocol selector -->
+    <div class="dm-proto-tabs">
+      <button class="dm-proto-tab active" id="tabApi" onclick="setProto('api')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        MikroTik REST API
+      </button>
+      <button class="dm-proto-tab" id="tabSnmp" onclick="setProto('snmp')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        SNMP
+      </button>
+    </div>
+
+    <input type="hidden" id="fDeviceId">
+    <input type="hidden" id="fProto" value="api">
+
+    <!-- Info dasar -->
+    <div class="dm-form-sep">Informasi Device</div>
+    <div class="dm-form-grid" style="margin-bottom:12px;">
+      <div class="dm-fg" style="grid-column:1/-1;">
+        <label>Nama Device *</label>
+        <input type="text" id="fName" placeholder="Contoh: Router Core, MikroTik CCR2004">
+      </div>
+      <div class="dm-fg">
+        <label>IP Address *</label>
+        <input type="text" id="fIp" placeholder="192.168.1.1">
+      </div>
+      <div class="dm-fg">
+        <label>Tipe</label>
+        <select id="fType">
+          <option value="router">Router</option>
+          <option value="switch">Switch</option>
+          <option value="olt">OLT</option>
+          <option value="access_point">Access Point</option>
+          <option value="server">Server</option>
+          <option value="other">Lainnya</option>
+        </select>
+      </div>
+      <div class="dm-fg">
+        <label>Brand</label>
+        <input type="text" id="fBrand" placeholder="MikroTik, Cisco, Huawei...">
+      </div>
+      <div class="dm-fg">
+        <label>Model</label>
+        <input type="text" id="fModel" placeholder="CCR2004, RB750...">
+      </div>
+      <div class="dm-fg">
+        <label>Lokasi</label>
+        <input type="text" id="fLocation" placeholder="NOC, Server Room...">
+      </div>
+    </div>
+
+    <!-- MikroTik API fields -->
+    <div id="apiFields">
+      <div class="dm-form-sep">MikroTik REST API</div>
+      <div class="dm-form-grid" style="margin-bottom:12px;">
+        <div class="dm-fg">
+          <label>REST API Port</label>
+          <input type="number" id="fApiPort" placeholder="80 (HTTP) / 443 (HTTPS)" value="80">
+        </div>
+        <div class="dm-fg">
+          <label>Username</label>
+          <input type="text" id="fApiUser" placeholder="admin">
+        </div>
+        <div class="dm-fg" style="grid-column:1/-1;">
+          <label>Password</label>
+          <input type="password" id="fApiPass" placeholder="password">
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--dm-muted,#64748b);margin:0 0 12px;padding:8px 10px;background:rgba(30,120,255,.06);border-radius:6px;border-left:3px solid #1e78ff;">
+        💡 Kosongkan API Port &amp; Username untuk menggunakan konfigurasi MikroTik utama dari settings.
+      </p>
+    </div>
+
+    <!-- SNMP fields -->
+    <div id="snmpFields" style="display:none;">
+      <div class="dm-form-sep">SNMP</div>
+      <div class="dm-form-grid" style="margin-bottom:12px;">
+        <div class="dm-fg">
+          <label>SNMP Version</label>
+          <select id="fSnmpVer">
+            <option value="2">v2c</option>
+            <option value="3">v3</option>
+          </select>
+        </div>
+        <div class="dm-fg">
+          <label>Community String</label>
+          <input type="text" id="fSnmpComm" placeholder="public" value="public">
+        </div>
+        <div class="dm-fg">
+          <label>SNMP Port</label>
+          <input type="number" id="fSnmpPort" placeholder="161" value="161">
+        </div>
+      </div>
+    </div>
+
+    <!-- Poll interval -->
+    <div class="dm-form-grid single" style="margin-bottom:16px;">
+      <div class="dm-fg">
+        <label>Poll Interval (detik)</label>
+        <select id="fPollInterval">
+          <option value="30">30 detik</option>
+          <option value="60" selected>1 menit</option>
+          <option value="120">2 menit</option>
+          <option value="300">5 menit</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Test result -->
+    <div class="dm-test-result" id="testResult"></div>
+
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;">
+      <button onclick="testDeviceConnection()" style="padding:9px 16px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#374151;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;" id="testConnBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        Test Koneksi
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeDeviceModal()" style="padding:9px 18px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;">Batal</button>
+        <button onclick="saveDevice()" id="saveDeviceBtn" style="padding:9px 20px;border-radius:8px;background:#1e78ff;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;">Simpan Device</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/device-monitor.js"></script>
+</body>
+</html>
