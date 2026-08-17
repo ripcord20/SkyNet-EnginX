@@ -87,7 +87,7 @@ module.exports = (sequelize) => {
     indexes: [
       { fields: ['reseller_id'] },
       { fields: ['type'] },
-      { fields: ['createdAt'] }
+      { fields: ['created_at'] }
     ]
   });
 
