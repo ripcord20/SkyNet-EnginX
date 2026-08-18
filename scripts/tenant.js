@@ -124,9 +124,16 @@ function copyAppInto(tenantDir) {
 }
 
 function writeEnv(tenantDir, cfg) {
+  // A tenant reached over a plain-HTTP local IP must NOT run in production mode:
+  // production enables Helmet's CSP which includes `upgrade-insecure-requests`,
+  // forcing the browser to upgrade http:// requests to https:// and breaking
+  // login over http://<ip>:<port>. Tenants exposed via a real domain (HTTPS at
+  // the edge, e.g. Cloudflare) should use production. So: production only when a
+  // --domain is given, development otherwise.
+  const mode = cfg.appEnv;
   const env = `# Auto-generated per-tenant env for "${cfg.slug}" (Pola B — isolated stack).
-APP_ENV=production
-NODE_ENV=production
+APP_ENV=${mode}
+NODE_ENV=${mode}
 APP_PORT=${cfg.port}
 APP_URL=${cfg.appUrl}
 BASE_URL=${cfg.appUrl}
@@ -200,6 +207,7 @@ function cmdCreate(positional, flags) {
 
   const cfg = {
     slug, port, dbName, dbUser, dbPass, appUrl,
+    appEnv: flags.domain ? 'production' : 'development',
     jwt: rand(24), jwtRefresh: rand(24), jwtPortal: rand(24),
     radiusAuth: RADIUS_BASE + idx * 10,
     radiusAcct: RADIUS_BASE + idx * 10 + 1,
