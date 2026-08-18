@@ -16,10 +16,15 @@ router.get('/stats', authenticate, RadiusCtrl.stats.bind(RadiusCtrl));
 router.get('/nas',              authenticate, RadiusCtrl.nasIndex.bind(RadiusCtrl));
 router.post('/nas',             authenticate, authorize('superadmin', 'admin'), logActivity('create', 'radius_nas'), RadiusCtrl.nasCreate.bind(RadiusCtrl));
 router.post('/nas/via-wireguard', authenticate, authorize('superadmin', 'admin'), logActivity('create', 'radius_nas_wireguard'), RadiusCtrl.nasCreateViaWireguard.bind(RadiusCtrl));
+router.post('/nas/via-vpn',       authenticate, authorize('superadmin', 'admin'), logActivity('create', 'radius_nas_vpn'), RadiusCtrl.nasCreateViaVpn.bind(RadiusCtrl));
+router.get('/vpn/settings',       authenticate, RadiusCtrl.vpnSettingsGet.bind(RadiusCtrl));
+router.put('/vpn/settings',       authenticate, authorize('superadmin', 'admin'), logActivity('update', 'nas_vpn_settings'), RadiusCtrl.vpnSettingsSave.bind(RadiusCtrl));
 router.put('/nas/:id',          authenticate, authorize('superadmin', 'admin'), logActivity('update', 'radius_nas'), RadiusCtrl.nasUpdate.bind(RadiusCtrl));
 router.delete('/nas/:id',       authenticate, authorize('superadmin', 'admin'), logActivity('delete', 'radius_nas'), RadiusCtrl.nasDestroy.bind(RadiusCtrl));
+router.get('/nas/:id/detail',   authenticate, RadiusCtrl.nasDetail.bind(RadiusCtrl));
 router.get('/nas/:id/wireguard-config', authenticate, RadiusCtrl.nasWireguardConfig.bind(RadiusCtrl));
 router.get('/nas/:id/secret', authenticate, authorize('superadmin', 'admin'), logActivity('reveal', 'radius_nas_secret'), RadiusCtrl.nasRevealSecret.bind(RadiusCtrl));
+router.get('/nas/:id/vpn-password', authenticate, authorize('superadmin', 'admin'), logActivity('reveal', 'radius_nas_vpn_password'), RadiusCtrl.nasRevealVpnPassword.bind(RadiusCtrl));
 
 // ── PORT FORWARDING ──────────────────────────────────────────────────
 router.get('/port-forwards',                      authenticate, RadiusCtrl.portForwardsAllIndex.bind(RadiusCtrl));

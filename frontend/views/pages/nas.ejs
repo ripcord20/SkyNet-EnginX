@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --nas-blue:#2563eb; --nas-blue-l:#eff6ff;
+      --nas-green:#16a34a; --nas-green-l:#f0fdf4;
+      --nas-red:#dc2626; --nas-red-l:#fef2f2;
+      --nas-amber:#d97706; --nas-amber-l:#fffbeb;
+      --nas-violet:#7c3aed; --nas-violet-l:#f5f3ff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .nas { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    .nas-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .nas-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .nas-hdr-l p { font-size:13px; color:var(--muted); margin:0; }
+    .nas-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-primary { background:var(--nas-blue); border-color:var(--nas-blue); color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-green { background:var(--nas-green); border-color:var(--nas-green); color:#fff; }
+    .btn-green:hover { background:#15803d; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    .nas-cards { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-radius:16px; border:1px solid #e8eaed; overflow:hidden; margin-bottom:20px; }
+    .nas-stat { padding:18px 20px; border-right:1px solid #e8eaed; }
+    .nas-stat:last-child { border-right:none; }
+    .nas-stat-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:8px; }
+    .nas-stat-val { font-size:26px; font-weight:800; color:#0f172a; letter-spacing:-1px; }
+    @media(max-width:900px){ .nas-cards{ grid-template-columns:repeat(2,1fr);} .nas-stat:nth-child(2){border-right:none;} }
+
+    .site-group { margin-bottom:20px; }
+    .site-group-hdr { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; font-weight:700; color:var(--text); }
+    .site-group-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+    .nas-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .nas-card { background:#fff; border:1.5px solid var(--border); border-radius:14px; padding:16px 18px; }
+    .nas-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:8px; }
+    .nas-card-name { font-size:14px; font-weight:800; color:var(--text); }
+    .nas-card-sub { font-size:11.5px; color:var(--faint); margin-top:2px; }
+    .nas-card-body { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#475569; margin:10px 0; }
+    .nas-card-body .row { display:flex; justify-content:space-between; gap:8px; }
+    .nas-card-body .row b { color:var(--text); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-weight:600; }
+    .nas-card-ftr { display:flex; gap:8px; margin-top:12px; align-items:center; }
+    .mode-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; }
+    .mode-vpn { background:var(--nas-green-l); color:var(--nas-green); }
+    .mode-wireguard { background:var(--nas-violet-l); color:var(--nas-violet); }
+    .mode-direct { background:var(--nas-blue-l); color:var(--nas-blue); }
+
+    .toggle { position:relative; display:inline-block; width:36px; height:20px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-track { position:absolute; inset:0; background:#cbd5e1; border-radius:20px; cursor:pointer; transition:.15s; }
+    .toggle-track:before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; }
+    .toggle input:checked + .toggle-track { background:var(--nas-green); }
+    .toggle input:checked + .toggle-track:before { transform:translateX(16px); }
+
+    .icon-btn { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:pointer; color:#64748b; }
+    .icon-btn:hover { background:#f8fafc; color:#0f172a; }
+    .icon-btn svg { width:14px; height:14px; }
+    .icon-btn.danger:hover { background:var(--nas-red-l); color:var(--nas-red); border-color:#fecaca; }
+
+    .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    .modal-box.wide { max-width:640px; }
+    .modal-hdr { padding:18px 22px; border-bottom:1px solid #f1f5f9; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .modal-hdr h3 { margin:0; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; }
+    .modal-hdr p { margin:4px 0 0; font-size:12.5px; color:var(--muted); font-weight:500; }
+    .modal-close { cursor:pointer; color:var(--faint); background:none; border:none; padding:4px; }
+    .modal-body { padding:18px 22px; display:flex; flex-direction:column; gap:14px; }
+    .modal-ftr { padding:16px 22px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; outline:none; background:#f8fafc; color:var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--nas-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .field-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+
+    .acc { border:1.5px solid var(--border); border-radius:12px; overflow:hidden; background:#fff; }
+    .acc-h { width:100%; display:flex; align-items:center; gap:10px; padding:12px 14px; background:#fff; border:none; cursor:pointer; font-family:inherit; text-align:left; }
+    .acc-h .acc-ic { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:#f8fafc; color:var(--nas-blue); flex-shrink:0; }
+    .acc-h .acc-ic svg { width:16px; height:16px; }
+    .acc-h b { font-size:13.5px; font-weight:700; color:var(--text); flex:1; }
+    .acc-h .chev { width:16px; height:16px; color:var(--faint); transition:transform .15s; }
+    .acc.open .acc-h .chev { transform:rotate(180deg); }
+    .acc-b { display:none; padding:0 16px 16px; }
+    .acc.open .acc-b { display:block; }
+
+    .kv-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; }
+    .kv label { display:block; font-size:11px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+    .kv .val { font-size:13.5px; font-weight:700; color:var(--text); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; word-break:break-all; }
+    .pw-row { display:flex; align-items:center; gap:8px; }
+    .pw-row button { background:none; border:none; cursor:pointer; color:var(--muted); padding:0; display:inline-flex; }
+    .pw-row button svg { width:16px; height:16px; }
+
+    .status-box { display:flex; gap:12px; align-items:flex-start; border-radius:12px; padding:14px 16px; }
+    .status-box.ok { background:var(--nas-green-l); border:1.5px solid #bbf7d0; color:#166534; }
+    .status-box.warn { background:var(--nas-amber-l); border:1.5px solid #fde68a; color:#92400e; }
+    .status-box .status-ic { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:rgba(255,255,255,.7); }
+    .status-box .status-ic svg { width:18px; height:18px; }
+    .status-box h4 { margin:0 0 4px; font-size:13.5px; font-weight:800; }
+    .status-box p { margin:0; font-size:12.5px; line-height:1.5; opacity:.92; }
+
+    .script-box { background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; white-space:pre-wrap; word-break:break-all; max-height:260px; overflow-y:auto; }
+  </style>
+</head>
+<body>
+<div class="app-layout nas">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="nas-hdr">
+        <div class="nas-hdr-l">
+          <h1>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--nas-blue)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            NAS
+          </h1>
+          <p>Network Access Server — VPN L2TP/PPTP agar MikroTik tanpa IP publik bisa terhubung ke RADIUS</p>
+        </div>
+        <div class="nas-hdr-r">
+          <button class="btn btn-outline btn-sm" id="btnVpnSettings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Pengaturan VPN
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnAddNasDirect">NAS — IP Manual</button>
+          <button class="btn btn-outline btn-sm" id="btnAddNasWireguard">NAS via WireGuard</button>
+          <button class="btn btn-primary btn-sm" id="btnAddNasVpn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            NAS via VPN
+          </button>
+        </div>
+      </div>
+
+      <div class="nas-cards">
+        <div class="nas-stat"><div class="nas-stat-lbl">Total NAS</div><div class="nas-stat-val" id="statTotal">—</div></div>
+        <div class="nas-stat"><div class="nas-stat-lbl">Mode VPN</div><div class="nas-stat-val" id="statVpn">—</div></div>
+        <div class="nas-stat"><div class="nas-stat-lbl">VPN Terhubung</div><div class="nas-stat-val" id="statOnline" style="color:var(--nas-green)">—</div></div>
+        <div class="nas-stat"><div class="nas-stat-lbl">IP Server VPN</div><div class="nas-stat-val" id="statServerIp" style="font-size:16px;letter-spacing:0">—</div></div>
+      </div>
+
+      <div id="nasGroups"><div class="tbl-empty"><p>Memuat...</p></div></div>
+      <p style="font-size:12px;color:var(--faint);margin-top:4px">
+        <b>VPN (L2TP/PPTP)</b>: router tidak perlu IP publik — paste script ke MikroTik, tunnel otomatis. Script disembunyikan setelah NAS online.
+        &nbsp;·&nbsp; <b>WireGuard</b>: tunnel modern, butuh interface di menu WireGuard.
+        &nbsp;·&nbsp; <b>IP Manual</b>: router harus reachable langsung.
+      </p>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: NAS via VPN -->
+<div class="modal-overlay" id="nasVpnModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div>
+        <h3>NAS via VPN</h3>
+        <p>Akun L2TP/PPTP dan script MikroTik digenerate otomatis</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('nasVpnModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Nama NAS</label><input type="text" id="nasVpnName" placeholder="Router Cabang - Kampung Mandar"></div>
+      <div class="field-row">
+        <div class="field"><label>Lokasi/Site (opsional)</label><input type="text" id="nasVpnSite" placeholder="mis. Kampung Mandar"></div>
+        <div class="field"><label>Link ke Device (opsional)</label><select id="nasVpnDeviceId"><option value="">— Tidak ada —</option></select></div>
+      </div>
+      <div class="field"><label>Deskripsi</label><input type="text" id="nasVpnDesc" placeholder="Opsional"></div>
+      <div class="field-hint">Username PPP mengikuti pola <code>billingradius_xxxxxxxxxxxx</code>. Setelah dibuat, paste script ke terminal MikroTik.</div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasVpnModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveNasVpn">Buat NAS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: NAS IP Manual -->
+<div class="modal-overlay" id="nasModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="nasModalTitle">Tambah NAS — IP Manual</h3><button class="modal-close" onclick="closeModal('nasModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="nasId">
+      <div class="field"><label>Nama</label><input type="text" id="nasName" placeholder="Router Inti - Kantor Pusat"></div>
+      <div class="field"><label>IP Address NAS</label><input type="text" id="nasIp" placeholder="10.0.0.1" class="mono"><div class="field-hint">IP sumber paket RADIUS (harus reachable dari server ini)</div></div>
+      <div class="field"><label>Shared Secret</label><input type="text" id="nasSecret" placeholder="Kosongkan saat edit = tidak diubah" class="mono"></div>
+      <div class="field-row">
+        <div class="field"><label>Tipe</label>
+          <select id="nasType"><option value="mikrotik">MikroTik</option><option value="other">Lainnya</option></select>
+        </div>
+        <div class="field"><label>Lokasi/Site (opsional)</label><input type="text" id="nasSite" placeholder="mis. Kampung Mandar"></div>
+      </div>
+      <div class="field"><label>Link ke Device (opsional)</label><select id="nasDeviceId"><option value="">— Tidak ada —</option></select></div>
+      <div class="field"><label>Deskripsi</label><input type="text" id="nasDesc" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveNas">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: NAS via WireGuard -->
+<div class="modal-overlay" id="nasWgModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>NAS via WireGuard</h3><button class="modal-close" onclick="closeModal('nasWgModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nama</label><input type="text" id="nasWgName" placeholder="Router Cabang - Kampung Mandar"></div>
+      <div class="field"><label>Interface WireGuard</label><select id="nasWgServerId"></select></div>
+      <div class="field-row">
+        <div class="field"><label>Lokasi/Site (opsional)</label><input type="text" id="nasWgSite" placeholder="mis. Kampung Mandar"></div>
+        <div class="field"><label>Link ke Device (opsional)</label><select id="nasWgDeviceId"><option value="">— Tidak ada —</option></select></div>
+      </div>
+      <div class="field"><label>Deskripsi</label><input type="text" id="nasWgDesc" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasWgModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveNasWg">Buat NAS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Pengaturan VPN -->
+<div class="modal-overlay" id="vpnSettingsModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div>
+        <h3>Pengaturan NAS VPN</h3>
+        <p>IP publik server &amp; pool PPP untuk concentrator L2TP/PPTP</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('vpnSettingsModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>IP Server VPN</label><input type="text" id="vpnServerIp" class="mono" placeholder="217.216.34.97"><div class="field-hint" id="vpnDetectedHint">IP yang diisi di script MikroTik sebagai <code>connect-to</code></div></div>
+      <div class="field-row">
+        <div class="field"><label>IP Lokal PPP (server)</label><input type="text" id="vpnLocalIp" class="mono" placeholder="10.200.0.1"></div>
+        <div class="field"><label>Pool CIDR</label><input type="text" id="vpnPoolCidr" class="mono" placeholder="10.200.0.0/24"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Nama Profile PPP</label><input type="text" id="vpnProfileName" placeholder="skynet-nas"></div>
+        <div class="field"><label>MTU</label><input type="text" id="vpnMtu" class="mono" placeholder="1400"></div>
+      </div>
+      <div class="field"><label>DNS</label><input type="text" id="vpnDns" class="mono" placeholder="8.8.8.8,1.1.1.1"></div>
+      <div class="field"><label>Protokol</label>
+        <select id="vpnProtocols">
+          <option value="l2tp,pptp">L2TP, PPTP</option>
+          <option value="l2tp">L2TP saja</option>
+          <option value="pptp">PPTP saja</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('vpnSettingsModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveVpnSettings">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detail NAS -->
+<div class="modal-overlay" id="nasDetailModal">
+  <div class="modal-box wide">
+    <div class="modal-hdr">
+      <div>
+        <h3 id="nasDetailTitle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Detail NAS
+        </h3>
+        <p>Informasi detail dan script konfigurasi perangkat NAS</p>
+      </div>
+      <button class="modal-close" onclick="closeModal('nasDetailModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="nasDetailBody">
+      <div class="tbl-empty"><p>Memuat...</p></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasDetailModal')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/nas.js"></script>
+</body>
+</html>

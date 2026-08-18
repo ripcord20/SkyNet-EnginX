@@ -123,6 +123,7 @@
     .mode-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; }
     .mode-wireguard { background:#f5f3ff; color:#7c3aed; }
     .mode-direct { background:var(--rd-blue-l); color:var(--rd-blue); }
+    .mode-vpn { background:#f0fdf4; color:#16a34a; }
 
     .result-qr { text-align:center; padding:10px 0; }
     .result-qr img { width:200px; height:200px; border:1.5px solid var(--border); border-radius:12px; padding:8px; }
@@ -187,6 +188,10 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               NAS — IP Manual
             </button>
+            <a class="btn btn-green btn-sm" href="/monitoring/nas" style="text-decoration:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              NAS via VPN
+            </a>
             <button class="btn btn-primary btn-sm" id="btnAddNasWireguard">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               NAS via WireGuard
@@ -196,6 +201,7 @@
         <div id="nasGroups"><div class="tbl-empty"><p>Memuat...</p></div></div>
         <p style="font-size:12px;color:var(--faint)">
           <b>IP Manual</b>: router harus punya IP publik/reachable — isi manual di router: <code>/radius add service=ppp,hotspot address=&lt;IP-server-ini&gt; secret=&lt;secret&gt;</code>.
+          &nbsp;·&nbsp; <b>via VPN</b>: L2TP/PPTP (halaman NAS) — router tidak perlu IP publik, script MikroTik digenerate otomatis.
           &nbsp;·&nbsp; <b>via WireGuard</b>: router tidak perlu IP publik sama sekali — connect lewat tunnel, IP &amp; secret RADIUS otomatis.
         </p>
       </div>

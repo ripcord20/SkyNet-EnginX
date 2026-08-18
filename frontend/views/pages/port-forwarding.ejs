@@ -90,7 +90,7 @@
       <div class="pf-hdr">
         <div class="pf-hdr-l">
           <h1>Port Forwarding</h1>
-          <p>Daftar konsolidasi seluruh port forward dari semua NAS mode WireGuard dalam satu tabel</p>
+          <p>Daftar konsolidasi seluruh port forward dari semua NAS mode WireGuard/VPN dalam satu tabel</p>
         </div>
         <div class="pf-hdr-r">
           <button class="btn btn-outline btn-sm" id="btnRefresh">
@@ -106,7 +106,7 @@
 
       <div class="pf-info">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
-        <div>Port forwarding hanya berlaku untuk NAS dengan mode koneksi <b>WireGuard</b> (router tanpa IP publik, di-DNAT lewat tunnel). NAS mode <b>Direct</b> memakai IP publiknya sendiri sehingga tidak memerlukan port forward.</div>
+        <div>Port forwarding berlaku untuk NAS mode <b>WireGuard</b> atau <b>VPN</b> (router tanpa IP publik, di-DNAT lewat tunnel). NAS mode <b>Direct</b> memakai IP publiknya sendiri sehingga tidak memerlukan port forward.</div>
       </div>
 
       <div class="pf-tbl-wrap">
@@ -143,9 +143,9 @@
     <div class="modal-hdr"><h3>Port Forward Baru</h3><button class="modal-close" onclick="closeModal('pfModal')">&times;</button></div>
     <div class="modal-body">
       <div class="field">
-        <label>NAS (mode WireGuard)</label>
+        <label>NAS (mode WireGuard / VPN)</label>
         <select id="pfNasSelect"></select>
-        <div class="field-hint">Hanya NAS bertipe koneksi WireGuard yang bisa diberi port forward</div>
+        <div class="field-hint">NAS mode WireGuard atau VPN (L2TP/PPTP) yang bisa diberi port forward</div>
       </div>
       <div class="field-row">
         <div class="field"><label>Port Publik</label><input type="text" id="pfPublicPort" placeholder="8728" class="mono"></div>

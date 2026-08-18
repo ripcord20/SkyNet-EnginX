@@ -65,6 +65,18 @@ async function getNasBySourceIp(ip) {
 
 function invalidateNasCache() { nasCache = new Map(); nasCacheAt = 0; }
 
+// Throttle last_seen_at (satu NAS max 1x / 30 detik) supaya paket RADIUS
+// beruntun tidak menuliskan DB terus-menerus.
+const lastSeenThrottle = new Map();
+function touchLastSeen(nas) {
+  if (!nas?.id) return;
+  const now = Date.now();
+  if ((lastSeenThrottle.get(nas.id) || 0) + 30000 > now) return;
+  lastSeenThrottle.set(nas.id, now);
+  const { RadiusNasClient } = require('../models');
+  RadiusNasClient.update({ last_seen_at: new Date() }, { where: { id: nas.id } }).catch(() => {});
+}
+
 // ── Gigawords helper (RFC 2869: Acct-Input/Output-Octets overflow ke
 //    -Gigawords tiap 2^32 byte) → gabung jadi satu angka byte total ──
 function octetsFromAttrs(low, giga) {
@@ -109,6 +121,7 @@ async function handleAuthPacket(msg, rinfo) {
     return;
   }
   if (packet.code !== 'Access-Request') return;
+  touchLastSeen(nas);
 
   const username = packet.attributes['User-Name'];
   const { RadiusUser } = require('../models');
@@ -186,6 +199,7 @@ async function handleAcctPacket(msg, rinfo) {
     return;
   }
   if (packet.code !== 'Accounting-Request') return;
+  touchLastSeen(nas);
 
   const a = packet.attributes;
   const sessionId  = a['Acct-Session-Id'] || '';
