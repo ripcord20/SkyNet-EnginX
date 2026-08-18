@@ -73,6 +73,7 @@ DB_PASS=isp_netops_dev
 JWT_SECRET=dev-jwt-secret-change-me
 JWT_REFRESH_SECRET=dev-jwt-refresh-secret-change-me
 JWT_PORTAL_SECRET=dev-jwt-portal-secret-change-me
+CONFIG_ENCRYPTION_KEY=dev-config-encryption-key-32b
 
 # Misc
 APP_TIMEZONE=Asia/Jakarta
