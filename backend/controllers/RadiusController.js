@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const ConfigCrypto = require('../utils/ConfigCrypto');
 const RadiusServer = require('../services/RadiusServer');
 const WireGuardService = require('../services/WireGuardService');
+const VpnNasService = require('../services/VpnNasService');
 
 function encrypt(plaintext) { return ConfigCrypto._encryptString(String(plaintext || '')); }
 function decrypt(value) {
@@ -11,13 +12,20 @@ function decrypt(value) {
 }
 function genSecret() { return crypto.randomBytes(24).toString('base64'); }
 
-// Serialize satu NAS client + info koneksi (device, wireguard peer + status live)
+// Serialize satu NAS client + info koneksi (device, wireguard peer / VPN PPP + status live)
 // untuk ditampilkan di kartu NAS pada frontend.
-function serializeNas(row, wgStatsByServer) {
+function serializeNas(row, wgStatsByServer, vpnOpts = {}) {
   const j = row.toJSON();
   const peer = j.wireguard_peer;
   let live = null;
-  if (peer && wgStatsByServer) {
+  if (j.connection_mode === 'vpn') {
+    const st = VpnNasService.isConnected(j, {
+      now: vpnOpts.now,
+      accelSessions: vpnOpts.accelSessions || '',
+      allowPing: vpnOpts.allowPing === true,
+    });
+    live = { connected: st.connected, reason: st.reason, lastSeenAt: st.lastSeenAt };
+  } else if (peer && wgStatsByServer) {
     const stats = wgStatsByServer.get(peer.server_id)?.get(peer.public_key);
     if (stats) {
       live = {
@@ -29,6 +37,11 @@ function serializeNas(row, wgStatsByServer) {
   return {
     ...j,
     secret: undefined,
+    vpn_password: undefined,
+    vpn_username: j.vpn_username || undefined,
+    vpn_local_ip: j.vpn_local_ip || undefined,
+    vpn_remote_ip: j.vpn_remote_ip || undefined,
+    vpn_protocols: j.vpn_protocols || undefined,
     wireguard_peer: peer ? { id: peer.id, name: peer.name, allocated_ip: peer.allocated_ip } : undefined,
     live,
   };
@@ -110,7 +123,8 @@ class RadiusController {
       const statsByServer = new Map();
       for (const s of servers) statsByServer.set(s.id, WireGuardService.getRuntimeStats(s.interface_name));
 
-      res.json({ success: true, data: rows.map(r => serializeNas(r, statsByServer)) });
+      const vpnOpts = { now: Date.now(), accelSessions: '', allowPing: false };
+      res.json({ success: true, data: rows.map(r => serializeNas(r, statsByServer, vpnOpts)) });
     } catch (err) {
       res.status(500).json({ success: false, message: err.message });
     }
@@ -219,6 +233,126 @@ class RadiusController {
     }
   }
 
+  // POST /api/radius/nas/via-vpn — mode 'vpn': L2TP/PPTP ke concentrator di
+  // server ini. Router MikroTik tidak perlu IP publik. Kredensial PPP + script
+  // RouterOS digenerate otomatis; script disembunyikan setelah NAS online.
+  async nasCreateViaVpn(req, res) {
+    try {
+      const { name, site_name, device_id, description } = req.body || {};
+      const result = await VpnNasService.provisionVpnNas({
+        name, site_name, device_id, description, created_by: req.user?.id || null,
+      });
+      RadiusServer.invalidateNasCache();
+      const nasJson = { ...result.nas.toJSON(), secret: undefined, vpn_password: undefined };
+      res.json({
+        success: true,
+        message: 'NAS via VPN (L2TP/PPTP) dibuat' + (result.apply.applied ? '' : ' (akun VPN tersimpan; concentrator live belum terpasang)'),
+        data: nasJson,
+        radiusSecret: result.radiusSecret,
+        vpnUsername: result.nas.vpn_username,
+        vpnPassword: result.vpnPassword,
+        vpnServerIp: result.settings.serverIp,
+        script: result.script,
+        apply: result.apply,
+      });
+    } catch (err) {
+      if (err.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({ success: false, message: 'Konflik data (username/IP VPN sudah dipakai) — coba lagi' });
+      }
+      const status = /wajib|belum diisi|tidak valid|Tidak ada IP/i.test(err.message) ? 400 : 500;
+      res.status(status).json({ success: false, message: err.message });
+    }
+  }
+
+  // GET /api/radius/nas/:id/detail — payload lengkap untuk modal Detail NAS.
+  // Script MikroTik HANYA dikirim kalau NAS belum terhubung.
+  async nasDetail(req, res) {
+    try {
+      const { RadiusNasClient, Device, WireguardPeer } = require('../models');
+      const row = await RadiusNasClient.findByPk(req.params.id, {
+        include: [
+          { model: Device, as: 'device', attributes: ['id', 'name', 'ip_address', 'type', 'status', 'location'], required: false },
+          { model: WireguardPeer, as: 'wireguard_peer', attributes: ['id', 'name', 'server_id', 'public_key', 'allocated_ip'], required: false },
+        ],
+      });
+      if (!row) return res.status(404).json({ success: false, message: 'NAS client tidak ditemukan' });
+
+      const vpnOpts = { now: Date.now(), allowPing: true };
+      const data = serializeNas(row, null, vpnOpts);
+      const settings = await VpnNasService.getSettings();
+      const connected = !!data.live?.connected;
+
+      const payload = {
+        ...data,
+        vpn: row.connection_mode === 'vpn' ? {
+          serverIp: settings.serverIp,
+          username: row.vpn_username,
+          protocols: VpnNasService.protocolList(row.vpn_protocols || settings.protocols),
+          protocolLabel: VpnNasService.protocolLabel(row.vpn_protocols || settings.protocols),
+          profile: VpnNasService.publicProfile(row, settings),
+        } : null,
+        scriptHidden: row.connection_mode === 'vpn' && connected,
+        script: null,
+      };
+
+      if (row.connection_mode === 'vpn' && !connected) {
+        payload.script = VpnNasService.buildMikrotikScript({
+          name: row.name,
+          serverIp: settings.serverIp,
+          username: row.vpn_username,
+          password: VpnNasService.decrypt(row.vpn_password),
+          radiusSecret: decrypt(row.secret),
+          localIp: row.vpn_local_ip || settings.localIp,
+          remoteIp: row.vpn_remote_ip || row.nas_ip_address,
+          profileName: settings.profileName,
+          dns: settings.dns,
+          protocols: row.vpn_protocols || settings.protocols,
+          mtu: settings.mtu,
+        });
+      }
+
+      res.json({ success: true, data: payload });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  // GET /api/radius/vpn/settings
+  async vpnSettingsGet(req, res) {
+    try {
+      const data = await VpnNasService.getSettings();
+      res.json({ success: true, data });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  // PUT /api/radius/vpn/settings
+  async vpnSettingsSave(req, res) {
+    try {
+      const data = await VpnNasService.saveSettings(req.body || {});
+      try { await VpnNasService.syncChapSecrets(); } catch (_) {}
+      res.json({ success: true, message: 'Pengaturan NAS VPN disimpan', data });
+    } catch (err) {
+      const status = /tidak valid|harus/i.test(err.message) ? 400 : 500;
+      res.status(status).json({ success: false, message: err.message });
+    }
+  }
+
+  // GET /api/radius/nas/:id/vpn-password — reveal password PPP (admin only)
+  async nasRevealVpnPassword(req, res) {
+    try {
+      const { RadiusNasClient } = require('../models');
+      const row = await RadiusNasClient.findByPk(req.params.id);
+      if (!row || row.connection_mode !== 'vpn') {
+        return res.status(404).json({ success: false, message: 'NAS VPN tidak ditemukan' });
+      }
+      res.json({ success: true, password: VpnNasService.decrypt(row.vpn_password), username: row.vpn_username });
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
   // PUT /api/radius/nas/:id
   async nasUpdate(req, res) {
     try {
@@ -230,7 +364,7 @@ class RadiusController {
       const patch = {};
       if (name !== undefined) patch.name = name;
       // NAS mode 'wireguard' — nas_ip_address dikelola otomatis dari tunnel, tidak boleh diedit manual.
-      if (nas_ip_address !== undefined && row.connection_mode !== 'wireguard') patch.nas_ip_address = nas_ip_address;
+      if (nas_ip_address !== undefined && row.connection_mode !== 'wireguard' && row.connection_mode !== 'vpn') patch.nas_ip_address = nas_ip_address;
       if (secret) patch.secret = encrypt(secret); // kosong = pertahankan secret lama
       if (nas_type !== undefined) patch.nas_type = nas_type;
       if (description !== undefined) patch.description = description;
@@ -268,7 +402,11 @@ class RadiusController {
         }
       }
 
+      const wasVpn = row.connection_mode === 'vpn';
       await row.destroy();
+      if (wasVpn) {
+        try { await VpnNasService.syncChapSecrets(); } catch (_) {}
+      }
       RadiusServer.invalidateNasCache();
       res.json({ success: true, message: 'NAS client dihapus' });
     } catch (err) {
@@ -323,8 +461,8 @@ class RadiusController {
       const { RadiusNasClient, NasPortForward } = require('../models');
       const nas = await RadiusNasClient.findByPk(req.params.id);
       if (!nas) return res.status(404).json({ success: false, message: 'NAS tidak ditemukan' });
-      if (nas.connection_mode !== 'wireguard') {
-        return res.status(400).json({ success: false, message: 'Port forwarding hanya untuk NAS mode WireGuard' });
+      if (nas.connection_mode !== 'wireguard' && nas.connection_mode !== 'vpn') {
+        return res.status(400).json({ success: false, message: 'Port forwarding hanya untuk NAS mode WireGuard atau VPN' });
       }
       const { public_port, target_port, protocol, description } = req.body || {};
       if (!public_port || !target_port) {

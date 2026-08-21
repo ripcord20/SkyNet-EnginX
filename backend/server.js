@@ -839,15 +839,21 @@ const startServer = async () => {
     }
 
     // ── Migrasi kolom baru di radius_nas_clients (NAS lewat WireGuard tunnel,
-    //    grouping per site, link ke Device) — tabel-nya sendiri sudah dibuat
-    //    lewat safeSync di atas, ini menambah kolom untuk instance yang tabelnya
-    //    sudah ada duluan dari versi sebelumnya. Idempotent.
+    //    grouping per site, link ke Device, VPN L2TP/PPTP) — tabel-nya sendiri
+    //    sudah dibuat lewat safeSync di atas, ini menambah kolom untuk instance
+    //    yang tabelnya sudah ada duluan dari versi sebelumnya. Idempotent.
     try {
       const nasCols = [
         { name: 'site_name',         ddl: `VARCHAR(150) NULL` },
-        { name: 'connection_mode',   ddl: `ENUM('direct','wireguard') NOT NULL DEFAULT 'direct'` },
+        { name: 'connection_mode',   ddl: `ENUM('direct','wireguard','vpn') NOT NULL DEFAULT 'direct'` },
         { name: 'device_id',         ddl: `INT NULL` },
         { name: 'wireguard_peer_id', ddl: `INT NULL` },
+        { name: 'vpn_username',      ddl: `VARCHAR(80) NULL` },
+        { name: 'vpn_password',      ddl: `VARCHAR(255) NULL` },
+        { name: 'vpn_local_ip',      ddl: `VARCHAR(45) NULL` },
+        { name: 'vpn_remote_ip',     ddl: `VARCHAR(45) NULL` },
+        { name: 'vpn_protocols',     ddl: `VARCHAR(40) NULL` },
+        { name: 'last_seen_at',      ddl: `DATETIME NULL` },
       ];
       for (const col of nasCols) {
         const [rows] = await db.sequelize.query(
@@ -859,6 +865,21 @@ const startServer = async () => {
           logger.info('Migrated: radius_nas_clients.' + col.name + ' column added');
         }
       }
+      // ENUM lama hanya 'direct','wireguard' — tambah 'vpn' kalau belum ada.
+      const [enumRows] = await db.sequelize.query(
+        `SELECT COLUMN_TYPE AS t FROM information_schema.columns
+          WHERE table_schema = DATABASE() AND table_name = 'radius_nas_clients' AND column_name = 'connection_mode'`
+      );
+      const enumType = enumRows && enumRows[0] && String(enumRows[0].t || '');
+      if (enumType && !/['\"]vpn['\"]/.test(enumType)) {
+        await db.sequelize.query(
+          `ALTER TABLE radius_nas_clients MODIFY COLUMN connection_mode ENUM('direct','wireguard','vpn') NOT NULL DEFAULT 'direct'`
+        );
+        logger.info('Migrated: radius_nas_clients.connection_mode +vpn');
+      }
+      try {
+        await db.sequelize.query(`ALTER TABLE radius_nas_clients ADD UNIQUE INDEX uniq_nas_vpn_username (vpn_username)`);
+      } catch (_) { /* index sudah ada atau kolom baru kosong */ }
     } catch (e) {
       logger.warn('Failed to migrate radius_nas_clients columns: ' + (e.message || e));
     }

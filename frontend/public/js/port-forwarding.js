@@ -22,7 +22,7 @@ const PortForwardingPage = {
   async loadNasOptions() {
     const data = await App.api('/radius/nas');
     const all = data?.success ? data.data : [];
-    this.nasOptions = all.filter(n => n.connection_mode === 'wireguard');
+    this.nasOptions = all.filter(n => n.connection_mode === 'wireguard' || n.connection_mode === 'vpn');
   },
 
   async loadForwards() {
@@ -95,7 +95,7 @@ const PortForwardingPage = {
   openCreateModal() {
     const sel = document.getElementById('pfNasSelect');
     if (!this.nasOptions.length) {
-      sel.innerHTML = '<option value="">Belum ada NAS mode WireGuard</option>';
+      sel.innerHTML = '<option value="">Belum ada NAS mode WireGuard/VPN</option>';
     } else {
       sel.innerHTML = this.nasOptions.map(n =>
         `<option value="${n.id}">${n.site_name ? esc(n.site_name) + ' — ' : ''}${esc(n.name)} (${esc(n.nas_ip_address)})</option>`
@@ -110,7 +110,7 @@ const PortForwardingPage = {
 
   async saveForward() {
     const nasId = document.getElementById('pfNasSelect').value;
-    if (!nasId) return App.showToast('Pilih NAS terlebih dahulu (mode WireGuard)', 'error');
+    if (!nasId) return App.showToast('Pilih NAS terlebih dahulu (mode WireGuard atau VPN)', 'error');
     const body = {
       public_port: document.getElementById('pfPublicPort').value.trim(),
       target_port: document.getElementById('pfTargetPort').value.trim(),

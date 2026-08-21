@@ -215,6 +215,10 @@ router.get('/monitoring/radius', authenticate, blockFinanceArea, blockSalesArea,
   res.render('pages/radius', { title: 'RADIUS Server', user: req.user, active: 'radius' });
 });
 
+router.get('/monitoring/nas', authenticate, blockFinanceArea, blockSalesArea, (req, res) => {
+  res.render('pages/nas', { title: 'NAS', user: req.user, active: 'nas' });
+});
+
 router.get('/monitoring/wireguard', authenticate, blockFinanceArea, blockSalesArea, (req, res) => {
   res.render('pages/wireguard', { title: 'WireGuard VPN', user: req.user, active: 'wireguard' });
 });

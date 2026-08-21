@@ -128,7 +128,10 @@ const RadiusPage = {
 
   nasCardHtml(n) {
     const isWg = n.connection_mode === 'wireguard';
+    const isVpn = n.connection_mode === 'vpn';
     const online = n.live?.connected;
+    const modeCls = isVpn ? 'mode-vpn' : (isWg ? 'mode-wireguard' : 'mode-direct');
+    const modeLabel = isVpn ? 'VPN' : (isWg ? 'WireGuard' : 'Direct');
     return `
       <div class="nas-card">
         <div class="nas-card-top">
@@ -136,11 +139,11 @@ const RadiusPage = {
             <div class="nas-card-name">${esc(n.name)}</div>
             <div class="nas-card-sub">${esc(n.nas_type)}${n.device ? ' · ' + esc(n.device.name) : ''}</div>
           </div>
-          <span class="mode-badge ${isWg ? 'mode-wireguard' : 'mode-direct'}">${isWg ? 'WireGuard' : 'Direct'}</span>
+          <span class="mode-badge ${modeCls}">${modeLabel}</span>
         </div>
         <div class="nas-card-body">
           <div class="row"><span>IP NAS</span><b>${esc(n.nas_ip_address)}</b></div>
-          ${isWg ? `<div class="row"><span>Status Tunnel</span><b style="color:${online ? 'var(--rd-green)' : 'var(--faint)'};font-family:inherit">${online ? 'Terhubung' : 'Idle'}</b></div>` : ''}
+          ${(isWg || isVpn) ? `<div class="row"><span>Status Tunnel</span><b style="color:${online ? 'var(--rd-green)' : 'var(--faint)'};font-family:inherit">${online ? 'Terhubung' : 'Idle'}</b></div>` : ''}
         </div>
         <div class="nas-card-ftr">
           <label class="toggle" title="Aktif/nonaktif">
@@ -253,6 +256,10 @@ const RadiusPage = {
   async openNasDetail(id) {
     const n = this.nas.find(x => x.id === id);
     if (!n) return;
+    if (n.connection_mode === 'vpn') {
+      window.location.href = '/monitoring/nas';
+      return;
+    }
     document.getElementById('nasDetailTitle').textContent = n.name;
     const isWg = n.connection_mode === 'wireguard';
     let body = `
