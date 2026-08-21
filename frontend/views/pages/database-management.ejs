@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= typeof appName !== 'undefined' ? appName : 'NETOPS' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- ── Header ─────────────────────────────────────────────── -->
+      <div class="dbm-header">
+        <div>
+          <h1>Database Management</h1>
+          <p class="dbm-subtitle">Cleanup retention &amp; backup database MySQL.</p>
+        </div>
+        <a href="/settings" class="dbm-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Kembali ke Settings
+        </a>
+      </div>
+
+      <!-- ── Tabs ───────────────────────────────────────────────── -->
+      <div class="dbm-tabs">
+        <button class="dbm-tab active" data-tab="cleanup">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+          Cleanup Retention
+        </button>
+        <button class="dbm-tab" data-tab="backup">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Backup Database
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- TAB: CLEANUP                                              -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <div class="dbm-panel active" id="panel-cleanup">
+
+        <!-- Summary -->
+        <div class="summary-grid">
+          <div class="summary-card">
+            <div class="summary-label">Total Storage Database</div>
+            <div class="summary-value" id="sumTotalMB">— MB</div>
+            <div class="summary-sub"><span id="sumTableCount">—</span> table dipantau</div>
+          </div>
+          <div class="summary-card summary-warn">
+            <div class="summary-label">Row Bisa Dihapus</div>
+            <div class="summary-value" id="sumPurgeable">—</div>
+            <div class="summary-sub">Berdasarkan retention saat ini</div>
+          </div>
+          <div class="summary-card summary-info">
+            <div class="summary-label">Cleanup Otomatis</div>
+            <div class="summary-value" style="font-size:18px;">Tiap hari 03:00</div>
+            <div class="summary-sub">Cron berjalan otomatis</div>
+          </div>
+        </div>
+
+        <div class="dbm-card">
+          <div class="dbm-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+            <h3>Konfigurasi Retention per Table</h3>
+            <div class="dbm-actions">
+              <button class="btn-secondary" id="btnCleanupRefresh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Refresh
+              </button>
+              <button class="btn-danger" id="btnRunAll">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+                Cleanup Semua
+              </button>
+            </div>
+          </div>
+
+          <div class="hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Atur <b>retention (hari)</b> per table. Set <b>0</b> = disable cleanup. Cleanup manual via tombol di tiap row.</span>
+          </div>
+
+          <div class="table-wrap">
+            <table class="dbm-table">
+              <thead>
+                <tr>
+                  <th>Table</th>
+                  <th class="num">Row</th>
+                  <th class="num">Ukuran</th>
+                  <th>Retention (hari)</th>
+                  <th class="num">Bisa Dihapus</th>
+                  <th>Cleanup Terakhir</th>
+                  <th class="action">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="cleanupTableBody">
+                <tr><td colspan="7" class="loading">Memuat data…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="footer-actions">
+            <button class="btn-secondary" id="btnResetDefaults">Reset ke Default</button>
+            <button class="btn-primary" id="btnSaveCleanup">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Setting
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- TAB: BACKUP                                               -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <div class="dbm-panel" id="panel-backup">
+
+        <!-- Info bar -->
+        <div class="info-banner" id="backupInfoBanner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div id="backupInfoText">Memuat info…</div>
+        </div>
+
+        <!-- Manual backup -->
+        <div class="dbm-card">
+          <div class="dbm-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <h3>Backup Manual</h3>
+          </div>
+
+          <div class="card-body">
+            <div class="form-row">
+              <label class="form-label">Mode Backup</label>
+              <select class="form-input" id="manualBackupMode" style="max-width:280px;">
+                <option value="auto">Auto (gunakan mysqldump kalau ada)</option>
+                <option value="mysqldump">mysqldump (cepat, butuh CLI)</option>
+                <option value="native">Native Node (selalu jalan)</option>
+              </select>
+              <div class="form-hint">
+                <b>mysqldump</b> lebih cepat & 100% kompatibel MySQL.
+                <b>Native</b> fallback kalau hosting tidak punya akses CLI mysqldump.
+              </div>
+            </div>
+
+            <button class="btn-primary btn-lg" id="btnBackupNow">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Backup Sekarang
+            </button>
+          </div>
+        </div>
+
+        <!-- Restore database -->
+        <div class="dbm-card" style="border-color:#fde68a;">
+          <div class="dbm-card-header" style="background:linear-gradient(135deg,#fffbeb,#fef3c7);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 4 3 8 7 8"/></svg>
+            <h3 style="color:#92400e;">Restore Database</h3>
+          </div>
+          <div class="card-body">
+            <div class="info-banner" style="background:#fef2f2;border-color:#fecaca;color:#991b1b;margin-bottom:14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div><b>Hati-hati:</b> Restore akan <b>menimpa SELURUH database</b> (pelanggan, invoice, transaksi, dll) dengan isi file backup. Tindakan ini tidak bisa dibatalkan. Disarankan buat backup dulu sebelum restore.</div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Pilih File Backup (.sql / .sql.gz)</label>
+              <input type="file" id="restoreFileInput" accept=".sql,.gz,.sql.gz,application/gzip,application/sql" class="form-input" style="max-width:420px;padding:8px;">
+              <div class="form-hint">Bisa file hasil "Backup Sekarang" (.sql.gz), atau pilih dari daftar di bawah lewat tombol Restore per-baris.</div>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">Mode Restore</label>
+              <select class="form-input" id="restoreMode" style="max-width:280px;">
+                <option value="auto">Auto (gunakan mysql client kalau ada)</option>
+                <option value="mysql">mysql CLI (cepat, butuh client)</option>
+                <option value="native">Native Node (selalu jalan)</option>
+              </select>
+            </div>
+
+            <button class="btn-danger btn-lg" id="btnRestoreNow" disabled style="opacity:.6;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 4 3 8 7 8"/></svg>
+              Restore Sekarang
+            </button>
+          </div>
+        </div>
+
+        <!-- Auto backup settings -->
+        <div class="dbm-card">
+          <div class="dbm-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <h3>Backup Otomatis (Schedule)</h3>
+          </div>
+
+          <div class="card-body">
+            <div class="form-row toggle-row">
+              <label class="toggle-wrap">
+                <input type="checkbox" id="autoEnabled">
+                <span class="toggle"></span>
+              </label>
+              <div>
+                <div class="form-label" style="margin:0;">Aktifkan Backup Otomatis</div>
+                <div class="form-hint">Backup akan dibuat sesuai schedule cron di bawah</div>
+              </div>
+            </div>
+
+            <div class="form-grid" id="autoSettingsForm">
+              <div class="form-row">
+                <label class="form-label">Schedule (Cron Expression)</label>
+                <input type="text" class="form-input form-mono" id="autoSchedule" placeholder="0 2 * * *">
+                <div class="form-hint">
+                  Default: <code>0 2 * * *</code> (tiap hari jam 02:00).
+                  Format: <code>menit jam tanggal bulan hari</code>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Retention (Jumlah File Backup Disimpan)</label>
+                <input type="number" class="form-input" id="autoRetention" min="1" max="365" placeholder="7" style="max-width:120px;">
+                <div class="form-hint">File backup lama otomatis dihapus, hanya simpan N file terbaru</div>
+              </div>
+
+              <div class="form-row">
+                <label class="form-label">Mode</label>
+                <select class="form-input" id="autoMode" style="max-width:280px;">
+                  <option value="auto">Auto</option>
+                  <option value="mysqldump">mysqldump</option>
+                  <option value="native">Native Node</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-footer">
+              <button class="btn-primary" id="btnSaveBackupSettings">Simpan Setting</button>
+              <span class="form-note">* Setelah simpan, restart aplikasi (pm2 restart) untuk apply schedule</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backup file list -->
+        <div class="dbm-card">
+          <div class="dbm-card-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <h3>Daftar File Backup</h3>
+            <div class="dbm-actions">
+              <span class="footer-stat" id="backupTotalStat">—</span>
+              <button class="btn-secondary" id="btnBackupRefresh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="dbm-table">
+              <thead>
+                <tr>
+                  <th>Nama File</th>
+                  <th class="num">Ukuran</th>
+                  <th>Dibuat</th>
+                  <th class="action">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="backupFileList">
+                <tr><td colspan="4" class="loading">Memuat data…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<style>
+  /* ── NETOPS Navy/Blue palette (no purple) ─────────────────────── */
+  :root {
+    --nav-blue:        #1d4ed8;
+    --nav-blue-d:      #1e3a8a;
+    --nav-blue-l:      #dbeafe;
+    --nav-blue-lighter:#eff6ff;
+    --warn:            #d97706;
+    --warn-l:          #fef3c7;
+    --danger:          #dc2626;
+    --danger-l:        #fee2e2;
+    --success:         #16a34a;
+    --success-l:       #dcfce7;
+    --gray-50:         #f8fafc;
+    --gray-100:        #f1f5f9;
+    --gray-200:        #e2e8f0;
+    --gray-400:        #94a3b8;
+    --gray-600:        #475569;
+    --gray-800:        #1e293b;
+  }
+  .page-content { padding:24px 28px; font-family:'Plus Jakarta Sans', system-ui, sans-serif; }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  .dbm-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:18px; gap:16px; flex-wrap:wrap; }
+  .dbm-header h1 { font-size:24px; font-weight:700; color:var(--gray-800); margin:0; }
+  .dbm-subtitle { font-size:13px; color:var(--gray-600); margin:4px 0 0; }
+  .dbm-back { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#fff; border:1px solid var(--gray-200); border-radius:9px; font-size:12.5px; font-weight:600; color:var(--gray-600); text-decoration:none; transition:all .15s; }
+  .dbm-back:hover { background:var(--gray-50); color:var(--nav-blue); border-color:var(--nav-blue-l); }
+
+  /* ── Tabs ────────────────────────────────────────────────────── */
+  .dbm-tabs { display:flex; gap:4px; border-bottom:1.5px solid var(--gray-200); margin-bottom:20px; }
+  .dbm-tab {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:11px 18px; background:transparent; border:none; cursor:pointer;
+    font-family:inherit; font-size:13.5px; font-weight:600; color:var(--gray-600);
+    border-bottom:2.5px solid transparent; margin-bottom:-1.5px; transition:all .15s;
+  }
+  .dbm-tab:hover { color:var(--nav-blue); }
+  .dbm-tab.active { color:var(--nav-blue); border-bottom-color:var(--nav-blue); }
+  .dbm-panel { display:none; }
+  .dbm-panel.active { display:block; animation:fadeIn .2s ease-out; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── Buttons ─────────────────────────────────────────────────── */
+  .btn-primary, .btn-secondary, .btn-danger {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600;
+    cursor:pointer; transition:all .15s; font-family:inherit; border:1px solid transparent;
+  }
+  .btn-primary  { background:var(--nav-blue); color:#fff; border-color:var(--nav-blue); }
+  .btn-primary:hover  { background:var(--nav-blue-d); border-color:var(--nav-blue-d); }
+  .btn-primary.btn-lg { padding:11px 22px; font-size:14px; }
+  .btn-secondary { background:#fff; color:var(--gray-800); border-color:var(--gray-200); }
+  .btn-secondary:hover { background:var(--gray-50); }
+  .btn-danger   { background:#fff; color:var(--danger); border-color:#fecaca; }
+  .btn-danger:hover   { background:var(--danger); color:#fff; border-color:var(--danger); }
+  .btn-primary:disabled, .btn-danger:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* ── Summary cards ───────────────────────────────────────────── */
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:14px; margin-bottom:20px; }
+  .summary-card { background:#fff; border:1px solid var(--gray-200); border-radius:12px; padding:18px 20px; }
+  .summary-card.summary-warn { background:linear-gradient(135deg, var(--warn-l) 0%, #fff 100%); border-color:#fed7aa; }
+  .summary-card.summary-info { background:linear-gradient(135deg, var(--nav-blue-l) 0%, #fff 100%); border-color:#bfdbfe; }
+  .summary-label { font-size:11px; font-weight:600; text-transform:uppercase; color:var(--gray-600); letter-spacing:.4px; }
+  .summary-value { font-size:28px; font-weight:700; color:var(--gray-800); margin:6px 0 4px; }
+  .summary-card.summary-warn .summary-value { color:var(--warn); }
+  .summary-sub { font-size:12px; color:var(--gray-600); }
+
+  /* ── Card ────────────────────────────────────────────────────── */
+  .dbm-card { background:#fff; border:1px solid var(--gray-200); border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .dbm-card-header { display:flex; align-items:center; gap:8px; padding:16px 20px; border-bottom:1px solid var(--gray-100); color:var(--nav-blue); }
+  .dbm-card-header h3 { font-size:15px; font-weight:700; color:var(--gray-800); margin:0; }
+  .dbm-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .footer-stat { font-size:12.5px; color:var(--gray-600); margin-right:6px; }
+  .card-body { padding:20px; }
+  .hint { display:flex; gap:8px; align-items:flex-start; padding:12px 20px; background:var(--nav-blue-lighter); font-size:12.5px; color:var(--gray-600); border-bottom:1px solid var(--gray-100); }
+  .hint svg { color:var(--nav-blue); flex-shrink:0; margin-top:2px; }
+  .hint b { color:var(--gray-800); }
+
+  /* ── Info banner ─────────────────────────────────────────────── */
+  .info-banner { display:flex; gap:10px; align-items:flex-start; padding:14px 18px; background:var(--nav-blue-lighter); border:1px solid #bfdbfe; border-radius:10px; font-size:13px; color:var(--gray-800); margin-bottom:16px; }
+  .info-banner svg { color:var(--nav-blue); flex-shrink:0; margin-top:1px; }
+  .info-banner b { color:var(--nav-blue-d); }
+
+  /* ── Form ────────────────────────────────────────────────────── */
+  .form-row { margin-bottom:18px; }
+  .form-label { display:block; font-size:11.5px; font-weight:600; color:var(--gray-600); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+  .form-input { width:100%; padding:10px 12px; border:1px solid var(--gray-200); border-radius:9px; font-size:13.5px; font-family:inherit; color:var(--gray-800); transition:all .15s; }
+  .form-input:focus { outline:none; border-color:var(--nav-blue); box-shadow:0 0 0 3px rgba(29,78,216,.12); }
+  .form-mono { font-family:'JetBrains Mono','Monaco', monospace; font-size:13px; }
+  .form-hint { font-size:11.5px; color:var(--gray-600); margin-top:5px; }
+  .form-hint code { background:var(--gray-100); padding:1px 6px; border-radius:4px; font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--nav-blue); }
+  .form-hint b { color:var(--gray-800); }
+  .form-grid { padding:6px 0 0; }
+  .form-footer { display:flex; align-items:center; gap:14px; margin-top:8px; }
+  .form-note { font-size:11.5px; color:var(--gray-400); font-style:italic; }
+  .toggle-row { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:1px solid var(--gray-100); margin-bottom:14px; }
+
+  /* Toggle switch */
+  .toggle-wrap { position:relative; display:inline-block; width:42px; height:24px; cursor:pointer; flex-shrink:0; }
+  .toggle-wrap input { opacity:0; width:0; height:0; }
+  .toggle { position:absolute; top:0; left:0; right:0; bottom:0; background:#cbd5e1; border-radius:14px; transition:.2s; }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+  .toggle-wrap input:checked + .toggle { background:var(--nav-blue); }
+  .toggle-wrap input:checked + .toggle::after { transform:translateX(18px); }
+
+  /* ── Table ───────────────────────────────────────────────────── */
+  .table-wrap { overflow-x:auto; }
+  .dbm-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .dbm-table thead th { background:var(--gray-50); padding:12px 14px; text-align:left; font-weight:600; color:var(--gray-600); text-transform:uppercase; font-size:11px; letter-spacing:.4px; border-bottom:1px solid var(--gray-200); }
+  .dbm-table thead th.num { text-align:right; }
+  .dbm-table thead th.action { text-align:center; }
+  .dbm-table tbody td { padding:14px; border-bottom:1px solid var(--gray-100); vertical-align:top; }
+  .dbm-table tbody td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .dbm-table tbody td.action { text-align:center; }
+  .dbm-table tbody tr:hover { background:var(--gray-50); }
+  .dbm-table tbody tr:last-child td { border-bottom:none; }
+  .loading { text-align:center; color:var(--gray-400); padding:32px !important; font-style:italic; }
+  .empty   { text-align:center; color:var(--gray-400); padding:32px !important; }
+
+  .table-name { font-weight:600; color:var(--gray-800); display:flex; align-items:center; gap:8px; }
+  .priority-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .priority-critical { background:var(--danger); }
+  .priority-medium   { background:var(--warn); }
+  .priority-low      { background:var(--success); }
+  .table-desc { font-size:11.5px; color:var(--gray-600); margin-top:4px; }
+  .table-key  { font-family:'JetBrains Mono','Monaco', monospace; font-size:11px; color:var(--gray-400); margin-top:2px; }
+
+  .row-count, .size-mb { font-weight:600; color:var(--gray-800); }
+  .size-detail { font-size:11px; color:var(--gray-400); margin-top:2px; }
+  .retention-input { width:80px; padding:7px 10px; border:1px solid var(--gray-200); border-radius:7px; font-size:13px; font-family:inherit; text-align:right; transition:all .15s; }
+  .retention-input:focus { outline:none; border-color:var(--nav-blue); box-shadow:0 0 0 3px rgba(29,78,216,.12); }
+  .retention-suffix { font-size:11px; color:var(--gray-400); margin-left:6px; }
+  .retention-default { font-size:10.5px; color:var(--gray-400); margin-top:4px; }
+  .retention-disabled-badge { display:inline-block; padding:2px 8px; background:var(--gray-100); color:var(--gray-600); border-radius:10px; font-size:10px; font-weight:600; margin-left:6px; }
+  .purgeable-zero { color:var(--gray-400); }
+  .purgeable-some { color:var(--warn); font-weight:600; }
+
+  .last-time { font-size:12px; color:var(--gray-800); }
+  .last-sub  { font-size:11px; color:var(--gray-400); margin-top:2px; }
+  .last-never { color:var(--gray-400); font-style:italic; font-size:11.5px; }
+
+  .file-name { font-family:'JetBrains Mono','Monaco', monospace; font-size:12.5px; color:var(--gray-800); font-weight:500; }
+  .mode-badge { display:inline-block; padding:2px 8px; background:var(--nav-blue-l); color:var(--nav-blue); border-radius:10px; font-size:10.5px; font-weight:600; margin-left:8px; }
+
+  .act-btn { padding:6px 12px; background:var(--nav-blue-l); color:var(--nav-blue); border:1px solid #bfdbfe; border-radius:7px; font-size:11.5px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap; margin-right:4px; display:inline-flex; align-items:center; gap:4px; }
+  .act-btn:hover { background:var(--nav-blue); color:#fff; border-color:var(--nav-blue); }
+  .act-btn:disabled { opacity:.5; cursor:not-allowed; }
+  .act-btn.danger { background:#fef2f2; color:var(--danger); border-color:#fecaca; padding:6px 9px; }
+  .act-btn.danger:hover { background:var(--danger); color:#fff; border-color:var(--danger); }
+  .act-btn svg { width:12px; height:12px; }
+
+  .footer-actions { display:flex; justify-content:flex-end; gap:10px; padding:16px 20px; border-top:1px solid var(--gray-100); background:var(--gray-50); }
+
+  /* ── Toast ───────────────────────────────────────────────────── */
+  .toast-stack { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .toast { padding:12px 16px; border-radius:9px; font-size:13px; box-shadow:0 4px 12px rgba(0,0,0,.1); background:#fff; border-left:4px solid; min-width:280px; animation:slideIn .25s ease-out; }
+  .toast.success { border-color:var(--success); color:#14532d; }
+  .toast.error   { border-color:var(--danger);  color:#7f1d1d; }
+  .toast.info    { border-color:var(--nav-blue);color:var(--nav-blue-d); }
+  @keyframes slideIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+  /* Spinner */
+  .spinning { animation:spin 1s linear infinite; }
+  @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+</style>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+'use strict';
+(() => {
+  const API_CLEANUP = '/api/db-cleanup';
+  const API_BACKUP  = '/api/backup';
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function toast(msg, type='info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toastStack').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+  async function api(url, method='GET', body=null) {
+    const opts = { method, headers: { 'Content-Type':'application/json' }, credentials:'include' };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.success) throw new Error(j.message || `HTTP ${r.status}`);
+    return j;
+  }
+  function fmtNum(n) { return (n || 0).toLocaleString('id-ID'); }
+  function fmtMB(mb) { return (mb || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 }) + ' MB'; }
+  function fmtSize(mb) {
+    if (mb < 1) return Math.round(mb * 1024) + ' KB';
+    return fmtMB(mb);
+  }
+  function fmtRelTime(iso) {
+    if (!iso) return null;
+    const d = new Date(iso); const diff = Date.now() - d.getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)   return 'baru saja';
+    if (m < 60)  return `${m} mnt lalu`;
+    const h = Math.floor(m / 60);
+    if (h < 24)  return `${h} jam lalu`;
+    const dy = Math.floor(h / 24);
+    if (dy < 30) return `${dy} hari lalu`;
+    return d.toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' });
+  }
+  function fmtFullTime(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleString('id-ID', {
+      day:'2-digit', month:'short', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+  }
+  function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+  // ═══════════════════════════════════════════════════════════════
+  // TAB SWITCHING
+  // ═══════════════════════════════════════════════════════════════
+  document.querySelectorAll('.dbm-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const t = tab.dataset.tab;
+      document.querySelectorAll('.dbm-tab').forEach(x => x.classList.toggle('active', x === tab));
+      document.querySelectorAll('.dbm-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t));
+      if (t === 'backup' && !window._backupLoaded) {
+        loadBackupInfo();
+        loadBackupSettings();
+        loadBackupFiles();
+        window._backupLoaded = true;
+      }
+    });
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // CLEANUP TAB
+  // ═══════════════════════════════════════════════════════════════
+  let cleanupTables = [];
+  const pendingRetention = new Map();
+
+  function renderCleanupRow(t) {
+    const purgeClass = t.purgeable > 0 ? 'purgeable-some' : 'purgeable-zero';
+    const disabledBadge = t.retentionDays === 0
+      ? '<span class="retention-disabled-badge">DISABLED</span>' : '';
+    let lastHtml = `<span class="last-never">Belum pernah</span>`;
+    if (t.lastCleanup && t.lastCleanup.at) {
+      if (t.lastCleanup.error) {
+        // Cleanup terakhir GAGAL — tampilkan error supaya user tahu
+        lastHtml = `
+          <div class="last-time" style="color:var(--danger);">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:3px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Gagal · ${esc(fmtRelTime(t.lastCleanup.at))}
+          </div>
+          <div class="last-sub" style="color:var(--danger);" title="${esc(t.lastCleanup.error)}">${esc(t.lastCleanup.error.slice(0, 80))}${t.lastCleanup.error.length > 80 ? '…' : ''}</div>`;
+      } else {
+        lastHtml = `
+          <div class="last-time">${esc(fmtRelTime(t.lastCleanup.at))}</div>
+          <div class="last-sub">Hapus ${fmtNum(t.lastCleanup.deleted)} row · ${t.lastCleanup.tookMs} ms</div>`;
+      }
+    }
+    return `
+      <tr data-key="${esc(t.key)}">
+        <td>
+          <div class="table-name">
+            <span class="priority-dot priority-${esc(t.priority)}" title="Priority: ${esc(t.priority)}"></span>
+            ${esc(t.label)}
+          </div>
+          <div class="table-desc">${esc(t.description)}</div>
+          <div class="table-key">${esc(t.key)} · field: ${esc(t.timeField)}</div>
+        </td>
+        <td class="num"><div class="row-count">${fmtNum(t.stats.rows)}</div></td>
+        <td class="num">
+          <div class="size-mb">${fmtMB(t.stats.totalMB)}</div>
+          <div class="size-detail">data ${fmtMB(t.stats.dataMB)} + idx ${fmtMB(t.stats.indexMB)}</div>
+        </td>
+        <td>
+          <input type="number" class="retention-input" value="${t.retentionDays}" min="0" max="3650"
+                 data-key="${esc(t.key)}" data-original="${t.retentionDays}">
+          <span class="retention-suffix">hari</span>${disabledBadge}
+          <div class="retention-default">Default: ${t.defaultDays} hari</div>
+        </td>
+        <td class="num ${purgeClass}">${fmtNum(t.purgeable)}</td>
+        <td>${lastHtml}</td>
+        <td class="action">
+          <button class="act-btn" data-action="cleanup" data-key="${esc(t.key)}"
+                  ${t.retentionDays === 0 ? 'disabled title="Disabled — set retention > 0 dulu"' : ''}>
+            Cleanup
+          </button>
+        </td>
+      </tr>`;
+  }
+
+  async function loadCleanup(forceRefresh = false) {
+    document.getElementById('cleanupTableBody').innerHTML =
+      '<tr><td colspan="7" class="loading">Memuat data…</td></tr>';
+    try {
+      const url = API_CLEANUP + '/overview' + (forceRefresh ? '?refresh=1' : '');
+      const r = await api(url);
+      cleanupTables = r.tables;
+      document.getElementById('sumTotalMB').textContent    = fmtMB(r.summary.totalMB);
+      document.getElementById('sumTableCount').textContent = r.summary.tableCount;
+      document.getElementById('sumPurgeable').textContent  = fmtNum(r.summary.purgeableTotal);
+      document.getElementById('cleanupTableBody').innerHTML = cleanupTables.map(renderCleanupRow).join('');
+      pendingRetention.clear();
+    } catch (e) {
+      document.getElementById('cleanupTableBody').innerHTML =
+        `<tr><td colspan="7" class="loading">Gagal: ${esc(e.message)}</td></tr>`;
+      toast('Gagal memuat data: ' + e.message, 'error');
+    }
+  }
+
+  document.getElementById('btnCleanupRefresh').addEventListener('click', () => loadCleanup(true));
+
+  document.getElementById('cleanupTableBody').addEventListener('input', (e) => {
+    const inp = e.target.closest('.retention-input');
+    if (!inp) return;
+    const v = parseInt(inp.value, 10);
+    if (!isNaN(v) && v >= 0 && v <= 3650) pendingRetention.set(inp.dataset.key, v);
+  });
+
+  document.getElementById('cleanupTableBody').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action="cleanup"]');
+    if (!btn) return;
+    const key = btn.dataset.key;
+    const t   = cleanupTables.find(x => x.key === key);
+    if (!t) return;
+    const days = pendingRetention.get(key) ?? t.retentionDays;
+    if (days === 0) { toast('Retention 0 = disabled', 'error'); return; }
+    if (!confirm(`Jalankan cleanup untuk "${t.label}"?\n\nRetention: ${days} hari\nEstimasi row dihapus: ${fmtNum(t.purgeable)}\n\nLanjutkan?`)) return;
+    btn.disabled = true;
+    btn.textContent = 'Cleaning…';
+    try {
+      const r = await api(`${API_CLEANUP}/run/${encodeURIComponent(key)}`, 'POST');
+      if (r.skipped) toast(`${t.label}: dilewati (${r.reason})`, 'info');
+      else            toast(`${t.label}: ${fmtNum(r.deleted)} row dihapus (${r.tookMs}ms)`, 'success');
+      await loadCleanup(true);
+    } catch (err) {
+      toast('Gagal: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Cleanup';
+    }
+  });
+
+  document.getElementById('btnSaveCleanup').addEventListener('click', async () => {
+    if (pendingRetention.size === 0) { toast('Tidak ada perubahan untuk disimpan', 'info'); return; }
+    const cfg = Object.fromEntries(pendingRetention);
+    const btn = document.getElementById('btnSaveCleanup');
+    btn.disabled = true;
+    try {
+      const r = await api(API_CLEANUP + '/retention', 'PUT', { config: cfg });
+      toast(`Setting tersimpan: ${Object.keys(r.updated).length} table`, 'success');
+      await loadCleanup();
+    } catch (e) {
+      toast('Gagal menyimpan: ' + e.message, 'error');
+    } finally { btn.disabled = false; }
+  });
+
+  document.getElementById('btnResetDefaults').addEventListener('click', async () => {
+    if (!confirm('Reset semua retention ke nilai default?\n\nIni akan menimpa setting yang sudah Anda atur.')) return;
+    const cfg = Object.fromEntries(cleanupTables.map(t => [t.key, t.defaultDays]));
+    try {
+      await api(API_CLEANUP + '/retention', 'PUT', { config: cfg });
+      toast('Retention di-reset ke default', 'success');
+      await loadCleanup();
+    } catch (e) { toast('Gagal: ' + e.message, 'error'); }
+  });
+
+  document.getElementById('btnRunAll').addEventListener('click', async () => {
+    const total = cleanupTables.reduce((s, t) => s + (t.retentionDays > 0 ? t.purgeable : 0), 0);
+    if (!confirm(`Jalankan cleanup untuk SEMUA table?\n\nEstimasi total row dihapus: ${fmtNum(total)}\n\nLanjutkan?`)) return;
+    const btn = document.getElementById('btnRunAll');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Cleaning…';
+    try {
+      const r = await api(API_CLEANUP + '/run-all', 'POST');
+      toast(`Cleanup selesai: ${fmtNum(r.totalDeleted)} row dihapus`, 'success');
+      await loadCleanup(true);
+    } catch (e) { toast('Gagal: ' + e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // BACKUP TAB
+  // ═══════════════════════════════════════════════════════════════
+  async function loadBackupInfo() {
+    try {
+      const r = await api(API_BACKUP + '/info');
+      const i = r.info;
+      let html = `<b>Database:</b> ${esc(i.dbName)} (${fmtMB(i.dbSizeMB)}, ${i.dbTableCount} table)<br>`;
+      if (i.hasMysqldump) {
+        html += `<b style="color:var(--success);">✓ mysqldump tersedia</b> — backup cepat & efisien`;
+      } else {
+        html += `<b style="color:var(--warn);">⚠ mysqldump tidak tersedia</b> — gunakan mode Native Node`;
+      }
+      document.getElementById('backupInfoText').innerHTML = html;
+
+      // Pre-select recommended mode
+      document.getElementById('manualBackupMode').value = i.recommendedMode;
+    } catch (e) {
+      document.getElementById('backupInfoText').innerHTML = `<span style="color:var(--danger);">Gagal: ${esc(e.message)}</span>`;
+    }
+  }
+
+  async function loadBackupSettings() {
+    try {
+      const r = await api(API_BACKUP + '/settings');
+      const s = r.settings;
+      document.getElementById('autoEnabled').checked = s.auto_enabled;
+      document.getElementById('autoSchedule').value  = s.auto_schedule;
+      document.getElementById('autoRetention').value = s.auto_retention;
+      document.getElementById('autoMode').value      = s.auto_mode;
+    } catch (e) { toast('Gagal memuat setting: ' + e.message, 'error'); }
+  }
+
+  document.getElementById('btnSaveBackupSettings').addEventListener('click', async () => {
+    const body = {
+      auto_enabled:   document.getElementById('autoEnabled').checked,
+      auto_schedule:  document.getElementById('autoSchedule').value.trim(),
+      auto_retention: parseInt(document.getElementById('autoRetention').value, 10),
+      auto_mode:      document.getElementById('autoMode').value,
+    };
+    const btn = document.getElementById('btnSaveBackupSettings');
+    btn.disabled = true;
+    try {
+      const r = await api(API_BACKUP + '/settings', 'PUT', body);
+      toast(r.message, 'success');
+    } catch (e) { toast('Gagal: ' + e.message, 'error'); }
+    finally { btn.disabled = false; }
+  });
+
+  document.getElementById('btnBackupNow').addEventListener('click', async () => {
+    const mode = document.getElementById('manualBackupMode').value;
+    if (!confirm(`Buat backup database sekarang?\n\nMode: ${mode}\n\nProses ini mungkin butuh beberapa detik tergantung ukuran DB.`)) return;
+    const btn = document.getElementById('btnBackupNow');
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Membackup… (tunggu)`;
+    try {
+      const r = await api(API_BACKUP + '/create', 'POST', { mode });
+      toast(`Backup berhasil: ${r.filename} (${r.sizeMB} MB, ${r.tookMs}ms)`, 'success');
+      await loadBackupFiles();
+    } catch (e) {
+      toast('Gagal: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  });
+
+  // ── Restore: enable tombol saat file dipilih ──
+  const restoreInput = document.getElementById('restoreFileInput');
+  const btnRestoreNow = document.getElementById('btnRestoreNow');
+  if (restoreInput && btnRestoreNow) {
+    restoreInput.addEventListener('change', () => {
+      const has = restoreInput.files && restoreInput.files.length > 0;
+      btnRestoreNow.disabled = !has;
+      btnRestoreNow.style.opacity = has ? '1' : '.6';
+    });
+    btnRestoreNow.addEventListener('click', async () => {
+      const file = restoreInput.files && restoreInput.files[0];
+      if (!file) { toast('Pilih file backup dulu', 'error'); return; }
+      if (!confirm('PERINGATAN!\n\nRestore akan MENIMPA SELURUH database dengan isi file:\n' + file.name + '\n\nSemua data saat ini (pelanggan, invoice, transaksi) akan tergantikan. Lanjutkan?')) return;
+      await doRestoreUpload(file);
+    });
+  }
+
+  async function doRestoreUpload(file) {
+    const btn = document.getElementById('btnRestoreNow');
+    const orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<svg class="spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Memulihkan… (jangan tutup)';
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('mode', document.getElementById('restoreMode').value);
+      const r = await fetch(API_BACKUP + '/restore', { method:'POST', body: fd, credentials:'include' });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.success) throw new Error(j.message || `HTTP ${r.status}`);
+      toast('Database berhasil dipulihkan. Memuat ulang…', 'success');
+      setTimeout(() => location.reload(), 1800);
+    } catch (e) {
+      toast('Gagal restore: ' + e.message, 'error');
+      btn.disabled = false; btn.innerHTML = orig;
+    }
+  }
+
+  async function doRestoreExisting(filename) {
+    if (!confirm('PERINGATAN!\n\nRestore akan MENIMPA SELURUH database dengan isi backup:\n' + filename + '\n\nSemua data saat ini akan tergantikan. Lanjutkan?')) return;
+    try {
+      toast('Memulihkan database… jangan tutup halaman', 'info');
+      const j = await api(API_BACKUP + '/restore', 'POST', { file: filename, mode: document.getElementById('restoreMode')?.value || 'auto' });
+      toast('Database berhasil dipulihkan. Memuat ulang…', 'success');
+      setTimeout(() => location.reload(), 1800);
+    } catch (e) {
+      toast('Gagal restore: ' + e.message, 'error');
+    }
+  }
+
+  async function loadBackupFiles() {
+    document.getElementById('backupFileList').innerHTML =
+      '<tr><td colspan="4" class="loading">Memuat data…</td></tr>';
+    try {
+      const r = await api(API_BACKUP + '/list');
+      document.getElementById('backupTotalStat').textContent =
+        `${r.count} file · ${fmtMB(r.totalMB)} total`;
+      if (r.files.length === 0) {
+        document.getElementById('backupFileList').innerHTML =
+          '<tr><td colspan="4" class="empty">Belum ada file backup. Klik "Backup Sekarang" di atas.</td></tr>';
+        return;
+      }
+      document.getElementById('backupFileList').innerHTML = r.files.map(f => `
+        <tr>
+          <td>
+            <div class="file-name">${esc(f.name)}</div>
+            <div class="last-sub">.sql.gz (gzipped SQL dump)</div>
+          </td>
+          <td class="num"><div class="size-mb">${fmtSize(f.sizeMB)}</div></td>
+          <td>
+            <div class="last-time">${esc(fmtFullTime(f.created))}</div>
+            <div class="last-sub">${esc(fmtRelTime(f.created))}</div>
+          </td>
+          <td class="action" style="white-space:nowrap;">
+            <a class="act-btn" href="${API_BACKUP}/download/${encodeURIComponent(f.name)}" download>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </a>
+            <button class="act-btn" data-action="restore" data-file="${esc(f.name)}" title="Pulihkan database dari file ini" style="color:#d97706;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 4 3 8 7 8"/></svg>
+              Restore
+            </button>
+            <button class="act-btn danger" data-action="delete" data-file="${esc(f.name)}" title="Hapus file backup">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      document.getElementById('backupFileList').innerHTML =
+        `<tr><td colspan="4" class="loading">Gagal: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  document.getElementById('backupFileList').addEventListener('click', async (e) => {
+    const restoreBtn = e.target.closest('[data-action="restore"]');
+    if (restoreBtn) { doRestoreExisting(restoreBtn.dataset.file); return; }
+    const btn = e.target.closest('[data-action="delete"]');
+    if (!btn) return;
+    const file = btn.dataset.file;
+    if (!confirm(`Hapus file backup "${file}"?\n\nFile yang sudah dihapus tidak bisa dikembalikan.`)) return;
+    btn.disabled = true;
+    try {
+      await api(`${API_BACKUP}/delete/${encodeURIComponent(file)}`, 'DELETE');
+      toast('File backup dihapus', 'success');
+      await loadBackupFiles();
+    } catch (err) {
+      toast('Gagal: ' + err.message, 'error');
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('btnBackupRefresh').addEventListener('click', loadBackupFiles);
+
+  // ═══════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════
+  // First load pakai refresh=true supaya statistik MySQL akurat langsung
+  // (jalankan ANALYZE TABLE dulu). Load berikutnya tanpa refresh untuk
+  // hemat waktu — kecuali user klik tombol Refresh / setelah cleanup.
+  loadCleanup(true);
+})();
+</script>
+
+</body>
+</html>

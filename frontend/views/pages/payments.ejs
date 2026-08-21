@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3;
+      --d-text:#0d1b3e; --d-muted:#6b7fa8;
+      --d-blue1:#1a6ef5; --d-blue2:#0047cc;
+    }
+    .pay-page { font-family:'DM Sans',sans-serif; background:var(--d-bg) !important; }
+
+    /* ── Fintech cards ── */
+        /* ── STAT CARDS — single strip ── */
+    .fin-grid, .fin-grid-4 {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .fin-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      min-height: 130px;
+      cursor: default; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .fin-card::before, .fin-card::after { display:none !important; content:none !important; }
+    .fin-card .orb1, .fin-card .orb2 { display:none !important; }
+    .fin-card:last-child { border-right: none; }
+    .fin-card:hover { background: #fafbff; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; flex-direction:column; gap:3px; margin-top:6px; }
+    .card-pill { display:inline-flex; align-items:center; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; align-self:flex-start; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-teal   { background:#cffafe; color:#0e7490; }
+    .pill-orange { background:#ffedd5; color:#c2410c; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .card-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:repeat(2,1fr); }
+      .fin-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .fin-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .fin-card:nth-child(even) { border-right:none; }
+      .fin-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:1fr; }
+      .fin-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+    }
+        /* ── Layout ── */
+    /* Main layout: form left + right panel */
+    .pay-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:16px; align-items:start; }
+    @media(max-width:1100px){ .pay-layout { grid-template-columns:260px 1fr; } }
+    @media(max-width:900px) { .pay-layout { grid-template-columns:1fr; } }
+
+    /* Responsive breakpoints — mengikuti PHP referensi */
+    @media(max-width:1100px) {
+      .fin-grid { grid-template-columns:repeat(2,1fr) !important; }
+    }
+    @media(max-width:960px) {
+      .pay-layout { grid-template-columns:1fr !important; }
+      .form-card  { position:static !important; }
+    }
+    @media(max-width:640px) {
+      .fin-grid { grid-template-columns:1fr !important; gap:0 !important; }
+      .fin-card  { padding:18px 20px !important; min-height:auto !important; border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+      .fin-card .fc-val { font-size:26px !important; }
+      .fin-card .fc-bar { display:none; }
+      .pay-btn   { font-size:13px; padding:10px; }
+      .method-grid { grid-template-columns:repeat(2,1fr) !important; }
+      .col-hide-mobile { display:none !important; }
+      .pay-table th, .pay-table td { padding:8px 10px !important; font-size:11.5px !important; }
+      .tbl-search { max-width:100% !important; }
+    }
+
+    /* ── Form card ── */
+    .form-card { background:#fff; border:1px solid var(--d-border); border-radius:22px; padding:22px; position:sticky; top:80px; }
+    .form-card-header { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+    .form-card-icon { width:36px;height:36px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center; color:#1a6ef5; }
+    .form-card-title { font-size:15px; font-weight:700; color:var(--d-text); }
+    .form-card-sub   { font-size:11px; color:var(--d-muted); }
+
+    .pf-label  { font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:6px; }
+    .pf-input  { width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;font-family:'DM Sans',sans-serif;transition:border-color .15s,box-shadow .15s;outline:none; }
+    .pf-input:focus { border-color:var(--d-blue1); box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .pf-field  { margin-bottom:14px; }
+
+    /* Customer autocomplete */
+    .cust-wrap { position:relative; }
+    .cust-icon { position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--d-muted);pointer-events:none; }
+    .cust-inp  { padding-left:34px !important; }
+    #custDropdown { display:none;position:absolute;z-index:999;background:#fff;border:1.5px solid var(--d-border);border-radius:12px;max-height:220px;overflow-y:auto;width:100%;top:calc(100% + 4px);box-shadow:0 12px 40px rgba(13,27,62,.15); }
+    .cust-item { padding:10px 13px;cursor:pointer;border-bottom:1px solid #f0f4ff;transition:background .1s;font-size:13px; }
+    .cust-item:last-child { border-bottom:none; }
+    .cust-item:hover { background:#f4f8ff; }
+    .cust-item .ci-name { font-weight:600; color:var(--d-text); }
+    .cust-item .ci-sub  { font-size:11px; color:var(--d-muted); margin-top:1px; }
+    #custInfo { display:none;margin-top:8px;padding:12px 13px;background:#f4f8ff;border:1px solid var(--d-border);border-radius:10px;font-size:12.5px; }
+
+    /* Method pills */
+    .method-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+    .mpill { text-align:center;padding:8px 4px;border-radius:10px;border:1.5px solid var(--d-border);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:#fff;color:var(--d-text);user-select:none; }
+    .mpill.active { border-color:var(--d-blue1); background:#eff6ff; color:var(--d-blue1); }
+    .mpill:hover:not(.active) { background:#f8faff; }
+
+    /* WA toggle */
+    .wa-toggle-row { display:flex;align-items:center;gap:10px;padding:11px 13px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;margin-bottom:14px; }
+
+    /* Submit */
+    .pay-btn { width:100%;padding:12px;border-radius:12px;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s;font-family:'DM Sans',sans-serif; }
+    .pay-btn:hover { opacity:.92; transform:translateY(-1px); }
+    .pay-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* Success banner */
+    #successBanner { display:none; background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:14px 18px;margin-bottom:18px; }
+
+    /* ── Right panel ── */
+    .right-panel { display:flex; flex-direction:column; gap:16px; }
+
+    /* Chart card */
+    /* Chart row */
+    .chart-row { display:grid; grid-template-columns:minmax(0,2fr) minmax(200px,1fr); gap:16px; margin-bottom:16px; }
+    @media(max-width:900px){ .chart-row { grid-template-columns:1fr; } }
+
+    .w-card { background:#fff; border:1px solid var(--d-border); border-radius:22px; padding:20px; }
+    .wc-lbl { font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--d-muted); }
+    .wc-ttl { font-size:15px; font-weight:700; color:var(--d-text); margin-top:2px; }
+
+    .chart-filters { display:flex; gap:6px; align-items:center; }
+    .cf-select { padding:5px 9px; border:1.5px solid var(--d-border); border-radius:8px; font-size:12px; outline:none; background:#f8faff; color:var(--d-text); cursor:pointer; }
+
+    /* Donut legend */
+    .mb-row   { display:flex; align-items:center; gap:8px; font-size:12px; margin-bottom:8px; }
+    .mb-dot   { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .mb-label { flex:1; color:var(--d-text); font-weight:600; }
+    .mb-bar   { width:60px; height:4px; background:#e0e7f3; border-radius:2px; overflow:hidden; }
+    .mb-fill  { height:100%; border-radius:2px; }
+    .mb-pct   { min-width:32px; text-align:right; font-weight:700; }
+
+    /* ── Tabs (Sales Dashboard pill style) ── */
+    .pay-pills {
+      display:inline-flex; gap:6px; background:#fff; border:1px solid var(--d-border);
+      border-radius:13px; padding:5px; margin-bottom:18px; overflow-x:auto; max-width:100%;
+    }
+    .pay-tab-btn {
+      display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border:none;
+      background:transparent; border-radius:9px; font-family:inherit; font-size:13px;
+      font-weight:600; color:var(--d-muted); cursor:pointer; white-space:nowrap;
+      transition:background .15s,color .15s;
+    }
+    .pay-tab-btn:hover:not(.pay-tab-active) { background:#f4f8ff; color:var(--d-text); }
+    .pay-tab-active { background:#2563eb !important; color:#fff !important; }
+    .pay-tab-active #proofTabBadge { background:rgba(255,255,255,.25) !important; color:#fff !important; }
+    .pay-tab-icn { width:16px; height:16px; flex-shrink:0; }
+    /* ── Table ── */
+    .table-card { background:#fff; border:1px solid var(--d-border); border-radius:22px; overflow:hidden; }
+    .table-header { padding:16px 20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-bottom:1px solid #f0f4ff; }
+    .tbl-search { position:relative; flex:1; min-width:200px; max-width:280px; }
+    .tbl-search svg { position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none; }
+    .tbl-search input { width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--d-border);border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;background:#f8faff;transition:all .15s; }
+    .tbl-search input:focus { border-color:var(--d-blue1);background:#fff; }
+    .tbl-section-title { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted); }
+    .tbl-count { margin-left:auto; font-size:12px; color:var(--d-muted); font-weight:600; }
+
+    .pay-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .pay-table thead th { padding:10px 16px;font-size:10.5px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;background:#f8faff;text-align:left;white-space:nowrap;border-bottom:1px solid #f0f4ff; }
+    .pay-table tbody td { padding:12px 16px; border-bottom:1px solid #f8faff; vertical-align:middle; }
+    .pay-table tbody tr:last-child td { border-bottom:none; }
+    .pay-table tbody tr:hover td { background:#f8faff; }
+
+    .mbadge { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:700;white-space:nowrap; }
+    .inv-btn { display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;font-size:11.5px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1.5px solid #bfdbfe;cursor:pointer;transition:background .15s; }
+    .inv-btn:hover { background:#dbeafe; }
+    .del-btn { background:#fff0f2;border:1.5px solid #fecdd3;color:#f5365c;padding:4px 10px;border-radius:7px;font-size:11.5px;cursor:pointer;font-weight:600;transition:background .15s; }
+    .del-btn:hover { background:#ffe4e8; }
+    .sent-badge { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#16a34a;background:#dcfce7;padding:2px 8px;border-radius:20px; }
+
+    /* Empty/loading */
+    .tbl-empty { padding:50px 20px; text-align:center; color:#94a3b8; }
+    .tbl-empty svg { width:40px; height:40px; margin-bottom:10px; opacity:.35; }
+
+    /* Pagination */
+    .pay-pagination { padding:14px 20px; display:flex; align-items:center; justify-content:center; gap:6px; border-top:1px solid #f0f4ff; }
+    .pg-btn { padding:6px 14px; border-radius:8px; font-size:12.5px; font-weight:600; cursor:pointer; border:1.5px solid var(--d-border); background:#fff; color:var(--d-text); transition:background .15s; }
+    .pg-btn:hover { background:#f4f8ff; }
+    .pg-btn.active { background:var(--d-blue1); border-color:var(--d-blue1); color:#fff; }
+  
+    /* ── Card active state ── */
+    .fin-card { cursor: pointer; }
+    .fin-card.fc-active { background: #2563eb; border-color: #2563eb; }
+    .fin-card.fc-active:hover { background: #1d4ed8; }
+    .fin-card.fc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .fin-card.fc-active .card-val  { color: #fff; }
+    .fin-card.fc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .fin-card.fc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fin-card.fc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .fin-card.fc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .fin-card.fc-active .sp-dot    { fill: #fff !important; }
+
+    /* ══ Detail Bukti Transfer Modal ══ */
+    .pm-overlay {
+      display:none; position:fixed; inset:0; z-index:10000;
+      background:rgba(13,27,62,.55); backdrop-filter:blur(3px);
+      align-items:center; justify-content:center; padding:24px;
+      font-family:'DM Sans',sans-serif;
+    }
+    .pm-overlay.open { display:flex; animation:pmFade .18s ease; }
+    @keyframes pmFade { from{opacity:0} to{opacity:1} }
+    .pm-box {
+      background:#fff; border-radius:20px; width:min(860px,96vw);
+      max-height:92vh; overflow:hidden; display:flex; flex-direction:column;
+      box-shadow:0 30px 80px rgba(13,27,62,.35); animation:pmPop .2s cubic-bezier(.2,.9,.3,1.2);
+    }
+    @keyframes pmPop { from{transform:scale(.95);opacity:0} to{transform:scale(1);opacity:1} }
+    .pm-head {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:18px 22px; border-bottom:1px solid var(--d-border);
+      background:linear-gradient(135deg,#f8faff,#eef4ff);
+    }
+    .pm-head-icn { width:38px;height:38px;border-radius:11px;background:#eff6ff;display:flex;align-items:center;justify-content:center;color:#1d4ed8;flex-shrink:0; }
+    .pm-head-ttl { font-size:16px;font-weight:800;color:var(--d-text);letter-spacing:-.3px; }
+    .pm-head-sub { font-size:12px;color:var(--d-muted);font-family:'DM Mono',monospace;margin-top:1px; }
+    .pm-close { width:34px;height:34px;border-radius:10px;border:1px solid var(--d-border);background:#fff;color:var(--d-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0; }
+    .pm-close:hover { background:#fee2e2;border-color:#fecaca;color:#dc2626; }
+
+    .pm-body { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:0; overflow:auto; }
+    @media(max-width:680px){ .pm-body { grid-template-columns:1fr; } }
+
+    .pm-img-col { padding:20px; border-right:1px solid var(--d-border); display:flex; flex-direction:column; }
+    @media(max-width:680px){ .pm-img-col { border-right:none; border-bottom:1px solid var(--d-border); } }
+    .pm-img-label, .pm-info-label { font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);margin-bottom:10px; }
+    .pm-img-frame {
+      flex:1; min-height:240px; border-radius:14px; border:1px solid var(--d-border);
+      background:#f4f8ff; overflow:auto; display:flex; align-items:center; justify-content:center;
+      max-height:54vh;
+    }
+    .pm-img-frame img { display:block; max-width:100%; height:auto; }
+    .pm-img-frame iframe { width:100%; height:54vh; border:none; }
+    .pm-img-loading { color:#94a3b8; font-size:13px; padding:40px; }
+    .pm-img-frame.is-empty { background:#f8faff; border-style:dashed; }
+    .pm-img-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:36px 24px; gap:4px; }
+    .pm-img-empty-icn { width:64px;height:64px;border-radius:18px;background:#eef2f9;color:#94a3b8;display:flex;align-items:center;justify-content:center;margin-bottom:10px; }
+    .pm-img-empty-ttl { font-size:14px;font-weight:800;color:#475569; }
+    .pm-img-empty-sub { font-size:12px;color:#94a3b8;line-height:1.5;max-width:240px; }
+    .pm-img-open { margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:#1d4ed8;text-decoration:none;padding:9px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;transition:background .15s; }
+    .pm-img-open:hover { background:#dbeafe; }
+
+    .pm-info-col { padding:20px; display:flex; flex-direction:column; }
+    .pm-amt-card { background:linear-gradient(135deg,#1d4ed8,#1e3a8a); border-radius:14px; padding:16px 18px; margin-bottom:16px; }
+    .pm-amt-lbl { font-size:11px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:.04em; }
+    .pm-amt-val { font-size:28px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;margin-top:3px;font-family:'DM Mono',monospace; }
+    .pm-rows { display:flex; flex-direction:column; }
+    .pm-row { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px dashed #eef2f9; }
+    .pm-row:last-child { border-bottom:none; }
+    .pm-row-k { font-size:12px;color:var(--d-muted);font-weight:600;flex-shrink:0; }
+    .pm-row-v { font-size:12.5px;color:var(--d-text);font-weight:700;text-align:right;word-break:break-word; }
+    .pm-st { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:7px;font-size:11.5px;font-weight:700; }
+    .pm-st-wait { background:rgba(255,255,255,.18);color:#fff; }
+    .pm-st-ok   { background:rgba(255,255,255,.22);color:#fff; }
+    .pm-st-no   { background:rgba(255,255,255,.22);color:#fff; }
+
+    .pm-actions { display:flex; gap:10px; margin-top:auto; padding-top:18px; }
+    .pm-btn { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px; border-radius:11px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all .15s; }
+    .pm-btn-verify { background:linear-gradient(135deg,#1a6ef5,#0047cc); color:#fff; }
+    .pm-btn-verify:hover { opacity:.92;transform:translateY(-1px); }
+    .pm-btn-reject { background:#fff; border:1.5px solid #fecaca; color:#dc2626; }
+    .pm-btn-reject:hover { background:#fee2e2; }
+
+    /* ══ Confirm / Reject Dialog ══ */
+    .pc-overlay {
+      display:none; position:fixed; inset:0; z-index:10001;
+      background:rgba(13,27,62,.55); backdrop-filter:blur(3px);
+      align-items:center; justify-content:center; padding:24px; font-family:'DM Sans',sans-serif;
+    }
+    .pc-overlay.open { display:flex; animation:pmFade .15s ease; }
+    .pc-box { background:#fff; border-radius:18px; width:min(420px,94vw); padding:26px 24px 22px; text-align:center; box-shadow:0 26px 70px rgba(13,27,62,.4); animation:pmPop .18s cubic-bezier(.2,.9,.3,1.2); }
+    .pc-icn { width:54px;height:54px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center; }
+    .pc-icn.ok   { background:#eff6ff;color:#1d4ed8; }
+    .pc-icn.warn { background:#fef2f2;color:#dc2626; }
+    .pc-ttl { font-size:17px;font-weight:800;color:var(--d-text);letter-spacing:-.3px;margin-bottom:6px; }
+    .pc-msg { font-size:13.5px;color:var(--d-muted);line-height:1.55;margin-bottom:4px; }
+    .pc-field { text-align:left; margin-top:14px; }
+    .pc-field-lbl { font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:6px; }
+    .pc-input { width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical;outline:none;transition:border-color .15s; }
+    .pc-input:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .pc-wa { display:flex;align-items:center;gap:8px;justify-content:center;margin-top:14px;padding:11px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:12px;color:#15803d;font-weight:600;cursor:pointer;user-select:none;transition:opacity .15s; }
+    .pc-wa.off { background:#f8fafc;border-color:#e2e8f0;color:#94a3b8; }
+    .pc-wa.off svg { fill:#cbd5e1 !important; }
+    .pc-wa-check { width:17px;height:17px;accent-color:#16a34a;cursor:pointer;flex-shrink:0;margin:0; }
+    .pc-btns { display:flex;gap:10px;margin-top:20px; }
+    .pc-btn { flex:1;padding:11px;border-radius:11px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border:none;transition:all .15s; }
+    .pc-cancel { background:#f1f5f9;color:#475569; }
+    .pc-cancel:hover { background:#e2e8f0; }
+    #pcOk.is-ok   { background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff; }
+    #pcOk.is-ok:hover { opacity:.92; }
+    #pcOk.is-warn { background:#dc2626;color:#fff; }
+    #pcOk.is-warn:hover { background:#b91c1c; }
+  </style>
+</head>
+<body>
+<div class="app-layout pay-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;" class="a1">
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:#0d1b3e;margin:0 0 4px;">Payments</h1>
+          <p style="font-size:13px;color:var(--d-muted);margin:0;" id="payHeaderSub">Manajemen pembayaran pelanggan ISP</p>
+        </div>
+      </div>
+
+      <!-- Success Banner -->
+      <div id="successBanner" class="a1">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:16px;">✅</div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:#15803d;" id="successMsg">Pembayaran berhasil dicatat.</div>
+              <div style="font-size:12px;color:#16a34a;margin-top:1px;" id="successInvNum"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      
+      <div class="fin-grid">
+        <div class="fin-card fc-active" id="fc-totalinv" onclick="payCardClick(this)">
+          <div class="card-lbl">Total Tagihan</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcTotalInv">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-orange" id="cp-totalinv">—</span>
+                <span class="card-sub" id="fcTotalInvSub">0 invoice</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-totalinv" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-totalinv-fill" d="" fill="#c2410c" opacity=".12"/>
+                <path class="sp-line" id="sp-totalinv-line" d="" stroke="#c2410c"/>
+                <circle class="sp-dot" id="sp-totalinv-dot" r="2.5" fill="#c2410c"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="fc-amt" onclick="payCardClick(this)">
+          <div class="card-lbl">Penerimaan</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcAmt">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="cp-amt">—</span>
+                <span class="card-sub" id="fcAmtSub">0 transaksi</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-amt" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-amt-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-amt-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-amt-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="fc-tx" onclick="payCardClick(this)">
+          <div class="card-lbl">Transaksi</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcTx">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-teal" id="cp-tx">—</span>
+                <span class="card-sub" id="fcTxSub">Bulan ini</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-tx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-tx-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-tx-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-tx-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="fc-overdue" onclick="payCardClick(this)">
+          <div class="card-lbl">Tertunggak</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcOverdue">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="cp-overdue">—</span>
+                <span class="card-sub" id="fcOverdueSub">0 tagihan</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-overdue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-overdue-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-overdue-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-overdue-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main layout -->
+      <div class="pay-layout">
+
+        <!-- Form Panel -->
+        <div class="form-card a5">
+          <div class="form-card-header">
+            <div class="form-card-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            </div>
+            <div>
+              <div class="form-card-title">Input Payment</div>
+              <div class="form-card-sub">Input transaksi baru</div>
+            </div>
+          </div>
+
+          <!-- Customer search -->
+          <div class="pf-field">
+            <label class="pf-label">Pelanggan *</label>
+            <div class="cust-wrap">
+              <svg class="cust-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" id="custSearch" class="pf-input cust-inp" placeholder="Nama, CID, atau nomor HP..." autocomplete="off" oninput="searchCustomers(this.value)">
+              <input type="hidden" id="selectedCustId">
+              <div id="custDropdown"></div>
+            </div>
+            <div id="custInfo"></div>
+            <div id="paidWarning"></div>
+          </div>
+
+          <!-- Amount & Date -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="pf-field">
+              <label class="pf-label">Jumlah (Rp) *</label>
+              <input type="text" id="payAmount" class="pf-input" placeholder="0" oninput="formatAmount(this)">
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Tanggal *</label>
+              <input type="date" id="payDate" class="pf-input">
+            </div>
+          </div>
+
+          <!-- Method -->
+          <div class="pf-field">
+            <label class="pf-label">Metode Payment *</label>
+            <div class="method-grid">
+              <div class="mpill active" onclick="selectMethod(this,'cash')">Cash</div>
+              <div class="mpill" onclick="selectMethod(this,'transfer')">Transfer</div>
+              <div class="mpill" onclick="selectMethod(this,'dana')">DANA</div>
+              <div class="mpill" onclick="selectMethod(this,'ovo')">OVO</div>
+              <div class="mpill" onclick="selectMethod(this,'gopay')">GoPay</div>
+              <div class="mpill" onclick="selectMethod(this,'qris')">QRIS</div>
+            </div>
+            <input type="hidden" id="payMethod" value="cash">
+          </div>
+
+          <!-- Bank (conditional) -->
+          <div class="pf-field" id="bankField" style="display:none;">
+            <label class="pf-label">Nama Bank</label>
+            <input type="text" id="payBank" class="pf-input" placeholder="BCA, Mandiri, BRI...">
+          </div>
+
+          <!-- Reference -->
+          <div class="pf-field">
+            <label class="pf-label">No. Referensi / Bukti</label>
+            <input type="text" id="payRef" class="pf-input" placeholder="Kode transfer, bukti, dll">
+          </div>
+
+          <!-- Due date after -->
+          <div class="pf-field">
+            <label class="pf-label">Jatuh Tempo Baru *</label>
+            <input type="date" id="payDueDate" class="pf-input">
+            <div style="font-size:11px;color:var(--d-muted);margin-top:4px;">Default: jatuh tempo pelanggan + 1 bulan. Bisa disesuaikan.</div>
+          </div>
+
+          <!-- Period -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="pf-field">
+              <label class="pf-label">Bulan</label>
+              <select id="payPeriodMonth" class="pf-input" style="cursor:pointer;">
+                <option value="1">Januari</option><option value="2">Februari</option>
+                <option value="3">Maret</option><option value="4">April</option>
+                <option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option>
+                <option value="9">September</option><option value="10">Oktober</option>
+                <option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="pf-field">
+              <label class="pf-label">Tahun</label>
+              <input type="number" id="payPeriodYear" class="pf-input" min="2020" max="2099">
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="pf-field">
+            <label class="pf-label">Catatan</label>
+            <input type="text" id="payNotes" class="pf-input" placeholder="Opsional">
+          </div>
+
+          <!-- WA toggle -->
+          <div class="wa-toggle-row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#25d366" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#15803d;">Kirim konfirmasi WA</div>
+              <div style="font-size:11px;color:#16a34a;">Otomatis ke nomor pelanggan</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
+              <input type="checkbox" id="paySendWa" style="opacity:0;width:0;height:0;">
+              <span id="waSlider" style="position:absolute;inset:0;background:#ccc;border-radius:22px;transition:.2s;"></span>
+              <span id="waThumb" style="position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span>
+            </label>
+          </div>
+
+          <!-- Email toggle -->
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;margin-bottom:14px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#1d4ed8" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;color:#1d4ed8;">Kirim konfirmasi Email</div>
+              <div style="font-size:11px;color:#3b82f6;">Email + kwitansi PDF (bila email pelanggan ada)</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer;">
+              <input type="checkbox" id="paySendEmail" checked style="opacity:0;width:0;height:0;">
+              <span id="emailSlider" style="position:absolute;inset:0;background:#1d4ed8;border-radius:22px;transition:.2s;"></span>
+              <span id="emailThumb" style="position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:20px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span>
+            </label>
+          </div>
+
+          <button class="pay-btn" id="submitBtn" onclick="submitPayment()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Catat Pembayaran
+          </button>
+        </div>
+
+        <!-- Right panel -->
+        <div class="right-panel">
+
+          <!-- Chart row: bar + donut -->
+          <div class="chart-row a5">
+
+            <!-- Bar chart -->
+            <div class="w-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+                <div>
+                  <div class="wc-lbl">Penerimaan Harian</div>
+                  <div class="wc-ttl" id="chartSubTitle">–</div>
+                </div>
+                <div class="chart-filters">
+                  <select id="filterMonth" class="cf-select" onchange="onFilterChange()">
+                    <option value="1">Jan</option><option value="2">Feb</option>
+                    <option value="3">Mar</option><option value="4">Apr</option>
+                    <option value="5">Mei</option><option value="6">Jun</option>
+                    <option value="7">Jul</option><option value="8">Agu</option>
+                    <option value="9">Sep</option><option value="10">Okt</option>
+                    <option value="11">Nov</option><option value="12">Des</option>
+                  </select>
+                  <select id="filterYear" class="cf-select" onchange="onFilterChange()"></select>
+                </div>
+              </div>
+              <canvas id="payChart" style="max-height:150px;"></canvas>
+            </div>
+
+            <!-- Donut chart -->
+            <div class="w-card" style="display:flex;flex-direction:column;">
+              <div class="wc-lbl" style="margin-bottom:4px;">Metode Pembayaran</div>
+              <div class="wc-ttl" id="donutSubTitle" style="margin-bottom:14px;">–</div>
+              <canvas id="donutChart" style="max-height:130px;margin-bottom:14px;"></canvas>
+              <div id="donutLegend"></div>
+            </div>
+
+          </div>
+
+          <!-- Tabs: Pembayaran | Bukti Transfer -->
+          <div class="pay-pills">
+            <button id="tabBtnPay" onclick="switchPayTab('pay')" class="pay-tab-btn pay-tab-active">
+              <svg class="pay-tab-icn" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Riwayat Pembayaran
+            </button>
+            <button id="tabBtnProof" onclick="switchPayTab('proof')" class="pay-tab-btn">
+              <svg class="pay-tab-icn" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              Bukti Transfer
+              <span id="proofTabBadge" style="display:none;margin-left:2px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:9px;">0</span>
+            </button>
+          </div>
+
+          <!-- Tab panel: Pembayaran -->
+          <div id="tabPanelPay">
+          <!-- Table -->
+          <div class="table-card a6">
+            <div class="table-header">
+              <div>
+                <div class="tbl-section-title">Riwayat Pembayaran</div>
+                <div style="font-size:12px;color:var(--d-muted);margin-top:2px;" id="tblSubTitle">–</div>
+              </div>
+              <div class="tbl-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="tblSearch" placeholder="Cari nama, CID, HP..." oninput="onSearchChange()">
+              </div>
+              <div class="tbl-count" id="tblCount">–</div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="pay-table">
+                <thead>
+                  <tr>
+                    <th>Pelanggan</th>
+                    <th>Tgl Bayar</th>
+                    <th>Jumlah</th>
+                    <th>Metode</th>
+                    <th>Due Date</th>
+                    <th class="col-hide-mobile">Notification</th>
+                    <th class="col-hide-mobile">Validation By</th>
+                    <th class="col-hide-mobile">Invoice</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="payTable">
+                  <tr><td colspan="9"><div class="tbl-empty"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>Memuat data...</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pay-pagination" id="payPagination"></div>
+          </div>
+          </div><!-- /tabPanelPay -->
+
+          <!-- Tab panel: Bukti Transfer -->
+          <div id="tabPanelProof" style="display:none;">
+            <div class="table-card a6">
+              <div class="table-header">
+                <div>
+                  <div class="tbl-section-title">Riwayat Bukti Transfer</div>
+                  <div style="font-size:12px;color:var(--d-muted);margin-top:2px;">Bukti pembayaran manual yang diunggah pelanggan via halaman invoice publik</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto;">
+                  <select id="proofStatusFilter" onchange="loadProofs(1)" style="padding:7px 10px;border:1px solid var(--d-border);border-radius:9px;font-size:12px;font-family:inherit;background:#fff;color:var(--d-text);">
+                    <option value="">Semua status</option>
+                    <option value="submitted">Menunggu verifikasi</option>
+                    <option value="verified">Terverifikasi</option>
+                    <option value="rejected">Ditolak</option>
+                  </select>
+                  <div class="tbl-search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                    <input type="text" id="proofSearch" placeholder="Cari nama, CID, HP..." oninput="onProofSearchChange()">
+                  </div>
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="pay-table">
+                  <thead>
+                    <tr>
+                      <th>Pelanggan</th>
+                      <th>Periode</th>
+                      <th>Invoice</th>
+                      <th>Jumlah</th>
+                      <th>Status</th>
+                      <th>Diunggah</th>
+                      <th>Bukti</th>
+                      <th>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="proofTable">
+                    <tr><td colspan="8"><div class="tbl-empty"><p>Memuat data...</p></div></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pay-pagination" id="proofPagination"></div>
+            </div>
+          </div><!-- /tabPanelProof -->
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══ Detail Bukti Transfer Modal ══ -->
+<div id="proofModal" class="pm-overlay" onclick="closeProofModal()">
+  <div class="pm-box" onclick="event.stopPropagation()">
+    <!-- Header -->
+    <div class="pm-head">
+      <div style="display:flex;align-items:center;gap:11px;min-width:0;">
+        <div class="pm-head-icn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        </div>
+        <div style="min-width:0;">
+          <div class="pm-head-ttl">Detail Bukti Transfer</div>
+          <div class="pm-head-sub" id="pmInvNo">—</div>
+        </div>
+      </div>
+      <button class="pm-close" onclick="closeProofModal()" aria-label="Tutup">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Body: image + info -->
+    <div class="pm-body">
+      <!-- Image side -->
+      <div class="pm-img-col">
+        <div class="pm-img-label">Bukti Pembayaran</div>
+        <div class="pm-img-frame" id="pmImgFrame">
+          <div class="pm-img-loading">Memuat gambar…</div>
+        </div>
+        <a id="pmImgOpen" href="#" target="_blank" rel="noopener" class="pm-img-open">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Buka gambar ukuran penuh
+        </a>
+      </div>
+
+      <!-- Info side -->
+      <div class="pm-info-col">
+        <div class="pm-info-label">Informasi Pembayaran</div>
+
+        <div class="pm-amt-card">
+          <div class="pm-amt-lbl">Jumlah Tagihan</div>
+          <div class="pm-amt-val" id="pmAmount">Rp 0</div>
+          <div id="pmStatusWrap" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="pm-rows">
+          <div class="pm-row"><span class="pm-row-k">Pelanggan</span><span class="pm-row-v" id="pmCustName">—</span></div>
+          <div class="pm-row"><span class="pm-row-k">Customer ID</span><span class="pm-row-v" id="pmCustId">—</span></div>
+          <div class="pm-row"><span class="pm-row-k">No. HP</span><span class="pm-row-v" id="pmCustPhone">—</span></div>
+          <div class="pm-row"><span class="pm-row-k">Invoice</span><span class="pm-row-v" id="pmInvoice">—</span></div>
+          <div class="pm-row"><span class="pm-row-k">Periode</span><span class="pm-row-v" id="pmPeriode">—</span></div>
+          <div class="pm-row"><span class="pm-row-k">Diunggah</span><span class="pm-row-v" id="pmUploaded">—</span></div>
+          <div class="pm-row" id="pmNoteRow" style="display:none;"><span class="pm-row-k">Catatan</span><span class="pm-row-v" id="pmNote">—</span></div>
+        </div>
+
+        <!-- Action buttons (only when pending) -->
+        <div class="pm-actions" id="pmActions" style="display:none;">
+          <button class="pm-btn pm-btn-reject" id="pmRejectBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            Tolak
+          </button>
+          <button class="pm-btn pm-btn-verify" id="pmVerifyBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Verifikasi & Tandai Lunas
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Confirm / Reject Dialog ══ -->
+<div id="payConfirm" class="pc-overlay" onclick="payConfirmCancel()">
+  <div class="pc-box" onclick="event.stopPropagation()">
+    <div class="pc-icn" id="pcIcn"></div>
+    <div class="pc-ttl" id="pcTitle">Konfirmasi</div>
+    <div class="pc-msg" id="pcMsg"></div>
+    <div class="pc-field" id="pcField" style="display:none;">
+      <label class="pc-field-lbl" id="pcFieldLbl">Alasan</label>
+      <textarea id="pcInput" class="pc-input" rows="3" placeholder="Opsional…"></textarea>
+    </div>
+    <label class="pc-wa" id="pcWa" style="display:none;">
+      <input type="checkbox" id="pcWaCheck" class="pc-wa-check" checked>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#25d366" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <span id="pcWaTxt">Kirim notifikasi WhatsApp ke pelanggan</span>
+    </label>
+    <div class="pc-btns">
+      <button class="pc-btn pc-cancel" onclick="payConfirmCancel()">Batal</button>
+      <button class="pc-btn" id="pcOk" onclick="payConfirmOk()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/payments.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'totalinv':'#c2410c','amt':'#2563eb','tx':'#0891b2','overdue':'#dc2626'},IDS={'totalinv':'fcTotalInv','amt':'fcAmt','tx':'fcTx','overdue':'fcOverdue'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){if(!v||v.length<2)return null;const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);const d=p.reduce((a,[x,y],i)=>{if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);const[px,py]=p[i-1],cx=(px+x)/2;return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);},'');const lp=p[p.length-1],fp=p[0];return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};}
+  function draw(id,v){const s=sp(v);if(!s)return;const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}}
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){Object.keys(C).forEach(k=>{const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();draw('sp-'+k,hist[k]);const p=document.getElementById('cp-'+k);if(p)p.textContent=hist[k][hist[k].length-1]||'—';});}
+  window._payUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',function(){
+    upd();
+    // Set default sparkline putih di card aktif
+    const def = document.getElementById('fc-totalinv');
+    if(def){
+      const l=def.querySelector('.sp-line'),f=def.querySelector('.sp-fill'),d=def.querySelector('.sp-dot');
+      if(l)l.style.stroke='rgba(255,255,255,.70)';
+      if(f)f.style.fill='rgba(255,255,255,.12)';
+      if(d)d.style.fill='#fff';
+    }
+  });
+})();
+
+function payCardClick(el){
+  const COLORS={'fc-totalinv':'#c2410c','fc-amt':'#2563eb','fc-tx':'#0891b2','fc-overdue':'#dc2626'};
+  const was = el.classList.contains('fc-active');
+
+  // Reset semua
+  document.querySelectorAll('.fin-card[id^="fc-"]').forEach(card=>{
+    card.classList.remove('fc-active');
+    const col = COLORS[card.id] || '#64748b';
+    const l=card.querySelector('.sp-line'),f=card.querySelector('.sp-fill'),d=card.querySelector('.sp-dot');
+    if(l)l.style.stroke=col; if(f)f.style.fill=col; if(d)d.style.fill=col;
+  });
+
+  if(!was){
+    el.classList.add('fc-active');
+    const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+    if(l)l.style.stroke='rgba(255,255,255,.70)';
+    if(f)f.style.fill='rgba(255,255,255,.12)';
+    if(d)d.style.fill='#fff';
+  }
+}
+</script>
+</body>
+</html>

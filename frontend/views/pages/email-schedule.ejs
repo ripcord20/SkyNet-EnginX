@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{ --es-bg:#eef2f9;--es-card:#fff;--es-border:#e0e7f3;--es-text:#0d1b3e;--es-muted:#6b7fa8;
+      --es-blue:#1f8bff;--es-blue-deep:#1565e0;--es-green:#16a34a; }
+    body{background:var(--es-bg);font-family:'DM Sans',sans-serif;}
+    .es-hdr{margin-bottom:20px;}
+    .es-title{font-size:22px;font-weight:800;color:var(--es-text);}
+    .es-sub{font-size:13px;color:var(--es-muted);margin-top:3px;}
+
+    .es-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px;}
+    @media(max-width:600px){.es-grid{grid-template-columns:1fr;}}
+
+    .es-card{background:var(--es-card);border:1px solid var(--es-border);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
+    .es-card-h{display:flex;align-items:flex-start;gap:13px;padding:18px 18px 14px;}
+    .es-ico{width:42px;height:42px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;}
+    .es-card-titles{flex:1;min-width:0;}
+    .es-card-title{font-size:15px;font-weight:800;color:var(--es-text);display:flex;align-items:center;gap:8px;}
+    .es-card-desc{font-size:12px;color:var(--es-muted);margin-top:3px;line-height:1.5;}
+    .es-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+    .es-on{background:#e7f7ef;color:#0a8a4f;}
+    .es-off{background:#f1f5f9;color:#94a3b8;}
+
+    .es-body{padding:0 18px 16px;display:flex;flex-direction:column;gap:13px;}
+    .es-field{display:flex;flex-direction:column;gap:6px;}
+    .es-label{font-size:12px;font-weight:700;color:#33415c;}
+    .es-inp,.es-sel{border:1.5px solid var(--es-border);border-radius:9px;padding:9px 11px;font-family:inherit;
+      font-size:13px;color:var(--es-text);background:#f9fbfe;outline:none;transition:all .15s;width:100%;box-sizing:border-box;}
+    .es-inp:focus,.es-sel:focus{border-color:var(--es-blue);background:#fff;box-shadow:0 0 0 3px rgba(31,139,255,.1);}
+
+    /* toggle switch */
+    .es-switch{display:flex;align-items:center;gap:11px;cursor:pointer;}
+    .es-switch input{display:none;}
+    .es-track{width:42px;height:24px;border-radius:20px;background:#cbd5e1;position:relative;transition:background .2s;flex-shrink:0;}
+    .es-track::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .es-switch input:checked + .es-track{background:var(--es-blue);}
+    .es-switch input:checked + .es-track::after{transform:translateX(18px);}
+    .es-switch-lbl{font-size:13.5px;font-weight:700;color:var(--es-text);}
+
+    .es-note{font-size:11px;line-height:1.5;color:#92660a;background:#fff8e6;border:1px solid #ffe2a8;border-radius:9px;padding:9px 11px;}
+    .es-last{font-size:11px;color:#94a3b8;}
+    .es-row2{display:flex;gap:10px;}
+    .es-row2 .es-field{flex:1;}
+
+    .es-foot{margin-top:auto;padding:13px 18px;border-top:1px solid #f0f4fa;background:#fafcff;display:flex;justify-content:flex-end;}
+    .es-btn{padding:9px 18px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;
+      background:linear-gradient(135deg,var(--es-blue),var(--es-blue-deep));color:#fff;display:inline-flex;align-items:center;gap:7px;transition:opacity .15s;}
+    .es-btn:disabled{opacity:.6;cursor:default;}
+    .es-spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:essp .7s linear infinite;}
+    @keyframes essp{to{transform:rotate(360deg);}}
+
+    /* result toast-ish modal */
+    .es-ov{position:fixed;inset:0;z-index:10001;background:rgba(13,27,62,.5);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;animation:esf .25s ease forwards;}
+    @keyframes esf{to{opacity:1;}}
+    .es-mcard{background:#fff;border-radius:20px;max-width:360px;width:100%;padding:30px 26px 24px;text-align:center;
+      transform:translateY(14px) scale(.95);opacity:0;animation:esp .4s cubic-bezier(.21,1.02,.4,1) .05s forwards;box-shadow:0 24px 60px rgba(13,27,62,.28);}
+    @keyframes esp{to{transform:translateY(0) scale(1);opacity:1;}}
+    .es-mico{width:70px;height:70px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+    .es-mico.ok{background:radial-gradient(circle at 50% 40%,#eafaf0,#d8f5e3);}
+    .es-mico.err{background:radial-gradient(circle at 50% 40%,#fdeeee,#fad9d9);}
+    .es-mtitle{font-size:18px;font-weight:800;color:#0d1b3e;}
+    .es-mmsg{font-size:13px;color:#64748b;margin-top:6px;line-height:1.5;}
+    .es-mok{width:100%;height:46px;margin-top:20px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--es-blue),var(--es-blue-deep));color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+      <div class="es-hdr">
+        <div class="es-title">Email Schedule</div>
+        <div class="es-sub">Pusat kendali semua jadwal pengiriman email otomatis — laporan, reminder, dan lainnya</div>
+      </div>
+      <div class="es-grid" id="grid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--es-muted);padding:40px;">Memuat jadwal…</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Modal hasil -->
+<div id="esResult" class="es-ov" style="display:none;">
+  <div class="es-mcard" id="esRCard">
+    <div class="es-mico ok" id="esRIco"></div>
+    <div class="es-mtitle" id="esRTitle">Tersimpan</div>
+    <div class="es-mmsg" id="esRMsg"></div>
+    <button class="es-mok" onclick="document.getElementById('esResult').style.display='none'">Selesai</button>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  const ICONS={
+    chart:'<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6m4 6V5m4 14v-9M3 21h18"/></svg>',
+    bell:'<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>',
+    clock:'<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 2"/></svg>',
+    mail:'<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 6l-10 7L2 6"/></svg>',
+    pulse:'<svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12h4l2 6 4-12 2 6h6"/></svg>'
+  };
+  const ACCENT={ finance_report:'#1f8bff', daily_digest:'#16a34a', invoice_reminder_email:'#e08a00' };
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function api(url,opt){ if(window.App&&App.api) return App.api(url,opt);
+    return fetch('/api'+url,Object.assign({headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'include'},opt||{})).then(r=>r.json()); }
+
+  function hourOpts(sel){
+    let h=''; for(let i=0;i<24;i++) h+='<option value="'+i+'"'+(i===+sel?' selected':'')+'>'+String(i).padStart(2,'0')+':00</option>';
+    return h;
+  }
+  function fieldHtml(key, f, cur){
+    const id='f_'+key+'_'+f;
+    if(f==='enabled'){
+      const on=(cur==='1'||cur===true);
+      return '<label class="es-switch"><input type="checkbox" id="'+id+'" '+(on?'checked':'')+' onchange="updateStatus(\''+key+'\')">'
+        +'<span class="es-track"></span><span class="es-switch-lbl">Aktifkan jadwal</span></label>';
+    }
+    if(f==='frequency'){
+      return '<div class="es-field"><div class="es-label">Frekuensi</div><select class="es-sel" id="'+id+'">'+FREQ_HTML(key,cur)+'</select></div>';
+    }
+    if(f==='hour'){
+      return '<div class="es-field"><div class="es-label">Jam kirim</div><select class="es-sel" id="'+id+'">'+hourOpts(cur)+'</select></div>';
+    }
+    if(f==='hour_due'){
+      return '<div class="es-field"><div class="es-label">Jam (menjelang jatuh tempo)</div><select class="es-sel" id="'+id+'">'+hourOpts(cur)+'</select></div>';
+    }
+    if(f==='hour_overdue'){
+      return '<div class="es-field"><div class="es-label">Jam (sudah menunggak)</div><select class="es-sel" id="'+id+'">'+hourOpts(cur)+'</select></div>';
+    }
+    if(f==='recipients'){
+      return '<div class="es-field"><div class="es-label">Email penerima</div>'
+        +'<input class="es-inp" id="'+id+'" value="'+esc(cur)+'" placeholder="admin@email.com, owner@email.com">'
+        +'<div style="font-size:11px;color:#94a3b8;">Bisa lebih dari satu, pisahkan koma.</div></div>';
+    }
+    return '';
+  }
+  let FREQOPTS={};
+  function FREQ_HTML(key,cur){
+    const opts=FREQOPTS[key]||[];
+    return opts.map(o=>'<option value="'+o.value+'"'+(o.value===cur?' selected':'')+'>'+esc(o.label)+'</option>').join('');
+  }
+
+  function cardHtml(s){
+    const accent=ACCENT[s.key]||'#1f8bff';
+    FREQOPTS[s.key]=s.freqOptions||[];
+    const on=(s.current.enabled==='1'||s.current.enabled===true);
+    // susun field: enabled dulu, lalu yg punya 2 jam digabung baris
+    let body='';
+    body+=fieldHtml(s.key,'enabled',s.current.enabled);
+    const hourPair=s.fields.includes('hour_due')&&s.fields.includes('hour_overdue');
+    if(hourPair){
+      body+='<div class="es-row2">'+fieldHtml(s.key,'hour_due',s.current.hour_due)+fieldHtml(s.key,'hour_overdue',s.current.hour_overdue)+'</div>';
+    }
+    s.fields.forEach(f=>{
+      if(f==='enabled'||f==='hour_due'||f==='hour_overdue') return;
+      body+=fieldHtml(s.key,f,s.current[f]);
+    });
+    if(s.note) body+='<div class="es-note">'+esc(s.note)+'</div>';
+    if(s.lastSent) body+='<div class="es-last">Terakhir terkirim: '+esc(new Date(s.lastSent).toLocaleString('id-ID'))+'</div>';
+
+    return '<div class="es-card" data-key="'+s.key+'">'
+      +'<div class="es-card-h">'
+        +'<div class="es-ico" style="background:'+accent+';">'+(ICONS[s.icon]||ICONS.mail)+'</div>'
+        +'<div class="es-card-titles"><div class="es-card-title">'+esc(s.label)
+          +'<span class="es-status '+(on?'es-on':'es-off')+'" id="st_'+s.key+'">'+(on?'AKTIF':'NONAKTIF')+'</span></div>'
+          +'<div class="es-card-desc">'+esc(s.desc)+'</div></div>'
+      +'</div>'
+      +'<div class="es-body">'+body+'</div>'
+      +'<div class="es-foot"><button class="es-btn" id="save_'+s.key+'" onclick="saveOne(\''+s.key+'\')">'
+        +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Simpan</button></div>'
+      +'</div>';
+  }
+
+  function updateStatus(key){
+    const on=document.getElementById('f_'+key+'_enabled').checked;
+    const st=document.getElementById('st_'+key);
+    if(st){ st.className='es-status '+(on?'es-on':'es-off'); st.textContent=on?'AKTIF':'NONAKTIF'; }
+  }
+
+  async function loadSchedules(){
+    const grid=document.getElementById('grid');
+    try{
+      const r=await api('/email-schedule');
+      if(!r||!r.success){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#dc2626;padding:40px;">Gagal memuat jadwal.</div>'; return; }
+      if(!r.data.length){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--es-muted);padding:40px;">Belum ada jadwal email.</div>'; return; }
+      grid.innerHTML=r.data.map(cardHtml).join('');
+    }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#dc2626;padding:40px;">Kesalahan jaringan.</div>'; }
+  }
+
+  function showResult(ok,title,msg){
+    const ov=document.getElementById('esResult');
+    document.getElementById('esRIco').className='es-mico '+(ok?'ok':'err');
+    document.getElementById('esRIco').innerHTML=ok
+      ? '<svg viewBox="0 0 52 52" width="40" height="40" fill="none"><path d="M14 27l8 8 16-18" stroke="#16a34a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg viewBox="0 0 52 52" width="40" height="40" fill="none"><path d="M18 18l16 16M34 18L18 34" stroke="#dc2626" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    document.getElementById('esRTitle').textContent=title;
+    document.getElementById('esRMsg').textContent=msg||'';
+    ov.style.display='flex';
+    const c=document.getElementById('esRCard'); c.style.animation='none'; void c.offsetWidth; c.style.animation='';
+  }
+
+  async function saveOne(key){
+    const btn=document.getElementById('save_'+key);
+    const get=(f)=>{ const el=document.getElementById('f_'+key+'_'+f); if(!el) return undefined;
+      return el.type==='checkbox'?el.checked:el.value; };
+    const payload={};
+    ['enabled','frequency','hour','hour_due','hour_overdue','recipients'].forEach(f=>{
+      const v=get(f); if(v!==undefined) payload[f]=v;
+    });
+    btn.disabled=true; const _h=btn.innerHTML; btn.innerHTML='<span class="es-spin"></span>Menyimpan…';
+    try{
+      const r=await api('/email-schedule/'+key,{method:'POST',body:JSON.stringify(payload)});
+      if(r&&r.success) showResult(true,'Tersimpan!', r.message||'Jadwal berhasil disimpan dan langsung berlaku.');
+      else showResult(false,'Gagal Menyimpan',(r&&r.message)||'Periksa kembali isian Anda.');
+    }catch(e){ showResult(false,'Gagal Menyimpan','Kesalahan jaringan saat menyimpan.'); }
+    btn.disabled=false; btn.innerHTML=_h;
+  }
+
+  document.getElementById('esResult').addEventListener('click',function(e){ if(e.target===this) this.style.display='none'; });
+
+  loadSchedules();
+</script>
+</body>
+</html>

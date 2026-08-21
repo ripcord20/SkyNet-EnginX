@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --wt-bg:#eef2f9;--wt-card:#fff;--wt-border:#e0e7f3;
+      --wt-text:#0d1b3e;--wt-muted:#6b7fa8;--wt-blue:#1f8bff;--wt-blue-deep:#1565e0;--wt-green:#25D366;
+    }
+    *{box-sizing:border-box;}
+    body{background:var(--wt-bg);font-family:'DM Sans',sans-serif;color:var(--wt-text);}
+    .page-content{padding:22px 24px 44px;}
+    .wt-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+    .wt-title{font-size:22px;font-weight:800;letter-spacing:-.01em;}
+    .wt-sub{font-size:13px;color:var(--wt-muted);margin-top:3px;}
+    .wt-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .wt-btn{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:inherit;
+      display:inline-flex;align-items:center;gap:7px;transition:all .15s;}
+    .wt-btn-primary{background:linear-gradient(135deg,#1f8bff,#1565e0);color:#fff;box-shadow:0 4px 10px -2px rgba(31,122,255,.4);}
+    .wt-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 14px -2px rgba(31,122,255,.5);}
+    .wt-btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+    .wt-btn-ghost{background:#fff;color:var(--wt-text);border:1.5px solid var(--wt-border);}
+    .wt-btn-ghost:hover{border-color:var(--wt-blue);color:var(--wt-blue);}
+    .wt-btn-danger{background:#fff;color:#dc2626;border:1.5px solid #fecaca;}
+    .wt-btn-danger:hover{background:#fef2f2;border-color:#dc2626;}
+
+    .wt-grid{display:grid;grid-template-columns:268px 1fr 1fr;gap:18px;align-items:start;}
+    @media (max-width:1280px){.wt-grid{grid-template-columns:248px 1fr;}.wt-preview-col{grid-column:1 / -1;}}
+    @media (max-width:860px){.wt-grid{grid-template-columns:1fr;}}
+
+    .wt-card{background:var(--wt-card);border:1px solid var(--wt-border);border-radius:16px;overflow:hidden;}
+    .wt-card-h{padding:13px 16px;border-bottom:1px solid var(--wt-border);font-size:12px;font-weight:800;
+      letter-spacing:.04em;text-transform:uppercase;color:var(--wt-muted);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .wt-card-h .cnt{font-size:11px;font-weight:700;color:var(--wt-muted);background:#f1f5fb;padding:2px 9px;border-radius:20px;}
+
+    /* list column */
+    .wt-newbtn{margin:10px 10px 4px;width:calc(100% - 20px);justify-content:center;}
+    .wt-list{display:flex;flex-direction:column;padding:8px;max-height:72vh;overflow-y:auto;}
+    .wt-group-lbl{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#9aa6bd;padding:11px 10px 5px;}
+    .wt-item{display:flex;align-items:flex-start;gap:11px;padding:10px 11px;border-radius:12px;cursor:pointer;border:1.5px solid transparent;transition:all .12s;}
+    .wt-item:hover{background:#f4f8ff;}
+    .wt-item.active{background:#eef5ff;border-color:var(--wt-blue);}
+    .wt-item-ic{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .wt-item.active .wt-item-ic{background:linear-gradient(135deg,#1f8bff,#1565e0) !important;color:#fff !important;}
+    .wt-item-b{flex:1;min-width:0;}
+    .wt-item-t{font-size:13px;font-weight:700;color:var(--wt-text);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wt-item-d{font-size:11px;color:var(--wt-muted);margin-top:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wt-pill{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px;letter-spacing:.03em;}
+    .wt-pill.on{background:#e7f7ef;color:#0a9a5a;}
+    .wt-pill.off{background:#f1f3f7;color:#8a95ad;}
+    .wt-empty{text-align:center;color:#9aa6bd;padding:30px 14px;font-size:12.5px;}
+
+    /* editor */
+    .wt-editor{padding:16px;}
+    .wt-field{margin-bottom:15px;}
+    .wt-field:last-child{margin-bottom:0;}
+    .wt-label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;color:#33415c;margin-bottom:7px;}
+    .wt-inp,.wt-ta,.wt-sel{width:100%;border:1.5px solid var(--wt-border);border-radius:11px;padding:10px 13px;
+      font-family:inherit;font-size:13.5px;color:var(--wt-text);background:#f9fbfe;outline:none;transition:all .15s;resize:vertical;}
+    .wt-inp:focus,.wt-ta:focus,.wt-sel:focus{border-color:var(--wt-blue);background:#fff;box-shadow:0 0 0 3.5px rgba(31,139,255,.1);}
+    .wt-ta{min-height:170px;line-height:1.6;font-family:'DM Mono','DM Sans',monospace;font-size:13px;}
+    .wt-hint{font-size:11px;color:var(--wt-muted);margin-top:6px;line-height:1.5;}
+    .wt-vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;}
+    .wt-chip{font-size:11px;font-weight:700;font-family:'DM Mono',monospace;background:#eef5ff;color:var(--wt-blue-deep);
+      padding:4px 9px;border-radius:7px;border:1px solid #dbe7ff;cursor:pointer;transition:all .12s;}
+    .wt-chip:hover{background:var(--wt-blue);color:#fff;border-color:var(--wt-blue);}
+    .wt-fmt{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+    .wt-fmt button{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;border:1.5px solid var(--wt-border);background:#fff;color:#475569;cursor:pointer;font-family:inherit;}
+    .wt-fmt button:hover{border-color:var(--wt-blue);color:var(--wt-blue);}
+
+    .wt-switch{position:relative;display:inline-flex;align-items:center;gap:9px;cursor:pointer;}
+    .wt-switch input{display:none;}
+    .wt-track{width:42px;height:24px;border-radius:13px;background:#cfd8e8;transition:all .18s;position:relative;flex-shrink:0;}
+    .wt-track::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:all .18s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .wt-switch input:checked + .wt-track{background:linear-gradient(135deg,#22c55e,#16a34a);}
+    .wt-switch input:checked + .wt-track::after{left:20px;}
+    .wt-switch-l{font-size:12.5px;font-weight:700;color:#33415c;}
+
+    /* preview — WhatsApp chat bubble */
+    .wt-preview-col .wt-card{position:sticky;top:14px;}
+    .wa-chat{background:#e5ddd5;background-image:linear-gradient(rgba(229,221,213,.92),rgba(229,221,213,.92));padding:0;min-height:380px;}
+    .wa-bar{background:#075E54;padding:11px 16px;display:flex;align-items:center;gap:11px;}
+    .wa-av{width:38px;height:38px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+    .wa-meta{flex:1;min-width:0;}
+    .wa-name{font-size:14px;font-weight:700;color:#fff;line-height:1.2;}
+    .wa-status{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+    .wa-body{padding:18px 16px 24px;min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;}
+    .wa-bubble{align-self:flex-start;background:#fff;border-radius:0 9px 9px 9px;padding:8px 11px 6px;max-width:86%;
+      box-shadow:0 1px 1px rgba(0,0,0,.13);position:relative;}
+    .wa-bubble::before{content:'';position:absolute;top:0;left:-7px;width:0;height:0;border:7px solid transparent;border-top-color:#fff;border-right:0;}
+    .wa-text{font-size:13.5px;line-height:1.5;color:#111b21;white-space:pre-wrap;word-break:break-word;}
+    .wa-time{font-size:10px;color:#667781;text-align:right;margin-top:3px;}
+    .wa-bold{font-weight:700;} .wa-italic{font-style:italic;} .wa-strike{text-decoration:line-through;}
+    .wa-mono{font-family:'DM Mono',monospace;background:#f0f0f0;padding:1px 4px;border-radius:4px;font-size:12.5px;}
+    .wa-empty{align-self:center;margin:auto;color:#54656f;font-size:13px;text-align:center;background:rgba(255,255,255,.6);padding:14px 18px;border-radius:10px;}
+    .wt-cat-tag{padding:9px 16px;border-bottom:1px solid var(--wt-border);background:#f9fbfe;display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:var(--wt-muted);}
+
+    /* toast (dipakai utk pesan singkat non-blocking) */
+    .wt-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+      background:var(--wt-text);color:#fff;padding:13px 22px;border-radius:13px;font-size:13px;font-weight:600;z-index:10002;
+      transition:all .3s;box-shadow:0 16px 36px rgba(13,27,62,.28);pointer-events:none;max-width:90vw;}
+    .wt-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .wt-toast.err{background:#b91c1c;}
+
+    /* ── Modal hasil/konfirmasi — animasi smooth ease-in (selaras Email Template) ── */
+    .rm-overlay{position:fixed;inset:0;z-index:10001;background:rgba(13,27,62,.5);
+      display:flex;align-items:center;justify-content:center;padding:20px;
+      opacity:0;animation:rmFade .25s ease forwards;}
+    @keyframes rmFade{to{opacity:1;}}
+    .rm-card{background:#fff;border-radius:22px;max-width:380px;width:100%;padding:34px 28px 26px;text-align:center;
+      box-shadow:0 24px 60px rgba(13,27,62,.28);transform:translateY(16px) scale(.94);opacity:0;
+      animation:rmPop .42s cubic-bezier(.21,1.02,.4,1) .06s forwards;}
+    @keyframes rmPop{to{transform:translateY(0) scale(1);opacity:1;}}
+    .rm-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+    .rm-icon.ok{background:radial-gradient(circle at 50% 40%,#eafaf0,#d8f5e3);}
+    .rm-icon.err{background:radial-gradient(circle at 50% 40%,#fdeeee,#fad9d9);}
+    .rm-icon.warn{background:radial-gradient(circle at 50% 40%,#fff5e6,#ffe9c7);}
+    .rm-icon svg{width:46px;height:46px;}
+    .rm-icon::after{content:'';position:absolute;width:78px;height:78px;border-radius:50%;animation:rmPulse 1.1s ease-out .25s;}
+    .rm-icon.ok::after{background:rgba(22,163,74,.18);}
+    .rm-icon.err::after{background:rgba(220,38,38,.16);}
+    .rm-icon.warn::after{background:rgba(224,138,0,.16);}
+    @keyframes rmPulse{0%{transform:scale(.6);opacity:.7;}100%{transform:scale(1.7);opacity:0;}}
+    .rm-draw{stroke-dasharray:48;stroke-dashoffset:48;animation:rmDraw .5s cubic-bezier(.65,0,.45,1) .32s forwards;}
+    @keyframes rmDraw{to{stroke-dashoffset:0;}}
+    .rm-title{font-size:19px;font-weight:800;color:#0d1b3e;letter-spacing:-.2px;opacity:0;animation:rmUp .4s ease .28s forwards;}
+    .rm-msg{font-size:13px;color:#64748b;line-height:1.55;margin-top:7px;opacity:0;animation:rmUp .4s ease .36s forwards;}
+    .rm-ok{width:100%;justify-content:center;margin-top:22px;height:48px;opacity:0;animation:rmUp .4s ease .44s forwards;
+      border:none;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;color:#fff;
+      background:linear-gradient(135deg,#1f8bff,#1565e0);display:inline-flex;align-items:center;}
+    @keyframes rmUp{from{transform:translateY(8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    .rm-actions{display:flex;gap:10px;margin-top:22px;opacity:0;animation:rmUp .4s ease .42s forwards;}
+    .rm-actions button{flex:1;justify-content:center;height:46px;border:none;border-radius:12px;font-weight:800;font-size:13.5px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;}
+    .rm-no{background:#f1f5fb;color:#475569;}
+    .rm-yes{background:#dc2626;color:#fff;}
+    .rm-yes.blue{background:linear-gradient(135deg,#1f8bff,#1565e0);}
+    .rm-spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:rmspin .7s linear infinite;display:inline-block;margin-right:7px;}
+    @keyframes rmspin{to{transform:rotate(360deg);}}
+    /* input nomor pada modal test */
+    .rm-input{width:100%;border:1.5px solid var(--wt-border);border-radius:11px;padding:11px 13px;font-family:inherit;font-size:14px;color:var(--wt-text);background:#f9fbfe;outline:none;margin-top:16px;text-align:center;letter-spacing:.5px;opacity:0;animation:rmUp .4s ease .4s forwards;}
+    .rm-input:focus{border-color:var(--wt-blue);background:#fff;box-shadow:0 0 0 3px rgba(31,139,255,.12);}
+
+    /* badge "dipakai sistem" pada kartu */
+    .wt-live{display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px;margin-left:6px;letter-spacing:.03em;background:#e6f7ff;color:#0a6fb0;}
+    .wt-live.dim{background:#f1f3f7;color:#9aa6bd;}
+    .wt-live .ld{width:5px;height:5px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 2px rgba(22,163,74,.18);}
+    .wt-live.dim .ld{background:#c0c8d6;box-shadow:none;}
+    .wt-usage{font-size:9.5px;color:#aab2c4;font-weight:700;margin-left:6px;}
+    /* badge var tak dikenal */
+    .wt-warnvar{margin-top:8px;font-size:11px;color:#b45309;background:#fff7e8;border:1px solid #fde4bf;border-radius:9px;padding:8px 11px;line-height:1.5;display:none;}
+    .wt-warnvar.show{display:block;}
+    .wt-warnvar code{font-family:'DM Mono',monospace;font-weight:700;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+
+      <div class="wt-hdr">
+        <div>
+          <div class="wt-title">Template Pesan WhatsApp</div>
+          <div class="wt-sub">Atur isi pesan WA yang dikirim sistem — reminder, broadcast, isolir, dan lainnya, dengan preview langsung</div>
+        </div>
+        <div class="wt-actions">
+          <button class="wt-btn wt-btn-ghost" id="btnTest" onclick="openTest()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            Test Kirim
+          </button>
+          <button class="wt-btn wt-btn-ghost" id="btnDelete" onclick="askDelete()" style="display:none;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.87 12.14A2 2 0 0116.14 21H7.86a2 2 0 01-1.99-1.86L5 7m5 4v6m4-6v6M4 7h16M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+            Hapus
+          </button>
+          <button class="wt-btn wt-btn-primary" id="btnSave" onclick="saveCurrent()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="saveLbl">Simpan</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="wt-grid">
+        <!-- LEFT: list -->
+        <div class="wt-card">
+          <div class="wt-card-h">Jenis Template <span class="cnt" id="tplCount">0</span></div>
+          <button class="wt-btn wt-btn-ghost wt-newbtn" onclick="newTemplate()">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+            Template Baru
+          </button>
+          <div class="wt-list" id="list"><div class="wt-empty">Memuat…</div></div>
+        </div>
+
+        <!-- MIDDLE: editor -->
+        <div class="wt-card">
+          <div class="wt-card-h" id="editorTitle">Editor Template</div>
+          <div class="wt-editor">
+            <div class="wt-field">
+              <div class="wt-label">Nama Template</div>
+              <input class="wt-inp" id="fName" placeholder="mis. Reminder H-3" oninput="onEdit()">
+            </div>
+            <div class="wt-field">
+              <div class="wt-label">Kategori</div>
+              <select class="wt-sel" id="fCat" onchange="onCatChange()"></select>
+              <div class="wt-hint" id="catHint"></div>
+            </div>
+            <div class="wt-field">
+              <div class="wt-label">Isi Pesan
+                <label class="wt-switch"><input type="checkbox" id="fActive" checked onchange="onEdit()"><span class="wt-track"></span><span class="wt-switch-l" id="activeLbl">Aktif</span></label>
+              </div>
+              <div class="wt-fmt">
+                <button onclick="wrapSel('*')" title="Tebal">*B*</button>
+                <button onclick="wrapSel('_')" title="Miring">_i_</button>
+                <button onclick="wrapSel('~')" title="Coret">~s~</button>
+                <button onclick="wrapSel('```')" title="Monospace">```</button>
+              </div>
+              <textarea class="wt-ta" id="fContent" placeholder="Tulis isi pesan WhatsApp…&#10;&#10;Gunakan *tebal*, _miring_, dan {variabel} seperti {nama}." oninput="onEdit()" style="margin-top:8px;"></textarea>
+              <div class="wt-hint">Format WhatsApp didukung: <b>*tebal*</b>, <i>_miring_</i>, ~coret~, ```mono```.</div>
+              <div class="wt-warnvar" id="varWarn"></div>
+            </div>
+            <div class="wt-field">
+              <div class="wt-label">Variabel Tersedia <span style="font-weight:600;color:#9aa6bd;">— klik untuk menyisipkan</span></div>
+              <div class="wt-vars" id="varChips"></div>
+              <div class="wt-hint">Variabel otomatis diganti dengan data asli saat pesan dikirim.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: WA preview -->
+        <div class="wt-card wt-preview-col">
+          <div class="wt-card-h">Preview Langsung</div>
+          <div class="wt-cat-tag" id="catTag">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            <span id="catTagLbl">—</span>
+          </div>
+          <div class="wa-chat">
+            <div class="wa-bar">
+              <div class="wa-av"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-8.94 14.46L2 22l5.66-1.48A10 10 0 1012 2z"/></svg></div>
+              <div class="wa-meta">
+                <div class="wa-name" id="waName">Pelanggan</div>
+                <div class="wa-status" id="waStatus">online</div>
+              </div>
+            </div>
+            <div class="wa-body" id="waBody">
+              <div class="wa-empty" id="waEmpty">Pilih atau tulis template untuk melihat preview pesan.</div>
+              <div class="wa-bubble" id="waBubble" style="display:none;">
+                <div class="wa-text" id="waText"></div>
+                <div class="wa-time" id="waTime">00.00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="wt-toast" id="toast"></div>
+
+<!-- Modal hasil (sukses/gagal) beranimasi -->
+<div id="resultModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card" id="rmCard">
+    <div class="rm-icon" id="rmIcon"></div>
+    <div class="rm-title" id="rmTitle">Berhasil</div>
+    <div class="rm-msg" id="rmMsg"></div>
+    <button class="rm-ok" onclick="closeResult()">Selesai</button>
+  </div>
+</div>
+
+<!-- Modal konfirmasi beranimasi -->
+<div id="confirmModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card" id="cfCard">
+    <div class="rm-icon warn" id="cfIcon">
+      <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="rm-draw" d="M26 14v16M26 38h.02" stroke="#e08a00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="rm-title" id="cfTitle">Konfirmasi</div>
+    <div class="rm-msg" id="cfMsg"></div>
+    <div class="rm-actions">
+      <button class="rm-no" onclick="closeConfirm(false)">Batal</button>
+      <button class="rm-yes" id="cfYes" onclick="closeConfirm(true)">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal test-send (input nomor) -->
+<div id="testModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card" id="tsCard">
+    <div class="rm-icon" id="tsIcon" style="background:radial-gradient(circle at 50% 40%,#eaf3ff,#d4e6ff);">
+      <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 30l8 8 16-18" stroke="#1565e0" stroke-width="0" /><path d="M14 26a12 12 0 1021 8l5 1-1-5a12 12 0 00-25-4z" stroke="#1565e0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="rm-title">Kirim Test ke WhatsApp</div>
+    <div class="rm-msg">Pesan akan dikirim nyata ke nomor ini memakai data contoh. Pastikan WA gateway terhubung.</div>
+    <input class="rm-input" id="tsPhone" placeholder="628123456789" inputmode="numeric">
+    <div class="rm-actions">
+      <button class="rm-no" onclick="closeTest()">Batal</button>
+      <button class="rm-yes blue" id="tsSend" onclick="doTestSend()">Kirim</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  // ── Metadata kategori (label, warna, ikon SVG line) ──
+  const CATS = {
+    reminder_before:  { label: 'Reminder Sebelum JT',  color:'#f59e0b', bg:'#fff7e8', icon:'M12 8v4l3 2M3 12a9 9 0 1018 0 9 9 0 00-18 0z' },
+    reminder_due:     { label: 'Reminder Tepat JT',     color:'#2563eb', bg:'#eff4ff', icon:'M8 7V3m8 4V3M3.5 9h17M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z' },
+    reminder_overdue: { label: 'Reminder Overdue',      color:'#ef4444', bg:'#fdecec', icon:'M12 9v4m0 4h.01M10.3 3.86l-8.5 14.7A2 2 0 003.5 21.6h17a2 2 0 001.7-3.04l-8.5-14.7a2 2 0 00-3.4 0z' },
+    broadcast:        { label: 'Broadcast',             color:'#16a34a', bg:'#e9f9ef', icon:'M11 5.88V19.2a1.76 1.76 0 01-3.42.59l-2.14-6.15M18 13a3 3 0 100-6M5.44 13.68A4 4 0 017 6h1.83c4.1 0 7.62-1.23 9.17-3v14c-1.55-1.77-5.07-3-9.17-3H7a4 4 0 01-1.56-.32z' },
+    payment_confirm:  { label: 'Konfirmasi Pembayaran', color:'#059669', bg:'#e7f8f1', icon:'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+    invoice_unpaid:   { label: 'Kirim Invoice (Belum Dibayar)', color:'#d97706', bg:'#fff7e8', icon:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.59a1 1 0 01.7.29l5.42 5.42a1 1 0 01.29.7V19a2 2 0 01-2 2z' },
+    invoice_paid:     { label: 'Kirim Invoice (Sudah Dibayar)', color:'#0284c7', bg:'#eaf5fd', icon:'M9 14l2 2 4-4m4 6V7.83a2 2 0 00-.59-1.41l-3.83-3.83A2 2 0 0013.17 2H6a2 2 0 00-2 2v16a2 2 0 002 2h11a2 2 0 002-2z' },
+    welcome:          { label: 'Selamat Datang',        color:'#0ea5e9', bg:'#e8f6fe', icon:'M16 7a4 4 0 11-8 0 4 4 0 018 0zM6 21v-1a6 6 0 0112 0v1' },
+    isolir:           { label: 'Notifikasi Isolir',     color:'#dc2626', bg:'#fdecec', icon:'M8 11V7a4 4 0 118 0v4M6 11h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z' },
+    restore:          { label: 'Notifikasi Restore',    color:'#16a34a', bg:'#e9f9ef', icon:'M8 11V7a4 4 0 014-4 4 4 0 013.46 2M6 11h12a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6a2 2 0 012-2z' },
+    custom:           { label: 'Custom',                color:'#64748b', bg:'#eef1f6', icon:'M8 10h8M8 14h5m-1 7l-4-3H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2h-5l-4 3z' }
+  };
+  // Helper: bungkus path jadi SVG line icon dgn warna kategori.
+  function catSvg(cat, size){
+    const m=CATS[cat]||CATS.custom; const s=size||18;
+    return '<svg width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">'
+      +'<path stroke-linecap="round" stroke-linejoin="round" d="'+m.icon+'"/></svg>';
+  }
+  const CAT_ORDER = ['reminder_before','reminder_due','reminder_overdue','payment_confirm','invoice_unpaid','invoice_paid','isolir','restore','welcome','broadcast','custom'];
+  const CONTACT_BY_CAT = {
+    reminder_before:{name:'Pelanggan',status:'reminder otomatis'}, reminder_due:{name:'Pelanggan',status:'reminder jatuh tempo'},
+    reminder_overdue:{name:'Pelanggan',status:'reminder overdue'}, broadcast:{name:'Broadcast',status:'pengumuman'},
+    payment_confirm:{name:'Pelanggan',status:'konfirmasi pembayaran'}, invoice_unpaid:{name:'Pelanggan',status:'kirim invoice'},
+    invoice_paid:{name:'Pelanggan',status:'kirim invoice'}, welcome:{name:'Pelanggan Baru',status:'selamat datang'},
+    isolir:{name:'Pelanggan',status:'notifikasi isolir'}, restore:{name:'Pelanggan',status:'notifikasi restore'}, custom:{name:'Pelanggan',status:'online'}
+  };
+  const CAT_HINT = {
+    reminder_before:'Dikirim H-3/H-1 sebelum jatuh tempo (lihat pengaturan Reminder).',
+    reminder_due:'Dikirim tepat di tanggal jatuh tempo.',
+    reminder_overdue:'Dikirim saat tagihan sudah lewat jatuh tempo.',
+    payment_confirm:'Dikirim otomatis saat pembayaran diterima.',
+    invoice_unpaid:'Dipakai tombol "Kirim via WA" untuk invoice belum dibayar.',
+    invoice_paid:'Dipakai tombol "Kirim via WA" untuk invoice sudah dibayar.',
+    welcome:'Dikirim saat pelanggan baru dibuat.',
+    isolir:'Dikirim saat layanan pelanggan diisolir.',
+    restore:'Dikirim saat layanan pelanggan dipulihkan.',
+    broadcast:'Template untuk broadcast manual ke banyak pelanggan.',
+    custom:'Template bebas untuk kebutuhan lain.'
+  };
+  // Variabel per kategori
+  const V = {
+    REMINDER:[['{nama}','Nama pelanggan'],['{nohp}','No HP, 628xxx'],['{invoice}','No invoice'],['{paket}','Nama paket'],['{periode}','Periode tagihan'],['{jumlah}','Total tagihan'],['{jatuh_tempo}','Tgl jatuh tempo'],['{tgl_jatuh_tempo}','Alias jatuh_tempo'],['{status}','Status tagihan'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']],
+    PAYMENT:[['{nama}','Nama pelanggan'],['{nohp}','No HP'],['{invoice}','No invoice'],['{paket}','Nama paket'],['{jumlah}','Jumlah bayar'],['{tgl_bayar}','Tgl pembayaran'],['{metode}','Metode bayar'],['{ref_no}','No referensi'],['{due_date_baru}','JT periode berikutnya'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']],
+    ISOLIR:[['{nama}','Nama pelanggan'],['{cid}','ID pelanggan'],['{phone}','No HP'],['{invoice}','No invoice menunggak'],['{jumlah}','Jumlah tagihan'],['{tgl_jatuh_tempo}','Tgl jatuh tempo'],['{paket}','Nama paket'],['{static_ip}','IP statis'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']],
+    RESTORE:[['{nama}','Nama pelanggan'],['{cid}','ID pelanggan'],['{phone}','No HP'],['{invoice}','No invoice dibayar'],['{jumlah}','Jumlah dibayar'],['{tgl_bayar}','Tgl pembayaran'],['{paket}','Nama paket'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']],
+    WELCOME:[['{nama}','Nama pelanggan'],['{cid}','ID pelanggan'],['{phone}','No HP'],['{email}','Email'],['{alamat}','Alamat'],['{paket}','Nama paket'],['{harga_paket}','Harga paket'],['{tgl_install}','Tgl pemasangan'],['{jatuh_tempo}','JT invoice pertama'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']],
+    INVOICE:[['{nama}','Nama pelanggan'],['{nohp}','No HP'],['{invoice}','No invoice'],['{paket}','Nama paket'],['{periode}','Periode tagihan'],['{jumlah}','Total tagihan'],['{jatuh_tempo}','Tgl jatuh tempo'],['{tgl_bayar}','Tgl bayar (PAID)'],['{metode}','Metode (PAID)'],['{aktif_hingga}','Aktif sampai'],['{status}','Status'],['{link_invoice}','Link invoice publik'],['{link_bayar_permanen}','Link bayar permanen'],['{perusahaan}','Nama perusahaan']]
+  };
+  function varsFor(cat){
+    if(cat==='payment_confirm') return V.PAYMENT;
+    if(cat==='welcome') return V.WELCOME;
+    if(cat==='isolir') return V.ISOLIR;
+    if(cat==='restore') return V.RESTORE;
+    if(cat==='invoice_paid'||cat==='invoice_unpaid') return V.INVOICE;
+    return V.REMINDER;
+  }
+
+  let TPLS = [];      // semua template dari server
+  let CUR = null;     // id template terpilih (null = baru)
+  let _previewTimer = null;
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function api(url,opt){ if(window.App&&App.api) return App.api(url,opt);
+    return fetch('/api'+url,Object.assign({headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'include'},opt||{})).then(r=>r.json()); }
+  function toast(msg,isErr){ const t=document.getElementById('toast'); t.textContent=msg; t.className='wt-toast show'+(isErr?' err':''); setTimeout(()=>t.className='wt-toast'+(isErr?' err':''),3000); }
+
+  // populate category dropdown once
+  (function initCatSelect(){
+    const sel=document.getElementById('fCat');
+    sel.innerHTML=CAT_ORDER.map(c=>'<option value="'+c+'">'+esc(CATS[c].label)+'</option>').join('');
+  })();
+
+  async function loadTemplates(keepId){
+    const list=document.getElementById('list');
+    try{
+      const d=await api('/wa/templates');
+      TPLS = (d&&d.success&&Array.isArray(d.data)) ? d.data : [];
+      document.getElementById('tplCount').textContent=TPLS.length;
+      renderList();
+      if(keepId!==undefined){ const t=TPLS.find(x=>x.id===keepId); if(t){ selectTpl(t.id); return; } }
+      if(TPLS.length && CUR===null){ selectTpl(TPLS[0].id); }
+      else if(!TPLS.length){ newTemplate(); }
+    }catch(e){ list.innerHTML='<div class="wt-empty">Gagal memuat template.</div>'; }
+  }
+
+  function renderList(){
+    const list=document.getElementById('list');
+    if(!TPLS.length){ list.innerHTML='<div class="wt-empty">Belum ada template.<br>Klik "Template Baru".</div>'; return; }
+    const grouped={}; TPLS.forEach(t=>{ (grouped[t.category]=grouped[t.category]||[]).push(t); });
+    let html='';
+    CAT_ORDER.forEach(cat=>{
+      const items=grouped[cat]; if(!items||!items.length) return;
+      const meta=CATS[cat]||CATS.custom;
+      html+='<div class="wt-group-lbl" style="color:'+meta.color+';display:flex;align-items:center;gap:5px;">'+catSvg(cat,12)+'<span>'+esc(meta.label)+'</span></div>';
+      items.forEach(t=>{
+        const active=(t.id===CUR);
+        const snippet=(t.content||t.message||'').replace(/[*_~`{}]/g,'').slice(0,46);
+        const liveBadge = t.is_live
+          ? '<span class="wt-live" title="'+esc(t.live_reason||'')+'"><span class="ld"></span>DIPAKAI</span>'
+          : (t.live_reason ? '<span class="wt-live dim" title="'+esc(t.live_reason)+'"><span class="ld"></span>—</span>' : '');
+        const usage = (t.usage_count>0) ? '<span class="wt-usage">'+t.usage_count+'×</span>' : '';
+        html+='<div class="wt-item'+(active?' active':'')+'" onclick="selectTpl('+t.id+')">'
+          +'<div class="wt-item-ic" style="background:'+meta.bg+';color:'+meta.color+';">'+catSvg(cat,18)+'</div>'
+          +'<div class="wt-item-b"><div class="wt-item-t">'+esc(t.name)+'</div>'
+            +'<div class="wt-item-d">'+esc(snippet||'(kosong)')+'</div>'
+            +'<div style="display:flex;align-items:center;flex-wrap:wrap;"><span class="wt-pill '+(t.is_active?'on':'off')+'">'+(t.is_active?'AKTIF':'NONAKTIF')+'</span>'+liveBadge+usage+'</div></div>'
+          +'</div>';
+      });
+    });
+    list.innerHTML=html;
+  }
+
+  function selectTpl(id){
+    const t=TPLS.find(x=>x.id===id); if(!t) return;
+    CUR=id;
+    document.getElementById('fName').value=t.name||'';
+    document.getElementById('fCat').value=t.category||'custom';
+    document.getElementById('fContent').value=t.content||t.message||'';
+    document.getElementById('fActive').checked=!!t.is_active;
+    document.getElementById('activeLbl').textContent=t.is_active?'Aktif':'Nonaktif';
+    document.getElementById('editorTitle').textContent='Edit: '+(t.name||'Template');
+    document.getElementById('saveLbl').textContent='Simpan Perubahan';
+    document.getElementById('btnDelete').style.display='inline-flex';
+    onCatChange(); renderList(); refreshPreview();
+  }
+
+  function newTemplate(){
+    CUR=null;
+    document.getElementById('fName').value='';
+    document.getElementById('fCat').value='custom';
+    document.getElementById('fContent').value='';
+    document.getElementById('fActive').checked=true;
+    document.getElementById('activeLbl').textContent='Aktif';
+    document.getElementById('editorTitle').textContent='Template Baru';
+    document.getElementById('saveLbl').textContent='Buat Template';
+    document.getElementById('btnDelete').style.display='none';
+    onCatChange(); renderList(); refreshPreview();
+    document.getElementById('fName').focus();
+  }
+
+  function onCatChange(){
+    const cat=document.getElementById('fCat').value;
+    document.getElementById('catHint').textContent=CAT_HINT[cat]||'';
+    const chips=varsFor(cat).map(([v,desc])=>'<span class="wt-chip" title="'+esc(desc)+'" onclick="insertVar(\''+v+'\')">'+esc(v)+'</span>').join('');
+    document.getElementById('varChips').innerHTML=chips;
+    validateVars(); refreshPreview();
+  }
+
+  function onEdit(){
+    document.getElementById('activeLbl').textContent=document.getElementById('fActive').checked?'Aktif':'Nonaktif';
+    validateVars();
+    clearTimeout(_previewTimer); _previewTimer=setTimeout(refreshPreview,300);
+  }
+  // Peringatkan bila isi memuat {variabel} yang tidak dikenal untuk kategori ini.
+  function validateVars(){
+    const cat=document.getElementById('fCat').value;
+    const content=document.getElementById('fContent').value||'';
+    const known=new Set(varsFor(cat).map(([v])=>v.replace(/[{}]/g,'')));
+    ['perusahaan','nama','nohp','phone'].forEach(k=>known.add(k));
+    const used=(content.match(/\{(\w+)\}/g)||[]).map(s=>s.slice(1,-1));
+    const unknown=[...new Set(used.filter(u=>!known.has(u)))];
+    const el=document.getElementById('varWarn');
+    if(unknown.length){
+      el.innerHTML='Variabel tak dikenal untuk kategori ini: '+unknown.map(u=>'<code>{'+esc(u)+'}</code>').join(', ')
+        +'. Akan dibiarkan apa adanya saat dikirim.';
+      el.classList.add('show');
+    } else { el.classList.remove('show'); el.innerHTML=''; }
+  }
+
+  function insertVar(v){
+    const ta=document.getElementById('fContent');
+    const s=ta.selectionStart,e=ta.selectionEnd;
+    ta.value=ta.value.substring(0,s)+v+ta.value.substring(e);
+    ta.selectionStart=ta.selectionEnd=s+v.length; ta.focus();
+    onEdit();
+  }
+  function wrapSel(mark){
+    const ta=document.getElementById('fContent');
+    const s=ta.selectionStart,e=ta.selectionEnd; const sel=ta.value.substring(s,e)||'teks';
+    ta.value=ta.value.substring(0,s)+mark+sel+mark+ta.value.substring(e);
+    ta.selectionStart=s+mark.length; ta.selectionEnd=s+mark.length+sel.length; ta.focus();
+    onEdit();
+  }
+
+  // WA markup → HTML (input sudah di-escape)
+  function waFormat(text){
+    let s=esc(text||'');
+    s=s.replace(/```([\s\S]+?)```/g,(_,t)=>'<span class="wa-mono">'+t+'</span>');
+    s=s.replace(/(?:^|\s)\*([^\s*][^*\n]*[^\s*]|[^\s*])\*(?=\s|[.,;:!?)\]]|$)/g,(m,t)=>m.replace('*'+t+'*','<span class="wa-bold">'+t+'</span>'));
+    s=s.replace(/(?:^|\s)_([^\s_][^_\n]*[^\s_]|[^\s_])_(?=\s|[.,;:!?)\]]|$)/g,(m,t)=>m.replace('_'+t+'_','<span class="wa-italic">'+t+'</span>'));
+    s=s.replace(/(?:^|\s)~([^\s~][^~\n]*[^\s~]|[^\s~])~(?=\s|[.,;:!?)\]]|$)/g,(m,t)=>m.replace('~'+t+'~','<span class="wa-strike">'+t+'</span>'));
+    return s;
+  }
+  function nowJam(){ const d=new Date(); return String(d.getHours()).padStart(2,'0')+'.'+String(d.getMinutes()).padStart(2,'0'); }
+
+  async function refreshPreview(){
+    const content=document.getElementById('fContent').value;
+    const cat=document.getElementById('fCat').value;
+    const meta=CATS[cat]||CATS.custom;
+    document.getElementById('catTagLbl').textContent=meta.label;
+    document.getElementById('catTag').style.color=meta.color;
+    const contact=CONTACT_BY_CAT[cat]||CONTACT_BY_CAT.custom;
+    document.getElementById('waName').textContent=contact.name;
+    document.getElementById('waStatus').textContent=contact.status;
+    if(!content||!content.trim()){
+      document.getElementById('waEmpty').style.display='block';
+      document.getElementById('waBubble').style.display='none';
+      return;
+    }
+    let preview=content;
+    try{
+      const d=await api('/wa/templates/preview',{method:'POST',body:JSON.stringify({content})});
+      if(d&&d.success) preview=d.preview;
+    }catch(e){ /* fallback: raw content */ }
+    document.getElementById('waEmpty').style.display='none';
+    document.getElementById('waBubble').style.display='block';
+    document.getElementById('waText').innerHTML=waFormat(preview);
+    document.getElementById('waTime').textContent=nowJam();
+  }
+
+  async function saveCurrent(){
+    const name=document.getElementById('fName').value.trim();
+    const cat=document.getElementById('fCat').value;
+    const content=document.getElementById('fContent').value;
+    const active=document.getElementById('fActive').checked;
+    if(!name){ toast('Nama template wajib diisi',true); document.getElementById('fName').focus(); return; }
+    if(!content.trim()){ toast('Isi pesan wajib diisi',true); document.getElementById('fContent').focus(); return; }
+    const btn=document.getElementById('btnSave'); btn.disabled=true;
+    try{
+      const url=CUR?('/wa/templates/'+CUR):'/wa/templates';
+      const method=CUR?'PUT':'POST';
+      const d=await api(url,{method,body:JSON.stringify({name,category:cat,content})});
+      if(d&&d.success){
+        const savedId=(d.data&&d.data.id)||CUR;
+        // Server membuat/menyimpan template; status aktif dikelola via toggle.
+        // create → selalu is_active:true. update → tak mengubah is_active.
+        // Jadi: bila status aktif yg diinginkan != status saat ini, panggil toggle.
+        const serverActive = (d.data && typeof d.data.is_active!=='undefined')
+          ? !!d.data.is_active
+          : (CUR ? !!(TPLS.find(x=>x.id===CUR)||{}).is_active : true);
+        if(savedId && serverActive!==active){
+          await api('/wa/templates/'+savedId+'/toggle',{method:'PATCH',body:'{}'});
+        }
+        toast(CUR?'Template diperbarui':'Template dibuat');
+        CUR=savedId; await loadTemplates(savedId);
+        showResult(true, CUR?'Tersimpan!':'Template Dibuat!', 'Perubahan template WhatsApp berhasil disimpan dan langsung berlaku.');
+      } else showResult(false,'Gagal Menyimpan',(d&&d.message)||'Terjadi kesalahan saat menyimpan.');
+    }catch(e){ showResult(false,'Gagal Menyimpan','Kesalahan jaringan. Coba lagi.'); }
+    btn.disabled=false;
+  }
+
+  function askDelete(){
+    if(CUR===null) return;
+    const t=TPLS.find(x=>x.id===CUR); if(!t) return;
+    showConfirm('Hapus Template?', 'Template "'+t.name+'" akan dihapus permanen.', 'Ya, Hapus', async()=>{
+      try{
+        const d=await api('/wa/templates/'+CUR,{method:'DELETE'});
+        if(d&&d.success){ CUR=null; await loadTemplates(); showResult(true,'Terhapus','Template berhasil dihapus.'); }
+        else showResult(false,'Gagal Menghapus',(d&&d.message)||'Terjadi kesalahan.');
+      }catch(e){ showResult(false,'Gagal Menghapus','Kesalahan jaringan.'); }
+    });
+  }
+
+  // ── Modal hasil (sukses/gagal) beranimasi ──
+  const ICON_OK='<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="rm-draw" d="M14 27l8 8 16-18" stroke="#16a34a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_ERR='<svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><path class="rm-draw" d="M18 18l16 16M34 18L18 34" stroke="#dc2626" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function showResult(ok, title, msg){
+    const overlay=document.getElementById('resultModal');
+    const icon=document.getElementById('rmIcon');
+    const card=document.getElementById('rmCard');
+    overlay.style.display='flex';
+    icon.className='rm-icon '+(ok?'ok':'err');
+    icon.innerHTML=ok?ICON_OK:ICON_ERR;
+    document.getElementById('rmTitle').textContent=title||(ok?'Berhasil':'Gagal');
+    document.getElementById('rmMsg').textContent=msg||'';
+    card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+    overlay.style.animation='none'; void overlay.offsetWidth; overlay.style.animation='';
+  }
+  function closeResult(){ document.getElementById('resultModal').style.display='none'; }
+  document.getElementById('resultModal').addEventListener('click',function(e){ if(e.target===this) closeResult(); });
+
+  // ── Modal konfirmasi beranimasi (pengganti confirm bawaan) ──
+  let _confirmCb=null;
+  function showConfirm(title, msg, yesLabel, onYes){
+    _confirmCb=onYes||null;
+    const overlay=document.getElementById('confirmModal');
+    const card=document.getElementById('cfCard');
+    document.getElementById('cfTitle').textContent=title||'Konfirmasi';
+    document.getElementById('cfMsg').textContent=msg||'';
+    document.getElementById('cfYes').textContent=yesLabel||'Ya, Lanjutkan';
+    overlay.style.display='flex';
+    card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+    overlay.style.animation='none'; void overlay.offsetWidth; overlay.style.animation='';
+  }
+  function closeConfirm(ok){
+    document.getElementById('confirmModal').style.display='none';
+    const cb=_confirmCb; _confirmCb=null;
+    if(ok && typeof cb==='function') cb();
+  }
+  document.getElementById('confirmModal').addEventListener('click',function(e){ if(e.target===this) closeConfirm(false); });
+
+  // ── Test kirim WA ke nomor admin ──
+  function openTest(){
+    if(CUR===null){ showResult(false,'Pilih Template','Pilih atau simpan template dulu sebelum mengirim test.'); return; }
+    const t=TPLS.find(x=>x.id===CUR);
+    if(!t){ showResult(false,'Pilih Template','Template belum tersimpan. Simpan dulu, lalu test kirim.'); return; }
+    const overlay=document.getElementById('testModal');
+    const card=document.getElementById('tsCard');
+    document.getElementById('tsPhone').value='';
+    overlay.style.display='flex';
+    card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+    overlay.style.animation='none'; void overlay.offsetWidth; overlay.style.animation='';
+    setTimeout(()=>document.getElementById('tsPhone').focus(),300);
+  }
+  function closeTest(){ document.getElementById('testModal').style.display='none'; }
+  document.getElementById('testModal').addEventListener('click',function(e){ if(e.target===this) closeTest(); });
+  async function doTestSend(){
+    const phone=String(document.getElementById('tsPhone').value||'').replace(/[^\d]/g,'');
+    if(phone.length<8){ document.getElementById('tsPhone').focus(); return; }
+    if(CUR===null) return;
+    const btn=document.getElementById('tsSend'); btn.disabled=true; const _t=btn.innerHTML;
+    btn.innerHTML='<span class="rm-spin"></span>Mengirim';
+    try{
+      const d=await api('/wa/reminders/test-send',{method:'POST',body:JSON.stringify({phone,template_id:CUR})});
+      closeTest();
+      if(d&&d.success){ showResult(true,'Terkirim!','Pesan test berhasil dikirim ke '+phone+'.'); }
+      else showResult(false,'Gagal Mengirim',(d&&d.message)||'WA gateway mungkin tidak terhubung.');
+    }catch(e){ closeTest(); showResult(false,'Gagal Mengirim','Kesalahan jaringan.'); }
+    btn.disabled=false; btn.innerHTML=_t;
+  }
+
+  loadTemplates();
+</script>
+</body>
+</html>

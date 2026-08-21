@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ac-blue:#2563eb;  --ac-blue-d:#1d4ed8; --ac-blue-l:#eff6ff;
+      --ac-green:#16a34a; --ac-green-d:#15803d; --ac-green-l:#f0fdf4;
+      --ac-red:#dc2626;   --ac-red-d:#b91c1c;   --ac-red-l:#fef2f2;
+      --ac-amber:#d97706; --ac-amber-d:#b45309; --ac-amber-l:#fffbeb;
+      --ac-teal:#0891b2;  --ac-teal-l:#ecfeff;
+      --ac-slate:#475569;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .ac { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .ac-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ac-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .ac-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .ac-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue { background:var(--ac-blue); border-color:var(--ac-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ac-blue-d); }
+    .btn-red  { background:var(--ac-red);  border-color:var(--ac-red);  color:#fff; }
+    .btn-red:hover  { background:var(--ac-red-d); }
+    .btn-amber{ background:var(--ac-amber);border-color:var(--ac-amber);color:#fff; }
+    .btn-sm   { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ── ACS STATUS BANNER ── */
+    .acs-banner { border-radius:12px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:14px; border:1.5px solid; }
+    .acs-banner-ok  { background:var(--ac-green-l); border-color:#bbf7d0; color:#15803d; }
+    .acs-banner-off { background:var(--ac-red-l);   border-color:#fecaca; color:#b91c1c; }
+    .acs-banner svg { flex-shrink:0; }
+    .acs-banner-text strong { display:block; font-size:14px; font-weight:700; }
+    .acs-banner-text span   { font-size:12px; opacity:.85; font-family:monospace; }
+
+    /* ── STAT CARDS ── */
+    .ac-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+    @media(max-width:900px){ .ac-cards { grid-template-columns:repeat(2,1fr); } }
+    .ac-card { border-radius:var(--rc); padding:22px; position:relative; overflow:hidden; color:#fff; min-height:110px; display:flex; flex-direction:column; gap:4px; }
+    .c-blue  { background:linear-gradient(135deg,#2563eb,#1d4ed8); }
+    .c-green { background:linear-gradient(135deg,#16a34a,#15803d); }
+    .c-red   { background:linear-gradient(135deg,#dc2626,#b91c1c); }
+    .c-amber { background:linear-gradient(135deg,#d97706,#b45309); }
+    .c-teal  { background:linear-gradient(135deg,#0891b2,#0e7490); }
+    .card-lbl { font-size:10px; font-weight:700; letter-spacing:1.2px; opacity:.8; text-transform:uppercase; }
+    .card-val { font-size:34px; font-weight:800; line-height:1; }
+    .card-sub { font-size:11.5px; opacity:.75; margin-top:2px; }
+    .card-ico { position:absolute; right:18px; top:50%; transform:translateY(-50%); width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; }
+    .card-ico svg { width:21px; height:21px; stroke:rgba(255,255,255,.9); fill:none; }
+
+    /* ── CONFIG PANEL ── */
+    .ac-config { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); padding:18px 20px; margin-bottom:20px; }
+    .ac-config-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .ac-config-hdr h3 { font-size:14px; font-weight:700; color:var(--text); margin:0; display:flex; align-items:center; gap:8px; }
+    .config-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .config-item { display:flex; flex-direction:column; gap:4px; }
+    .config-lbl  { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.6px; }
+    .config-val  { font-size:13px; font-weight:600; color:var(--text); font-family:monospace; }
+    .config-input { padding:7px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:inherit; background:#f8fafc; color:var(--text); outline:none; width:100%; }
+    .config-input:focus { border-color:var(--ac-blue); }
+
+    /* ── TABLE ── */
+    .ac-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .ac-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ac-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ac-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:220px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ac-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .ac-tbl-hdr select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+
+    .ac-table { width:100%; border-collapse:collapse; }
+    .ac-table thead tr { background:#f8fafc; }
+    .ac-table th { padding:10px 14px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .ac-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; cursor:pointer; }
+    .ac-table tbody tr:hover { background:#f8fafc; }
+    .ac-table tbody tr:last-child { border-bottom:none; }
+    .ac-table td { padding:10px 14px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell  { color:var(--faint); font-size:12px; font-weight:600; }
+    .sn-cell   { font-family:monospace; font-size:12px; font-weight:700; color:#334155; }
+    .model-cell { font-size:12.5px; font-weight:600; color:var(--text); }
+    .mfr-sub   { font-size:11px; color:var(--faint); margin-top:1px; }
+    .ip-badge  { font-family:monospace; font-size:12px; background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0; }
+
+    .status-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .sdot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .pill-online  { background:var(--ac-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .pill-online .sdot { background:#22c55e; animation:pulse 2s infinite; }
+    .pill-offline { background:var(--ac-red-l); color:#b91c1c; border:1px solid #fecaca; }
+    .pill-offline .sdot { background:#ef4444; }
+    .pill-warning { background:var(--ac-amber-l); color:var(--ac-amber); border:1px solid #fde68a; }
+    .pill-warning .sdot { background:#f59e0b; animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.35} }
+
+    .signal-wrap { display:flex; align-items:center; gap:5px; }
+    .signal-track { width:60px; height:4px; background:#f1f5f9; border-radius:2px; overflow:hidden; }
+    .signal-fill  { height:100%; border-radius:2px; }
+    .signal-val   { font-family:monospace; font-size:11.5px; font-weight:700; }
+
+    .inform-cell { font-size:12px; color:var(--text); }
+    .inform-sub  { font-size:10.5px; color:var(--faint); margin-top:1px; }
+
+    .act-btns { display:flex; gap:4px; }
+    .act-btn  { padding:4px 9px; border-radius:7px; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:inherit; }
+    .act-detail { background:#fff; border-color:var(--border); color:#374151; }
+    .act-detail:hover { background:#f8fafc; }
+    .act-reboot { background:#fff; border-color:#fde68a; color:var(--ac-amber); }
+    .act-reboot:hover { background:var(--ac-amber-l); }
+
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    /* ── MODAL ── */
+    .ac-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1200; display:none; align-items:center; justify-content:center; }
+    .ac-modal-overlay.show { display:flex; }
+    .ac-modal-box { background:#fff; border-radius:16px; padding:24px; width:500px; max-width:96vw; max-height:90vh; overflow-y:auto; font-family:'Plus Jakarta Sans',sans-serif; }
+    .ac-modal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+    .ac-modal-hdr h3 { font-size:16px; font-weight:800; color:var(--text); margin:0; }
+    .ac-modal-close { background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:5px 11px; cursor:pointer; font-size:16px; color:var(--muted); font-family:inherit; }
+    .ac-modal-close:hover { background:#f1f5f9; }
+
+    .info-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+    .info-item { background:#f8fafc; border:1.5px solid var(--border); border-radius:10px; padding:10px 13px; }
+    .info-lbl  { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.7px; margin-bottom:4px; }
+    .info-val  { font-size:13px; font-weight:600; color:var(--text); word-break:break-all; }
+    .info-val.mono { font-family:monospace; font-size:12px; }
+
+    .form-group  { margin-bottom:12px; }
+    .form-label  { display:block; font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+    .form-control{ width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; background:#f8fafc; color:var(--text); outline:none; font-family:inherit; }
+    .form-control:focus { border-color:var(--ac-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .form-row    { display:flex; gap:10px; }
+    .form-row .form-group { flex:1; }
+    .modal-footer{ display:flex; justify-content:flex-end; gap:8px; margin-top:18px; padding-top:14px; border-top:1.5px solid #f1f5f9; }
+
+    /* ── TABS ── */
+    .detail-tab { background:none; border:none; border-bottom:2.5px solid transparent; padding:8px 14px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; transition:all .15s; margin-bottom:-1.5px; }
+    .detail-tab:hover { color:var(--text); }
+    .detail-tab.active { color:var(--ac-blue); border-bottom-color:var(--ac-blue); }
+
+    @media(max-width:768px) {
+      .ac-cards { grid-template-columns:repeat(2,1fr); }
+      .search-wrap input { width:150px; }
+      .ac-table th:nth-child(4),.ac-table td:nth-child(4),
+      .ac-table th:nth-child(7),.ac-table td:nth-child(7) { display:none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout ac">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ac-hdr">
+        <div class="ac-hdr-l">
+          <h1>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--ac-blue)"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            TR-069 ACS
+          </h1>
+          <p>Auto Configuration Server — monitoring ONT/modem via CWMP</p>
+        </div>
+        <div class="ac-hdr-r">
+          <button class="btn btn-outline btn-sm" id="btnAcsConfig">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+            Konfigurasi ACS
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- ACS Status Banner -->
+      <div class="acs-banner acs-banner-ok" id="acsBanner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <div class="acs-banner-text">
+          <strong id="acsStatusText">ACS Server Berjalan</strong>
+          <span id="acsUrlText">URL: http://192.168.1.4:7547/acs</span>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="ac-cards">
+        <div class="ac-card c-blue">
+          <span class="card-lbl">Total Devices</span>
+          <span class="card-val" id="statTotal">0</span>
+          <span class="card-sub">ONT via TR-069</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+        </div>
+        <div class="ac-card c-green">
+          <span class="card-lbl">Online</span>
+          <span class="card-val" id="statOnline">0</span>
+          <span class="card-sub">ONT aktif</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+        </div>
+        <div class="ac-card c-red">
+          <span class="card-lbl">Offline</span>
+          <span class="card-val" id="statOffline">0</span>
+          <span class="card-sub">Tidak merespons</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+        </div>
+        <div class="ac-card c-amber">
+          <span class="card-lbl">Warning</span>
+          <span class="card-val" id="statWarning">0</span>
+          <span class="card-sub">Sinyal lemah</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Device table -->
+      <div class="ac-tbl-wrap">
+        <div class="ac-tbl-hdr">
+          <div class="ac-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ac-blue)" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Perangkat Terkoneksi
+            <span class="ac-count" id="devCount">0 device</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="searchInput" placeholder="Cari SN, model, IP...">
+            </div>
+            <select id="filterStatus">
+              <option value="">All Status</option>
+              <option value="online">Online</option>
+              <option value="offline">Offline</option>
+              <option value="warning">Warning</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ac-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Serial Number</th>
+                <th>Model / Brand</th>
+                <th>IP Address</th>
+                <th>Status</th>
+                <th>RX Signal</th>
+                <th>Last Inform</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="deviceTbody">
+              <tr><td colspan="8">
+                <div class="tbl-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+                  <p>Memuat data...</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── CONFIG MODAL ── -->
+<div class="ac-modal-overlay" id="configModal">
+  <div class="ac-modal-box">
+    <div class="ac-modal-hdr">
+      <h3>Konfigurasi ACS Server</h3>
+      <button class="ac-modal-close" onclick="AcsPage.closeConfigModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ACS Port</label>
+      <input type="number" id="cfgPort" class="form-control" value="7547">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" id="cfgUsername" class="form-control" placeholder="digs">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="cfgPassword" class="form-control" placeholder="Kosong = tanpa auth">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Inform Period (detik)</label>
+      <input type="number" id="cfgInformPeriod" class="form-control" value="300">
+      <div style="font-size:11px;color:var(--faint);margin-top:4px;">ONT akan check-in setiap N detik (300 = 5 menit)</div>
+    </div>
+    <div style="background:var(--ac-blue-l);border:1.5px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:4px;">
+      <div style="font-size:12px;font-weight:700;color:var(--ac-blue);margin-bottom:6px;">URL untuk diisi di ONT/modem:</div>
+      <div style="font-family:monospace;font-size:13px;color:#1e40af;" id="acsUrlPreview">http://192.168.1.4:7547/acs</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="AcsPage.closeConfigModal()">Batal</button>
+      <button class="btn btn-blue btn-sm" id="btnSaveConfig" onclick="AcsPage.saveConfig()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DETAIL MODAL ── -->
+<div class="ac-modal-overlay" id="detailModal">
+  <div class="ac-modal-box" style="max-width:580px;">
+    <div class="ac-modal-hdr">
+      <h3 id="detailTitle">Detail ONT</h3>
+      <button class="ac-modal-close" onclick="AcsPage.closeDetailModal()">✕</button>
+    </div>
+
+    <!-- Info Grid -->
+    <div class="info-grid" id="detailGrid"></div>
+
+    <!-- Tab switcher -->
+    <div style="display:flex;gap:4px;margin:14px 0 10px;border-bottom:1.5px solid #f1f5f9;padding-bottom:0;">
+      <button class="detail-tab active" id="tab-info" onclick="AcsPage.switchTab('info')">Info</button>
+      <button class="detail-tab" id="tab-wifi" onclick="AcsPage.switchTab('wifi')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        WiFi Manager
+      </button>
+    </div>
+
+    <!-- Tab: Info -->
+    <div id="panel-info">
+      <div style="font-size:12px;color:var(--muted);padding:4px 0;">Signal history dan parameter TR-069 tersimpan di database.</div>
+    </div>
+
+    <!-- Tab: WiFi Manager -->
+    <div id="panel-wifi" style="display:none;">
+      <!-- Current WiFi info -->
+      <div style="background:#f8fafc;border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">WiFi Saat Ini</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:10px;color:var(--faint);">SSID</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);font-family:monospace;" id="currentSsid">—</div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--faint);">Password</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="font-size:13px;font-weight:700;color:var(--text);font-family:monospace;" id="currentPass">—</div>
+              <button onclick="AcsPage.togglePassVis()" style="background:none;border:none;cursor:pointer;color:var(--faint);padding:2px;" id="btnTogglePass" title="Tampilkan/sembunyikan">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--faint);">Channel</div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);" id="currentChannel">—</div>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="AcsPage.refreshWifi()" style="margin-top:10px;font-size:11px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          Refresh dari ONT
+        </button>
+      </div>
+
+      <!-- Change WiFi form -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">Ubah WiFi</div>
+        <div class="form-group">
+          <label class="form-label">SSID Baru <span style="font-weight:400;color:var(--faint)">(nama jaringan WiFi)</span></label>
+          <input type="text" id="newSsid" class="form-control" placeholder="Contoh: RumahSaya_2.4G" maxlength="32">
+          <div style="font-size:10.5px;color:var(--faint);margin-top:3px;">1-32 karakter. Kosongkan jika tidak ingin mengubah SSID.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password WiFi Baru</label>
+          <div style="position:relative;">
+            <input type="password" id="newPass" class="form-control" placeholder="Minimal 8 karakter" maxlength="63" style="padding-right:38px;">
+            <button onclick="AcsPage.toggleNewPass()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--faint);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div style="font-size:10.5px;color:var(--faint);margin-top:3px;">8-63 karakter. Kosongkan jika tidak ingin mengubah password.</div>
+        </div>
+
+        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:12px;color:#92400e;margin-bottom:12px;">
+          ⚠ Perubahan akan diterapkan saat ONT check-in berikutnya (~5 menit). WiFi ONT akan restart sebentar.
+        </div>
+
+        <button class="btn btn-blue btn-sm" id="btnSetWifi" onclick="AcsPage.setWifi()" style="width:100%;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+          Terapkan Perubahan WiFi
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div style="display:flex;gap:8px;padding-top:14px;border-top:1.5px solid #f1f5f9;margin-top:14px;">
+      <button class="btn btn-amber btn-sm" id="btnReboot" onclick="AcsPage.rebootDevice()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Reboot ONT
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="AcsPage.closeDetailModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/acs.js"></script>
+</body>
+</html>

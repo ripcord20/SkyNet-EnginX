@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root { --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3; --d-text:#0d1b3e; --d-muted:#6b7fa8; --d-blue1:#1a6ef5; }
+    .bill-page { font-family:'DM Sans',sans-serif; }
+    /* ── STAT CARDS — single strip ── */
+    .fin-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    /* Baris bawah (kartu 4-6) diberi garis pemisah atas */
+    .fin-grid > .fin-card:nth-child(n+4) { border-top: 1px solid #e8eaed; }
+    @media(min-width:1600px){
+      .fin-grid { grid-template-columns: repeat(6, 1fr); }
+      .fin-grid > .fin-card:nth-child(n+4) { border-top: none; }
+    }
+    @media(max-width:900px){ .fin-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media(max-width:560px){ .fin-grid { grid-template-columns: 1fr; } }
+    .fin-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+      min-height: 108px;
+    }
+    .fin-card::before, .fin-card::after { display:none !important; content:none !important; }
+    .fin-card .orb1, .fin-card .orb2 { display:none !important; }
+    .fin-card:last-child { border-right: none; }
+    .fin-card:hover { background: #fafbff; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill { display:inline-flex; align-items:center; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-teal   { background:#ccfbf1; color:#0d9488; }
+    .pill-orange { background:#ffedd5; color:#c2410c; }
+    #bcard-potensi .card-val { color:#0d9488; }
+    #bcard-sisa .card-val { color:#c2410c; }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .card-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .fin-grid { grid-template-columns:repeat(2,1fr); }
+      .fin-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .fin-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .fin-card:nth-child(even) { border-right:none; }
+      .fin-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .fin-grid { grid-template-columns:1fr; }
+      .fin-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+    }
+    .fc-sub  { font-size:12px;color:rgba(255,255,255,.7); }
+    .fc-icon { width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .fc-bar  { height:4px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:16px; }
+    .fc-bar-f{ height:100%;border-radius:99px;background:rgba(255,255,255,.8);transition:width .7s; }
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .4s ease both} .a2{animation:fadeUp .4s .07s ease both}
+    .a3{animation:fadeUp .4s .14s ease both} .a4{animation:fadeUp .4s .21s ease both}
+    .a5{animation:fadeUp .4s .28s ease both}
+    /* Table card */
+    .bill-card { background:#fff;border:1px solid var(--d-border);border-radius:22px;overflow:hidden; }
+    .bill-card-header { padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid #f0f4ff; }
+    .bill-search { position:relative;flex:1;min-width:180px;max-width:260px; }
+    .bill-search svg { position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none; }
+    .bill-search input { width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--d-border);border-radius:10px;font-size:13px;outline:none;box-sizing:border-box;background:#f8faff;transition:all .15s; }
+    .bill-search input:focus { border-color:var(--d-blue1);background:#fff; }
+    .bill-filter select { padding:8px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-size:13px;outline:none;background:#f8faff;color:var(--d-text);cursor:pointer; }
+    .bill-count { margin-left:auto;font-size:12px;color:var(--d-muted);font-weight:600; }
+    .bill-table { width:100%;border-collapse:collapse;font-size:13px; }
+    .bill-table thead th { padding:10px 16px;font-size:10.5px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;background:#f8faff;text-align:left;white-space:nowrap;border-bottom:1px solid #f0f4ff; }
+    .bill-table tbody td { padding:13px 16px;border-bottom:1px solid #f8faff;vertical-align:middle; }
+    .bill-table tbody tr:last-child td { border-bottom:none; }
+    .bill-table tbody tr:hover td { background:#f8faff; }
+    /* Status badges */
+    .pm-cash{background:#f0fdf4;color:#16a34a;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    .pm-transfer{background:#eff6ff;color:#1d4ed8;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    .pm-qris{background:#f0fdfa;color:#0d9488;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    .pm-gateway{background:#fff7ed;color:#ea580c;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    .pm-ewallet{background:#f0f9ff;color:#0891b2;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    .pm-other{background:#f8fafc;color:#64748b;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;display:inline-block;}
+    /* Warna badge per gateway online (palet biru/teal). pm-gateway di atas jadi dasar. */
+    .pm-tripay{background:#eff6ff;color:#2563eb;}
+    .pm-midtrans{background:#eef2ff;color:#1e3a8a;}
+    .pm-xendit{background:#eff6ff;color:#1d4ed8;}
+    .pm-duitku{background:#ecfeff;color:#0284c7;}
+    .st-paid     { display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700; }
+    .st-unpaid   { display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#d97706;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700; }
+    .st-overdue  { display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700; }
+    .st-cancelled{ display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;color:#64748b;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700; }
+    /* Action buttons */
+    .act-btn { display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .12s;white-space:nowrap; }
+    .act-inv  { background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8; } .act-inv:hover  { background:#dbeafe; }
+    .act-wa   { background:#f0fdf4;border-color:#bbf7d0;color:#16a34a; } .act-wa:hover   { background:#dcfce7; }
+    .act-email{ background:#eff6ff;border-color:#bfdbfe;color:#2563eb; } .act-email:hover{ background:#dbeafe; }
+    .act-pay  { background:linear-gradient(135deg,#1a6ef5,#0047cc);border-color:transparent;color:#fff; } .act-pay:hover { opacity:.9; }
+    .act-del  { background:#fef2f2;border-color:#fecaca;color:#dc2626; } .act-del:hover  { background:#fee2e2; }
+    .tbl-empty { padding:50px 20px;text-align:center;color:#94a3b8; }
+    .tbl-empty svg { width:40px;height:40px;margin-bottom:10px;opacity:.35; }
+    .bill-pagination { padding:14px 20px;display:flex;align-items:center;justify-content:center;gap:6px;border-top:1px solid #f0f4ff; }
+    .pg-btn { padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--d-border);background:#fff;color:var(--d-text);transition:background .15s; }
+    .pg-btn:hover { background:#f4f8ff; }
+    .pg-btn.active { background:var(--d-blue1);border-color:var(--d-blue1);color:#fff; }
+    @media(max-width:640px) {
+      .col-hide-sm { display:none !important; }
+    }
+  
+    /* ── Card active state ── */
+    .fin-card { cursor: pointer; }
+    .fin-card.fc-active { background: #2563eb; border-color: #2563eb; }
+    .fin-card.fc-active:hover { background: #1d4ed8; }
+    .fin-card.fc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .fin-card.fc-active .card-val  { color: #fff; }
+    .fin-card.fc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .fin-card.fc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fin-card.fc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .fin-card.fc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .fin-card.fc-active .sp-dot    { fill: #fff !important; }
+  </style>
+</head>
+<body>
+<div class="app-layout bill-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;" class="a1">
+        <div>
+          <h1 style="font-size:22px;font-weight:800;color:#0d1b3e;margin:0 0 4px;">Billing & Invoice</h1>
+          <p style="font-size:13px;color:var(--d-muted);margin:0;" id="billHeaderSub">Manajemen tagihan dan invoice pelanggan</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="openResetInvoices()" id="btnResetInvoices" style="display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #fecaca;background:#fff;color:#dc2626;transition:all .15s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='#fff'" title="Hapus invoice (destructive)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+            Reset Invoice
+          </button>
+          <button onclick="markOverdue()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;color:#374151;transition:all .15s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            Mark Overdue
+          </button>
+          <button onclick="openProofInbox()" id="btnProofInbox" style="position:relative;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;transition:all .15s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Verifikasi Bukti
+            <span id="proofInboxBadge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center;">0</span>
+          </button>
+          <button onclick="openGenerate()" style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Generate Invoice
+          </button>
+        </div>
+      </div>
+
+      <!-- Period selector untuk stat cards -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:600;color:#64748b;">Periode statistik:</span>
+        <select id="statMonth" onchange="onStatPeriodChange()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;color:#374151;background:#fff;cursor:pointer;">
+          <option value="1">Januari</option><option value="2">Februari</option>
+          <option value="3">Maret</option><option value="4">April</option>
+          <option value="5">Mei</option><option value="6">Juni</option>
+          <option value="7">Juli</option><option value="8">Agustus</option>
+          <option value="9">September</option><option value="10">Oktober</option>
+          <option value="11">November</option><option value="12">Desember</option>
+        </select>
+        <select id="statYear" onchange="onStatPeriodChange()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;color:#374151;background:#fff;cursor:pointer;"></select>
+        <button onclick="resetStatPeriod()" style="padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:12px;font-weight:600;color:#1a6ef5;background:#fff;cursor:pointer;">Bulan ini</button>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="fin-grid">
+
+        <!-- Lunas -->
+        <div class="fin-card fc-active" id="bcard-paid" data-filter="paid" onclick="bilCardClick(this)">
+          <div class="card-lbl">Lunas</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcPaid">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="cp-paid">—</span>
+                <span class="card-sub" id="fcRevenueSub">Invoice lunas</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-paid" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-paid-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-paid-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-paid-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Belum Bayar -->
+        <div class="fin-card" id="bcard-unpaid" data-filter="unpaid" onclick="bilCardClick(this)">
+          <div class="card-lbl">Belum Bayar</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcUnpaid">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="cp-unpaid">—</span>
+                <span class="card-sub">Invoice unpaid</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-unpaid" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-unpaid-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-unpaid-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-unpaid-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="fin-card" id="bcard-overdue" data-filter="overdue" onclick="bilCardClick(this)">
+          <div class="card-lbl">Overdue</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcOverdue">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="cp-overdue">—</span>
+                <span class="card-sub">Jatuh tempo lewat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-overdue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-overdue-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-overdue-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-overdue-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="fin-card" id="bcard-revenue" data-filter="" onclick="bilCardClick(this)">
+          <div class="card-lbl">Revenue</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcRevenueVal">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="cp-revenue">—</span>
+                <span class="card-sub" id="fcRevenueAmt">Penerimaan bulan ini</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-revenue" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-revenue-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-revenue-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-revenue-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Potensi Penerimaan -->
+        <div class="fin-card" id="bcard-potensi">
+          <div class="card-lbl">Total Potensi Penerimaan · Bulan Ini</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcPotensiVal">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-teal" id="cp-potensi">—</span>
+                <span class="card-sub" id="fcPotensiSub">0 invoice · 0 plgn</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-potensi" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-potensi-fill" d="" fill="#0d9488" opacity=".12"/>
+                <path class="sp-line" id="sp-potensi-line" d="" stroke="#0d9488"/>
+                <circle class="sp-dot" id="sp-potensi-dot" r="2.5" fill="#0d9488"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sisa Tertagih -->
+        <div class="fin-card" id="bcard-sisa">
+          <div class="card-lbl">Sisa Tertagih · Bulan Ini</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="fcSisaVal">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-orange" id="cp-sisa">—</span>
+                <span class="card-sub" id="fcSisaSub">0 invoice belum lunas</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-sisa" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-sisa-fill" d="" fill="#c2410c" opacity=".12"/>
+                <path class="sp-line" id="sp-sisa-line" d="" stroke="#c2410c"/>
+                <circle class="sp-dot" id="sp-sisa-dot" r="2.5" fill="#c2410c"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="bill-card a5">
+        <div class="bill-card-header">
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">Daftar Invoice</div>
+            <div style="font-size:12px;color:var(--d-muted);margin-top:2px;" id="billSub">–</div>
+          </div>
+          <div class="bill-search">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="searchInvoice" placeholder="Cari invoice, nama, CID...">
+          </div>
+          <div class="bill-filter">
+            <select id="invoiceStatus">
+              <option value="">Semua Status</option>
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="bill-filter">
+            <select id="invoiceMonth" title="Filter periode bulan">
+              <option value="">Semua Bulan</option>
+              <option value="1">Januari</option><option value="2">Februari</option>
+              <option value="3">Maret</option><option value="4">April</option>
+              <option value="5">Mei</option><option value="6">Juni</option>
+              <option value="7">Juli</option><option value="8">Agustus</option>
+              <option value="9">September</option><option value="10">Oktober</option>
+              <option value="11">November</option><option value="12">Desember</option>
+            </select>
+          </div>
+          <div class="bill-filter">
+            <select id="invoiceYear" title="Filter periode tahun">
+              <option value="">Semua Tahun</option>
+            </select>
+          </div>
+          <div class="bill-count" id="billCount">–</div>
+        </div>
+        <!-- Bulk action bar — muncul saat ada invoice tercentang -->
+        <div id="bulkBar" style="display:none;align-items:center;gap:12px;padding:10px 14px;margin:0 0 10px;background:#eff4ff;border:1.5px solid #c7d7fe;border-radius:10px;">
+          <span style="font-size:13px;font-weight:600;color:#1e3a8a;"><span id="bulkCount">0</span> invoice terpilih</span>
+          <button class="act-btn" onclick="bulkSendEmail()" style="color:#1d4ed8;border-color:#c7d7fe;background:#fff;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Kirim Email Terpilih
+          </button>
+          <button class="act-btn" onclick="bulkDeleteSelected()" style="color:#dc2626;border-color:#fecaca;background:#fff;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Hapus Terpilih
+          </button>
+          <button class="act-btn" onclick="clearInvoiceSelection()" style="color:#64748b;border-color:#e2e8f0;background:#fff;">Batal</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="bill-table">
+            <thead>
+              <tr>
+                <th style="width:34px;text-align:center;"><input type="checkbox" id="selectAllInv" onchange="toggleSelectAllInv(this)" style="cursor:pointer;width:15px;height:15px;"></th>
+                <th>Invoice #</th>
+                <th>Pelanggan</th>
+                <th>Tagihan</th>
+                <th>Jatuh Tempo</th>
+                <th class="col-hide-sm">Periode</th>
+                <th>Status & Pembayaran</th>
+                <th class="col-hide-sm">Metode</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceTable">
+              <tr><td colspan="8"><div class="tbl-empty"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><p>Memuat data...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bill-pagination" id="billPagination"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Generate Modal -->
+<div class="modal-overlay" id="generateModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <h2>Generate Invoice Bulanan</h2>
+      <button class="modal-close" onclick="closeGenerateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--d-muted);margin-bottom:16px;">Generate invoice otomatis untuk semua pelanggan dengan status <b>active</b>, <b>isolated</b>, atau <b>suspended</b>. Pelanggan <b>inactive</b> dan invoice yang sudah ada di periode ini akan dilewati.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <label class="form-label">Bulan</label>
+          <select class="form-control" id="genMonth">
+            <option value="1">Januari</option><option value="2">Februari</option>
+            <option value="3">Maret</option><option value="4">April</option>
+            <option value="5">Mei</option><option value="6">Juni</option>
+            <option value="7">Juli</option><option value="8">Agustus</option>
+            <option value="9">September</option><option value="10">Oktober</option>
+            <option value="11">November</option><option value="12">Desember</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Tahun</label>
+          <input type="number" class="form-control" id="genYear" min="2020" max="2099">
+        </div>
+      </div>
+
+      <!-- Cakupan: semua pelanggan atau pelanggan tertentu -->
+      <label class="form-label" style="margin-bottom:6px;">Cakupan Pelanggan</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;" id="genScopeGroup">
+        <label class="gen-scope-opt" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1.5px solid #1a6ef5;border-radius:10px;cursor:pointer;background:#eff6ff;transition:all .15s;">
+          <input type="radio" name="genScope" value="all" checked onchange="onGenScopeChange()">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0f172a;">Semua Pelanggan</div>
+            <div style="font-size:11px;color:#64748b;">Eligible di periode ini</div>
+          </div>
+        </label>
+        <label class="gen-scope-opt" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;">
+          <input type="radio" name="genScope" value="selected" onchange="onGenScopeChange()">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0f172a;">Pelanggan Tertentu</div>
+            <div style="font-size:11px;color:#64748b;">Pilih satu / beberapa</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Customer picker (muncul saat mode 'selected') -->
+      <div id="genCustPicker" style="display:none;margin-bottom:12px;">
+        <div style="position:relative;">
+          <input type="text" class="form-control" id="genCustSearch" placeholder="Cari nama / Customer ID…" autocomplete="off" oninput="onGenCustSearch()" onfocus="onGenCustSearch()" style="margin-bottom:0;">
+          <div id="genCustResults" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;max-height:172px;overflow-y:auto;box-shadow:0 8px 24px -8px rgba(13,27,62,.25);"></div>
+        </div>
+        <div id="genCustChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;"></div>
+        <div id="genCustEmpty" style="font-size:11.5px;color:#94a3b8;margin-top:8px;">Belum ada pelanggan dipilih.</div>
+      </div>
+
+      <!-- Preview customer aktif (loaded saat modal dibuka) -->
+      <div id="genPreview" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:12px;color:#64748b;">
+        <span id="genPreviewLoading">Memeriksa customer…</span>
+        <div id="genPreviewContent" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;">
+            <div><span style="color:#64748b;" title="Customer dengan status active, isolated, atau suspended (inactive di-skip)">Customer eligible:</span> <span id="gpActiveCount" style="font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;">–</span></div>
+            <div><span style="color:#64748b;">Punya paket:</span> <span id="gpWithPackage" style="font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;">–</span></div>
+          </div>
+          <div id="gpWarn" style="display:none;font-size:11.5px;color:#b45309;border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <div style="padding:11px 13px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;font-size:12.5px;color:#15803d;">
+        ✓ Invoice tidak akan duplikat — pelanggan yang sudah punya invoice periode ini akan dilewati.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeGenerateModal()">Batal</button>
+      <button class="btn btn-primary" id="confirmGenerateBtn" onclick="confirmGenerate()">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Invoice Modal (DESTRUCTIVE) -->
+<div class="modal-overlay" id="resetInvoiceModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;border-bottom:none;">
+      <h2 style="color:#fff;display:flex;align-items:center;gap:10px;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        Reset / Hapus Invoice
+      </h2>
+      <button class="modal-close" onclick="closeResetModal()" style="color:#fff;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="padding:12px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:12.5px;color:#991b1b;line-height:1.6;margin-bottom:16px;">
+        <b>⚠ Aksi ini tidak dapat dibatalkan.</b> Invoice & pembayaran terkait akan dihapus permanen dari database. Pastikan Anda sudah backup atau export data terlebih dahulu.
+      </div>
+
+      <label class="form-label" style="margin-bottom:6px;">Mode Penghapusan</label>
+      <div style="display:grid;gap:8px;margin-bottom:14px;" id="resetModeGroup">
+        <label class="reset-mode-opt" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;">
+          <input type="radio" name="resetMode" value="unpaid" checked onchange="onResetModeChange()" style="margin-top:3px;">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#0f172a;">Hanya Invoice Belum Lunas</div>
+            <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Hapus invoice dengan status <b>unpaid</b> dan <b>overdue</b>. Invoice yang sudah lunas tetap aman. <span style="color:#16a34a;font-weight:700;">Direkomendasikan</span></div>
+          </div>
+        </label>
+        <label class="reset-mode-opt" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;transition:all .15s;">
+          <input type="radio" name="resetMode" value="period" onchange="onResetModeChange()" style="margin-top:3px;">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#0f172a;">Periode Tertentu</div>
+            <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Hapus seluruh invoice (lunas & belum lunas) di bulan/tahun tertentu.</div>
+            <div id="resetPeriodInputs" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+              <select class="form-control" id="resetMonth" style="font-size:12.5px;padding:7px 10px;" onchange="loadResetPreview()">
+                <option value="1">Januari</option><option value="2">Februari</option>
+                <option value="3">Maret</option><option value="4">April</option>
+                <option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option>
+                <option value="9">September</option><option value="10">Oktober</option>
+                <option value="11">November</option><option value="12">Desember</option>
+              </select>
+              <input type="number" class="form-control" id="resetYear" placeholder="Tahun" min="2020" max="2099" style="font-size:12.5px;padding:7px 10px;" onchange="loadResetPreview()">
+            </div>
+          </div>
+        </label>
+        <label class="reset-mode-opt" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border:1.5px solid #fecaca;border-radius:10px;cursor:pointer;transition:all .15s;background:#fef2f2;">
+          <input type="radio" name="resetMode" value="all" onchange="onResetModeChange()" style="margin-top:3px;">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#991b1b;">Semua Invoice (NUKLIR)</div>
+            <div style="font-size:11.5px;color:#991b1b;margin-top:2px;">Hapus <b>SELURUH</b> invoice di database — termasuk yang sudah lunas. Hanya pakai untuk testing atau pindah ke sistem baru.</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Preview impact -->
+      <div id="resetPreviewBox" style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+        <div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;margin-bottom:8px;">Preview Dampak</div>
+        <div id="resetPreviewLoading" style="font-size:12px;color:#94a3b8;">Memuat preview…</div>
+        <div id="resetPreviewContent" style="display:none;">
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-size:12px;">
+            <div><div style="color:#64748b;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;">Invoice akan dihapus</div><div style="font-size:18px;font-weight:800;color:#dc2626;font-family:'DM Mono',monospace;" id="rpInvoiceCount">0</div></div>
+            <div><div style="color:#64748b;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;">Pembayaran ikut hilang</div><div style="font-size:18px;font-weight:800;color:#dc2626;font-family:'DM Mono',monospace;" id="rpPaymentCount">0</div></div>
+            <div><div style="color:#64748b;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;">Total nilai (gross)</div><div style="font-size:14px;font-weight:700;color:#0f172a;font-family:'DM Mono',monospace;" id="rpGrossTotal">Rp 0</div></div>
+            <div><div style="color:#64748b;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;">Pendapatan (paid) ikut hilang</div><div style="font-size:14px;font-weight:700;color:#dc2626;font-family:'DM Mono',monospace;" id="rpPaidTotal">Rp 0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <label class="form-label" style="margin-bottom:6px;">Konfirmasi — ketik <code style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11.5px;">RESET</code> untuk melanjutkan</label>
+      <input type="text" class="form-control" id="resetConfirmInput" placeholder='Ketik "RESET"' autocomplete="off" oninput="onResetConfirmInput()" style="font-family:'DM Mono',monospace;letter-spacing:.05em;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeResetModal()">Batal</button>
+      <button class="btn btn-primary" id="confirmResetBtn" onclick="confirmResetInvoices()" disabled style="background:#dc2626;border-color:#dc2626;opacity:.5;cursor:not-allowed;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="display:inline-block;vertical-align:-2px;margin-right:6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3"/></svg>
+        Hapus Invoice
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .reset-mode-opt:hover { background:#f8fafc; border-color:#cbd5e1; }
+  .reset-mode-opt:has(input:checked) { background:#eff6ff; border-color:#3b82f6; }
+  .reset-mode-opt:has(input[value="all"]:checked) { background:#fef2f2; border-color:#dc2626; }
+  #confirmResetBtn:not([disabled]) { opacity:1 !important; cursor:pointer !important; }
+</style>
+
+<!-- ── Modal: Verifikasi Bukti Pembayaran ─────────────────────────── -->
+<div class="modal-overlay" id="proofInboxModal" style="display:none;">
+  <div style="background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(15,23,42,.22);">
+    <div style="padding:18px 22px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="20" height="20" fill="none" stroke="#1d4ed8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div style="font-size:16px;font-weight:800;color:#0f172a;">Verifikasi Bukti Pembayaran</div>
+      </div>
+      <button onclick="closeProofInbox()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:22px;line-height:1;">&times;</button>
+    </div>
+    <div id="proofInboxBody" style="padding:18px 22px;overflow:auto;">
+      <div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px;">Memuat…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox preview bukti -->
+<div id="proofLightbox" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.85);z-index:10000;align-items:center;justify-content:center;padding:24px;" onclick="closeProofLightbox()">
+  <div style="max-width:92vw;max-height:92vh;" onclick="event.stopPropagation()">
+    <div style="text-align:right;margin-bottom:8px;"><button onclick="closeProofLightbox()" style="background:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;">Tutup</button></div>
+    <div id="proofLightboxContent" style="background:#fff;border-radius:10px;overflow:auto;max-height:84vh;"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/billing.js?v=1783162200"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={paid:[],unpaid:[],overdue:[],revenue:[],potensi:[],sisa:[]};
+  const C={paid:'#16a34a',unpaid:'#2563eb',overdue:'#dc2626',revenue:'#d97706',potensi:'#0d9488',sisa:'#c2410c'};
+  const IDS={paid:'fcPaid',unpaid:'fcUnpaid',overdue:'fcOverdue',revenue:'fcRevenueVal',potensi:'fcPotensiVal',sisa:'fcSisaVal'};
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(C).forEach(k=>{
+      const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      // Pill cp-* untuk kartu asli menampilkan angka count; TAPI potensi & sisa
+      // pill-nya diisi teks khusus (nominal / persentase) oleh loadBillStats,
+      // jadi JANGAN ditimpa di sini.
+      if(k!=='potensi' && k!=='sisa'){
+        const p=document.getElementById('cp-'+k);if(p)p.textContent=v;
+      }
+    });
+  }
+  window._bilUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',function(){
+    upd();
+    // Set default active card sparkline ke putih
+    const def=document.getElementById('bcard-paid');
+    if(def){
+      const l=def.querySelector('.sp-line'),f=def.querySelector('.sp-fill'),d=def.querySelector('.sp-dot');
+      if(l)l.style.stroke='rgba(255,255,255,.70)';
+      if(f)f.style.fill='rgba(255,255,255,.12)';
+      if(d)d.style.fill='#fff';
+    }
+    // Sync filter ke paid
+    const sel=document.getElementById('invoiceStatus');
+    if(sel){ sel.value='paid'; if(typeof loadInvoices==='function'){window._billPage=1;loadInvoices();} }
+  });
+})();
+
+function bilCardClick(el){
+  const COLORS={paid:'#16a34a',unpaid:'#2563eb',overdue:'#dc2626',revenue:'#d97706'};
+  const all=document.querySelectorAll('.fin-card[data-filter]');
+  const was=el.classList.contains('fc-active');
+
+  // Reset all
+  all.forEach(c=>{
+    c.classList.remove('fc-active');
+    const key=c.id.replace('bcard-','');
+    const col=COLORS[key]||'#64748b';
+    const l=c.querySelector('.sp-line'),f=c.querySelector('.sp-fill'),d=c.querySelector('.sp-dot');
+    if(l)l.style.stroke=col;if(f)f.style.fill=col;if(d)d.style.fill=col;
+  });
+
+  if(!was){
+    el.classList.add('fc-active');
+    const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+    if(l)l.style.stroke='rgba(255,255,255,.70)';
+    if(f)f.style.fill='rgba(255,255,255,.12)';
+    if(d)d.style.fill='#fff';
+  }
+
+  // Sync filter dropdown & reload
+  const sel=document.getElementById('invoiceStatus');
+  if(sel){
+    sel.value=was?'':(el.dataset.filter||'');
+    if(typeof loadInvoices==='function'){ window._billPage=1; loadInvoices(); }
+  }
+}
+</script>
+</body>
+</html>

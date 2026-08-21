@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --pp-blue:#2563eb;  --pp-blue-d:#1d4ed8; --pp-blue-l:#eff6ff;
+      --pp-green:#16a34a; --pp-green-d:#15803d; --pp-green-l:#f0fdf4;
+      --pp-red:#dc2626;   --pp-red-d:#b91c1c;   --pp-red-l:#fef2f2;
+      --pp-amber:#d97706; --pp-amber-d:#b45309; --pp-amber-l:#fffbeb;
+      --pp-teal:#0891b2;  --pp-teal-l:#ecfeff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .pp { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .pp-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .pp-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .pp-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .pp-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-red { background:var(--pp-red); border-color:var(--pp-red); color:#fff; }
+    .btn-red:hover { background:var(--pp-red-d); }
+
+    /* ── Action icon buttons (clean, minimal) ── */
+    .pp-acts { display:inline-flex; align-items:center; gap:6px; }
+    .act-ico { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border-radius:9px; border:1px solid #e8edf5; background:#fff; color:#64748b; cursor:pointer; transition:all .15s; padding:0; }
+    .act-ico svg { width:15px; height:15px; stroke-width:2; }
+    .act-ico:hover { transform:translateY(-1px); box-shadow:0 3px 8px rgba(15,23,42,.10); }
+    .act-ico.edit:hover   { background:#eff6ff; border-color:#bfdbfe; color:#2563eb; }
+    .act-ico.pause:hover  { background:#fffbeb; border-color:#fde68a; color:#d97706; }
+    .act-ico.play:hover   { background:#f0fdf4; border-color:#bbf7d0; color:#16a34a; }
+    .act-ico.del:hover    { background:#fef2f2; border-color:#fecaca; color:#dc2626; }
+    @media(max-width:640px){ .pp-acts{ gap:8px; } .act-ico{ width:34px; height:34px; } }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; background:var(--pp-green-l); border:1px solid #bbf7d0; color:var(--pp-green); }
+    .live-chip .ldot { width:7px; height:7px; border-radius:50%; background:var(--pp-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS — single strip with dividers ── */
+    .pp-cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    @media(max-width:1200px){ .pp-cards { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:768px){ .pp-cards { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:500px){ .pp-cards { grid-template-columns:1fr; } }
+
+    .pp-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .pp-card:last-child { border-right: none; }
+    .pp-card:hover { background: #fafbff; }
+
+    /* Active — biru solid */
+    .pp-card.pc-active { background: #2563eb; border-color: #2563eb; }
+    .pp-card.pc-active:hover { background: #1d4ed8; }
+    .pp-card.pc-active .card-lbl    { color: rgba(255,255,255,.70); }
+    .pp-card.pc-active .card-val    { color: #fff; }
+    .pp-card.pc-active .card-sub    { color: rgba(255,255,255,.60); }
+    .pp-card.pc-active .card-pill   { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .pp-card.pc-active .sp-line     { stroke: rgba(255,255,255,.70) !important; }
+    .pp-card.pc-active .sp-fill     { fill: rgba(255,255,255,.12) !important; }
+    .pp-card.pc-active .sp-dot      { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+
+    /* body: angka kiri + sparkline kanan */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+
+    /* meta: pill + sub */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+
+    /* ── Mobile responsive borders ── */
+    @media (max-width: 768px) {
+      .pp-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .pp-card:last-child { border-bottom: none; }
+      .pp-card.pc-active { border-color: #2563eb; }
+    }
+    @media (min-width: 441px) and (max-width: 768px) {
+      .pp-card:nth-child(odd)  { border-right: 1px solid #e8eaed; border-bottom: 1px solid #e8eaed; }
+      .pp-card:nth-child(even) { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .pp-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media (max-width: 440px) {
+      .pp-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .pp-card:last-child { border-bottom: none; }
+    }
+
+    /* ── CONTROLS ── */
+    .pp-ctrl { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); padding:13px 18px; margin-bottom:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .pp-ctrl-l { display:flex; align-items:center; gap:8px; }
+    .pp-ctrl-l svg { color:var(--muted); flex-shrink:0; }
+    .pp-ctrl-title { font-size:14px; font-weight:700; color:var(--text); }
+    .pp-ctrl-r { margin-left:auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:240px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--pp-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .pp-ctrl select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .pp-ctrl select:focus { border-color:var(--pp-blue); }
+
+    /* ── TABLE ── */
+    .pp-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .pp-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:8px; }
+    .pp-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .session-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    .pp-table { width:100%; border-collapse:collapse; }
+    .pp-table thead tr { background:#f8fafc; }
+    .pp-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .pp-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; }
+    .pp-table tbody tr:hover { background:#f8fafc; }
+    .pp-table tbody tr:last-child { border-bottom:none; }
+    .pp-table td { padding:12px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell { color:var(--faint); font-size:12px; font-weight:600; }
+    .username-cell { font-weight:700; color:var(--text); }
+
+    .svc-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .svc-pppoe  { background:var(--pp-blue-l);  color:var(--pp-blue);  border:1px solid #bfdbfe; }
+    .svc-l2tp   { background:var(--pp-amber-l); color:var(--pp-amber); border:1px solid #fde68a; }
+    .svc-other  { background:#f1f5f9; color:var(--muted); border:1px solid var(--border); }
+
+    .ip-badge { font-family:monospace; font-size:12px; font-weight:700; background:#f1f5f9; color:#334155; padding:4px 9px; border-radius:6px; display:inline-block; border:1px solid #e2e8f0; }
+    .mac-cell  { font-family:monospace; font-size:11.5px; color:var(--muted); }
+
+    .uptime-badge { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:700; background:var(--pp-teal-l); color:var(--pp-teal); border:1px solid #a5f3fc; border-radius:6px; padding:3px 9px; }
+
+    /* Empty / loading */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    @media(max-width:768px) {
+      .pp-cards { grid-template-columns:repeat(2,1fr); }
+      .search-wrap input { width:180px; }
+      .pp-table th:nth-child(5),
+      .pp-table td:nth-child(5) { display:none; }
+    }
+
+    /* ── Tabs ── */
+    .pp-tab { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border:none; background:transparent; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; font-family:inherit; white-space:nowrap; }
+    .pp-tab svg { flex-shrink:0; }
+    .pp-tab.active { color:#2563eb; border-bottom-color:#2563eb; }
+    .pp-tab:hover:not(.active) { color:#374151; background:#f8fafc; border-radius:8px 8px 0 0; }
+    .pp-tab-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; background:#f1f5f9; color:#64748b; border-radius:100px; font-size:10px; font-weight:700; }
+    .pp-tab.active .pp-tab-badge { background:#dbeafe; color:#2563eb; }
+
+    /* ── Unified panel header: tab bar + toolbar ── */
+    .pp-panel-hdr { flex-direction:column; align-items:stretch; gap:0; padding:0; }
+    .pp-tabbar { display:flex; gap:2px; padding:0 12px; border-bottom:2px solid #f1f5f9; }
+    .pp-tab { margin-bottom:-2px; }
+    .pp-toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:13px 18px; }
+    .pp-toolbar select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .pp-toolbar select:focus { border-color:var(--pp-blue); }
+    .pp-toolbar .btn { margin-left:auto; }
+    .pp-table-scroll { overflow-x:auto; }
+    #filterService { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+
+    /* ── MOBILE: tabel → kartu (stack) ── */
+    @media(max-width:640px) {
+      .pp-tabbar { padding:0 8px; }
+      .pp-tab { padding:9px 11px; font-size:12.5px; }
+      .pp-toolbar { padding:11px 12px; }
+      .pp-toolbar .search-wrap { flex:1 1 100%; }
+      .pp-toolbar .search-wrap input { width:100%; box-sizing:border-box; }
+      .pp-toolbar select { flex:1; }
+      .pp-toolbar .btn { margin-left:0; flex:1; justify-content:center; }
+
+      .pp-table-scroll { overflow-x:visible; }
+      .pp-table thead { display:none; }
+      .pp-table, .pp-table tbody, .pp-table tr, .pp-table td { display:block; width:100%; box-sizing:border-box; }
+      .pp-table tr { border:1.5px solid var(--border); border-radius:12px; margin:10px 12px; padding:6px 0; background:#fff; }
+      .pp-table tr:hover { background:#fff; }
+      .pp-table td { padding:7px 14px; border:none; text-align:right; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12.5px; }
+      .pp-table td::before { content:attr(data-label); font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; text-align:left; }
+      .pp-table td:not([data-label]) { display:block; text-align:center; }
+      .pp-table td:not([data-label])::before { display:none; }
+      .pp-table td.num-cell { display:none; }
+      .pp-table td[data-label] > * { margin-left:auto; }
+      .pp-table tr:has(.tbl-empty) { border:none; margin:0; background:transparent; }
+    }
+
+    /* ── Modal overlay ── */
+    .pp-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+    .pp-modal-overlay.show { display:flex !important; }
+    .pp-modal { background:#fff; border-radius:16px; padding:28px; width:92%; max-width:520px; max-height:92vh; overflow-y:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); animation:ppIn .2s ease; }
+    @keyframes ppIn { from{opacity:0;transform:translateY(14px)scale(.97)} to{opacity:1;transform:none} }
+    .pp-modal-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .pp-modal-hdr h3 { font-size:16px; font-weight:800; margin:0; color:#0f172a; }
+    .pp-modal-close { width:30px;height:30px;border-radius:8px;border:none;background:#f8fafc;cursor:pointer;font-size:18px;color:#64748b;display:flex;align-items:center;justify-content:center;transition:all .15s; }
+    .pp-modal-close:hover { background:#fee2e2; color:#dc2626; }
+    .pp-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:480px){ .pp-form-grid { grid-template-columns:1fr; } }
+    .pp-form-group { display:flex; flex-direction:column; gap:5px; }
+    .pp-form-group.full { grid-column:1/-1; }
+    .pp-form-label { font-size:12px; font-weight:600; color:#374151; }
+    .pp-form-label span { color:#dc2626; }
+    .pp-form-control { padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; font-family:inherit; color:#0f172a; outline:none; transition:border-color .15s,box-shadow .15s; background:#fff; width:100%; }
+    .pp-form-control:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+    .pp-form-control::placeholder { color:#94a3b8; }
+    .pp-form-hint { font-size:11px; color:#94a3b8; }
+    .pp-modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; padding-top:16px; border-top:1px solid #f1f5f9; }
+    .btn-pp-save { background:#2563eb; color:#fff; border:none; padding:10px 22px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:background .15s; }
+    .btn-pp-save:hover { background:#1d4ed8; }
+    .btn-pp-save:disabled { opacity:.6; cursor:not-allowed; }
+    .btn-pp-cancel { background:#f8fafc; color:#374151; border:1.5px solid #e2e8f0; padding:9px 18px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .btn-pp-cancel:hover { background:#f1f5f9; }
+
+    /* ── Secrets table extras ── */
+    .svc-badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10.5px; font-weight:700; text-transform:uppercase; }
+    .svc-badge.svc-pppoe { background:#dbeafe; color:#1d4ed8; }
+    .svc-badge.svc-l2tp  { background:#fef3c7; color:#b45309; }
+    .svc-badge.svc-pptp  { background:#f3e8ff; color:#7c3aed; }
+    .svc-badge.svc-any   { background:#f1f5f9; color:#475569; }
+    .btn-blue { background:#2563eb; border-color:#2563eb; color:#fff; }
+    .btn-blue:hover { background:#1d4ed8; }
+  
+  </style>
+</head>
+<body>
+<div class="app-layout pp">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="pp-hdr">
+        <div class="pp-hdr-l">
+          <h1>
+            PPPoE Active Sessions
+          </h1>
+          <p>Monitor sesi PPPoE aktif secara real-time</p>
+        </div>
+        <div class="pp-hdr-r">
+          <div id="mtSelectorMount"></div>
+          <div class="live-chip"><span class="ldot"></span>LIVE</div>
+          <span style="font-size:12px;color:var(--faint);">Auto-refresh: 10s</span>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnBulkPppoe" onclick="PppoeBulk.open()" title="Buat user PPPoE massal dari Excel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Bulk Create
+          </button>
+          <button class="btn btn-blue btn-sm" id="btnAddUser" onclick="openUserModal(null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah User PPPoE
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="pp-cards">
+
+        <!-- Active Sessions (Online sekarang) -->
+        <div class="pp-card pc-active" id="pc-total" data-filter="all" onclick="pcClick(this)">
+          <div class="card-lbl">Active Sessions</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statTotal">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="pp-pill-total">— sesi</span>
+                <span class="card-sub">Online sekarang</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- PPPoE Sessions -->
+        <div class="pp-card" id="pc-pppoe" data-filter="pppoe" onclick="pcClick(this)">
+          <div class="card-lbl">PPPoE Active Sessions</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statPppoe">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="pp-pill-pppoe">— sesi</span>
+                <span class="card-sub">Sesi PPPoE</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-pppoe" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-pppoe-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-pppoe-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-pppoe-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Akun Aktif (Secrets enabled) -->
+        <div class="pp-card" id="pc-enabled" data-filter="enabled" onclick="pcClick(this)">
+          <div class="card-lbl">Total Account</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statEnabled">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="pp-pill-enabled">— akun</span>
+                <span class="card-sub">Secret enabled</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-enabled" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-enabled-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-enabled-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-enabled-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Akun Inactive (Secrets disabled) -->
+        <div class="pp-card" id="pc-disabled" data-filter="disabled" onclick="pcClick(this)">
+          <div class="card-lbl">Disabled Account</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statDisabled">0</span>
+              <div class="card-meta">
+                <span class="card-pill" style="background:#fee2e2;color:#dc2626" id="pp-pill-disabled">— akun</span>
+                <span class="card-sub">Secret disabled</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-disabled" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-disabled-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-disabled-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-disabled-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offline (Enabled tapi tidak online) -->
+        <div class="pp-card" id="pc-offline" data-filter="offline" onclick="pcClick(this)">
+          <div class="card-lbl">Offline</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statOffline">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="pp-pill-offline">— akun</span>
+                <span class="card-sub">Aktif &amp; tidak online</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-offline" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-offline-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-offline-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-offline-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── SESSIONS / SECRETS TABLE ── -->
+      <!-- ════════ UNIFIED PANEL: tab bar tetap + toolbar + tabel ════════ -->
+      <div class="pp-tbl-wrap" id="data-panel">
+        <div class="pp-tbl-hdr pp-panel-hdr">
+          <!-- Tab navigation -->
+          <div class="pp-tabbar">
+            <button id="tab-sessions" class="pp-tab active" onclick="onTabClick('sessions')">
+              Active Sessions <span class="pp-tab-badge" id="tb-sessions">0</span><span id="sessionCount" style="display:none;">0 sesi</span>
+            </button>
+            <button id="tab-secrets" class="pp-tab" onclick="onTabClick('secrets')">
+              PPP Secrets <span class="pp-tab-badge" id="tb-secrets">0</span>
+            </button>
+          </div>
+          <!-- Toolbar: berubah sesuai tab aktif -->
+          <div class="pp-toolbar" id="toolbar-sessions">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="searchInput" placeholder="Cari username, IP, caller-id...">
+            </div>
+            <select id="filterService">
+              <option value="">All Services</option>
+              <option value="pppoe">PPPoE</option>
+              <option value="l2tp">L2TP</option>
+              <option value="pptp">PPTP</option>
+            </select>
+          </div>
+          <div class="pp-toolbar" id="toolbar-secrets" style="display:none;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="secretsSearch" placeholder="Cari username..." oninput="filterSecrets(this.value)">
+            </div>
+            <select id="secretsFilterService" onchange="filterSecrets(document.getElementById('secretsSearch').value)">
+              <option value="">All Services</option>
+              <option value="pppoe">PPPoE</option>
+              <option value="l2tp">L2TP</option>
+              <option value="any">Any</option>
+            </select>
+            <button class="btn btn-blue btn-sm" onclick="openUserModal(null)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tambah
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Tabel: Active Sessions ── -->
+        <div id="sessions-table" class="pp-table-scroll">
+          <table class="pp-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Username</th>
+                <th>Service</th>
+                <th>IP Address</th>
+                <th>Caller ID / MAC</th>
+                <th>Uptime</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pppoeTbody" data-session-count="true">
+              <tr>
+                <td colspan="7">
+                  <div class="tbl-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    <p>Memuat sesi...</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Tabel: PPP Secrets ── -->
+        <div id="secrets-table" class="pp-table-scroll" style="display:none;">
+          <table class="pp-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Username</th><th>Service</th><th>Profile</th>
+                <th>Local IP</th><th>Remote IP</th><th>Status</th><th>Comment</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="secretsTbody">
+              <tr><td colspan="9"><div class="tbl-empty"><p>Memuat secrets...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <span id="secretsCount" style="display:none;">0 user</span>
+      </div>
+
+      <!-- ── MODAL CREATE/EDIT USER PPPOE ── -->
+      <div class="pp-modal-overlay" id="userModal">
+        <div class="pp-modal">
+          <div class="pp-modal-hdr">
+            <h3 id="modalTitle">Tambah User PPPoE</h3>
+            <button class="pp-modal-close" onclick="closeUserModal()">×</button>
+          </div>
+          <input type="hidden" id="editSecretId">
+          <div class="pp-form-grid">
+            <div class="pp-form-group">
+              <label class="pp-form-label">Username <span>*</span></label>
+              <input class="pp-form-control" id="f-name" placeholder="e.g. user@isp">
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Password <span>*</span></label>
+              <div style="position:relative;">
+                <input class="pp-form-control" id="f-password" type="password" placeholder="Password" style="padding-right:38px;">
+                <button onclick="togglePwd('f-password',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:#94a3b8;font-size:13px;">👁</button>
+              </div>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Service</label>
+              <select class="pp-form-control" id="f-service">
+                <option value="pppoe">PPPoE</option>
+                <option value="l2tp">L2TP</option>
+                <option value="pptp">PPTP</option>
+                <option value="any">Any</option>
+              </select>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Profile <span id="profile-device-tag" style="font-weight:400;color:#64748b;font-size:11px;"></span></label>
+              <select class="pp-form-control" id="f-profile" disabled>
+                <option value="">Loading profiles…</option>
+              </select>
+              <span class="pp-form-hint" id="profile-hint" style="color:#2563eb;"></span>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Local Address</label>
+              <input class="pp-form-control" id="f-local-address" placeholder="e.g. 10.0.0.1">
+              <span class="pp-form-hint">Kosongkan = dari pool</span>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Remote Address</label>
+              <input class="pp-form-control" id="f-remote-address" placeholder="e.g. 10.0.0.2">
+              <span class="pp-form-hint">Kosongkan = dari pool</span>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Caller ID (MAC)</label>
+              <input class="pp-form-control" id="f-caller-id" placeholder="e.g. AA:BB:CC:DD:EE:FF">
+              <span class="pp-form-hint">Opsional — filter MAC address</span>
+            </div>
+            <div class="pp-form-group">
+              <label class="pp-form-label">Status</label>
+              <select class="pp-form-control" id="f-disabled">
+                <option value="false">Aktif (Enabled)</option>
+                <option value="true">Nonaktif (Disabled)</option>
+              </select>
+            </div>
+            <div class="pp-form-group full">
+              <label class="pp-form-label">Comment</label>
+              <input class="pp-form-control" id="f-comment" placeholder="Keterangan opsional...">
+            </div>
+          </div>
+          <div class="pp-modal-footer">
+            <button class="btn-pp-cancel" onclick="closeUserModal()">Batal</button>
+            <button class="btn-pp-save" id="btnSaveUser" onclick="saveUser()">
+              <span id="saveBtnText">Simpan</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MODAL KONFIRMASI (reusable) ── -->
+      <div class="pp-modal-overlay" id="confirmModal">
+        <div class="pp-modal" style="max-width:440px;">
+          <!-- Icon -->
+          <div id="cm-icon-wrap" style="width:56px;height:56px;border-radius:14px;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg id="cm-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 id="cm-title" style="font-size:17px;font-weight:800;margin:0 0 8px;color:#0f172a;text-align:center;">Konfirmasi</h3>
+          <p id="cm-message" style="font-size:13px;color:#64748b;margin:0 0 4px;text-align:center;line-height:1.55;">Lanjutkan tindakan?</p>
+          <p id="cm-detail" style="font-size:12px;color:#94a3b8;margin:8px 0 0;text-align:center;line-height:1.5;display:none;"></p>
+          <div class="pp-modal-footer" style="justify-content:center;border-top:none;padding-top:22px;margin-top:18px;">
+            <button class="btn-pp-cancel" id="cm-btn-cancel" type="button">Batal</button>
+            <button id="cm-btn-ok" type="button" style="background:#dc2626;color:#fff;border:none;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;">Konfirmasi</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/mikrotik-selector.js"></script>
+<script src="/js/pppoe-bulk.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  // ══════════════════════════════════════════════════════════════
+  // PPPoE Monitor — Clean rewrite (v11) — multi-device aware
+  // ══════════════════════════════════════════════════════════════
+
+  // Helper: append ?device_id=N kalau ada selector aktif
+  function _withDev(url) {
+    return (window.MikrotikSelector && window.MikrotikSelector.withDevice)
+      ? window.MikrotikSelector.withDevice(url)
+      : url;
+  }
+
+  // State
+  var _sessions  = [];
+  var _secrets   = [];
+  var _onlineNamesLower = {};            // map username (lowercase) → true, dari sesi aktif
+  var _secretsStatusFilter = '';         // '' | 'enabled' | 'disabled' | 'offline'
+  var _profiles  = [];
+  var _timer     = null;
+  var _activeTab = 'sessions';  // 'sessions' | 'secrets'
+
+  // Stat history untuk sparkline
+  var _sparkHist = { total: [], pppoe: [], enabled: [], disabled: [], offline: [] };
+  var SPARK_W = 72, SPARK_H = 36, SPARK_MAX = 20;
+  var SPARK_COLORS = { total:'#2563eb', pppoe:'#16a34a', enabled:'#16a34a', disabled:'#dc2626', offline:'#d97706' };
+
+  // ── Utils ───────────────────────────────────────────────────
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function showToast(msg, type, dur) {
+    var d = document.createElement('div');
+    d.style.cssText =
+      'position:fixed;bottom:24px;right:24px;z-index:9999;' +
+      'padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;' +
+      'background:' + (type==='success' ? '#16a34a' : type==='warn' ? '#d97706' : '#dc2626') + ';' +
+      'box-shadow:0 4px 20px rgba(0,0,0,.15);max-width:400px;word-break:break-word;cursor:pointer;';
+    d.textContent = msg;
+    d.onclick = function(){ d.remove(); };
+    document.body.appendChild(d);
+    setTimeout(function(){ d.remove(); }, dur || 4000);
+  }
+
+  // ── showConfirm: Promise-based confirm modal ───────────────
+  // Pengganti `confirm()` native. Pakai design system .pp-modal yang sama
+  // dengan modal Tambah/Edit User supaya konsisten.
+  //
+  // Opsi:
+  //   title    : judul (default "Konfirmasi")
+  //   message  : pesan utama (default "Lanjutkan?")
+  //   detail   : baris kedua kecil (opsional, contoh "Tindakan tidak bisa dibatalkan")
+  //   okText   : label tombol OK (default "Konfirmasi")
+  //   cancelText: label tombol cancel (default "Batal")
+  //   variant  : 'danger' (merah, default) | 'warn' (amber) | 'info' (biru)
+  //   icon     : 'warning' (default) | 'trash' | 'plug' | 'info'
+  //
+  // Return: Promise<boolean> — true jika OK, false jika cancel/ESC/klik overlay
+  var _cmCleanup = null;
+  function showConfirm(opts) {
+    opts = opts || {};
+    return new Promise(function(resolve){
+      var modal   = document.getElementById('confirmModal');
+      var titleEl = document.getElementById('cm-title');
+      var msgEl   = document.getElementById('cm-message');
+      var detEl   = document.getElementById('cm-detail');
+      var iconEl  = document.getElementById('cm-icon');
+      var iconWrap = document.getElementById('cm-icon-wrap');
+      var btnOk   = document.getElementById('cm-btn-ok');
+      var btnCx   = document.getElementById('cm-btn-cancel');
+      if (!modal || !btnOk || !btnCx) { resolve(window.confirm(opts.message || 'Lanjutkan?')); return; }
+
+      // Set teks
+      titleEl.textContent = opts.title   || 'Konfirmasi';
+      msgEl.textContent   = opts.message || 'Lanjutkan?';
+      if (opts.detail) { detEl.textContent = opts.detail; detEl.style.display = 'block'; }
+      else { detEl.textContent = ''; detEl.style.display = 'none'; }
+      btnOk.textContent = opts.okText     || 'Konfirmasi';
+      btnCx.textContent = opts.cancelText || 'Batal';
+
+      // Variant warna untuk tombol OK + background icon
+      var variants = {
+        danger: { btnBg:'#dc2626', btnHover:'#b91c1c', iconBg:'#fef2f2', iconColor:'#dc2626' },
+        warn:   { btnBg:'#d97706', btnHover:'#b45309', iconBg:'#fffbeb', iconColor:'#d97706' },
+        info:   { btnBg:'#2563eb', btnHover:'#1d4ed8', iconBg:'#eff6ff', iconColor:'#2563eb' }
+      };
+      var v = variants[opts.variant] || variants.danger;
+      btnOk.style.background = v.btnBg;
+      btnOk.onmouseover = function(){ btnOk.style.background = v.btnHover; };
+      btnOk.onmouseout  = function(){ btnOk.style.background = v.btnBg; };
+      iconWrap.style.background = v.iconBg;
+      iconEl.setAttribute('stroke', v.iconColor);
+
+      // Icon SVG path — sederhana, inline supaya tidak butuh asset
+      var icons = {
+        warning: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+        trash:   '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+        plug:    '<path d="M9 2v6"/><path d="M15 2v6"/><path d="M6 8h12v4a6 6 0 01-12 0V8z"/><path d="M12 18v4"/>',
+        info:    '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
+      };
+      iconEl.innerHTML = icons[opts.icon || 'warning'] || icons.warning;
+
+      // Cleanup handler lama bila ada (kalau showConfirm dipanggil 2x berurutan)
+      if (_cmCleanup) _cmCleanup();
+
+      function close(result) {
+        modal.classList.remove('show');
+        if (_cmCleanup) { _cmCleanup(); _cmCleanup = null; }
+        resolve(result);
+      }
+      function onOk()     { close(true); }
+      function onCancel() { close(false); }
+      function onOverlay(e){ if (e.target === modal) close(false); }
+      function onKey(e)   {
+        if (e.key === 'Escape') close(false);
+        else if (e.key === 'Enter') close(true);
+      }
+
+      btnOk.addEventListener('click',  onOk);
+      btnCx.addEventListener('click',  onCancel);
+      modal.addEventListener('click',  onOverlay);
+      document.addEventListener('keydown', onKey);
+
+      _cmCleanup = function(){
+        btnOk.removeEventListener('click', onOk);
+        btnCx.removeEventListener('click', onCancel);
+        modal.removeEventListener('click', onOverlay);
+        document.removeEventListener('keydown', onKey);
+      };
+
+      modal.classList.add('show');
+      // Auto-focus tombol OK supaya Enter langsung confirm
+      setTimeout(function(){ try { btnOk.focus(); } catch(e){} }, 50);
+    });
+  }
+  window.showConfirm = showConfirm;
+
+  // ── Sparkline ───────────────────────────────────────────────
+  function sparkPath(vals) {
+    if (!vals || vals.length < 2) return null;
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals), rng = mx - mn || 1;
+    var pts = vals.map(function(v,i){
+      return [(i/(vals.length-1))*SPARK_W, SPARK_H-((v-mn)/rng)*(SPARK_H-6)-3];
+    });
+    var d = pts.reduce(function(a,p,i){
+      if (!i) return 'M' + p[0].toFixed(1) + ',' + p[1].toFixed(1);
+      var prev = pts[i-1], cx = (prev[0] + p[0])/2;
+      return a + ' C' + cx.toFixed(1) + ',' + prev[1].toFixed(1)
+                + ' ' + cx.toFixed(1) + ',' + p[1].toFixed(1)
+                + ' ' + p[0].toFixed(1) + ',' + p[1].toFixed(1);
+    }, '');
+    var lp = pts[pts.length-1], fp = pts[0];
+    return { d: d, fill: d + ' L' + lp[0].toFixed(1) + ',' + SPARK_H + ' L' + fp[0].toFixed(1) + ',' + SPARK_H + ' Z', dot: lp };
+  }
+
+  function drawSpark(id, vals) {
+    var sp = sparkPath(vals); if (!sp) return;
+    var fill = document.getElementById(id+'-fill');
+    var line = document.getElementById(id+'-line');
+    var dot  = document.getElementById(id+'-dot');
+    if (fill) fill.setAttribute('d', sp.fill);
+    if (line) line.setAttribute('d', sp.d);
+    if (dot) { dot.setAttribute('cx', sp.dot[0].toFixed(1)); dot.setAttribute('cy', sp.dot[1].toFixed(1)); }
+  }
+
+  function updateSparkCards() {
+    // Hitung dari sessions
+    var totalSessions = _sessions.length;
+    var pppoeSessions = _sessions.filter(function(s){ return (s.service||'').toLowerCase() === 'pppoe'; }).length;
+
+    // Hitung dari secrets
+    var enabledList  = _secrets.filter(function(s){ return !s.disabled; });
+    var disabledList = _secrets.filter(function(s){ return  s.disabled; });
+
+    // Online set = nama user yg punya session aktif (lowercase utk match case-insensitive)
+    var onlineSet = {};
+    _sessions.forEach(function(s){
+      var nm = (s.name || '').toLowerCase();
+      if (nm) onlineSet[nm] = true;
+    });
+    _onlineNamesLower = onlineSet;
+
+    // Offline = secret enabled yg TIDAK ada di onlineSet
+    var offlineCount = enabledList.filter(function(s){
+      var nm = (s.name || '').toLowerCase();
+      return nm && !onlineSet[nm];
+    }).length;
+
+    var vals = {
+      total:    totalSessions,
+      pppoe:    pppoeSessions,
+      enabled:  enabledList.length,
+      disabled: disabledList.length,
+      offline:  offlineCount
+    };
+
+    // Update sparkline history + pill text
+    var pillSuffix = { total:' sesi', pppoe:' sesi', enabled:' akun', disabled:' akun', offline:' akun' };
+    Object.keys(vals).forEach(function(k){
+      if (!_sparkHist[k]) _sparkHist[k] = [];
+      _sparkHist[k].push(vals[k]);
+      if (_sparkHist[k].length > SPARK_MAX) _sparkHist[k].shift();
+      drawSpark('sp-'+k, _sparkHist[k]);
+      var pill = document.getElementById('pp-pill-'+k);
+      if (pill) pill.textContent = vals[k] + (pillSuffix[k] || '');
+    });
+
+    // Stat number cards
+    document.getElementById('statTotal').textContent    = vals.total;
+    document.getElementById('statPppoe').textContent    = vals.pppoe;
+    document.getElementById('statEnabled').textContent  = vals.enabled;
+    document.getElementById('statDisabled').textContent = vals.disabled;
+    document.getElementById('statOffline').textContent  = vals.offline;
+
+    // Tab badge sessions
+    var tb = document.getElementById('tb-sessions');
+    if (tb) tb.textContent = vals.total;
+
+    // Session count label
+    var sc = document.getElementById('sessionCount');
+    if (sc) sc.textContent = vals.total + ' sesi';
+
+    // Sidebar badge — tetap pakai jumlah sesi aktif (online)
+    var sbBadge = document.getElementById('pppoe-count');
+    if (sbBadge) {
+      sbBadge.textContent = vals.total;
+      sbBadge.style.display = vals.total ? 'flex' : 'none';
+    }
+  }
+
+  // ── Filter card click ───────────────────────────────────────
+  // Mapping kategori card:
+  //   'all', 'pppoe'                      → tab Sessions
+  //   'enabled', 'disabled', 'offline'    → tab Secrets (dengan status filter)
+  function pcClick(el) {
+    var cards = document.querySelectorAll('.pp-card[data-filter]');
+    var wasActive = el.classList.contains('pc-active');
+
+    // Reset semua card ke warna asli
+    cards.forEach(function(c){
+      c.classList.remove('pc-active');
+      var f = c.dataset.filter === 'all' ? 'total' : c.dataset.filter;
+      var col = SPARK_COLORS[f] || '#64748b';
+      var line = c.querySelector('.sp-line'), fill = c.querySelector('.sp-fill'), dot = c.querySelector('.sp-dot');
+      if (line) line.style.stroke = col;
+      if (fill) fill.style.fill   = col;
+      if (dot)  dot.style.fill    = col;
+    });
+
+    var sessSel = document.getElementById('filterService');
+    var filter  = el.dataset.filter;
+    var SECRETS_FILTERS = { enabled:1, disabled:1, offline:1 };
+
+    if (wasActive) {
+      // Toggle off → kembali ke default: tab Sessions, semua filter clear
+      var totalCard = document.getElementById('pc-total');
+      if (totalCard) {
+        totalCard.classList.add('pc-active');
+        var l2 = totalCard.querySelector('.sp-line'), f2 = totalCard.querySelector('.sp-fill'), d2 = totalCard.querySelector('.sp-dot');
+        if (l2) l2.style.stroke = 'rgba(255,255,255,.70)';
+        if (f2) f2.style.fill   = 'rgba(255,255,255,.12)';
+        if (d2) d2.style.fill   = '#fff';
+      }
+      if (sessSel) sessSel.value = '';
+      _secretsStatusFilter = '';
+      switchTab('sessions', true);
+      renderSessions();
+      return;
+    }
+
+    // Tandai card aktif (warna putih)
+    el.classList.add('pc-active');
+    var line2 = el.querySelector('.sp-line'), fill2 = el.querySelector('.sp-fill'), dot2 = el.querySelector('.sp-dot');
+    if (line2) line2.style.stroke = 'rgba(255,255,255,.70)';
+    if (fill2) fill2.style.fill   = 'rgba(255,255,255,.12)';
+    if (dot2)  dot2.style.fill    = '#fff';
+
+    if (SECRETS_FILTERS[filter]) {
+      // Pindah ke tab Secrets + apply status filter
+      _secretsStatusFilter = filter;
+      if (sessSel) sessSel.value = '';
+      switchTab('secrets', true);   // data secrets sudah ada di _secrets, cukup render
+      renderSecrets();
+    } else {
+      // Tab Sessions
+      _secretsStatusFilter = '';
+      if (sessSel) sessSel.value = filter === 'all' ? '' : filter;
+      switchTab('sessions', true);
+      renderSessions();
+    }
+  }
+  window.pcClick = pcClick;
+
+  // ── Load Sessions ───────────────────────────────────────────
+  async function loadSessions() {
+    try {
+      var search  = (document.getElementById('searchInput').value || '').trim();
+      var service = (document.getElementById('filterService').value || '').trim();
+      var params = new URLSearchParams();
+      if (search)  params.set('search', search);
+      if (service) params.set('service', service);
+
+      var url = '/mikrotik/pppoe/active' + (params.toString() ? '?' + params.toString() : '');
+      var data = await App.api(_withDev(url));
+
+      if (data && data.success) {
+        _sessions = data.data || [];
+        updateSparkCards();
+        renderSessions();
+        if (data.warning) {
+          // Show warning tapi tidak block UI
+          console.warn('[PPPoE]', data.warning);
+        }
+      } else {
+        document.getElementById('pppoeTbody').innerHTML =
+          '<tr><td colspan="7"><div class="tbl-empty">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' +
+            '<p style="color:#dc2626">' + esc((data && data.message) || 'Gagal memuat sesi') + '</p>' +
+          '</div></td></tr>';
+      }
+    } catch (e) {
+      document.getElementById('pppoeTbody').innerHTML =
+        '<tr><td colspan="7"><div class="tbl-empty"><p style="color:#dc2626">Error: ' + esc(e.message) + '</p></div></td></tr>';
+    }
+  }
+
+  function renderSessions() {
+    var tbody = document.getElementById('pppoeTbody');
+    if (!tbody) return;
+
+    // Filter client-side berdasar search + service (untuk instant feedback, backend juga filter)
+    var search  = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+    var service = (document.getElementById('filterService').value || '').trim().toLowerCase();
+
+    var list = _sessions.filter(function(s){
+      if (service && (s.service||'').toLowerCase() !== service) return false;
+      if (search) {
+        var hay = ((s.name||'') + ' ' + (s.address||'') + ' ' + (s.callerID||'')).toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    if (!list.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="7"><div class="tbl-empty">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>' +
+          '<p>' + (_sessions.length ? 'Tidak ada sesi yang cocok dengan filter' : 'Tidak ada sesi aktif') + '</p>' +
+        '</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(function(s, i){
+      var svc = (s.service || 'pppoe').toLowerCase();
+      var svcClass = svc === 'pppoe' ? 'svc-pppoe' : svc === 'l2tp' ? 'svc-l2tp' : svc === 'pptp' ? 'svc-pptp' : 'svc-any';
+      return '<tr data-session-id="' + esc(s.id) + '" data-session-name="' + esc(s.name) + '">' +
+        '<td class="num-cell">' + (i+1) + '</td>' +
+        '<td class="username-cell" data-label="Username">' + esc(s.name) + '</td>' +
+        '<td data-label="Service"><span class="svc-badge ' + svcClass + '">' + esc(svc.toUpperCase()) + '</span></td>' +
+        '<td data-label="IP Address"><span class="ip-badge">' + (esc(s.address) || '—') + '</span></td>' +
+        '<td class="mac-cell" data-label="Caller ID / MAC">' + (esc(s.callerID) || '—') + '</td>' +
+        '<td data-label="Uptime"><span class="uptime-badge">' +
+          '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>' +
+          esc(s.uptime) +
+        '</span></td>' +
+        '<td data-label="Action">' +
+          '<button class="btn btn-red btn-sm" data-act="disconnect">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+            'Disconnect' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  async function disconnectSession(id, name) {
+    var ok = await showConfirm({
+      title:   'Disconnect Sesi?',
+      message: 'Sesi "' + name + '" akan diputus dari MikroTik.',
+      detail:  'Klien akan terputus dari internet seketika hingga melakukan reconnect.',
+      okText:  'Disconnect',
+      variant: 'danger',
+      icon:    'plug'
+    });
+    if (!ok) return;
+    try {
+      var r = await App.api(_withDev('/mikrotik/pppoe/disconnect/' + encodeURIComponent(id)), { method:'POST' });
+      if (r && r.success) {
+        showToast('Sesi "' + name + '" terdisconnect', 'success');
+        await loadSessions();
+      } else {
+        showToast((r && r.message) || 'Gagal disconnect', 'error');
+      }
+    } catch (e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Load Secrets ────────────────────────────────────────────
+  async function loadSecrets() {
+    try {
+      var r = await App.api(_withDev('/mikrotik/pppoe/secrets'));
+      if (!r || !r.success) {
+        showToast((r && r.message) || 'Gagal memuat secrets', 'error');
+        return;
+      }
+      _secrets = r.data || [];
+      var tb = document.getElementById('tb-secrets');
+      var cnt = document.getElementById('secretsCount');
+      if (tb)  tb.textContent = _secrets.length;
+      if (cnt) cnt.textContent = _secrets.length + ' user';
+      updateSparkCards();   // secrets berubah → angka card Aktif/Inactive/Offline ikut update
+      renderSecrets();
+    } catch (e) {
+      showToast('Error loading secrets: ' + e.message, 'error');
+    }
+  }
+
+  // Orchestrator: fetch sessions + secrets paralel, lalu update cards + render tab aktif.
+  // Card stats ditampilkan di semua tab, jadi keduanya harus selalu fresh.
+  async function refreshAll() {
+    var sessReq = (async function(){
+      try {
+        var search  = (document.getElementById('searchInput').value || '').trim();
+        var service = (document.getElementById('filterService').value || '').trim();
+        var params = new URLSearchParams();
+        if (search)  params.set('search', search);
+        if (service) params.set('service', service);
+        var url = '/mikrotik/pppoe/active' + (params.toString() ? '?' + params.toString() : '');
+        var data = await App.api(_withDev(url));
+        if (data && data.success) {
+          _sessions = data.data || [];
+          if (data.warning) console.warn('[PPPoE]', data.warning);
+        } else {
+          document.getElementById('pppoeTbody').innerHTML =
+            '<tr><td colspan="7"><div class="tbl-empty">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' +
+              '<p style="color:#dc2626">' + esc((data && data.message) || 'Gagal memuat sesi') + '</p>' +
+            '</div></td></tr>';
+        }
+      } catch (e) {
+        document.getElementById('pppoeTbody').innerHTML =
+          '<tr><td colspan="7"><div class="tbl-empty"><p style="color:#dc2626">Error: ' + esc(e.message) + '</p></div></td></tr>';
+      }
+    })();
+
+    var secReq = (async function(){
+      try {
+        var r = await App.api(_withDev('/mikrotik/pppoe/secrets'));
+        if (r && r.success) {
+          _secrets = r.data || [];
+          var tb = document.getElementById('tb-secrets');
+          if (tb) tb.textContent = _secrets.length;
+        }
+      } catch (e) { /* silent: jangan ganggu polling sessions */ }
+    })();
+
+    await Promise.allSettled([sessReq, secReq]);
+
+    // Setelah keduanya siap, baru update cards & render tab aktif
+    updateSparkCards();
+    if (_activeTab === 'sessions') renderSessions();
+    else renderSecrets();
+  }
+  window.refreshAll = refreshAll;
+
+  function renderSecrets() {
+    var tbody = document.getElementById('secretsTbody');
+    if (!tbody) return;
+
+    var search = (document.getElementById('secretsSearch').value || '').trim().toLowerCase();
+    var svcFilter = (document.getElementById('secretsFilterService').value || '').trim().toLowerCase();
+    var statusFilter = _secretsStatusFilter; // 'enabled' | 'disabled' | 'offline' | ''
+
+    var list = _secrets.filter(function(s){
+      if (svcFilter && (s.service||'').toLowerCase() !== svcFilter) return false;
+      // Status filter dari card click
+      if (statusFilter === 'enabled'  && s.disabled) return false;
+      if (statusFilter === 'disabled' && !s.disabled) return false;
+      if (statusFilter === 'offline') {
+        if (s.disabled) return false;                                     // harus enabled
+        var nm = (s.name || '').toLowerCase();
+        if (nm && _onlineNamesLower[nm]) return false;                    // dan tidak online
+      }
+      if (search) {
+        var hay = ((s.name||'') + ' ' + (s.comment||'') + ' ' + (s.profile||'')).toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    // Update status filter indicator
+    var sCnt = document.getElementById('secretsCount');
+    if (sCnt) {
+      var lbl = statusFilter
+        ? (statusFilter === 'enabled'  ? 'akun aktif'
+         : statusFilter === 'disabled' ? 'akun inactive'
+         : 'akun offline')
+        : 'user';
+      sCnt.textContent = list.length + ' ' + lbl;
+    }
+
+    if (!list.length) {
+      var emptyMsg = statusFilter === 'enabled'  ? 'Tidak ada akun aktif'
+                   : statusFilter === 'disabled' ? 'Tidak ada akun inactive'
+                   : statusFilter === 'offline'  ? 'Tidak ada akun offline (semua sedang online)'
+                   : (_secrets.length ? 'Tidak ada secret yang cocok' : 'Belum ada secret');
+      tbody.innerHTML =
+        '<tr><td colspan="9"><div class="tbl-empty">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>' +
+          '<p>' + emptyMsg + '</p>' +
+        '</div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map(function(s, i){
+      var svc = (s.service || 'pppoe').toLowerCase();
+      var svcClass = svc === 'pppoe' ? 'svc-pppoe' : svc === 'l2tp' ? 'svc-l2tp' : svc === 'pptp' ? 'svc-pptp' : 'svc-any';
+
+      // Status badge: gabungan enable/disable + online indicator
+      var nmLower = (s.name || '').toLowerCase();
+      var isOnline = !s.disabled && nmLower && _onlineNamesLower[nmLower];
+      var statusBadge;
+      if (s.disabled) {
+        statusBadge = '<span class="svc-badge" style="background:#fee2e2;color:#dc2626">DISABLED</span>';
+      } else if (isOnline) {
+        statusBadge =
+          '<span class="svc-badge" style="background:#dcfce7;color:#16a34a;display:inline-flex;align-items:center;gap:4px">' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block;box-shadow:0 0 0 2px rgba(22,163,74,.18)"></span>ONLINE' +
+          '</span>';
+      } else {
+        statusBadge = '<span class="svc-badge" style="background:#fffbeb;color:#b45309;border:1px solid #fde68a">OFFLINE</span>';
+      }
+
+      return '<tr data-secret-id="' + esc(s.id) + '" data-secret-name="' + esc(s.name) + '" data-secret-disabled="' + (s.disabled?'1':'0') + '">' +
+        '<td class="num-cell">' + (i+1) + '</td>' +
+        '<td class="username-cell" data-label="Username">' + esc(s.name) + '</td>' +
+        '<td data-label="Service"><span class="svc-badge ' + svcClass + '">' + esc(svc.toUpperCase()) + '</span></td>' +
+        '<td data-label="Profile">' + (esc(s.profile) || '—') + '</td>' +
+        '<td class="mac-cell" data-label="Local IP">' + (esc(s.localAddress) || '—') + '</td>' +
+        '<td class="mac-cell" data-label="Remote IP">' + (esc(s.remoteAddress) || '—') + '</td>' +
+        '<td data-label="Status">' + statusBadge + '</td>' +
+        '<td data-label="Comment" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(s.comment) + '">' + (esc(s.comment) || '—') + '</td>' +
+        '<td data-label="Aksi">' +
+          '<div class="pp-acts">' +
+            '<button class="act-ico edit" data-act="edit" title="Edit">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+            '</button>' +
+            '<button class="act-ico ' + (s.disabled?'play':'pause') + '" data-act="toggle" title="' + (s.disabled?'Enable':'Disable') + '">' +
+              (s.disabled
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor" stroke="none"/></svg>'
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>') +
+            '</button>' +
+            '<button class="act-ico del" data-act="delete" title="Hapus">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // ── Secret Actions ──────────────────────────────────────────
+  async function toggleSecret(id, enable, name) {
+    try {
+      var ep = '/mikrotik/pppoe/secrets/' + encodeURIComponent(id) + '/' + (enable ? 'enable' : 'disable');
+      var r = await App.api(_withDev(ep), { method:'POST', body: JSON.stringify({}) });
+      if (r && r.success) {
+        showToast((r.message) || (enable ? 'Diaktifkan' : 'Dinonaktifkan'), 'success');
+        await loadSecrets();
+      } else {
+        showToast((r && r.message) || 'Gagal toggle', 'error');
+      }
+    } catch (e) { showToast(e.message, 'error'); }
+  }
+
+  async function deleteSecret(id, name) {
+    var ok = await showConfirm({
+      title:   'Hapus User PPPoE?',
+      message: 'User "' + name + '" akan dihapus permanen dari MikroTik.',
+      detail:  'Tindakan ini tidak dapat dibatalkan.',
+      okText:  'Hapus',
+      variant: 'danger',
+      icon:    'trash'
+    });
+    if (!ok) return;
+    try {
+      var r = await App.api(_withDev('/mikrotik/pppoe/secrets/' + encodeURIComponent(id)), { method:'DELETE' });
+      if (r && r.success) {
+        showToast('User "' + name + '" dihapus', 'success');
+        await loadSecrets();
+      } else {
+        showToast((r && r.message) || 'Gagal hapus', 'error');
+      }
+    } catch (e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Tab Switch ──────────────────────────────────────────────
+  // Dipanggil saat user klik tab langsung dari header (BUKAN dari card).
+  // Reset filter status secrets supaya tab Secrets menampilkan semua user.
+  function onTabClick(tab) {
+    _secretsStatusFilter = '';
+    // Reset highlight card → kembali ke "Active Sessions" (Total) sebagai default
+    var cards = document.querySelectorAll('.pp-card[data-filter]');
+    cards.forEach(function(c){
+      c.classList.remove('pc-active');
+      var f = c.dataset.filter === 'all' ? 'total' : c.dataset.filter;
+      var col = SPARK_COLORS[f] || '#64748b';
+      var line = c.querySelector('.sp-line'), fill = c.querySelector('.sp-fill'), dot = c.querySelector('.sp-dot');
+      if (line) line.style.stroke = col;
+      if (fill) fill.style.fill   = col;
+      if (dot)  dot.style.fill    = col;
+    });
+    var totalCard = document.getElementById('pc-total');
+    if (totalCard) {
+      totalCard.classList.add('pc-active');
+      var tl = totalCard.querySelector('.sp-line'), tf = totalCard.querySelector('.sp-fill'), td = totalCard.querySelector('.sp-dot');
+      if (tl) tl.style.stroke = 'rgba(255,255,255,.70)';
+      if (tf) tf.style.fill   = 'rgba(255,255,255,.12)';
+      if (td) td.style.fill   = '#fff';
+    }
+    var sessSel = document.getElementById('filterService');
+    if (sessSel) sessSel.value = '';
+    switchTab(tab);
+  }
+  window.onTabClick = onTabClick;
+
+  // skipReload=true → tab sudah punya data fresh dari pcClick, cukup render
+  function switchTab(tab, skipReload) {
+    _activeTab = tab;
+    document.getElementById('tab-sessions').classList.toggle('active', tab === 'sessions');
+    document.getElementById('tab-secrets').classList.toggle('active', tab === 'secrets');
+    var sessTbl = document.getElementById('sessions-table');
+    var secrTbl = document.getElementById('secrets-table');
+    var tbSess  = document.getElementById('toolbar-sessions');
+    var tbSecr  = document.getElementById('toolbar-secrets');
+    if (tab === 'secrets') {
+      if (sessTbl) sessTbl.style.display = 'none';
+      if (secrTbl) secrTbl.style.display = 'block';
+      if (tbSess) tbSess.style.display = 'none';
+      if (tbSecr) tbSecr.style.display = 'flex';
+      if (skipReload) renderSecrets();
+      else loadSecrets();
+    } else {
+      if (sessTbl) sessTbl.style.display = 'block';
+      if (secrTbl) secrTbl.style.display = 'none';
+      if (tbSess) tbSess.style.display = 'flex';
+      if (tbSecr) tbSecr.style.display = 'none';
+    }
+  }
+  window.switchTab = switchTab;
+
+  // Helper: nama device yang aktif di selector
+  function _getActiveDeviceName() {
+    var selDev = document.getElementById('mikrotikSelector');
+    if (!selDev) return '';
+    var opt = selDev.options[selDev.selectedIndex];
+    if (!opt) return '';
+    // Buang prefix emoji status (🟢/🟡/🔴) dan suffix bintang
+    return (opt.textContent || '').replace(/^[^\s]*\s*/, '').replace(/\s*★$/, '').trim();
+  }
+
+  // ── Modal Add/Edit ──────────────────────────────────────────
+  async function loadProfiles(currentProfile) {
+    var sel = document.getElementById('f-profile');
+    var hint = document.getElementById('profile-hint');
+    var devTag = document.getElementById('profile-device-tag');
+    if (!sel) return;
+
+    // Tampilkan device aktif di label
+    var devName = _getActiveDeviceName();
+    if (devTag) devTag.textContent = devName ? '— dari ' + devName : '';
+
+    // Loading state
+    sel.disabled = true;
+    sel.innerHTML = '<option value="">Loading profiles…</option>';
+    if (hint) { hint.textContent = ''; hint.style.color = '#2563eb'; }
+
+    try {
+      var r = await App.api(_withDev('/mikrotik/pppoe/profiles'));
+      var profiles = (r && r.success && Array.isArray(r.data)) ? r.data : [];
+      _profiles = profiles;
+
+      if (profiles.length) {
+        sel.innerHTML = profiles.map(function(p){
+          var meta = [];
+          if (p.rateLimit) meta.push(p.rateLimit);
+          if (p.remoteAddress) meta.push('pool: ' + p.remoteAddress);
+          var label = p.name + (meta.length ? '  (' + meta.join(' • ') + ')' : '');
+          return '<option value="' + esc(p.name) + '">' + esc(label) + '</option>';
+        }).join('');
+        sel.disabled = false;
+
+        if (currentProfile && profiles.some(function(p){return p.name === currentProfile;})) {
+          sel.value = currentProfile;
+        } else {
+          sel.value = profiles[0].name;
+        }
+        if (hint) hint.textContent = profiles.length + ' profile dimuat dari MikroTik';
+      } else {
+        // MikroTik tidak return profile (atau error connection)
+        var warning = (r && r.warning) ? r.warning : 'MikroTik tidak mengembalikan daftar profile';
+        sel.innerHTML = '<option value="default">default</option><option value="default-encryption">default-encryption</option>';
+        sel.disabled = false;
+        if (currentProfile && !sel.querySelector('option[value="' + currentProfile + '"]')) {
+          var opt = document.createElement('option');
+          opt.value = currentProfile;
+          opt.textContent = currentProfile;
+          sel.appendChild(opt);
+        }
+        if (currentProfile) sel.value = currentProfile;
+        if (hint) {
+          hint.style.color = '#dc2626';
+          hint.innerHTML = '⚠ ' + esc(warning) + ' — pakai fallback. <a href="#" id="btnRetryProfiles" style="color:#2563eb;">Coba lagi</a>';
+          var retry = document.getElementById('btnRetryProfiles');
+          if (retry) retry.addEventListener('click', function(e){ e.preventDefault(); loadProfiles(currentProfile); });
+        }
+      }
+    } catch (e) {
+      sel.innerHTML = '<option value="default">default</option>';
+      sel.disabled = false;
+      if (hint) {
+        hint.style.color = '#dc2626';
+        hint.textContent = 'Error: ' + e.message;
+      }
+    }
+  }
+
+  function openUserModal(secretId) {
+    var modal = document.getElementById('userModal');
+    var title = document.getElementById('modalTitle');
+    var saveBtn = document.getElementById('saveBtnText');
+
+    // Reset form
+    ['f-name','f-password','f-local-address','f-remote-address','f-caller-id','f-comment'].forEach(function(id){
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('f-service').value = 'pppoe';
+    document.getElementById('f-disabled').value = 'false';
+    document.getElementById('editSecretId').value = '';
+
+    var currentProfile = '';
+    var passwordPlaceholder = 'Password';
+
+    if (secretId) {
+      var s = _secrets.find(function(x){ return x.id === secretId; });
+      if (!s) { showToast('Secret tidak ditemukan', 'error'); return; }
+      title.textContent = 'Edit User PPPoE';
+      saveBtn.textContent = 'Update';
+      document.getElementById('editSecretId').value    = secretId;
+      document.getElementById('f-name').value          = s.name || '';
+      document.getElementById('f-service').value       = s.service || 'pppoe';
+      document.getElementById('f-local-address').value = s.localAddress || '';
+      document.getElementById('f-remote-address').value= s.remoteAddress || '';
+      document.getElementById('f-caller-id').value     = s.callerId || '';
+      document.getElementById('f-comment').value       = s.comment || '';
+      document.getElementById('f-disabled').value      = s.disabled ? 'true' : 'false';
+      currentProfile = s.profile || '';
+      passwordPlaceholder = s.hasPassword ? '(kosongkan jika tidak diganti)' : 'Password';
+    } else {
+      title.textContent = 'Tambah User PPPoE';
+      saveBtn.textContent = 'Simpan';
+    }
+
+    document.getElementById('f-password').placeholder = passwordPlaceholder;
+    loadProfiles(currentProfile);
+    modal.classList.add('show');
+    setTimeout(function(){ document.getElementById('f-name').focus(); }, 100);
+  }
+  window.openUserModal = openUserModal;
+
+  function closeUserModal() {
+    document.getElementById('userModal').classList.remove('show');
+  }
+  window.closeUserModal = closeUserModal;
+
+  async function saveUser() {
+    var id = document.getElementById('editSecretId').value;
+    var name = document.getElementById('f-name').value.trim();
+    var pass = document.getElementById('f-password').value;
+    if (!name) { showToast('Username wajib diisi', 'error'); return; }
+    if (!id && !pass) { showToast('Password wajib diisi untuk user baru', 'error'); return; }
+
+    var body = {
+      name: name,
+      service:       (document.getElementById('f-service').value || 'pppoe').toLowerCase(),
+      profile:       (document.getElementById('f-profile').value || '').trim() || 'default',
+      localAddress:  document.getElementById('f-local-address').value.trim(),
+      remoteAddress: document.getElementById('f-remote-address').value.trim(),
+      callerId:      document.getElementById('f-caller-id').value.trim(),
+      comment:       document.getElementById('f-comment').value.trim(),
+      disabled:      document.getElementById('f-disabled').value === 'true'
+    };
+    // Kirim password hanya kalau diisi (edit mode: biarkan kosong = password lama tetap)
+    if (pass) body.password = pass;
+
+    var btn = document.getElementById('btnSaveUser');
+    btn.disabled = true;
+    document.getElementById('saveBtnText').textContent = id ? 'Menyimpan...' : 'Membuat...';
+
+    try {
+      var r = id
+        ? await App.api(_withDev('/mikrotik/pppoe/secrets/' + encodeURIComponent(id)), { method:'PUT', body: JSON.stringify(body) })
+        : await App.api(_withDev('/mikrotik/pppoe/secrets'), { method:'POST', body: JSON.stringify(body) });
+      if (r && r.success) {
+        closeUserModal();
+        showToast((r.message) || (id ? 'Updated' : 'Dibuat'), 'success');
+        switchTab('secrets');
+        await loadSecrets();
+      } else {
+        showToast((r && r.message) || 'Gagal menyimpan', 'error', 6000);
+      }
+    } catch (e) {
+      var msg = e.message && e.message.includes('ECONNRESET')
+        ? 'Koneksi ke MikroTik terputus — coba lagi'
+        : e.message || 'Error';
+      showToast(msg, 'error', 6000);
+    }
+
+    btn.disabled = false;
+    document.getElementById('saveBtnText').textContent = id ? 'Update' : 'Simpan';
+  }
+  window.saveUser = saveUser;
+
+  // ── Password toggle ─────────────────────────────────────────
+  function togglePwd(id, btn) {
+    var el = document.getElementById(id); if (!el) return;
+    el.type = el.type === 'password' ? 'text' : 'password';
+    btn.textContent = el.type === 'password' ? '👁' : '🙈';
+  }
+  window.togglePwd = togglePwd;
+
+  // ── Filters (secrets) ───────────────────────────────────────
+  function filterSecrets() { renderSecrets(); }
+  window.filterSecrets = filterSecrets;
+
+  // ══════════════════════════════════════════════════════════════
+  // INIT
+  // ══════════════════════════════════════════════════════════════
+  // Helper: reload semua data sesuai device aktif (sessions + secrets dimuat paralel
+  // supaya card stats di atas selalu akurat, tidak peduli tab mana yang sedang aktif).
+  function _reloadAllForDevice() {
+    refreshAll();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // Init MikroTik selector — reload data saat user ganti device
+    // PENTING: pakai onReady agar initial load TIDAK race dengan selector
+    if (window.MikrotikSelector) {
+      window.MikrotikSelector.init({
+        selectId: 'mikrotikSelector',
+        onChange: function(){
+          // Reload semua data ke device baru
+          _reloadAllForDevice();
+          // Kalau modal "Tambah/Edit User" sedang terbuka, refresh juga profile
+          // dropdown supaya menyesuaikan profile MikroTik device baru
+          var modal = document.getElementById('userModal');
+          if (modal && modal.classList.contains('show')) {
+            var currentProfile = (document.getElementById('f-profile').value || '').trim();
+            loadProfiles(currentProfile);
+          }
+        },
+        onReady: function(){
+          // Selector sudah siap — sekarang aman untuk initial load
+          _reloadAllForDevice();
+        }
+      });
+    } else {
+      // Fallback kalau selector script gagal load
+      _reloadAllForDevice();
+    }
+
+    // Deep-link: support URL param `?tab=sessions` atau `?tab=secrets`.
+    // Default sudah "sessions" (tab pertama), tapi parameter ini berguna
+    // kalau ke depan ada link yang explicitly mau ke secrets.
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && (tab === 'sessions' || tab === 'secrets')) {
+        // Delay supaya data ter-load dulu sebelum switch
+        setTimeout(function() {
+          if (typeof switchTab === 'function') switchTab(tab);
+        }, 300);
+      }
+    } catch(_) { /* abaikan */ }
+
+    // Event: refresh button — selalu refresh keduanya supaya stats akurat
+    var btnRefresh = document.getElementById('btnRefresh');
+    if (btnRefresh) btnRefresh.addEventListener('click', function(){
+      refreshAll();
+    });
+
+    // Event: search + filter inputs (debounced via instant render)
+    var sInp = document.getElementById('searchInput');
+    var fSel = document.getElementById('filterService');
+    if (sInp) sInp.addEventListener('input', renderSessions);
+    if (fSel) fSel.addEventListener('change', renderSessions);
+
+    var sSearch = document.getElementById('secretsSearch');
+    var sSvcFilt = document.getElementById('secretsFilterService');
+    if (sSearch) sSearch.addEventListener('input', renderSecrets);
+    if (sSvcFilt) sSvcFilt.addEventListener('change', renderSecrets);
+
+    // Event delegation: action buttons di sessions table
+    var sessTbody = document.getElementById('pppoeTbody');
+    if (sessTbody) sessTbody.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      var tr = btn.closest('tr[data-session-id]');
+      if (!tr) return;
+      var id = tr.getAttribute('data-session-id');
+      var nm = tr.getAttribute('data-session-name');
+      if (btn.getAttribute('data-act') === 'disconnect') disconnectSession(id, nm);
+    });
+
+    // Event delegation: action buttons di secrets table
+    var secTbody = document.getElementById('secretsTbody');
+    if (secTbody) secTbody.addEventListener('click', function(e){
+      var btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      var tr = btn.closest('tr[data-secret-id]');
+      if (!tr) return;
+      var id = tr.getAttribute('data-secret-id');
+      var nm = tr.getAttribute('data-secret-name');
+      var dis = tr.getAttribute('data-secret-disabled') === '1';
+      var act = btn.getAttribute('data-act');
+      if (act === 'edit')    openUserModal(id);
+      else if (act === 'toggle') toggleSecret(id, dis, nm);  // kalau currently disabled, button = enable
+      else if (act === 'delete') deleteSecret(id, nm);
+    });
+
+    // Close modal pada klik overlay
+    var modal = document.getElementById('userModal');
+    if (modal) modal.addEventListener('click', function(e){
+      if (e.target === this) closeUserModal();
+    });
+
+    // ESC untuk tutup modal
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') {
+        var m = document.getElementById('userModal');
+        if (m && m.classList.contains('show')) closeUserModal();
+      }
+    });
+
+    // Initial load dipicu oleh onReady selector (lihat di atas).
+    // Kalau selector tidak ada, _reloadAllForDevice() sudah dipanggil di fallback.
+
+    // Auto-refresh tiap 10s — refresh sessions + secrets keduanya supaya card
+    // stats (Aktif/Inactive/Offline) selalu sinkron, bukan cuma sesi aktif.
+    _timer = setInterval(function(){
+      refreshAll();
+    }, 10000);
+  });
+
+  window.addEventListener('beforeunload', function(){
+    if (_timer) clearInterval(_timer);
+  });
+})();
+</script>
+</body>
+</html>

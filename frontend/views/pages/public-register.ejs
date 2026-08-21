@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1d4ed8">
+  <title>Pendaftaran Pelanggan Baru · <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+  <style>
+    :root{
+      --font:'Plus Jakarta Sans',sans-serif;
+      --blue:#2563eb;--blue2:#1d4ed8;--blue3:#1e3a8a;
+      --bg:#eef3fb;--card:#fff;--border:#e4eaf4;
+      --text:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+      --green:#16a34a;--red:#e11d48;--amber:#d97706;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;}
+
+    /* Desktop split layout */
+    .page{display:flex;min-height:100dvh;}
+    .brandside{display:none;width:42%;max-width:520px;background:linear-gradient(160deg,#2563eb,#1d4ed8 55%,#1e3a8a);
+      color:#fff;padding:48px 44px;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;}
+    .brandside::after{content:'';position:absolute;right:-120px;bottom:-120px;width:340px;height:340px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);}
+    .brandside::before{content:'';position:absolute;left:-80px;top:-60px;width:220px;height:220px;border-radius:50%;
+      background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);}
+    .bs-logo{font-size:22px;font-weight:800;letter-spacing:-.4px;position:relative;}
+    .bs-mid{position:relative;}
+    .bs-mid h2{font-size:30px;font-weight:800;line-height:1.2;letter-spacing:-.8px;margin-bottom:14px;}
+    .bs-mid p{font-size:14.5px;opacity:.88;line-height:1.6;font-weight:400;max-width:360px;}
+    .bs-feat{margin-top:30px;display:flex;flex-direction:column;gap:14px;position:relative;}
+    .bs-feat .it{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;}
+    .bs-feat .ic{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .bs-feat .ic svg{width:17px;height:17px;}
+    .bs-foot{font-size:12px;opacity:.7;position:relative;font-weight:400;}
+
+    .formside{flex:1;display:flex;flex-direction:column;align-items:center;padding:24px 18px 40px;overflow-y:auto;
+      background-color:#eef3fb;
+      background-image:
+        radial-gradient(circle at 18% 12%, rgba(37,99,235,.06), transparent 38%),
+        radial-gradient(circle at 88% 78%, rgba(37,99,235,.05), transparent 42%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='2' cy='2' r='1.3' fill='%232563eb' fill-opacity='0.06'/%3E%3C/svg%3E");
+      background-attachment:fixed,fixed,scroll;
+    }
+    <% var _bg = (typeof bgUrl!=='undefined' && bgUrl) ? bgUrl : ''; var _ov = (typeof bgOverlay!=='undefined' && bgOverlay!=='') ? bgOverlay : '0.82'; %>
+    <% if (_bg) { %>
+    /* Background foto kustom dari Settings — overlay putih agar form tetap terbaca */
+    .formside{
+      background-color:#eef3fb;
+      background-image:
+        linear-gradient(rgba(255,255,255,<%= _ov %>), rgba(255,255,255,<%= _ov %>)),
+        url("<%= _bg %>");
+      background-size:cover, cover;
+      background-position:center, center;
+      background-attachment:fixed, fixed;
+      background-repeat:no-repeat, no-repeat;
+    }
+    <% } %>
+    .fwrap{width:100%;max-width:520px;}
+
+    /* Mobile hero (shown when brandside hidden) */
+    .mhero{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;border-radius:20px;
+      padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
+    .mhero::after{content:'';position:absolute;right:-50px;bottom:-60px;width:170px;height:170px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%);}
+    .mhero h1{font-size:21px;font-weight:800;letter-spacing:-.4px;position:relative;}
+    .mhero p{font-size:13px;opacity:.88;margin-top:6px;line-height:1.5;font-weight:400;position:relative;}
+    .sales-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;margin-top:14px;position:relative;}
+
+    /* Stepper */
+    .stepper{display:flex;align-items:center;margin:6px 0 22px;}
+    .stp{display:flex;align-items:center;flex:1;}
+    .stp:last-child{flex:0;}
+    .stp-dot{width:32px;height:32px;border-radius:50%;background:#e2e8f0;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;transition:.25s;}
+    .stp.active .stp-dot{background:var(--blue);color:#fff;}
+    .stp.done .stp-dot{background:var(--green);color:#fff;}
+    .stp-line{flex:1;height:3px;background:#e2e8f0;margin:0 8px;border-radius:2px;transition:.25s;}
+    .stp.done .stp-line{background:var(--green);}
+    .stp-lbl{font-size:11px;font-weight:600;color:var(--muted);margin-top:6px;text-align:center;position:absolute;}
+
+    .card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 6px 24px rgba(15,40,90,.05);transition:box-shadow .3s ease;}
+    .card:hover{box-shadow:0 10px 34px rgba(15,40,90,.08);}
+    .step-title{font-size:17px;font-weight:700;margin-bottom:4px;}
+    .step-desc{font-size:13px;color:var(--muted);margin-bottom:18px;}
+
+    /* ── Animasi transisi antar-step (ease-in, smooth) ── */
+    .step{animation:stepIn .45s cubic-bezier(.16,1,.3,1);}
+    @keyframes stepIn{
+      0%{opacity:0;transform:translateY(14px) scale(.99);}
+      100%{opacity:1;transform:translateY(0) scale(1);}
+    }
+    /* Field & paket muncul bertahap (stagger) */
+    .step .field,.step .pkg,.step .step-title,.step .step-desc,.step .map,.step .actions{
+      animation:fadeUp .5s both cubic-bezier(.16,1,.3,1);
+    }
+    @keyframes fadeUp{0%{opacity:0;transform:translateY(10px);}100%{opacity:1;transform:translateY(0);}}
+    .step .step-title{animation-delay:.02s;}
+    .step .step-desc{animation-delay:.06s;}
+    .step .field:nth-child(3){animation-delay:.10s;}
+    .step .field:nth-child(4){animation-delay:.14s;}
+    .step .field:nth-child(5){animation-delay:.18s;}
+    .step .actions{animation-delay:.22s;}
+    .pkg{animation-delay:calc(.08s * var(--i,0));}
+
+    /* Stepper: dot mengembang halus saat aktif/selesai */
+    .stp-dot{transition:transform .35s cubic-bezier(.34,1.56,.64,1),background .3s ease,color .3s ease;}
+    .stp.active .stp-dot{transform:scale(1.12);}
+    .stp-line{position:relative;overflow:hidden;}
+    .stp-line::after{content:'';position:absolute;inset:0;background:var(--green,#16a34a);transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.16,1,.3,1);}
+    .stp.done .stp-line::after{transform:scaleX(1);}
+
+    .field{margin-bottom:15px;}
+    label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;}
+    label .opt{font-weight:400;color:var(--muted2);}
+    input,textarea,select{width:100%;font-family:var(--font);font-size:14px;font-weight:400;padding:12px 14px;
+      border:1.5px solid var(--border);border-radius:12px;background:#fff;color:var(--text);transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(37,99,235,.12);background:#fdfeff;}
+    input:hover:not(:focus),textarea:hover:not(:focus){border-color:#cbd6e8;}
+    textarea{resize:vertical;min-height:74px;}
+    .row{display:flex;gap:12px;}.row>*{flex:1;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    @media(max-width:520px){ .row2{grid-template-columns:1fr;} }
+
+    .pkg-grid{display:flex;flex-direction:column;gap:11px;}
+    .pkg{border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease,transform .15s ease;}
+    .pkg:hover{border-color:#bfd4fe;background:#f8fbff;transform:translateY(-1px);}
+    .pkg:active{transform:scale(.99);}
+    .pkg.sel{border-color:var(--blue);background:#eff5ff;box-shadow:0 0 0 3px rgba(37,99,235,.10);}
+    .pkg-l{display:flex;align-items:center;gap:12px;}
+    .pkg-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;position:relative;transition:border-color .2s ease;}
+    .pkg.sel .pkg-radio{border-color:var(--blue);}
+    .pkg.sel .pkg-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--blue);animation:pop .3s cubic-bezier(.34,1.56,.64,1);}
+    .pkg-name{font-size:14.5px;font-weight:700;}
+    .pkg-spec{font-size:12px;color:var(--muted);font-weight:500;margin-top:2px;}
+    .pkg-price{font-size:15px;font-weight:800;color:var(--blue2);white-space:nowrap;}
+    .pkg-price small{display:block;font-size:10px;color:var(--muted2);font-weight:500;text-align:right;}
+
+    .map{height:220px;border-radius:14px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:10px;}
+    .geo-btn{width:100%;padding:11px;border:1.5px dashed var(--blue);background:#eff5ff;color:var(--blue2);border-radius:12px;font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .2s ease,transform .15s ease;}
+    .geo-btn:hover{background:#e3eeff;}
+    .geo-btn:active{transform:scale(.98);}
+    .geo-btn svg{width:16px;height:16px;}
+
+    .cov{border-radius:13px;padding:13px 15px;font-size:13px;font-weight:600;margin-top:10px;display:none;align-items:center;gap:8px;animation:fadeUp .35s ease both;}
+    .cov.show{display:flex;}
+    .cov.available{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+    .cov.not_covered{background:#fef2f2;color:#be123c;border:1px solid #fecaca;}
+    .cov.unknown{background:#fffbeb;color:#b45309;border:1px solid #fde68a;}
+    .cov small{display:block;font-weight:400;opacity:.85;margin-top:2px;}
+
+    .actions{display:flex;gap:10px;margin-top:22px;}
+    .btn{flex:1;padding:14px;border:none;border-radius:13px;font-family:var(--font);font-weight:700;font-size:15px;cursor:pointer;transition:transform .15s ease,box-shadow .25s ease,filter .2s ease;}
+    .btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.28);}
+    .btn-primary:hover{filter:brightness(1.05);box-shadow:0 10px 26px rgba(37,99,235,.36);transform:translateY(-1px);}
+    .btn-primary:active{transform:scale(.99) translateY(0);}
+    .btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
+    .btn-ghost{background:#eef2f9;color:var(--text);flex:0 0 auto;padding-left:22px;padding-right:22px;}
+    .btn-ghost:hover{background:#e2e8f3;}
+
+    .done{text-align:center;padding:30px 10px;}
+    .done .ic{width:78px;height:78px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:pop .4s ease;}
+    @keyframes pop{0%{transform:scale(.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+    .done h2{font-size:21px;font-weight:800;}
+    .done p{font-size:14px;color:var(--muted);font-weight:400;margin-top:8px;line-height:1.55;}
+    .reg-no{display:inline-block;background:#eff5ff;color:var(--blue2);font-weight:700;padding:9px 18px;border-radius:11px;margin-top:18px;font-size:14px;letter-spacing:.5px;}
+
+    .err{background:#fef2f2;color:#be123c;border:1px solid #fecaca;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:500;margin-bottom:16px;display:none;}
+    .err.show{display:block;animation:errIn .4s cubic-bezier(.36,.07,.19,.97);}
+    @keyframes errIn{
+      0%{opacity:0;transform:translateY(-6px);}
+      35%{opacity:1;transform:translateY(0);}
+      45%{transform:translateX(-5px);}55%{transform:translateX(5px);}
+      70%{transform:translateX(-3px);}85%{transform:translateX(2px);}100%{transform:translateX(0);}
+    }
+    .foot{text-align:center;font-size:11.5px;color:var(--muted2);padding:18px;font-weight:400;}
+
+    @media(min-width:900px){
+      .brandside{display:flex;}
+      .mhero{display:none;}
+      .formside{padding:48px 40px;justify-content:center;}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Brand panel (desktop) -->
+    <aside class="brandside">
+      <div class="bs-logo"><%= appName %></div>
+      <div class="bs-mid">
+        <h2>Pasang internet cepat & stabil di rumah Anda.</h2>
+        <p>Lengkapi formulir pendaftaran. Tim kami akan menghubungi Anda untuk survey lokasi dan menjadwalkan pemasangan.</p>
+        <div class="bs-feat">
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg></span>Proses cepat & mudah</div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>Cek ketersediaan otomatis</div>
+          <div class="it"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span>Dukungan pelanggan responsif</div>
+        </div>
+      </div>
+      <div class="bs-foot">© <%= new Date().getFullYear() %> <%= appName %>. Semua hak dilindungi.</div>
+    </aside>
+
+    <!-- Form -->
+    <div class="formside">
+      <div class="fwrap">
+        <!-- Mobile hero -->
+        <div class="mhero">
+          <h1>Daftar Internet</h1>
+          <p>Lengkapi formulir di bawah. Tim kami akan menghubungi Anda untuk survey & pemasangan.</p>
+          <% if (validCode && salesName) { %>
+            <div class="sales-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Sales: <%= salesName %>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Stepper -->
+        <div class="stepper" id="stepper">
+          <div class="stp active" data-s="1"><div class="stp-dot">1</div><div class="stp-line"></div></div>
+          <div class="stp" data-s="2"><div class="stp-dot">2</div><div class="stp-line"></div></div>
+          <div class="stp" data-s="3"><div class="stp-dot">3</div></div>
+        </div>
+
+        <div class="card">
+          <div class="err" id="err"></div>
+
+          <!-- STEP 1 -->
+          <div class="step" data-step="1">
+            <div class="step-title">Data Diri</div>
+            <div class="step-desc">Isi identitas Anda sesuai KTP.</div>
+            <!-- Honeypot anti-bot: disembunyikan dari user, harus tetap kosong -->
+            <div aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;width:0;overflow:hidden">
+              <input type="text" id="hp_website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            <div class="field"><label>Nama Lengkap</label><input type="text" id="name" placeholder="Nama sesuai KTP" autocomplete="name"></div>
+            <div class="field"><label>Nomor WhatsApp</label><input type="tel" id="phone" placeholder="08xxxxxxxxxx" autocomplete="tel"></div>
+            <div class="row">
+              <div class="field"><label>Email <span class="opt">(opsional)</span></label><input type="email" id="email" placeholder="nama@email.com" autocomplete="email"></div>
+              <div class="field"><label>No. KTP <span class="opt">(opsional)</span></label><input type="text" id="ktp" placeholder="16 digit" inputmode="numeric"></div>
+            </div>
+            <div class="actions"><button class="btn btn-primary" onclick="next(2)">Lanjut</button></div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step" data-step="2" style="display:none;">
+            <div class="step-title">Lokasi Pemasangan</div>
+            <div class="step-desc">Tentukan titik lokasi agar kami bisa cek ketersediaan jaringan.</div>
+            <div class="row2">
+              <div class="field"><label>Provinsi</label><select id="prov" onchange="onProvChange()"><option value="">— pilih provinsi —</option></select></div>
+              <div class="field"><label>Kabupaten / Kota</label><select id="kab" onchange="onKabChange()" disabled><option value="">— pilih —</option></select></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>Kecamatan</label><select id="kec" onchange="onKecChange()" disabled><option value="">— pilih —</option></select></div>
+              <div class="field"><label>Desa / Kelurahan</label><select id="desa" onchange="onDesaChange()" disabled><option value="">— pilih —</option></select></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>Nama Jalan</label><input id="jalan" placeholder="Jl. ..." oninput="composeAddr()"></div>
+              <div class="field"><label>No. Rumah</label><input id="noRumah" placeholder="No." oninput="composeAddr()"></div>
+            </div>
+            <div class="row2">
+              <div class="field"><label>RT</label><input id="rt" placeholder="001" inputmode="numeric" oninput="composeAddr()"></div>
+              <div class="field"><label>RW</label><input id="rw" placeholder="002" inputmode="numeric" oninput="composeAddr()"></div>
+            </div>
+            <div class="field"><label>Alamat Lengkap <span class="opt">(otomatis tersusun, bisa diedit)</span></label><textarea id="address" placeholder="Nama jalan, no. rumah, RT/RW, kelurahan, patokan..."></textarea></div>
+            <div class="field">
+              <label>Titik Lokasi <span class="opt">(geser pin untuk akurasi)</span></label>
+              <div class="map" id="map"></div>
+              <button class="geo-btn" onclick="locate()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Gunakan Lokasi Saya</button>
+              <div class="cov" id="cov"></div>
+            </div>
+            <div class="actions"><button class="btn btn-ghost" onclick="next(1)">Kembali</button><button class="btn btn-primary" onclick="next(3)">Lanjut</button></div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="step" data-step="3" style="display:none;">
+            <div class="step-title">Pilih Paket</div>
+            <div class="step-desc">Pilih paket internet yang sesuai kebutuhan Anda.</div>
+            <div class="field"><div class="pkg-grid" id="pkgs"><div style="color:var(--muted);font-size:13px;">Memuat paket...</div></div></div>
+            <div class="field"><label>Catatan <span class="opt">(opsional)</span></label><textarea id="notes" placeholder="Mis. preferensi jadwal pemasangan"></textarea></div>
+            <div class="actions"><button class="btn btn-ghost" onclick="next(2)">Kembali</button><button class="btn btn-primary" id="submitBtn" onclick="submitForm()">Kirim Pendaftaran</button></div>
+          </div>
+
+          <!-- DONE -->
+          <div class="step" data-step="done" style="display:none;">
+            <div class="done">
+              <div class="ic"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <h2>Pendaftaran Berhasil!</h2>
+              <p id="doneMsg">Tim kami akan segera menghubungi Anda.</p>
+              <div class="reg-no" id="regNo"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="foot">© <%= new Date().getFullYear() %> <%= appName %></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/leaflet/leaflet.js"></script>
+  <script>
+    const REFERRAL = <%- JSON.stringify(referralCode || '') %>;
+    let selPkg=null, map, marker, lat=null, lng=null, curStep=1;
+
+    function showErr(m){
+      const e=document.getElementById('err');
+      e.textContent=m;
+      e.classList.remove('show'); void e.offsetWidth; // reflow → animasi selalu replay
+      e.classList.add('show');
+      clearTimeout(e._t);
+      e._t=setTimeout(()=>e.classList.remove('show'),5000);
+    }
+
+    function setStep(s){
+      document.querySelectorAll('.step').forEach(el=>el.style.display='none');
+      document.querySelector(`[data-step="${s}"]`).style.display='block';
+      // stepper visual
+      const num = s==='done' ? 4 : s;
+      document.querySelectorAll('.stp').forEach(st=>{
+        const sn=parseInt(st.dataset.s);
+        st.classList.toggle('active', sn===num);
+        st.classList.toggle('done', sn<num);
+      });
+      if(typeof s==='number') curStep=s;
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    function next(s){
+      if(s===2){
+        if(!document.getElementById('name').value.trim())return showErr('Nama wajib diisi');
+        if(!document.getElementById('phone').value.trim())return showErr('Nomor WhatsApp wajib diisi');
+      }
+      if(s===3){ if(!document.getElementById('address').value.trim())return showErr('Alamat wajib diisi'); }
+      setStep(s);
+      if(s===2 && !map) setTimeout(initMap,80);
+      if(s===2) loadProvinces();
+    }
+
+    function pinIcon(){
+      return L.divIcon({
+        className:'',
+        html:'<div style="transform:translate(-50%,-100%);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))">'
+          +'<svg width="34" height="44" viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg">'
+          +'<path d="M17 0C7.6 0 0 7.6 0 17c0 12 17 27 17 27s17-15 17-27C34 7.6 26.4 0 17 0z" fill="#2563eb"/>'
+          +'<circle cx="17" cy="17" r="6.5" fill="#fff"/></svg></div>',
+        iconSize:[34,44], iconAnchor:[0,0]
+      });
+    }
+    function initMap(){
+      const def=[-6.2,106.8];
+      map=L.map('map').setView(def,13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+      marker=L.marker(def,{draggable:true,icon:pinIcon()}).addTo(map);
+      marker.on('dragend',()=>{const p=marker.getLatLng();lat=p.lat;lng=p.lng;checkCoverage();});
+      map.on('click',e=>{lat=e.latlng.lat;lng=e.latlng.lng;marker.setLatLng(e.latlng);checkCoverage();});
+      setTimeout(()=>map.invalidateSize(),200);
+    }
+    // ── Dropdown wilayah berjenjang (API emsifa) ──
+    const WILAYAH_API='/api/regions';
+    let _provLoaded=false, _fwdGeoTimer=null;
+    async function fetchWilayah(path){
+      try{ const r=await fetch(`${WILAYAH_API}/${path}`); return r.ok?await r.json():[]; }catch(_){ return []; }
+    }
+    function fillSelect(id,items,ph){
+      const el=document.getElementById(id); if(!el)return;
+      el.innerHTML=`<option value="">${ph}</option>`+items.map(x=>`<option value="${x.id}" data-name="${x.name}">${x.name}</option>`).join('');
+      el.disabled=items.length===0;
+    }
+    async function loadProvinces(){
+      if(_provLoaded)return;
+      const provs=await fetchWilayah('provinces');
+      if(provs.length){ fillSelect('prov',provs,'— pilih provinsi —'); _provLoaded=true; }
+    }
+    async function onProvChange(){
+      const id=document.getElementById('prov').value;
+      ['kab','kec','desa'].forEach(x=>{const e=document.getElementById(x);e.innerHTML='<option value="">— pilih —</option>';e.disabled=true;});
+      if(id){ fillSelect('kab',await fetchWilayah('regencies/'+id),'— pilih kab/kota —'); }
+      composeAddr(); moveMapToWilayah();
+    }
+    async function onKabChange(){
+      const id=document.getElementById('kab').value;
+      ['kec','desa'].forEach(x=>{const e=document.getElementById(x);e.innerHTML='<option value="">— pilih —</option>';e.disabled=true;});
+      if(id){ fillSelect('kec',await fetchWilayah('districts/'+id),'— pilih kecamatan —'); }
+      composeAddr(); moveMapToWilayah();
+    }
+    async function onKecChange(){
+      const id=document.getElementById('kec').value;
+      const e=document.getElementById('desa');e.innerHTML='<option value="">— pilih —</option>';e.disabled=true;
+      if(id){ fillSelect('desa',await fetchWilayah('villages/'+id),'— pilih desa/kelurahan —'); }
+      composeAddr(); moveMapToWilayah();
+    }
+    function onDesaChange(){ composeAddr(); moveMapToWilayah(); }
+    function selName(id){const el=document.getElementById(id);if(!el||!el.value)return '';const o=el.options[el.selectedIndex];return o?(o.getAttribute('data-name')||o.textContent):'';}
+    function composeAddr(){
+      const jalan=document.getElementById('jalan').value.trim();
+      const no=document.getElementById('noRumah').value.trim();
+      const rt=document.getElementById('rt').value.trim();
+      const rw=document.getElementById('rw').value.trim();
+      const desa=selName('desa'),kec=selName('kec'),kab=selName('kab'),prov=selName('prov');
+      const seg=[]; let js=jalan; if(no) js+=(jalan?' No. ':'No. ')+no;
+      if(js)seg.push(js); if(rt||rw)seg.push(`RT ${rt||'-'}/RW ${rw||'-'}`);
+      if(desa)seg.push('Kel. '+desa); if(kec)seg.push('Kec. '+kec); if(kab)seg.push(kab); if(prov)seg.push(prov);
+      const txt=seg.join(', '); if(txt) document.getElementById('address').value=txt;
+    }
+    function moveMapToWilayah(){
+      const desa=selName('desa'),kec=selName('kec'),kab=selName('kab'),prov=selName('prov');
+      if(!prov&&!kab)return;
+      const q=[desa,kec,kab,prov,'Indonesia'].filter(Boolean).join(', ');
+      clearTimeout(_fwdGeoTimer);
+      _fwdGeoTimer=setTimeout(async()=>{
+        try{
+          const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=id&countrycodes=id&q='+encodeURIComponent(q));
+          const arr=await r.json();
+          if(arr&&arr.length&&map){
+            const la=parseFloat(arr[0].lat),ln=parseFloat(arr[0].lon);
+            const zoom=desa?15:kec?13:kab?12:10;
+            map.setView([la,ln],zoom);
+            lat=la;lng=ln; if(marker) marker.setLatLng([la,ln]); checkCoverage();
+          }
+        }catch(_){}
+      },500);
+    }
+
+    function locate(){
+      if(!navigator.geolocation)return showErr('Browser tidak mendukung lokasi');
+      navigator.geolocation.getCurrentPosition(p=>{
+        lat=p.coords.latitude;lng=p.coords.longitude;
+        map.setView([lat,lng],17);marker.setLatLng([lat,lng]);checkCoverage();
+      },()=>showErr('Gagal mendapatkan lokasi. Geser pin manual.'),{enableHighAccuracy:true});
+    }
+    async function checkCoverage(){
+      if(lat==null||lng==null)return;
+      const box=document.getElementById('cov');
+      box.className='cov show unknown';box.innerHTML='Mengecek ketersediaan jaringan...';
+      try{
+        const r=await fetch('/pub/reg/coverage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({latitude:lat,longitude:lng})});
+        const j=await r.json();
+        if(!j.success){box.className='cov show unknown';box.innerHTML='Tidak dapat mengecek coverage.';return;}
+        const d=j.data;
+        let extra=d.cable_estimate?`<small>Estimasi kabel: ±${d.cable_estimate} m</small>`:'';
+        box.className='cov show '+d.coverage_status;
+        const ic=d.coverage_status==='available'?'✅':d.coverage_status==='not_covered'?'⚠️':'🔎';
+        box.innerHTML=`<span>${ic}</span><span>${d.message}${extra}</span>`;
+      }catch(e){box.className='cov show unknown';box.innerHTML='Gagal cek coverage.';}
+    }
+
+    async function loadPkgs(){
+      try{
+        const r=await fetch('/pub/reg/packages');const j=await r.json();
+        const box=document.getElementById('pkgs');
+        if(!j.data||!j.data.length){box.innerHTML='<div style="color:var(--muted);font-size:13px;">Belum ada paket tersedia.</div>';return;}
+        box.innerHTML='';
+        j.data.forEach((p,pi)=>{
+          const el=document.createElement('div');el.className='pkg';
+          el.style.setProperty('--i', pi+1);
+          el.innerHTML=`<div class="pkg-l"><div class="pkg-radio"></div><div><div class="pkg-name">${p.name}</div><div class="pkg-spec">${p.speed_down} Mbps${p.description?' · '+p.description:''}</div></div></div>
+            <div class="pkg-price">Rp${Number(p.price).toLocaleString('id-ID')}<small>/bulan</small></div>`;
+          el.onclick=()=>{document.querySelectorAll('.pkg').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');selPkg=p.id;};
+          box.appendChild(el);
+        });
+      }catch(e){document.getElementById('pkgs').innerHTML='<div style="color:var(--red);font-size:13px;">Gagal memuat paket.</div>';}
+    }
+
+    async function submitForm(){
+      const btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Mengirim...';
+      const payload={
+        name:document.getElementById('name').value.trim(),
+        phone:document.getElementById('phone').value.trim(),
+        email:document.getElementById('email').value.trim()||null,
+        id_card_number:document.getElementById('ktp').value.trim()||null,
+        address:document.getElementById('address').value.trim(),
+        latitude:lat,longitude:lng,package_id:selPkg,
+        notes:document.getElementById('notes').value.trim()||null,
+        referral_code:REFERRAL,
+        website:(document.getElementById('hp_website')||{}).value||'' // honeypot
+      };
+      try{
+        const url=REFERRAL?`/pub/reg/submit/${REFERRAL}`:'/pub/reg/submit';
+        const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const j=await r.json();
+        if(!j.success){btn.disabled=false;btn.textContent='Kirim Pendaftaran';return showErr(j.message||'Gagal mengirim');}
+        document.getElementById('regNo').textContent=j.data.reg_number;
+        document.getElementById('doneMsg').textContent=j.message;
+        setStep('done');
+      }catch(e){btn.disabled=false;btn.textContent='Kirim Pendaftaran';showErr('Terjadi kesalahan jaringan');}
+    }
+
+    loadPkgs();
+  </script>
+</body>
+</html>

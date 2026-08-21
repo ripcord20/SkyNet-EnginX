@@ -1,0 +1,1090 @@
+<!-- Demo banner — tampil hanya untuk user demo -->
+<% if (typeof user !== 'undefined' && user && user.role && user.role.name === 'demo') { %>
+  <%- include('./demo-banner') %>
+<% } %>
+<% const isFinanceUser = (typeof user !== 'undefined') && user && user.role && user.role.name === 'finance'; %>
+<% const isSalesUser = (typeof user !== 'undefined') && user && user.role && user.role.name === 'sales'; %>
+<% const onSalesPage = (typeof active !== 'undefined') && active === 'sales-dashboard'; %>
+<% const useSalesBottomNav = isSalesUser || onSalesPage; %>
+<!-- Top Navigation Bar -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="topbar-right">
+    <div class="search-box" id="globalSearchWrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" placeholder="Cari perangkat, user..." id="globalSearch" autocomplete="off">
+      <div class="global-search-dropdown" id="globalSearchDropdown"></div>
+    </div>
+    <div class="topbar-actions">
+
+      <!-- Notification Bell -->
+      <div class="notif-wrap" id="notifWrap">
+        <button class="topbar-btn notif-bell-btn" id="notificationBtn" onclick="toggleNotifPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          <span class="notif-count-badge" id="notifCountBadge" style="display:none;">0</span>
+        </button>
+
+        <!-- Notification Panel -->
+        <div class="notif-panel" id="notifPanel" style="display:none;">
+          <div class="notif-panel-hdr">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#0d1b3e;">Notifikasi</div>
+              <div style="font-size:11px;color:#94a3b8;" id="notifSubtitle">–</div>
+            </div>
+            <button onclick="markAllNotifRead()" style="font-size:11.5px;color:#1a6ef5;background:none;border:none;cursor:pointer;font-weight:600;padding:0;">Tandai semua</button>
+          </div>
+          <div class="notif-panel-tabs">
+            <button class="notif-tab active" onclick="switchNotifTab('all',this)">Semua</button>
+            <button class="notif-tab" onclick="switchNotifTab('unread',this)">Belum dibaca</button>
+          </div>
+          <div class="notif-panel-list" id="notifPanelList">
+            <div class="notif-empty-state">
+              <svg width="32" height="32" fill="none" stroke="#d1d5db" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <p>Tidak ada notifikasi</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<style>
+@media(min-width:769px){ .sidebar-toggle { display:none !important; } }
+
+/* Notification */
+.notif-wrap { position:relative; }
+.notif-bell-btn {
+  position:relative; width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  background:none; border:none; cursor:pointer; color:#64748b;
+  transition:all .15s;
+}
+.notif-bell-btn:hover { background:#f4f8ff; color:#1a6ef5; }
+.notif-count-badge {
+  position:absolute; top:-2px; right:-2px;
+  min-width:16px; height:16px; border-radius:99px;
+  background:#ef4444; color:#fff; font-size:9.5px; font-weight:800;
+  display:flex; align-items:center; justify-content:center;
+  padding:0 4px; border:2px solid #fff; line-height:1;
+}
+.notif-panel {
+  position:absolute; right:-8px; top:calc(100% + 10px);
+  width:360px; background:#fff; border-radius:16px;
+  box-shadow:0 8px 40px rgba(0,0,0,.14), 0 0 0 1px rgba(0,0,0,.06);
+  z-index:9999; overflow:hidden;
+  animation:notifSlide .2s ease;
+}
+@keyframes notifSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-panel-hdr {
+  padding:14px 16px 10px; display:flex; align-items:flex-start;
+  justify-content:space-between; border-bottom:1px solid #f1f5f9;
+}
+.notif-panel-tabs { display:flex; padding:0 16px; border-bottom:1px solid #f1f5f9; }
+.notif-tab {
+  padding:8px 12px; font-size:12px; font-weight:600; cursor:pointer;
+  border:none; background:none; color:#94a3b8; border-bottom:2px solid transparent;
+  transition:all .15s; margin-bottom:-1px;
+}
+.notif-tab.active { color:#1a6ef5; border-bottom-color:#1a6ef5; }
+.notif-panel-list { max-height:380px; overflow-y:auto; }
+
+/* ── Modern notification item ─────────────────────────────── */
+.notif-item {
+  display:flex; gap:11px; padding:12px 16px;
+  border-bottom:1px solid #f1f5f9; cursor:pointer;
+  transition:background .15s; position:relative;
+}
+.notif-item:last-child { border-bottom:none; }
+.notif-item:hover { background:#f8faff; }
+.notif-item.unread { background:#f8fbff; }
+
+/* Icon container: rounded square dengan subtle background + outline icon */
+.notif-icon {
+  width:34px; height:34px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0; /* hide any text fallback */
+  position:relative;
+}
+.notif-icon svg {
+  width:16px; height:16px;
+  stroke-width:2;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+/* Color variants — soft pastel bg + saturated stroke */
+.notif-icon.overdue  { background:#fef2f2; }
+.notif-icon.overdue  svg { stroke:#dc2626; }
+.notif-icon.warning  { background:#fffbeb; }
+.notif-icon.warning  svg { stroke:#d97706; }
+.notif-icon.due      { background:#fef9c3; }
+.notif-icon.due      svg { stroke:#a16207; }
+.notif-icon.critical { background:#fef2f2; }
+.notif-icon.critical svg { stroke:#b91c1c; }
+.notif-icon.wa       { background:#f0fdf4; }
+.notif-icon.wa       svg { stroke:#16a34a; }
+.notif-icon.payment  { background:#f0fdf4; }
+.notif-icon.payment  svg { stroke:#16a34a; }
+.notif-icon.info     { background:#eff6ff; }
+.notif-icon.info     svg { stroke:#2563eb; }
+
+.notif-body { flex:1; min-width:0; }
+.notif-title-row {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:8px; margin-bottom:3px;
+}
+.notif-title {
+  font-size:12.5px; font-weight:600; color:#0f172a;
+  line-height:1.35; flex:1; min-width:0;
+}
+/* Unread indicator: dot kecil di pojok kanan title */
+.notif-unread-dot {
+  width:7px; height:7px; border-radius:50%;
+  background:#1a6ef5; flex-shrink:0;
+  margin-top:5px;
+  box-shadow:0 0 0 2px rgba(26,110,245,.15);
+}
+.notif-msg {
+  font-size:11.5px; color:#64748b; line-height:1.5;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.notif-time  {
+  font-size:10.5px; color:#94a3b8; margin-top:4px;
+  display:flex; align-items:center; gap:4px;
+}
+.notif-time::before {
+  content:''; width:3px; height:3px; border-radius:50%;
+  background:#cbd5e1; flex-shrink:0;
+}
+.notif-time:first-child::before { display:none; }
+
+.notif-empty-state {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:32px 16px; color:#94a3b8; gap:8px;
+  font-size:13px;
+}
+
+/* ── Global Search Dropdown ─────────────────────────────────── */
+#globalSearchWrap { position:relative; }
+.global-search-dropdown {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:#fff; border-radius:12px;
+  box-shadow:0 8px 32px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.05);
+  z-index:9999; max-height:480px; overflow-y:auto;
+  display:none; padding:6px 0;
+  animation:gsdFade .15s ease;
+}
+.global-search-dropdown.open { display:block; }
+@keyframes gsdFade { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+.gsd-section {
+  padding:8px 14px 4px;
+  font-size:10px; font-weight:700;
+  color:#94a3b8; text-transform:uppercase;
+  letter-spacing:.5px;
+}
+.gsd-item {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 14px; cursor:pointer;
+  transition:background .12s;
+  text-decoration:none; color:#0d1b3e;
+}
+.gsd-item:hover, .gsd-item.active { background:#f4f8ff; }
+.gsd-icon {
+  width:30px; height:30px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.gsd-icon.cust { background:#dbeafe; color:#1d4ed8; }
+.gsd-icon.dev  { background:#fef3c7; color:#a16207; }
+.gsd-icon.infra{ background:#dcfce7; color:#15803d; }
+.gsd-body { flex:1; min-width:0; }
+.gsd-title {
+  font-size:13px; font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.gsd-sub {
+  font-size:11px; color:#64748b;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.gsd-empty, .gsd-loading {
+  padding:24px 16px; text-align:center;
+  font-size:12px; color:#94a3b8;
+}
+.gsd-status {
+  font-size:9px; font-weight:700;
+  padding:1px 6px; border-radius:8px;
+  text-transform:uppercase; letter-spacing:.3px;
+  flex-shrink:0; margin-left:6px;
+}
+.gsd-status.active   { background:#dcfce7; color:#15803d; }
+.gsd-status.inactive { background:#fee2e2; color:#b91c1c; }
+.gsd-status.isolated { background:#fef3c7; color:#a16207; }
+.gsd-status.online   { background:#dcfce7; color:#15803d; }
+.gsd-status.offline  { background:#fee2e2; color:#b91c1c; }
+@media (max-width: 600px) {
+  .global-search-dropdown { max-height:360px; }
+}
+</style>
+
+<div class="notification-dropdown" id="notifDropdown" style="display:none"></div>
+
+<script>
+// ── Notification Panel ─────────────────────────────────────────
+// Beberapa halaman (Financial/NOC/Sales Dashboard) tidak memuat /js/app.js,
+// jadi objek `App` tidak ada → panel notifikasi "gagal memuat". Pakai helper
+// lokal `notifApi()` yang memilih App.api bila tersedia, atau fetch sendiri.
+// Tidak menyentuh/menimpa window.App agar tidak bentrok dengan app.js.
+async function notifApi(url, options = {}) {
+  if (typeof window.App !== 'undefined' && typeof window.App.api === 'function') {
+    return window.App.api(url, options);
+  }
+  const headers = { 'Content-Type':'application/json', 'Accept':'application/json', 'X-Requested-With':'XMLHttpRequest' };
+  let token = null; try { token = localStorage.getItem('token'); } catch(_) {}
+  if (token && token !== 'null') headers['Authorization'] = 'Bearer ' + token;
+  if (options.headers) Object.assign(headers, options.headers);
+  try {
+    const res = await fetch('/api' + url, { ...options, headers, credentials:'include' });
+    return await res.json();
+  } catch (e) { return { success:false, message:'Network error' }; }
+}
+
+let _notifOpen   = false;
+let _notifTab    = 'all';
+let _notifItems  = [];
+
+function toggleNotifPanel() {
+  _notifOpen = !_notifOpen;
+  const panel = document.getElementById('notifPanel');
+  if (panel) panel.style.display = _notifOpen ? 'block' : 'none';
+  if (_notifOpen) loadNotifPanel();
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('notifWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    _notifOpen = false;
+    const p = document.getElementById('notifPanel');
+    if (p) p.style.display = 'none';
+  }
+});
+
+async function loadNotifPanel() {
+  const list = document.getElementById('notifPanelList');
+  if (!list) return;
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px;">Memuat...</div>';
+
+  const renderEmpty = (txt) => {
+    list.innerHTML = '<div class="notif-empty-state"><svg width="32" height="32" fill="none" stroke="#d1d5db" stroke-width="1.5" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><p>' + (txt || 'Tidak ada notifikasi') + '</p></div>';
+  };
+
+  const url = _notifTab === 'unread' ? '/notifications?unread=true&limit=30' : '/notifications?limit=30';
+  let d;
+  try {
+    d = await notifApi(url);
+  } catch (e) {
+    renderEmpty('Gagal memuat notifikasi');
+    return;
+  }
+  if (!d || d.success === false) { renderEmpty('Gagal memuat notifikasi'); return; }
+  _notifItems = Array.isArray(d.data) ? d.data : [];
+
+  updateNotifSubtitle();
+
+  if (!_notifItems.length) { renderEmpty('Tidak ada notifikasi'); return; }
+
+  list.innerHTML = _notifItems.map(n => {
+    const icon = getNotifIcon(n.type, n.severity);
+    const iconClass = getNotifIconClass(n.type, n.severity);
+    const time = formatNotifTime(n.created_at);
+    return `<div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="readNotif(${n.id}, this)">
+      <div class="notif-icon ${iconClass}">${icon}</div>
+      <div class="notif-body">
+        <div class="notif-title-row">
+          <div class="notif-title">${escHtml(n.title)}</div>
+          ${n.is_read ? '' : '<span class="notif-unread-dot" title="Belum dibaca"></span>'}
+        </div>
+        <div class="notif-msg">${escHtml(n.message)}</div>
+        <div class="notif-time">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateNotifSubtitle() {
+  const unreadCount = _notifItems.filter(n => !n.is_read).length;
+  const el = document.getElementById('notifSubtitle');
+  if (el) el.textContent = unreadCount > 0 ? unreadCount + ' belum dibaca' : 'Semua sudah dibaca';
+}
+
+function getNotifIcon(type, severity) {
+  // SVG inline icons — konsisten cross-browser, stroke-based, modern outline style
+  const ICONS = {
+    // Invoice & billing
+    overdue:    '<svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>',
+    due_today:  '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="15" r="1.5" fill="currentColor"/></svg>',
+    due_soon:   '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    payment:    '<svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>',
+    // Operations
+    isolir:     '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>',
+    restore:    '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 4v5h5"/></svg>',
+    // WhatsApp / messaging
+    wa_incoming:    '<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+    wa_disconnected:'<svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>',
+    // System
+    critical:   '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    warning:    '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info:       '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  };
+
+  // Map type ke icon — prioritas: type spesifik > severity > default
+  if (type === 'overdue')         return ICONS.overdue;
+  if (type === 'due_today')       return ICONS.due_today;
+  if (type === 'due_soon')        return ICONS.due_soon;
+  if (type === 'payment')         return ICONS.payment;
+  if (type === 'isolir')          return ICONS.isolir;
+  if (type === 'restore')         return ICONS.restore;
+  if (type === 'wa_incoming')     return ICONS.wa_incoming;
+  if (type === 'wa_disconnected') return ICONS.wa_disconnected;
+  if (severity === 'critical')    return ICONS.critical;
+  if (severity === 'warning')     return ICONS.warning;
+  return ICONS.info;
+}
+
+function getNotifIconClass(type, severity) {
+  // CSS class untuk background color icon container
+  if (type === 'overdue')         return 'overdue';
+  if (type === 'due_today')       return 'warning';
+  if (type === 'due_soon')        return 'due';
+  if (type === 'payment')         return 'payment';
+  if (type === 'restore')         return 'payment';
+  if (type === 'isolir')          return 'overdue';
+  if (type === 'wa_incoming')     return 'wa';
+  if (type === 'wa_disconnected') return 'warning';
+  if (severity === 'critical')    return 'critical';
+  if (severity === 'warning')     return 'warning';
+  return 'info';
+}
+
+function formatNotifTime(dt) {
+  if (!dt) return '';
+  const now  = new Date();
+  const d    = new Date(dt);
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60)   return 'Baru saja';
+  if (diff < 3600) return Math.floor(diff/60) + ' menit lalu';
+  if (diff < 86400)return Math.floor(diff/3600) + ' jam lalu';
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function readNotif(id, el) {
+  if (el && el.classList.contains('unread')) {
+    el.classList.remove('unread');
+    // Hapus unread dot dengan animasi fade-out
+    const dot = el.querySelector('.notif-unread-dot');
+    if (dot) {
+      dot.style.transition = 'opacity .2s';
+      dot.style.opacity = '0';
+      setTimeout(() => dot.remove(), 200);
+    }
+    await notifApi('/notifications/' + id + '/read', { method:'PUT' });
+    updateNotifCount();
+  }
+}
+
+async function markAllNotifRead() {
+  await notifApi('/notifications/read-all', { method:'PUT' });
+  document.querySelectorAll('.notif-item.unread').forEach(el => {
+    el.classList.remove('unread');
+    const dot = el.querySelector('.notif-unread-dot');
+    if (dot) dot.remove();
+  });
+  document.getElementById('notifCountBadge').style.display = 'none';
+  const sub = document.getElementById('notifSubtitle');
+  if (sub) sub.textContent = 'Semua sudah dibaca';
+}
+
+function switchNotifTab(tab, btn) {
+  _notifTab = tab;
+  document.querySelectorAll('.notif-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadNotifPanel();
+}
+
+async function updateNotifCount() {
+  const d = await notifApi('/notifications/unread-count');
+  const count = d?.data?.count || 0;
+  const badge = document.getElementById('notifCountBadge');
+  if (badge) {
+    badge.textContent = count > 99 ? '99+' : count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+// Init + socket listener
+document.addEventListener('DOMContentLoaded', () => {
+  updateNotifCount();
+  setInterval(updateNotifCount, 30000); // refresh tiap 30 detik
+  // Socket real-time ditangani oleh App.initSocket() (satu koneksi saja) agar
+  // tidak ada toast/notif dobel. App akan memanggil window.updateNotifCount &
+  // window.loadNotifPanel saat ada notifikasi baru.
+});
+
+// ── Global Search (Topbar) ──────────────────────────────────
+//
+// Search dengan debounce 250ms. Query paralel ke /customers, /devices,
+// dan /infrastructure (kalau filter "all"). Hasil di-merge & ditampilkan
+// di dropdown dengan kategori. Keyboard nav: arrow keys + Enter. 
+(function() {
+  const inputEl    = document.getElementById('globalSearch');
+  const dropdownEl = document.getElementById('globalSearchDropdown');
+  const wrapEl     = document.getElementById('globalSearchWrap');
+  if (!inputEl || !dropdownEl) return;
+
+  let debounceTimer = null;
+  let lastQuery     = '';
+  let resultItems   = []; // flat list untuk keyboard nav
+  let activeIdx     = -1;
+  let abortCtrl     = null;
+
+  const ICONS = {
+    cust:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    dev:   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    infra: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6"/></svg>'
+  };
+
+  function escHtmlLocal(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  function openDropdown()  { dropdownEl.classList.add('open'); }
+  function closeDropdown() { dropdownEl.classList.remove('open'); activeIdx = -1; }
+
+  // Cari pelanggan + device + infrastructure paralel
+  async function performSearch(q) {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+    const signal = abortCtrl.signal;
+
+    const tok = localStorage.getItem('token');
+    const hdr = { 'X-Requested-With':'XMLHttpRequest' };
+    if (tok && tok !== 'null') hdr['Authorization'] = 'Bearer ' + tok;
+    const opts = { headers: hdr, credentials: 'include', signal };
+
+    const enc = encodeURIComponent(q);
+
+    // Ketiga endpoint sudah dijaga authentication — fail silently kalau forbidden
+    const [custRes, devRes, infraRes] = await Promise.all([
+      fetch('/api/customers?search=' + enc + '&limit=5', opts).then(r=>r.json()).catch(()=>null),
+      fetch('/api/devices?search='   + enc + '&limit=5', opts).then(r=>r.json()).catch(()=>null),
+      fetch('/api/infrastructure?search=' + enc + '&limit=5', opts).then(r=>r.json()).catch(()=>null)
+    ]);
+
+    if (signal.aborted) return; // result obsolete
+
+    const customers = (custRes?.data || custRes?.customers || []).slice(0, 5);
+    const devices   = (devRes?.data   || []).slice(0, 5);
+    // Infra: filter agar hanya match nama (search endpoint mungkin tidak filter)
+    const infras    = (infraRes?.data || []).filter(i =>
+      (i.name||'').toLowerCase().includes(q.toLowerCase()) ||
+      (i.address||'').toLowerCase().includes(q.toLowerCase())
+    ).slice(0, 5);
+
+    renderResults(customers, devices, infras, q);
+  }
+
+  function renderResults(customers, devices, infras, q) {
+    resultItems = [];
+    let html = '';
+
+    if (customers.length) {
+      html += '<div class="gsd-section">Pelanggan</div>';
+      customers.forEach(c => {
+        const idx = resultItems.length;
+        resultItems.push({ url: '/customers/profile/' + c.id });
+        const stat = c.status === 'active' ? 'active' : c.status === 'isolated' ? 'isolated' : 'inactive';
+        const sub = [c.customer_id, c.phone, c.package?.name].filter(Boolean).join(' · ');
+        html += `<a class="gsd-item" data-idx="${idx}" href="/customers/profile/${c.id}">
+          <div class="gsd-icon cust">${ICONS.cust}</div>
+          <div class="gsd-body">
+            <div class="gsd-title">${escHtmlLocal(c.name)}</div>
+            <div class="gsd-sub">${escHtmlLocal(sub)}</div>
+          </div>
+          <span class="gsd-status ${stat}">${escHtmlLocal(c.status||'')}</span>
+        </a>`;
+      });
+    }
+
+    if (devices.length) {
+      html += '<div class="gsd-section">Perangkat</div>';
+      devices.forEach(d => {
+        const idx = resultItems.length;
+        resultItems.push({ url: '/devices' });  // halaman list device — anchor by ID
+        const stat = d.status === 'online' ? 'online' : 'offline';
+        const sub = [d.ip_address, d.type, d.brand].filter(Boolean).join(' · ');
+        html += `<a class="gsd-item" data-idx="${idx}" href="/devices?focus=${d.id}">
+          <div class="gsd-icon dev">${ICONS.dev}</div>
+          <div class="gsd-body">
+            <div class="gsd-title">${escHtmlLocal(d.name)}</div>
+            <div class="gsd-sub">${escHtmlLocal(sub)}</div>
+          </div>
+          <span class="gsd-status ${stat}">${escHtmlLocal(d.status||'')}</span>
+        </a>`;
+      });
+    }
+
+    if (infras.length) {
+      html += '<div class="gsd-section">Infrastruktur</div>';
+      infras.forEach(i => {
+        const idx = resultItems.length;
+        resultItems.push({ url: '/infrastructure' });
+        const sub = [i.type?.toUpperCase(), i.address, i.status].filter(Boolean).join(' · ');
+        html += `<a class="gsd-item" data-idx="${idx}" href="/infrastructure?focus=${i.id}">
+          <div class="gsd-icon infra">${ICONS.infra}</div>
+          <div class="gsd-body">
+            <div class="gsd-title">${escHtmlLocal(i.name)}</div>
+            <div class="gsd-sub">${escHtmlLocal(sub)}</div>
+          </div>
+        </a>`;
+      });
+    }
+
+    if (!html) {
+      html = `<div class="gsd-empty">Tidak ada hasil untuk "${escHtmlLocal(q)}"</div>`;
+    }
+
+    dropdownEl.innerHTML = html;
+    openDropdown();
+  }
+
+  function setActive(idx) {
+    const items = dropdownEl.querySelectorAll('.gsd-item');
+    if (!items.length) return;
+    activeIdx = ((idx % items.length) + items.length) % items.length;
+    items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
+    items[activeIdx].scrollIntoView({ block: 'nearest' });
+  }
+
+  inputEl.addEventListener('input', () => {
+    const q = inputEl.value.trim();
+    clearTimeout(debounceTimer);
+    if (!q) { closeDropdown(); lastQuery=''; return; }
+    if (q === lastQuery) return;
+    lastQuery = q;
+    // Show loading state
+    dropdownEl.innerHTML = '<div class="gsd-loading">Mencari...</div>';
+    openDropdown();
+    debounceTimer = setTimeout(() => performSearch(q), 250);
+  });
+
+  inputEl.addEventListener('focus', () => {
+    if (inputEl.value.trim() && resultItems.length) openDropdown();
+  });
+
+  inputEl.addEventListener('keydown', (e) => {
+    const items = dropdownEl.querySelectorAll('.gsd-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); }
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      const target = activeIdx >= 0 ? items[activeIdx] : items[0];
+      if (target) window.location.href = target.getAttribute('href');
+    } else if (e.key === 'Escape') {
+      closeDropdown();
+      inputEl.blur();
+    }
+  });
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (!wrapEl.contains(e.target)) closeDropdown();
+  });
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- BOTTOM NAVBAR — Mobile only                               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<% if (useSalesBottomNav) { %>
+<nav class="bottom-nav" id="bottomNav">
+  <a href="#overview" class="bn-item active" data-sales-bn="overview" onclick="salesBnGo(event,'overview')">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+    </div>
+    <span>Dashboard</span>
+  </a>
+  <a href="#pipeline" class="bn-item" data-sales-bn="pipeline" onclick="salesBnGo(event,'pipeline')">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+    </div>
+    <span>Pipeline</span>
+  </a>
+
+  <!-- FAB center: Registrasi baru -->
+  <button class="bn-fab" id="bnFab" onclick="salesBnReg()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <a href="#coverage" class="bn-item" data-sales-bn="coverage" onclick="salesBnGo(event,'coverage')">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </div>
+    <span>Coverage</span>
+  </a>
+
+  <button class="bn-item bn-more" onclick="toggleSidebar()">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <span>Menu</span>
+  </button>
+</nav>
+<script>
+  // Bottom nav sales → panggil goSection di halaman /sales (in-page switch)
+  function salesBnGo(e, sec){
+    e.preventDefault();
+    if (typeof goSection === 'function') goSection(sec);
+    else location.href = '/sales#' + sec;
+    document.querySelectorAll('#bottomNav .bn-item[data-sales-bn]').forEach(a=>a.classList.toggle('active', a.dataset.salesBn===sec));
+  }
+  function salesBnReg(){
+    if (typeof openRegModal === 'function') openRegModal();
+    else location.href = '/sales';
+  }
+  // Sinkronkan highlight bottom-nav saat section berganti dari sumber lain
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const sync = ()=>{
+      const active = document.querySelector('.fx-section.on');
+      if(!active) return;
+      const sec = active.dataset.section;
+      document.querySelectorAll('#bottomNav .bn-item[data-sales-bn]').forEach(a=>a.classList.toggle('active', a.dataset.salesBn===sec));
+    };
+    // observe perubahan class section
+    document.querySelectorAll('.fx-section').forEach(s=>{
+      new MutationObserver(sync).observe(s, { attributes:true, attributeFilter:['class'] });
+    });
+  });
+</script>
+<% } else if (isFinanceUser) { %>
+<nav class="bottom-nav" id="bottomNav">
+  <a href="/finance" class="bn-item" data-page="finance-dashboard">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    </div>
+    <span>Dashboard</span>
+  </a>
+  <a href="/customers" class="bn-item" data-page="customers">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span>Customers</span>
+  </a>
+  <a href="/billing" class="bn-item" data-page="billing">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    </div>
+    <span>Billing</span>
+  </a>
+  <a href="/payments" class="bn-item" data-page="payments">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    </div>
+    <span>Bayar</span>
+  </a>
+  <button class="bn-item bn-more" onclick="toggleSidebar()">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <span>Menu</span>
+  </button>
+</nav>
+<% } else { %>
+<nav class="bottom-nav" id="bottomNav">
+  <a href="/dashboard" class="bn-item" data-page="dashboard">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    </div>
+    <span>Dashboard</span>
+  </a>
+
+  <a href="/customers" class="bn-item" data-page="customers">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span>Customers</span>
+  </a>
+
+  <!-- FAB center button: Tambah / Quick actions -->
+  <button class="bn-fab" id="bnFab" onclick="toggleBnMenu()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <a href="/billing" class="bn-item" data-page="billing">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+    </div>
+    <span>Billing</span>
+  </a>
+
+  <button class="bn-item bn-more" onclick="toggleSidebar()">
+    <div class="bn-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </div>
+    <span>Menu</span>
+  </button>
+</nav>
+<% } %>
+
+<!-- FAB Quick-action menu (admin/superadmin only) -->
+<% if (!isFinanceUser && !useSalesBottomNav) { %>
+<div class="bn-menu-overlay" id="bnMenuOverlay" onclick="toggleBnMenu()"></div>
+<div class="bn-menu" id="bnMenu">
+  <div class="bn-menu-title">Quick Actions</div>
+  <div class="bn-menu-grid">
+    <a href="/genieacs" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#eff6ff;color:#1e78ff;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8M10 14h5"/></svg>
+      </div>
+      <span>ONT Mgmt</span>
+    </a>
+    <a href="/monitoring/traffic" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#f0fdf4;color:#16a34a;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      </div>
+      <span>Traffic</span>
+    </a>
+    <a href="/whatsapp" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#f0fdf4;color:#25d366;">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </div>
+      <span>WhatsApp</span>
+    </a>
+    <a href="/isolir" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#fff7ed;color:#ea580c;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+      </div>
+      <span>Isolir</span>
+    </a>
+    <a href="/assets" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#f5f3ff;color:#121dbd;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      </div>
+      <span>Assets</span>
+    </a>
+    <a href="/infrastructure" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#ecfeff;color:#0891b2;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      </div>
+      <span>Infra</span>
+    </a>
+    <a href="/payments" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#f0fdf4;color:#16a34a;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <span>Pembayaran</span>
+    </a>
+    <a href="/monitoring/ping" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#fff1f2;color:#e11d48;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3M12 2v3m0 14v3M5.64 5.64l2.12 2.12m8.48 8.48l2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48l2.12-2.12"/></svg>
+      </div>
+      <span>Host Monitor</span>
+    </a>
+    <a href="/keuangan" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#fefce8;color:#ca8a04;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <span>Keuangan</span>
+    </a>
+    <a href="/laporan" class="bn-menu-item">
+      <div class="bn-mi-icon" style="background:#fff7ed;color:#ea580c;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <span>Laporan</span>
+    </a>
+  </div>
+</div>
+<% } %>
+
+<style>
+/* ── Bottom Nav ─────────────────────────────────────────────── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 64px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.08);
+  z-index: 500;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom);
+  /* Force own compositing layer — mencegah position:fixed jadi relatif
+   * ke ancestor kalau ada CSS containing-block trigger di parent (.main-content
+   * flex container, dll). Diuji di Chrome Android & iOS Safari. */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  /* iOS Safari fix — kadang fixed elements drift dengan momentum scroll.
+   * `backface-visibility: hidden` stabilkan GPU compositing. */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav { display: flex; }
+  .main-content { padding-bottom: 72px; }
+
+  /* ═══════ CRITICAL FIX: bottom-nav drift saat scroll ═══════════
+   *
+   * Bug: di Chrome Android, `body { overflow-x: hidden }` (app.css:47)
+   * membuat body jadi scroll container — akibatnya `position: fixed`
+   * di anak body ikut scroll bersama konten body.
+   *
+   * Fix: hilangkan SEMUA overflow-x dari ancestor element (html, body,
+   * app-layout) di mobile. Document scroll sekarang murni viewport-level,
+   * sehingga `position: fixed` benar-benar berfungsi terhadap viewport.
+   *
+   * Cegah horizontal overflow dengan `max-width: 100vw` di .main-content
+   * — lebih reliable daripada overflow-x karena tidak create scroll container. */
+  html, body, .app-layout { overflow-x: visible !important; }
+  .main-content { max-width: 100vw; overflow-x: hidden; }
+}
+
+.bn-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color .15s;
+  font-family: inherit;
+  padding: 8px 0;
+  position: relative;
+}
+.bn-item.active, .bn-item:hover { color: #1e78ff; }
+.bn-item.active .bn-icon svg { stroke: #1e78ff; }
+.bn-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 32px; height: 3px;
+  background: #1e78ff;
+  border-radius: 0 0 4px 4px;
+}
+
+.bn-icon {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+}
+.bn-icon svg { width: 22px; height: 22px; stroke: #94a3b8; transition: stroke .15s; }
+.bn-item.active .bn-icon svg, .bn-item:hover .bn-icon svg { stroke: #1e78ff; }
+.bn-more .bn-icon svg { stroke: #94a3b8; }
+.bn-more:hover .bn-icon svg, .bn-more.active .bn-icon svg { stroke: #1e78ff; }
+
+/* ── FAB ────────────────────────────────────────────────────── */
+.bn-fab {
+  width: 52px; height: 52px;
+  border-radius: 16px;
+  background: #1e78ff;
+  border: none;
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(30,120,255,.45);
+  transition: all .2s;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+.bn-fab:hover { background: #0052cc; transform: scale(1.05); }
+.bn-fab.open { background: #ef4444; border-radius: 50%; transform: rotate(45deg); }
+
+/* ── FAB Quick Menu ─────────────────────────────────────────── */
+.bn-menu-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 499;
+  backdrop-filter: blur(2px);
+}
+.bn-menu-overlay.show { display: block; }
+
+.bn-menu {
+  display: none;
+  position: fixed;
+  bottom: 76px; left: 12px; right: 12px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 16px 16px;
+  z-index: 600;
+  box-shadow: 0 -4px 40px rgba(0,0,0,.15);
+  animation: bnMenuUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+.bn-menu.show { display: block; }
+@keyframes bnMenuUp {
+  from { opacity: 0; transform: translateY(20px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bn-menu-title {
+  font-size: 11px; font-weight: 700;
+  color: #94a3b8; text-transform: uppercase;
+  letter-spacing: .07em; margin-bottom: 14px;
+}
+.bn-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.bn-menu-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 7px;
+  text-decoration: none; color: #374151;
+  font-size: 11px; font-weight: 600;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: #f8fafc;
+  transition: all .15s;
+  border: 1.5px solid transparent;
+}
+.bn-menu-item:hover { background: #eff6ff; border-color: #bfdbfe; }
+.bn-mi-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+</style>
+
+<script>
+// ── Bottom Nav active state ──────────────────────────────────
+(function() {
+  const path = window.location.pathname;
+  document.querySelectorAll('.bn-item[data-page]').forEach(el => {
+    const page = el.dataset.page;
+    const match =
+      (page === 'dashboard'  && path === '/dashboard') ||
+      (page === 'customers'  && path.startsWith('/customers')) ||
+      (page === 'billing'    && path.startsWith('/billing'));
+    if (match) el.classList.add('active');
+  });
+
+  // Highlight active quick action
+  document.querySelectorAll('.bn-menu-item').forEach(el => {
+    const href = el.getAttribute('href');
+    if (href && path.startsWith(href)) {
+      el.style.background = '#eff6ff';
+      el.style.borderColor = '#bfdbfe';
+      el.style.color = '#1e78ff';
+    }
+  });
+})();
+
+// ── FAB Menu toggle ──────────────────────────────────────────
+function toggleBnMenu() {
+  const menu    = document.getElementById('bnMenu');
+  const overlay = document.getElementById('bnMenuOverlay');
+  const fab     = document.getElementById('bnFab');
+  const isOpen  = menu.classList.contains('show');
+  menu.classList.toggle('show', !isOpen);
+  overlay.classList.toggle('show', !isOpen);
+  fab.classList.toggle('open', !isOpen);
+}
+
+// ── Toggle sidebar dari bottom nav ──────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  // Sinkronkan juga backdrop agar konsisten dgn tombol hamburger (app.js).
+  // Tanpa ini, state sidebar & backdrop bisa tidak sinkron → sidebar
+  // "kadang tidak muncul" saat dibuka via tombol Menu bottom-nav.
+  let backdrop = document.getElementById('sidebarBackdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'sidebarBackdrop';
+    backdrop.className = 'sidebar-backdrop';
+    backdrop.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+    });
+    document.body.appendChild(backdrop);
+  }
+  const willOpen = !sidebar.classList.contains('open');
+  sidebar.classList.toggle('open', willOpen);
+  backdrop.classList.toggle('show', willOpen);
+}
+
+// ── Bottom-nav stickyfication (defensif untuk Chrome Android & iOS) ─
+// position:fixed sering broken di mobile karena ancestor containing-block
+// triggers (transform, filter, overflow:hidden di body, dll). Solusi:
+//
+// 1. Pindahkan element ke body (escape main-content flex container)
+// 2. Force `position: fixed` dengan inline style (override apapun)
+// 3. JS observer: pastikan saat scroll, element selalu di bottom viewport
+//    via `transform` (fallback last-resort kalau position:fixed broken)
+(function stickyBottomNav() {
+  function setup() {
+    ['bottomNav', 'bnMenu', 'bnMenuOverlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // Pindahkan ke body level (escape containing block ancestor)
+      if (el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+    });
+
+    const bnav = document.getElementById('bottomNav');
+    if (!bnav) return;
+
+    // Force inline style supaya tidak bisa di-override CSS lain
+    bnav.style.position = 'fixed';
+    bnav.style.bottom = '0';
+    bnav.style.left = '0';
+    bnav.style.right = '0';
+    bnav.style.zIndex = '500';
+    // GPU compositing
+    bnav.style.transform = 'translate3d(0,0,0)';
+    bnav.style.willChange = 'transform';
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setup);
+  } else {
+    setup();
+  }
+})();
+</script>

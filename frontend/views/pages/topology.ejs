@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    /* ── DARK THEME (default) ── */
+    :root, [data-theme="dark"] {
+      --bg:          #0d0f14;
+      --surface:     #13161e;
+      --surface-2:   #1a1e28;
+      --surface-3:   #1e2330;
+      --canvas-bg:   #0f1422;
+      --border:      rgba(255,255,255,0.07);
+      --bh:          rgba(255,255,255,0.13);
+      --accent:      #3b7eff;
+      --green:       #22c55e;
+      --red:         #ef4444;
+      --yellow:      #f59e0b;
+      --t1:          #f0f2f7;
+      --t2:          #8b95a8;
+      --t3:          #4e5869;
+      --conn-line:   rgba(255,255,255,0.09);
+      --node-shadow: rgba(0,0,0,0.38);
+      --label-shadow: rgba(0,0,0,0.55);
+      --rcard:       14px;
+      --font:        'DM Sans', sans-serif;
+      --mono:        'DM Mono', monospace;
+    }
+
+    /* ── LIGHT THEME ── */
+    [data-theme="light"] {
+      --bg:          #f0f4f8;
+      --surface:     #ffffff;
+      --surface-2:   #f8fafc;
+      --surface-3:   #eef2f7;
+      --canvas-bg:   #e8edf5;
+      --border:      rgba(0,0,0,0.08);
+      --bh:          rgba(0,0,0,0.14);
+      --accent:      #3b7eff;
+      --green:       #16a34a;
+      --red:         #dc2626;
+      --yellow:      #d97706;
+      --t1:          #0f172a;
+      --t2:          #475569;
+      --t3:          #94a3b8;
+      --conn-line:   rgba(0,0,0,0.12);
+      --node-shadow: rgba(0,0,0,0.10);
+      --label-shadow: rgba(255,255,255,0.85);
+      --rcard:       14px;
+      --font:        'DM Sans', sans-serif;
+      --mono:        'DM Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); font-family: var(--font); color: var(--t1); -webkit-font-smoothing: antialiased; transition: background .2s; }
+
+    /* ── PAGE HEADER ─────────────────────────── */
+    .topo-hdr { display:flex; align-items:center; justify-content:space-between; padding:0 0 16px; flex-wrap:wrap; gap:10px; }
+    .topo-hdr h1 { font-size:20px; font-weight:700; letter-spacing:-.3px; }
+    .breadcrumb { display:flex; align-items:center; gap:5px; font-size:11px; color:var(--t3); margin-top:3px; }
+    .breadcrumb span { color:var(--t2); }
+
+    /* ── TOOLBAR ─────────────────────────────── */
+    .tbar {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:9px 12px; background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; margin-bottom:12px; flex-wrap:wrap; transition:background .2s, border-color .2s;
+    }
+    .tbar-l, .tbar-r { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .mode-pills { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:3px; gap:2px; }
+    .mpill { padding:5px 13px; border:none; background:transparent; color:var(--t3); font-size:11px; font-weight:600; font-family:var(--font); border-radius:5px; cursor:pointer; transition:all .18s; display:flex; align-items:center; gap:4px; }
+    .mpill svg { width:12px; height:12px; }
+    .mpill.active { background:var(--surface-3); color:var(--t1); }
+    .tbtn { display:flex; align-items:center; gap:5px; padding:6px 12px; border:1px solid var(--border); background:var(--surface-2); color:var(--t2); font-size:11px; font-weight:600; font-family:var(--font); border-radius:7px; cursor:pointer; transition:all .18s; white-space:nowrap; }
+    .tbtn svg { width:13px; height:13px; flex-shrink:0; }
+    .tbtn:hover { border-color:var(--bh); color:var(--t1); background:var(--surface-3); }
+    .tbtn.pri { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .tbtn.pri:hover { filter:brightness(1.1); }
+    .zoom-strip { display:flex; align-items:center; gap:2px; border:1px solid var(--border); border-radius:7px; background:var(--surface-2); padding:2px; }
+    .zbtn { width:27px; height:27px; border:none; background:transparent; color:var(--t2); font-size:15px; font-weight:700; border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .zbtn:hover { background:var(--surface-3); color:var(--t1); }
+    .zval { font-size:10px; font-weight:700; font-family:var(--mono); color:var(--t3); min-width:36px; text-align:center; }
+
+    /* ── CANVAS WRAP ─────────────────────────── */
+    .cwrap {
+      position:relative; background:var(--canvas-bg); border:1px solid var(--border);
+      border-radius:14px; overflow:hidden; height:660px;
+      cursor:grab; user-select:none; transition: background .2s, border-color .2s;
+    }
+    .cwrap:active { cursor:grabbing; }
+    #topo-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; }
+
+    /* ── DOM NODES ───────────────────────────── */
+    .tnodes { position:absolute; inset:0; pointer-events:none; z-index:3; }
+    .dnode {
+      position:absolute; pointer-events:auto;
+      transform:translate(-50%,-50%);
+    }
+    .dnode.dragging { z-index:100; }
+
+    .ncard {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      width: 54px;             /* fixed width = icon width */
+      text-align:center; position:relative;
+      cursor:grab; transition: transform .15s;
+      box-shadow: none;
+    }
+    .ncard:hover {
+      transform: translateY(-2px) scale(1.04);
+    }
+    .ncard:hover .nicon {
+      box-shadow: 0 10px 24px var(--node-shadow), 0 0 0 3px rgba(59,126,255,.18);
+    }
+    .ncard.selected .nicon { box-shadow: 0 0 0 3px rgba(59,126,255,.55), 0 8px 22px var(--node-shadow); }
+
+    /* status dot — diposisikan pada .nicon */
+    .ndot {
+      position:absolute; top:-2px; right:-2px;
+      width:11px; height:11px; border-radius:50%;
+      background:var(--t3);
+      border: 2px solid var(--canvas-bg);
+      z-index: 2;
+    }
+    .ncard.online .ndot { background:var(--green); box-shadow:0 0 6px var(--green); animation:pg 2s infinite; }
+    @keyframes pg { 0%,100%{box-shadow:0 0 4px var(--green)} 50%{box-shadow:0 0 12px var(--green),0 0 20px rgba(34,197,94,.3)} }
+
+    /* icon — fokus utama, node center = icon center */
+    .nicon {
+      position: relative;
+      width:54px; height:54px; border-radius:14px;
+      margin: 0;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; flex-shrink:0;
+      background: var(--surface);
+      box-shadow: 0 4px 14px var(--node-shadow);
+      border: 1px solid var(--border);
+      transition: box-shadow .2s, transform .15s, border-color .2s;
+    }
+    .nicon img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      background: transparent;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .nicon svg { width: 28px; height: 28px; }
+    .nicon.router   { background:linear-gradient(135deg,rgba(59,126,255,.12),rgba(59,126,255,.05)); border-color:rgba(59,126,255,.28); }
+    .nicon.switch   { background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(34,197,94,.05)); border-color:rgba(34,197,94,.28); }
+    .nicon.server   { background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.05)); border-color:rgba(245,158,11,.28); }
+    .nicon.client   { background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.05)); border-color:rgba(139,92,246,.28); }
+    .nicon.gateway  { background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(6,182,212,.05));  border-color:rgba(6,182,212,.28); }
+    .nicon.firewall { background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.05));  border-color:rgba(239,68,68,.28); }
+    .nicon.ont      { background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(249,115,22,.05));border-color:rgba(249,115,22,.28); }
+    .nicon.ap       { background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(168,85,247,.05));border-color:rgba(168,85,247,.28); }
+    /* Kalau device punya icon image (upload), background netral agar logo dominan */
+    .nicon.has-img {
+      background: var(--surface) !important;
+      border-color: var(--border) !important;
+    }
+
+    /* Label di bawah icon — absolute supaya tidak menggeser pusat node */
+    .nlabel {
+      position: absolute;
+      top: 62px;               /* persis di bawah icon */
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 80px;
+      max-width: 140px;
+      pointer-events: none;    /* klik tidak terhalang oleh label */
+    }
+    .nname {
+      font-size:11px; font-weight:700; color:var(--t1);
+      line-height:1.25; margin-bottom:2px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      text-shadow: 0 1px 2px var(--label-shadow), 0 0 4px var(--label-shadow);
+    }
+    .nip {
+      font-size:9.5px; font-family:var(--mono); color:var(--t3);
+      white-space:nowrap; line-height:1.2;
+      overflow:hidden; text-overflow:ellipsis;
+      text-shadow: 0 1px 2px var(--label-shadow), 0 0 4px var(--label-shadow);
+    }
+
+    /* action buttons (hover reveal) */
+    .nacts {
+      position:absolute; top:-8px; right:-8px;
+      display:flex; flex-direction:column; gap:2px;
+      opacity:0; pointer-events:none; transition:opacity .18s; z-index:10;
+    }
+    .dnode:hover .nacts { opacity:1; pointer-events:auto; }
+    .nact {
+      width:20px; height:20px; border-radius:50%; border:1px solid var(--border);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; font-size:9px; transition:all .15s; background:var(--surface-3); color:var(--t2);
+    }
+    .nact.edit:hover  { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .nact.del:hover   { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.4); color:var(--red); }
+
+    /* ── FLOATING LEFT TOOLS ─────────────────── */
+    .ftools { position:absolute; top:14px; left:14px; display:flex; flex-direction:column; gap:4px; z-index:20; }
+    .ftool { width:36px; height:36px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--t3); transition:all .15s; position:relative; }
+    .ftool svg { width:15px; height:15px; }
+    .ftool:hover, .ftool.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .ftool-sep { height:1px; background:var(--border); margin:2px 0; }
+    .fttip { position:absolute; left:44px; top:50%; transform:translateY(-50%); background:var(--surface-2); border:1px solid var(--border); color:var(--t1); padding:3px 8px; border-radius:5px; font-size:10px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; }
+    .ftool:hover .fttip { opacity:1; }
+
+    /* ── ADD PANEL ───────────────────────────── */
+    .addpanel { position:absolute; top:14px; right:14px; width:250px; background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:13px; box-shadow:0 8px 32px var(--node-shadow); display:none; z-index:20; }
+    .addpanel.show { display:block; }
+    .ph { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; padding-bottom:9px; border-bottom:1px solid var(--border); }
+    .phtitle { font-size:12px; font-weight:700; color:var(--t1); }
+    .phx { width:22px; height:22px; border:none; background:transparent; color:var(--t3); cursor:pointer; border-radius:5px; font-size:14px; display:flex; align-items:center; justify-content:center; }
+    .phx:hover { background:var(--surface-3); color:var(--t1); }
+    .dg { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; }
+    .dgi { padding:9px 5px; background:var(--surface-3); border:1px solid var(--border); border-radius:9px; text-align:center; cursor:pointer; transition:all .18s; }
+    .dgi:hover { border-color:rgba(59,126,255,.4); background:rgba(59,126,255,.05); transform:translateY(-1px); }
+    .dgi svg { width:20px; height:20px; margin:0 auto 4px; display:block; }
+    .dgi span { font-size:9px; font-weight:600; color:var(--t2); }
+
+    /* ── CONN HINT ───────────────────────────── */
+    .chint { position:absolute; top:14px; left:50%; transform:translateX(-50%); background:rgba(59,126,255,.9); backdrop-filter:blur(6px); color:#fff; padding:7px 16px; border-radius:18px; font-size:11px; font-weight:600; display:none; z-index:50; white-space:nowrap; box-shadow:0 4px 20px rgba(59,126,255,.4); pointer-events:none; }
+    .chint.show { display:block; }
+
+    /* ── MINI MAP ────────────────────────────── */
+    #mmap { position:absolute; bottom:14px; right:14px; width:128px; height:78px; background:var(--surface-2); border:1px solid var(--border); border-radius:7px; overflow:hidden; z-index:10; backdrop-filter:blur(6px); }
+    #mmap canvas { width:100%; height:100%; }
+
+    /* ── EMPTY STATE ─────────────────────────── */
+    .empty { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; pointer-events:none; }
+    .empty svg { width:44px; height:44px; color:var(--t3); opacity:.35; }
+    .empty p { font-size:12px; color:var(--t3); }
+
+    /* ── TOOLTIP ─────────────────────────────── */
+    #dtt {
+      position:fixed; z-index:99999; width:290px;
+      background:var(--surface); border:1px solid var(--border); border-radius:13px; overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.3); backdrop-filter:blur(12px);
+      opacity:0; pointer-events:none; transform:scale(.95) translateY(5px); transition:all .2s cubic-bezier(.4,0,.2,1);
+    }
+    #dtt.show { opacity:1; pointer-events:auto; transform:scale(1) translateY(0); }
+    .tth { padding:11px 13px 9px; border-bottom:1px solid var(--border); display:flex; gap:9px; align-items:center; position:relative; background:linear-gradient(135deg,rgba(59,126,255,.06),transparent); }
+    .ttiw { width:34px; height:34px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .ttiw img { width:100%; height:100%; object-fit:cover; border-radius:7px; }
+    .ttiw svg { width:17px; height:17px; }
+    .ttinf { flex:1; min-width:0; }
+    .ttnm { font-size:12px; font-weight:700; color:var(--t1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ttsub { font-size:9px; color:var(--t3); text-transform:uppercase; letter-spacing:.5px; margin-top:1px; }
+    .ttbadge { padding:2px 7px; border-radius:7px; font-size:9px; font-weight:700; flex-shrink:0; }
+    .ttbadge.on  { background:rgba(34,197,94,.1); color:var(--green); border:1px solid rgba(34,197,94,.2); }
+    .ttbadge.off { background:rgba(239,68,68,.1); color:var(--red);   border:1px solid rgba(239,68,68,.2); }
+    .ttx { position:absolute; top:7px; right:7px; width:19px; height:19px; border-radius:50%; border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.08); color:var(--red); cursor:pointer; font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+    .ttx:hover { background:rgba(239,68,68,.2); transform:scale(1.1); }
+    .ttb { padding:11px 13px; max-height:300px; overflow-y:auto; }
+    .ttb::-webkit-scrollbar { width:3px; }
+    .ttb::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+    .tts { margin-bottom:10px; }
+    .tts:last-child { margin-bottom:0; }
+    .ttsl { font-size:8px; font-weight:700; color:var(--t3); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; padding-bottom:3px; border-bottom:1px solid var(--border); }
+    .ttr { display:flex; justify-content:space-between; align-items:center; padding:3px 0; gap:7px; }
+    .ttlbl { font-size:10px; color:var(--t3); flex-shrink:0; }
+    .ttval { font-size:10px; color:var(--t2); font-weight:500; text-align:right; word-break:break-all; }
+    .ttval.hi { color:var(--accent); font-weight:600; }
+    .ttval.ok { color:var(--green); font-family:var(--mono); }
+    .ttval.up { color:#a78bfa; font-family:var(--mono); }
+    .rbar { margin-bottom:7px; }
+    .rbar-t { display:flex; justify-content:space-between; margin-bottom:3px; }
+    .rbar-l { font-size:9px; color:var(--t3); }
+    .rbar-v { font-size:9px; font-weight:700; font-family:var(--mono); }
+    .rbar-v.low{color:var(--green);}.rbar-v.medium{color:var(--yellow);}.rbar-v.high{color:var(--red);}
+    .rtrack { height:3px; background:var(--surface-3); border-radius:2px; overflow:hidden; }
+    .rfill  { height:100%; border-radius:2px; transition:width .4s; }
+    .rfill.low{background:linear-gradient(90deg,#22c55e,#16a34a);}.rfill.medium{background:linear-gradient(90deg,#f59e0b,#d97706);}.rfill.high{background:linear-gradient(90deg,#ef4444,#dc2626);}
+    .ifrow { display:flex; align-items:center; gap:6px; padding:3px 7px; background:var(--surface-3); border-radius:5px; margin-bottom:3px; }
+    .ifdot { width:4px; height:4px; border-radius:50%; flex-shrink:0; }
+    .ifdot.up{background:var(--green);}.ifdot.dn{background:var(--t3);}
+    .ifnm { font-size:9px; font-weight:600; color:var(--t2); min-width:48px; }
+    .ifrx { font-size:8px; color:var(--accent); font-family:var(--mono); margin-left:auto; }
+    .iftx { font-size:8px; color:#a78bfa; font-family:var(--mono); margin-left:4px; }
+    .ttload { padding:28px; text-align:center; color:var(--t3); }
+    .ttspin { width:22px; height:22px; border:2px solid rgba(255,255,255,.07); border-top-color:var(--accent); border-radius:50%; margin:0 auto 8px; animation:sp .7s linear infinite; }
+    @keyframes sp { to{transform:rotate(360deg)} }
+
+    /* ── MOBILE OPTIMIZATIONS ────────────────── */
+    /* Backdrop untuk bottom-sheet mobile — di-mount di JS, hanya tampil di mobile */
+    .dtt-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(3px);
+      z-index: 99998;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+      display: none;
+    }
+    .dtt-backdrop.show { opacity: 1; pointer-events: auto; }
+
+    @media (max-width: 768px) {
+      /* Canvas lebih pendek supaya tidak harus scroll jauh */
+      .cwrap { height: calc(100vh - 260px); min-height: 420px; }
+
+      /* Toolbar top: kompakkan gap + fleksibilitas */
+      .zoom-strip { padding: 1px; }
+      .zbtn { width: 30px; height: 30px; }
+      .tbtn { padding: 7px 10px; font-size: 11px; }
+      .tbtn span { display: inline; } /* boleh tampil singkat kalau muat */
+
+      /* Floating tools kiri jadi lebih kecil */
+      .ftools { top: 10px; left: 10px; gap: 3px; }
+      .ftool  { width: 34px; height: 34px; border-radius: 8px; }
+      .ftool svg { width: 14px; height: 14px; }
+
+      /* Tooltip panel detail jadi bottom sheet */
+      #dtt {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-height: 72vh;
+        border-radius: 18px 18px 0 0 !important;
+        transform: translateY(100%) !important;
+        transition: transform .28s cubic-bezier(.4,0,.2,1), opacity .2s;
+        opacity: 1;
+        box-shadow: 0 -8px 40px rgba(0,0,0,.35);
+        z-index: 99999;
+      }
+      #dtt.show {
+        transform: translateY(0) !important;
+        opacity: 1;
+      }
+      /* Handle bar di atas bottom sheet — penanda bisa di-swipe */
+      #dtt::before {
+        content: '';
+        position: absolute;
+        top: 8px; left: 50%;
+        transform: translateX(-50%);
+        width: 40px; height: 4px;
+        background: var(--t3); opacity: .4;
+        border-radius: 2px;
+        z-index: 1;
+      }
+      .tth { padding: 22px 16px 12px !important; }
+      .ttb { padding: 14px 16px 24px !important; max-height: calc(72vh - 80px) !important; }
+      .ttiw { width: 44px !important; height: 44px !important; }
+      .ttiw svg { width: 22px; height: 22px; }
+      .ttnm { font-size: 14px !important; }
+      .ttsub { font-size: 10px !important; }
+      .ttbadge { font-size: 10px !important; padding: 3px 9px; }
+      .ttsl { font-size: 9px !important; }
+      .ttlbl, .ttval { font-size: 12px !important; }
+      .ttx { width: 28px !important; height: 28px !important; font-size: 14px !important; top: 10px !important; right: 12px !important; }
+
+      /* Backdrop aktif di mobile saja */
+      .dtt-backdrop { display: block; }
+
+      /* Minimap lebih kecil + pindah ke kiri-bawah supaya tidak tumpang tindih
+         dengan node di kanan-bawah (seperti di screenshot) */
+      #mmap {
+        width: 92px !important; height: 60px !important;
+        bottom: 10px !important; right: 10px !important;
+        opacity: .85;
+      }
+
+      /* Node action buttons (edit/delete) sedikit lebih besar untuk tap target */
+      .nacts { top: -10px !important; right: -10px !important; gap: 4px !important; }
+      .nact  { width: 26px !important; height: 26px !important; }
+      .nact svg { width: 13px !important; height: 13px !important; }
+      /* Di mobile, .nacts selalu tampil ringan untuk node yg sedang di-select */
+      .dnode.selected .nacts { opacity: .85 !important; pointer-events: auto !important; }
+    }
+
+    /* Pada layar sangat sempit, sembunyikan minimap — tidak terlalu berguna */
+    @media (max-width: 420px) {
+      #mmap { display: none !important; }
+    }
+
+    /* ── MODAL ───────────────────────────────── */
+    .mveil { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:9999; }
+    .mveil.show { display:flex; }
+    .mbox { width:440px; max-width:95vw; max-height:90vh; background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+    .mtop { padding:16px 18px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:linear-gradient(135deg,rgba(59,126,255,.06),transparent); }
+    .mtitle { font-size:14px; font-weight:700; color:var(--t1); }
+    .mbody { padding:18px; overflow-y:auto; max-height:calc(90vh - 120px); }
+    .mfoot { padding:12px 18px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:7px; }
+    .fg { margin-bottom:13px; }
+    .fg:last-child { margin-bottom:0; }
+    .fl { display:block; font-size:10px; font-weight:600; color:var(--t2); margin-bottom:5px; letter-spacing:.3px; }
+    .fi, .fsel { width:100%; padding:8px 11px; background:var(--surface-3); border:1px solid var(--border); border-radius:7px; color:var(--t1); font-size:12px; font-family:var(--font); transition:border-color .15s; }
+    .fi:focus, .fsel:focus { outline:none; border-color:rgba(59,126,255,.5); }
+    .fi::placeholder { color:var(--t3); }
+    .fg-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    .mbtn { padding:8px 16px; border:none; border-radius:7px; font-size:12px; font-weight:600; font-family:var(--font); cursor:pointer; transition:all .18s; }
+    .mbtn-s { background:transparent; color:var(--t2); border:1px solid var(--border); }
+    .mbtn-s:hover { background:var(--surface-3); color:var(--t1); }
+    .mbtn-p { background:var(--accent); color:#fff; }
+    .mbtn-p:hover { filter:brightness(1.1); }
+    /* icon upload */
+    .izone { border:2px dashed var(--border); border-radius:9px; padding:13px; text-align:center; cursor:pointer; transition:all .2s; position:relative; }
+    .izone:hover { border-color:rgba(59,126,255,.4); background:rgba(59,126,255,.03); }
+    .izone.has { border-style:solid; border-color:rgba(59,126,255,.4); }
+    #iprev { width:52px; height:52px; border-radius:9px; object-fit:cover; margin:0 auto 5px; display:none; }
+    #iprev.show { display:block; }
+    #ifile { position:absolute; inset:0; opacity:0; cursor:pointer; }
+    .izph svg { width:26px; height:26px; color:var(--t3); margin-bottom:4px; }
+    .izph p { font-size:10px; color:var(--t3); }
+    .izph p span { color:var(--accent); }
+    .izph small { font-size:8px; color:var(--t3); }
+    .irm { position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:50%; border:1px solid rgba(239,68,68,.3); background:rgba(239,68,68,.08); color:var(--red); cursor:pointer; font-size:9px; font-weight:700; display:none; align-items:center; justify-content:center; z-index:2; }
+    .irm.show { display:flex; }
+
+    @media(max-width:640px){
+      .cwrap{height:460px;}
+      .tbtn span{display:none;}
+      .tbtn{padding:6px 8px;}
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="topo-hdr">
+        <div>
+          <h1>Network Topology</h1>
+          <div class="breadcrumb">
+            <span>POP Bogor</span><span style="color:var(--t3)">›</span>
+        
+          </div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="tbar">
+        <div class="tbar-l">
+        
+          <div class="zoom-strip">
+            <button class="zbtn" onclick="zoomBy(-0.15)">−</button>
+            <span class="zval" id="zval">100%</span>
+            <button class="zbtn" onclick="zoomBy(0.15)">+</button>
+            <button class="zbtn" onclick="fitView()" style="font-size:9px;font-weight:700;width:34px;">FIT</button>
+          </div>
+        </div>
+        <div class="tbar-r">
+          <button class="tbtn" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+            <svg id="theme-icon-moon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            <svg id="theme-icon-sun" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+          <button class="tbtn" onclick="refreshTopology()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+            <span>Refresh</span>
+          </button>
+          <button class="tbtn" onclick="addSampleData()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Sample</span>
+          </button>
+          <button class="tbtn" onclick="toggleAddPanel()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Add Device</span>
+          </button>
+          <button class="tbtn pri" onclick="saveTopology()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+            <span>Save</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="cwrap" id="cwrap">
+        <canvas id="cv"></canvas>
+        <div class="chint" id="chint">🔗 Click source → then click target to connect</div>
+
+        <!-- Floating tools -->
+        <div class="ftools">
+          <div class="ftool active" data-tool="select" onclick="setTool('select')">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+            <span class="fttip">Select & Move</span>
+          </div>
+          <div class="ftool" data-tool="connect" onclick="setTool('connect')">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+            <span class="fttip">Connect Devices</span>
+          </div>
+          <div class="ftool-sep"></div>
+          <div class="ftool" data-tool="del-dev" onclick="setTool('del-dev')">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            <span class="fttip">Delete Device</span>
+          </div>
+          <div class="ftool" data-tool="del-conn" onclick="setTool('del-conn')">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span class="fttip">Delete Connection</span>
+          </div>
+        </div>
+
+        <!-- Add Device Panel -->
+        <div class="addpanel" id="addpanel">
+          <div class="ph">
+            <span class="phtitle">Add Device</span>
+            <button class="phx" onclick="toggleAddPanel()">✕</button>
+          </div>
+          <div class="dg">
+            <div class="dgi" onclick="openForm('router')"><svg fill="none" stroke="#3b7eff" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg><span>Router</span></div>
+            <div class="dgi" onclick="openForm('switch')"><svg fill="none" stroke="#22c55e" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="15" width="20" height="6" rx="1"/><circle cx="6" cy="6" r="1.5" fill="#22c55e"/><circle cx="6" cy="18" r="1.5" fill="#22c55e"/></svg><span>Switch</span></div>
+            <div class="dgi" onclick="openForm('server')"><svg fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg><span>Server</span></div>
+            <div class="dgi" onclick="openForm('client')"><svg fill="none" stroke="#8b5cf6" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg><span>Client</span></div>
+            <div class="dgi" onclick="openForm('gateway')"><svg fill="none" stroke="#06b6d4" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span>Gateway</span></div>
+            <div class="dgi" onclick="openForm('firewall')"><svg fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span>Firewall</span></div>
+            <div class="dgi" onclick="openForm('ont')"><svg fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><circle cx="12" cy="13" r="1.5" fill="#f97316"/></svg><span>ONT/ONU</span></div>
+            <div class="dgi" onclick="openForm('ap')"><svg fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="#a855f7"/></svg><span>Access Point</span></div>
+          </div>
+        </div>
+
+        <!-- DOM Nodes container -->
+        <div class="tnodes" id="tnodes"></div>
+
+        <!-- Mini Map -->
+        <div id="mmap"><canvas id="mc"></canvas></div>
+
+      </div><!-- /cwrap -->
+
+    </main>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="dtt-backdrop" class="dtt-backdrop" onclick="unpinTip()"></div>
+<div id="dtt"></div>
+
+<!-- Modal -->
+<div class="mveil" id="dmod">
+  <div class="mbox">
+    <div class="mtop">
+      <span class="mtitle" id="mtitle">Add Device</span>
+      <button class="phx" onclick="closeForm()">✕</button>
+    </div>
+    <div class="mbody">
+      <form id="dform" onsubmit="return false;">
+        <input type="hidden" id="fid">
+        <input type="hidden" id="ftype">
+        <div class="fg">
+          <label class="fl">Device Icon <span style="color:var(--t3);font-weight:400;">(optional)</span></label>
+          <div class="izone" id="izone">
+            <input type="file" id="ifile" accept="image/*" onchange="onIconPick(event)">
+            <img id="iprev" alt="">
+            <div class="izph" id="izph">
+              <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p>Drop image or <span>browse</span></p>
+              <small>PNG · JPG · SVG — max 2MB</small>
+            </div>
+            <button type="button" class="irm" id="irm" onclick="clearIcon(event)">✕</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Device Name *</label>
+          <input class="fi" type="text" id="fname" placeholder="e.g. MK-Core-01" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Protocol</label>
+          <select class="fsel" id="fproto" onchange="onProto()">
+            <option value="manual">Manual</option>
+            <option value="mikrotik">MikroTik REST API</option>
+            <option value="snmp">SNMP</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">IP Address</label>
+          <input class="fi" type="text" id="fip" placeholder="192.168.1.1">
+        </div>
+        <div id="mtf" style="display:none">
+          <div class="fg-row">
+            <div class="fg"><label class="fl">Username</label><input class="fi" type="text" id="fusr" value="admin" placeholder="admin"></div>
+            <div class="fg"><label class="fl">Password</label><input class="fi" type="password" id="fpwd"></div>
+          </div>
+          <div class="fg"><label class="fl">API Port</label><input class="fi" type="number" id="fprt" value="80" placeholder="80"></div>
+        </div>
+        <div id="snf" style="display:none">
+          <div class="fg"><label class="fl">SNMP Community</label><input class="fi" type="text" id="fcom" value="public" placeholder="public"></div>
+        </div>
+      </form>
+    </div>
+    <div class="mfoot">
+      <button class="mbtn mbtn-s" onclick="closeForm()">Cancel</button>
+      <button class="mbtn mbtn-p" id="msbtn" onclick="submitForm()">Add Device</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+/* ─────────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────────── */
+const TC = { router:'#3b7eff', switch:'#22c55e', server:'#f59e0b', client:'#8b5cf6', gateway:'#06b6d4', firewall:'#ef4444', ont:'#f97316', ap:'#a855f7' };
+const TS = {
+  router:   `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>`,
+  switch:   `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="15" width="20" height="6" rx="1"/><circle cx="6" cy="6" r="1.5" fill="currentColor"/><circle cx="6" cy="18" r="1.5" fill="currentColor"/></svg>`,
+  server:   `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>`,
+  client:   `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+  gateway:  `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`,
+  firewall: `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  ont:      `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="10" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/><circle cx="12" cy="13" r="1.5" fill="currentColor"/></svg>`,
+  ap:       `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>`,
+};
+
+/* ─────────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────────── */
+let devices=[], connections=[];
+const IS = {};        // iconStore: id → dataURL
+let pendingIcon=undefined, editMode=false;
+
+let vx=0, vy=0, vs=1;
+const SN=0.1, SX=5;
+
+let tool='select', connSrc=null;
+let dragEl=null, dox=0, doy=0;
+let dragStartX=0, dragStartY=0, dragMoved=false;
+let panning=false, px0=0, py0=0, pvx=0, pvy=0;
+let ttPinned=false;
+// Preview line saat connect mode
+let previewMouseX=0, previewMouseY=0, hovTarget=null;
+
+/* ─────────────────────────────────────────────────
+   CANVAS
+───────────────────────────────────────────────── */
+const wrap = document.getElementById('cwrap');
+const cv   = document.getElementById('cv');
+const ctx  = cv.getContext('2d');
+const tnEl = document.getElementById('tnodes');
+let dots = {};
+
+function initCv() { cv.width=wrap.clientWidth; cv.height=wrap.clientHeight; }
+
+let raf=null;
+function startLoop() {
+  if(raf) cancelAnimationFrame(raf);
+  (function lp(){ draw(); tickDots(); raf=requestAnimationFrame(lp); })();
+}
+
+function draw() {
+  ctx.clearRect(0,0,cv.width,cv.height);
+  drawConns();
+  drawMM();
+}
+
+function w2s(wx,wy){return{x:wx*vs+vx,y:wy*vs+vy};}
+function s2w(sx,sy){return{x:(sx-vx)/vs,y:(sy-vy)/vs};}
+
+function drawConns() {
+  connections.forEach((c,i)=>{
+    const s=devices.find(d=>d.id===c.source_id), t=devices.find(d=>d.id===c.target_id);
+    if(!s||!t) return;
+    const sp=w2s(s.x,s.y), tp=w2s(t.x,t.y);
+
+    // line — uses theme-aware color
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,.09)' : 'rgba(0,0,0,.12)'; ctx.lineWidth=1.5;
+    ctx.setLineDash([6,5]); ctx.beginPath(); ctx.moveTo(sp.x,sp.y); ctx.lineTo(tp.x,tp.y); ctx.stroke(); ctx.setLineDash([]);
+
+    // animated green dots
+    if(!dots[i]) dots[i]=Array.from({length:3},(_,k)=>({p:k/3, spd:.004+Math.random()*.003}));
+    dots[i].forEach(d=>{
+      const px=sp.x+(tp.x-sp.x)*d.p, py=sp.y+(tp.y-sp.y)*d.p, r=4;
+      const g=ctx.createRadialGradient(px,py,0,px,py,r*2.5);
+      g.addColorStop(0,'rgba(34,197,94,.85)'); g.addColorStop(.4,'rgba(34,197,94,.2)'); g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,r*2.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#22c55e'; ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2); ctx.fill();
+    });
+
+    // endpoint glow dots
+    [sp,tp].forEach(pt=>{
+      ctx.shadowColor='rgba(34,197,94,.7)'; ctx.shadowBlur=10;
+      ctx.fillStyle='#22c55e'; ctx.beginPath(); ctx.arc(pt.x,pt.y,4.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+    });
+  });
+
+  // ── Connect mode visuals ──────────────────────────────────────
+  if(connSrc && tool==='connect'){
+    const s=devices.find(d=>d.id===connSrc.id);
+    if(s){
+      const sp=w2s(s.x,s.y);
+
+      // Pulse ring di source
+      ctx.strokeStyle='rgba(59,126,255,.9)'; ctx.lineWidth=2.5;
+      ctx.setLineDash([6,4]);
+      ctx.shadowColor='rgba(59,126,255,.5)'; ctx.shadowBlur=12;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,38,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0; ctx.setLineDash([]);
+
+      // Label "Source" di atas node
+      ctx.fillStyle='rgba(59,126,255,.9)';
+      ctx.font='bold 10px DM Sans, sans-serif'; ctx.textAlign='center';
+      ctx.fillText('SOURCE',sp.x,sp.y-46);
+
+      // Preview line dari source ke cursor — hanya kalau hovTarget !== source
+      const rect=wrap.getBoundingClientRect();
+      const tx=previewMouseX-rect.left, ty=previewMouseY-rect.top;
+      const ht=hovTarget;
+
+      // Tentukan titik tujuan: kalau hover di device lain → snap ke center device itu
+      let ex=tx, ey=ty;
+      if(ht && ht.id!==connSrc.id){
+        const hp=w2s(ht.x,ht.y); ex=hp.x; ey=hp.y;
+      }
+
+      // Garis preview dashed kuning
+      ctx.strokeStyle='rgba(251,191,36,.7)'; ctx.lineWidth=1.5;
+      ctx.setLineDash([8,5]);
+      ctx.beginPath(); ctx.moveTo(sp.x,sp.y); ctx.lineTo(ex,ey); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot di ujung preview
+      ctx.fillStyle='rgba(251,191,36,.9)';
+      ctx.beginPath(); ctx.arc(ex,ey,4,0,Math.PI*2); ctx.fill();
+
+      // Kalau hover di target valid → highlight ring hijau di target
+      if(ht && ht.id!==connSrc.id){
+        const hp=w2s(ht.x,ht.y);
+        ctx.strokeStyle='rgba(34,197,94,.8)'; ctx.lineWidth=2.5;
+        ctx.setLineDash([5,4]);
+        ctx.shadowColor='rgba(34,197,94,.4)'; ctx.shadowBlur=10;
+        ctx.beginPath(); ctx.arc(hp.x,hp.y,38,0,Math.PI*2); ctx.stroke();
+        ctx.shadowBlur=0; ctx.setLineDash([]);
+        ctx.fillStyle='rgba(34,197,94,.85)';
+        ctx.font='bold 10px DM Sans, sans-serif'; ctx.textAlign='center';
+        ctx.fillText('CONNECT',hp.x,hp.y-46);
+      }
+    }
+  }
+}
+
+function tickDots(){Object.values(dots).forEach(a=>a.forEach(d=>{d.p+=d.spd; if(d.p>1)d.p=0;}));}
+
+/* ─────────────────────────────────────────────────
+   DOM NODES
+───────────────────────────────────────────────── */
+function renderNodes() {
+  tnEl.innerHTML='';
+  // empty state
+  wrap.querySelector('.empty')?.remove();
+  if(devices.length===0){
+    const e=document.createElement('div'); e.className='empty';
+    e.innerHTML=`<svg fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="3" opacity=".4"/><path d="M8 12h8M12 8v8" opacity=".4"/></svg><p>No devices — click "Sample" or "Add Device"</p>`;
+    wrap.appendChild(e); return;
+  }
+  devices.forEach(d=>tnEl.appendChild(buildNode(d)));
+}
+
+function buildNode(dev) {
+  const el=document.createElement('div');
+  el.className='dnode'; el.dataset.id=dev.id;
+  const sp=w2s(dev.x,dev.y);
+  el.style.left=sp.x+'px'; el.style.top=sp.y+'px';
+
+  const ok=dev.status==='online', color=TC[dev.type]||'#3b7eff';
+  const hasImg = !!IS[dev.id];
+  const ic = hasImg
+    ? `<img src="${IS[dev.id]}" alt="">`
+    : `<span style="color:${color};">${TS[dev.type]||TS.router}</span>`;
+
+  el.innerHTML=`
+    <div class="ncard ${ok?'online':'offline'}">
+      <div class="nicon ${dev.type||'router'}${hasImg?' has-img':''}">
+        <div class="ndot"></div>
+        ${ic}
+      </div>
+      <div class="nlabel">
+        <div class="nname" title="${dev.name}">${dev.name}</div>
+        <div class="nip">${dev.ip_address||'—'}</div>
+      </div>
+    </div>
+    <div class="nacts">
+      <div class="nact edit" onclick="onEdit(event,'${dev.id}')" title="Edit">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width:11px;height:11px;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <div class="nact del" onclick="onDel(event,'${dev.id}')" title="Delete">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width:11px;height:11px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      </div>
+    </div>`;
+
+  const card=el.querySelector('.ncard');
+
+  card.addEventListener('mousedown',e=>{
+    if(e.button!==0) return;
+    // Fix: abaikan mousedown kalau user klik tombol aksi (edit/delete badge) —
+    // mencegah drag tidak perlu + API call update posisi sia-sia
+    if(e.target.closest('.nact')) return;
+    e.stopPropagation();
+    if(tool==='del-dev'){if(confirm(`Delete "${dev.name}"?`)) apiDel(dev.id); return;}
+    if(tool==='connect') return; // connect pakai click, bukan mousedown
+    if(tool==='select'){
+      dragEl=el; el.classList.add('dragging');
+      dox=e.clientX-parseFloat(el.style.left); doy=e.clientY-parseFloat(el.style.top);
+      dragStartX=parseFloat(el.style.left); dragStartY=parseFloat(el.style.top);
+      dragMoved=false;
+      e.preventDefault();
+    }
+  });
+
+  card.addEventListener('click',e=>{
+    e.stopPropagation();
+    if(tool==='connect'){ handleConn(dev,e); return; }
+  });
+
+  card.addEventListener('click',e=>{
+    if(tool!=='select') return;
+    e.stopPropagation();
+    const r=wrap.getBoundingClientRect();
+    pinTip(dev, parseFloat(el.style.left)+r.left, parseFloat(el.style.top)+r.top);
+  });
+  card.addEventListener('mouseenter',e=>{
+    hovTarget=dev;
+    if(tool==='connect') return; // tooltip tidak muncul saat connect mode
+    if(ttPinned) return;
+    const r=wrap.getBoundingClientRect();
+    showTip(dev, parseFloat(el.style.left)+r.left, parseFloat(el.style.top)+r.top);
+  });
+  card.addEventListener('mouseleave',()=>{
+    hovTarget=null;
+    if(!ttPinned) hideTip();
+  });
+  return el;
+}
+
+function syncPos(){
+  document.querySelectorAll('.dnode').forEach(el=>{
+    const d=devices.find(x=>String(x.id)===el.dataset.id); if(!d) return;
+    const sp=w2s(d.x,d.y); el.style.left=sp.x+'px'; el.style.top=sp.y+'px';
+  });
+}
+
+/* ─────────────────────────────────────────────────
+   VIEWPORT
+───────────────────────────────────────────────── */
+function zoomBy(delta,cx,cy){
+  cx=cx??cv.width/2; cy=cy??cv.height/2;
+  const ns=Math.min(SX,Math.max(SN,vs+delta)), f=ns/vs;
+  vx=cx-f*(cx-vx); vy=cy-f*(cy-vy); vs=ns;
+  document.getElementById('zval').textContent=Math.round(vs*100)+'%';
+  syncPos();
+}
+
+function fitView(){
+  if(!devices.length){vx=0;vy=0;vs=1;return;}
+  let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  devices.forEach(d=>{x1=Math.min(x1,d.x);y1=Math.min(y1,d.y);x2=Math.max(x2,d.x);y2=Math.max(y2,d.y);});
+  const p=110,rw=x2-x1+p*2||1,rh=y2-y1+p*2||1;
+  vs=Math.min(SX,Math.max(SN,Math.min(cv.width/rw,cv.height/rh)));
+  vx=cv.width/2-((x1+x2)/2)*vs; vy=cv.height/2-((y1+y2)/2)*vs;
+  document.getElementById('zval').textContent=Math.round(vs*100)+'%';
+  syncPos();
+}
+
+/* ─────────────────────────────────────────────────
+   EVENTS (pan, drag, wheel, touch)
+───────────────────────────────────────────────── */
+wrap.addEventListener('mousedown',e=>{
+  if(e.button!==0||dragEl) return;
+  if(tool==='del-conn'){
+    const r=wrap.getBoundingClientRect();
+    const w=s2w(e.clientX-r.left,e.clientY-r.top);
+    const c=hitConn(w.x,w.y);
+    if(c&&confirm('Delete this connection?')) apiDelConn(c.id);
+    return;
+  }
+  // Connect mode: click area kosong → cancel jika sudah ada source terpilih
+  if(tool==='connect'){
+    if(connSrc){ connSrc=null; hovTarget=null; setTool('select'); }
+    return;
+  }
+  panning=true; px0=e.clientX; py0=e.clientY; pvx=vx; pvy=vy;
+  wrap.style.cursor='grabbing';
+  if(ttPinned) unpinTip();
+});
+
+document.addEventListener('mousemove',e=>{
+  // Selalu track mouse untuk preview line
+  previewMouseX=e.clientX; previewMouseY=e.clientY;
+
+  if(dragEl){
+    const nx=e.clientX-dox, ny=e.clientY-doy;
+    // Flag bahwa user benar-benar menggeser (bukan click-diam)
+    if(!dragMoved && (Math.abs(nx-dragStartX)>2 || Math.abs(ny-dragStartY)>2)) dragMoved=true;
+    dragEl.style.left=nx+'px'; dragEl.style.top=ny+'px';
+    const w=s2w(nx,ny), d=devices.find(x=>String(x.id)===dragEl.dataset.id);
+    if(d){d.x=w.x; d.y=w.y;} return;
+  }
+  if(panning){vx=pvx+(e.clientX-px0); vy=pvy+(e.clientY-py0); syncPos();}
+});
+
+document.addEventListener('mouseup',e=>{
+  if(dragEl){
+    // Hanya simpan posisi kalau user benar-benar menggeser — cegah update sia-sia
+    if(dragMoved){
+      const d=devices.find(x=>String(x.id)===dragEl.dataset.id);
+      if(d) apiUpdPos(d);
+    }
+    dragEl.classList.remove('dragging'); dragEl=null; dragMoved=false;
+  }
+  if(panning){panning=false; wrap.style.cursor='grab';}
+});
+
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=wrap.getBoundingClientRect();
+  zoomBy(e.deltaY<0?.12:-.12,e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
+
+// touch
+let tc={}, pd=null;
+// State untuk drag node via touch
+let touchDragEl = null, touchDox = 0, touchDoy = 0;
+let touchDragStartX = 0, touchDragStartY = 0, touchDragMoved = false;
+let touchStartTime = 0;
+
+wrap.addEventListener('touchstart',e=>{
+  const touch0 = e.changedTouches[0];
+  // Deteksi apakah tap di atas node → izinkan click native supaya tooltip bisa buka,
+  // dan siapkan drag via touch. Jangan preventDefault sepenuhnya.
+  const nodeEl = touch0 && document.elementFromPoint(touch0.clientX, touch0.clientY)?.closest('.dnode');
+
+  // Jika tap pada tombol aksi node (edit/delete), biarkan event browser-nya jalan apa adanya
+  if (touch0 && document.elementFromPoint(touch0.clientX, touch0.clientY)?.closest('.nact')) {
+    return;
+  }
+
+  if (nodeEl && e.touches.length === 1 && tool === 'select') {
+    // Mulai potensi drag node — tapi jangan preventDefault sampai user benar-benar bergerak,
+    // supaya event 'click' tetap bisa ter-synthesize kalau user cuma tap.
+    touchDragEl = nodeEl;
+    const rectL = parseFloat(nodeEl.style.left) || 0;
+    const rectT = parseFloat(nodeEl.style.top)  || 0;
+    touchDox = touch0.clientX - rectL;
+    touchDoy = touch0.clientY - rectT;
+    touchDragStartX = touch0.clientX;
+    touchDragStartY = touch0.clientY;
+    touchDragMoved = false;
+    touchStartTime = Date.now();
+    // Track identifier
+    Array.from(e.changedTouches).forEach(t=>tc[t.identifier]={x:t.clientX,y:t.clientY});
+    return; // jangan panning, jangan preventDefault
+  }
+
+  e.preventDefault();
+  Array.from(e.changedTouches).forEach(t=>tc[t.identifier]={x:t.clientX,y:t.clientY});
+  const ts=Object.values(tc);
+  if(ts.length===2) pd=Math.hypot(ts[1].x-ts[0].x,ts[1].y-ts[0].y);
+  else if(ts.length===1){panning=true;px0=ts[0].x;py0=ts[0].y;pvx=vx;pvy=vy;}
+},{passive:false});
+
+wrap.addEventListener('touchmove',e=>{
+  Array.from(e.changedTouches).forEach(t=>tc[t.identifier]={x:t.clientX,y:t.clientY});
+  const ts=Object.values(tc);
+
+  // Kalau sedang drag node (dari touchstart pertama)
+  if (touchDragEl && ts.length === 1) {
+    const t0 = ts[0];
+    const dx = Math.abs(t0.x - touchDragStartX), dy = Math.abs(t0.y - touchDragStartY);
+    if (!touchDragMoved && (dx > 5 || dy > 5)) {
+      touchDragMoved = true;
+      touchDragEl.classList.add('dragging');
+    }
+    if (touchDragMoved) {
+      e.preventDefault();
+      const nx = t0.x - touchDox, ny = t0.y - touchDoy;
+      touchDragEl.style.left = nx + 'px';
+      touchDragEl.style.top  = ny + 'px';
+      const w = s2w(nx, ny), d = devices.find(x => String(x.id) === touchDragEl.dataset.id);
+      if (d) { d.x = w.x; d.y = w.y; }
+    }
+    return;
+  }
+
+  e.preventDefault();
+  if(ts.length===2&&pd){
+    const d=Math.hypot(ts[1].x-ts[0].x,ts[1].y-ts[0].y), r=wrap.getBoundingClientRect();
+    zoomBy((d-pd)*.005,(ts[0].x+ts[1].x)/2-r.left,(ts[0].y+ts[1].y)/2-r.top); pd=d;
+  } else if(ts.length===1&&panning){vx=pvx+(ts[0].x-px0);vy=pvy+(ts[0].y-py0);syncPos();}
+},{passive:false});
+
+wrap.addEventListener('touchend',e=>{
+  Array.from(e.changedTouches).forEach(t=>delete tc[t.identifier]);
+
+  // Finalisasi drag node
+  if (touchDragEl) {
+    if (touchDragMoved) {
+      touchDragEl.classList.remove('dragging');
+      const d = devices.find(x => String(x.id) === touchDragEl.dataset.id);
+      if (d) apiUpdPos(d);
+    } else {
+      // Tap singkat pada node → trigger click untuk buka tooltip detail.
+      // Cari .ncard di dalam dan simulate click (karena native click mungkin tidak fire
+      // di sebagian browser setelah touchstart yang tidak preventDefault).
+      const elapsed = Date.now() - touchStartTime;
+      if (elapsed < 400) {
+        const card = touchDragEl.querySelector('.ncard');
+        if (card) {
+          // Trigger click handler asli → ini akan memanggil pinTip lewat listener bawaan
+          card.click();
+        }
+      }
+    }
+    touchDragEl = null;
+    touchDragMoved = false;
+  }
+
+  if(Object.keys(tc).length<2) pd=null;
+  if(!Object.keys(tc).length){panning=false;dragEl=null;}
+});
+
+wrap.addEventListener('touchcancel',e=>{
+  Array.from(e.changedTouches).forEach(t=>delete tc[t.identifier]);
+  if (touchDragEl) {
+    touchDragEl.classList.remove('dragging');
+    touchDragEl = null;
+    touchDragMoved = false;
+  }
+  if(!Object.keys(tc).length){panning=false;}
+});
+
+function hitConn(wx,wy){
+  return connections.find(c=>{
+    const s=devices.find(d=>d.id===c.source_id), t=devices.find(d=>d.id===c.target_id); if(!s||!t) return false;
+    const dx=t.x-s.x,dy=t.y-s.y,l2=dx*dx+dy*dy; if(!l2) return false;
+    const u=Math.max(0,Math.min(1,((wx-s.x)*dx+(wy-s.y)*dy)/l2));
+    return Math.hypot(wx-(s.x+u*dx),wy-(s.y+u*dy))<10/vs;
+  });
+}
+
+/* ─────────────────────────────────────────────────
+   TOOLS
+───────────────────────────────────────────────── */
+function setTool(t){
+  tool=t; connSrc=null; hovTarget=null;
+  document.querySelectorAll('.ftool').forEach(el=>el.classList.remove('active'));
+  document.querySelector(`[data-tool="${t}"]`)?.classList.add('active');
+  const hint=document.getElementById('chint');
+  hint.classList.toggle('show', t==='connect');
+  hint.textContent='🔗 Click source → then click target to connect';
+  wrap.style.cursor = t==='connect' ? 'crosshair' : (t==='del-dev'||t==='del-conn' ? 'not-allowed' : 'grab');
+}
+function handleConn(dev,e){
+  if(!connSrc){
+    // Step 1: pilih source
+    connSrc=dev;
+    // Update hint text
+    document.getElementById('chint').textContent='✅ Source selected — now click the target device (ESC to cancel)';
+    wrap.style.cursor='crosshair';
+  } else {
+    // Step 2: pilih target
+    if(connSrc.id!==dev.id){
+      apiAddConn(connSrc.id,dev.id);
+    }
+    connSrc=null; hovTarget=null;
+    setTool('select');
+  }
+}
+function setMode(m,btn){document.querySelectorAll('.mpill').forEach(b=>b.classList.remove('active')); btn.classList.add('active');}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('topo-theme', next);
+  document.getElementById('theme-icon-moon').style.display = next === 'dark' ? '' : 'none';
+  document.getElementById('theme-icon-sun').style.display  = next === 'light' ? '' : 'none';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('topo-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('theme-icon-moon').style.display = saved === 'dark' ? '' : 'none';
+  document.getElementById('theme-icon-sun').style.display  = saved === 'light' ? '' : 'none';
+}
+
+/* ─────────────────────────────────────────────────
+   MINI MAP
+───────────────────────────────────────────────── */
+function drawMM(){
+  const mc=document.getElementById('mc'), mm=document.getElementById('mmap');
+  mc.width=mm.clientWidth; mc.height=mm.clientHeight;
+  const mx=mc.getContext('2d'); mx.clearRect(0,0,mc.width,mc.height);
+  if(!devices.length) return;
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+  devices.forEach(d=>{x1=Math.min(x1,d.x);y1=Math.min(y1,d.y);x2=Math.max(x2,d.x);y2=Math.max(y2,d.y);});
+  const p=14,rw=x2-x1+p*2||1,rh=y2-y1+p*2||1;
+  const sc=Math.min(mc.width/rw,mc.height/rh);
+  const ox=(mc.width-rw*sc)/2-(x1-p)*sc, oy=(mc.height-rh*sc)/2-(y1-p)*sc;
+  connections.forEach(c=>{
+    const s=devices.find(d=>d.id===c.source_id),t=devices.find(d=>d.id===c.target_id); if(!s||!t) return;
+    mx.strokeStyle = isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.12)'; mx.lineWidth=1;
+    mx.beginPath(); mx.moveTo(s.x*sc+ox,s.y*sc+oy); mx.lineTo(t.x*sc+ox,t.y*sc+oy); mx.stroke();
+  });
+  devices.forEach(d=>{mx.fillStyle=TC[d.type]||'#3b7eff'; mx.beginPath(); mx.arc(d.x*sc+ox,d.y*sc+oy,3,0,Math.PI*2); mx.fill();});
+  mx.strokeStyle='rgba(59,126,255,.5)'; mx.lineWidth=1;
+  mx.strokeRect(-vx/vs*sc+ox,-vy/vs*sc+oy,cv.width/vs*sc,cv.height/vs*sc);
+}
+
+/* ─────────────────────────────────────────────────
+   TOOLTIP
+───────────────────────────────────────────────── */
+const tip=document.getElementById('dtt');
+const tipBackdrop = document.getElementById('dtt-backdrop');
+
+function isMobileView(){ return window.innerWidth <= 768; }
+
+function showTip(dev,sx,sy){
+  // Mobile: bottom-sheet, posisi di-handle CSS. Jangan set inline left/top
+  // karena akan di-override !important tapi lebih rapi kalau di-reset.
+  if(isMobileView()){
+    tip.style.left = '';
+    tip.style.top  = '';
+  } else {
+    const W=290,M=10;
+    let l=sx+22, t=sy-70;
+    if(l+W>window.innerWidth-M) l=sx-W-22;
+    if(l<M) l=M; if(t<M) t=M; if(t+380>window.innerHeight) t=window.innerHeight-400;
+    tip.style.left=l+'px'; tip.style.top=t+'px';
+  }
+  fetchTip(dev);
+}
+
+function pinTip(dev,sx,sy){
+  ttPinned=true;
+  // Tampilkan backdrop di mobile (backdrop CSS hanya display:block di ≤768px)
+  if(tipBackdrop) tipBackdrop.classList.add('show');
+  showTip(dev,sx,sy);
+}
+
+function unpinTip(){
+  ttPinned=false;
+  tip.classList.remove('show');
+  if(tipBackdrop) tipBackdrop.classList.remove('show');
+}
+
+function hideTip(){
+  // Di mobile, tooltip harus tetap tampil sampai user menutup secara eksplisit
+  // (karena tidak ada "hover"). Kalau sudah pinned, jangan auto-hide.
+  if(!ttPinned) {
+    tip.classList.remove('show');
+    if(tipBackdrop) tipBackdrop.classList.remove('show');
+  }
+}
+
+async function fetchTip(dev){
+  tip.innerHTML=`<div class="ttload"><div class="ttspin"></div><span style="font-size:10px;">Loading…</span></div>`;
+  tip.classList.add('show');
+  try{
+    const tk=localStorage.getItem('token');
+    const r=await fetch(`/api/topology/devices/${dev.id}/refresh`,{method:'POST',headers:{'Authorization':'Bearer '+tk}});
+    const d=await r.json();
+    d.success&&d.data.deviceInfo?.discovered ? renderTipFull(dev,d.data) : renderTipBasic(dev);
+  }catch(e){renderTipBasic(dev);}
+}
+
+function tipHdr(dev,status){
+  const color=TC[dev.type]||'#3b7eff', img=IS[dev.id];
+  const ic=img?`<img src="${img}" alt="">`:`<span style="color:${color};">${TS[dev.type]||TS.router}</span>`;
+  const badge=status!=null?`<div class="ttbadge ${status==='online'?'on':'off'}">${status==='online'?'● ONLINE':'● OFFLINE'}</div>`:'';
+  // Di mobile, tombol close selalu tampil (karena tidak ada cara lain untuk close)
+  const showX = ttPinned || isMobileView();
+  return`<div class="tth">
+    <div class="ttiw" style="background:${color}18;">${ic}</div>
+    <div class="ttinf"><div class="ttnm">${dev.name}</div><div class="ttsub">${dev.type||'device'} · ${(dev.protocol||'manual').toUpperCase()}</div></div>
+    ${badge}
+    ${showX?`<button class="ttx" onclick="unpinTip()">✕</button>`:''}
+  </div>`;
+}
+
+function renderTipBasic(dev){
+  tip.innerHTML=`${tipHdr(dev,dev.status)}<div class="ttb"><div class="tts"><div class="ttsl">Device Info</div>
+    <div class="ttr"><span class="ttlbl">IP</span><span class="ttval hi">${dev.ip_address||'N/A'}</span></div>
+    <div class="ttr"><span class="ttlbl">Protocol</span><span class="ttval">${(dev.protocol||'manual').toUpperCase()}</span></div>
+    <div class="ttr"><span class="ttlbl">Status</span><span class="ttval">${dev.status==='online'?'Online':'Offline/Manual'}</span></div>
+  </div></div>`;
+}
+
+function renderTipFull(dev,rd){
+  const info=rd.deviceInfo; let h=tipHdr(dev,rd.status)+`<div class="ttb">`;
+  h+=`<div class="tts"><div class="ttsl">System</div>
+    <div class="ttr"><span class="ttlbl">IP</span><span class="ttval hi">${dev.ip_address||'N/A'}</span></div>`;
+  if(info.identity) h+=`<div class="ttr"><span class="ttlbl">Identity</span><span class="ttval">${info.identity}</span></div>`;
+  if(info.version)  h+=`<div class="ttr"><span class="ttlbl">Version</span><span class="ttval">${info.version}</span></div>`;
+  if(info.boardName&&info.boardName!=='Unknown') h+=`<div class="ttr"><span class="ttlbl">Board</span><span class="ttval">${info.boardName}</span></div>`;
+  if(info.uptime)   h+=`<div class="ttr"><span class="ttlbl">Uptime</span><span class="ttval">${info.uptime}</span></div>`;
+  h+=`</div>`;
+  if(info.cpuLoad!==undefined||info.memoryPercent!==undefined){
+    h+=`<div class="tts"><div class="ttsl">Resources</div>`;
+    if(info.cpuLoad!==undefined){const c=rc(info.cpuLoad); h+=`<div class="rbar"><div class="rbar-t"><span class="rbar-l">CPU</span><span class="rbar-v ${c}">${info.cpuLoad}%</span></div><div class="rtrack"><div class="rfill ${c}" style="width:${info.cpuLoad}%"></div></div></div>`;}
+    if(info.memoryPercent!==undefined){const c=rc(info.memoryPercent); h+=`<div class="rbar"><div class="rbar-t"><span class="rbar-l">Memory</span><span class="rbar-v ${c}">${info.memoryPercent}%</span></div><div class="rtrack"><div class="rfill ${c}" style="width:${info.memoryPercent}%"></div></div></div>`;}
+    h+=`</div>`;
+  }
+  if(info.totalRxBps!==undefined) h+=`<div class="tts"><div class="ttsl">Traffic</div><div class="ttr"><span class="ttlbl">↓ RX</span><span class="ttval ok">${fbps(info.totalRxBps||0)}</span></div><div class="ttr"><span class="ttlbl">↑ TX</span><span class="ttval up">${fbps(info.totalTxBps||0)}</span></div></div>`;
+  if(info.interfaces?.length){
+    h+=`<div class="tts"><div class="ttsl">Interfaces (${info.interfaceCount} total)</div>`;
+    info.interfaces.forEach(i=>h+=`<div class="ifrow"><div class="ifdot ${i.running?'up':'dn'}"></div><span class="ifnm">${i.name}</span><span class="ifrx">↓${fbps(i.rxBps||0)}</span><span class="iftx">↑${fbps(i.txBps||0)}</span></div>`);
+    h+=`</div>`;
+  }
+  tip.innerHTML=h+`</div>`;
+}
+
+function rc(p){return p<60?'low':p<85?'medium':'high';}
+function fbps(b){if(!b)return'0 bps';const k=1000,s=['bps','Kbps','Mbps','Gbps'],i=Math.floor(Math.log(b)/Math.log(k));return(b/Math.pow(k,i)).toFixed(1)+' '+s[i];}
+
+/* ─────────────────────────────────────────────────
+   ICON UPLOAD
+───────────────────────────────────────────────── */
+function onIconPick(e){
+  const f=e.target.files[0]; if(!f) return;
+  if(f.size>2*1024*1024){alert('Max 2MB'); return;}
+  const r=new FileReader();
+  r.onload=ev=>{
+    pendingIcon=ev.target.result;
+    document.getElementById('iprev').src=pendingIcon;
+    document.getElementById('iprev').classList.add('show');
+    document.getElementById('izph').style.display='none';
+    document.getElementById('irm').classList.add('show');
+    document.getElementById('izone').classList.add('has');
+  };
+  r.readAsDataURL(f);
+}
+function clearIcon(e){
+  e?.stopPropagation();
+  // Saat user klik X: kalau sedang edit mode = null (hapus dari DB), kalau add = undefined (tidak perlu)
+  pendingIcon = editMode ? null : undefined;
+  document.getElementById('iprev').src=''; document.getElementById('iprev').classList.remove('show');
+  document.getElementById('izph').style.display=''; document.getElementById('irm').classList.remove('show');
+  document.getElementById('izone').classList.remove('has'); document.getElementById('ifile').value='';
+}
+
+/* ─────────────────────────────────────────────────
+   FORM
+───────────────────────────────────────────────── */
+function toggleAddPanel(){document.getElementById('addpanel').classList.toggle('show');}
+
+function openForm(type, existing){
+  editMode=!!existing;
+  // Reset visual icon preview TANPA menandai pendingIcon sebagai "hapus"
+  // (clearIcon() lama di sini membuat pendingIcon=null untuk edit mode,
+  //  yang salah — itu hanya boleh terjadi saat user klik tombol X secara eksplisit)
+  pendingIcon = undefined;
+  document.getElementById('iprev').src='';
+  document.getElementById('iprev').classList.remove('show');
+  document.getElementById('izph').style.display='';
+  document.getElementById('irm').classList.remove('show');
+  document.getElementById('izone').classList.remove('has');
+  document.getElementById('ifile').value='';
+
+  document.getElementById('fid').value   = existing?.id||'';
+  document.getElementById('ftype').value = existing?.type||type;
+  document.getElementById('fname').value = existing?.name||'';
+  document.getElementById('fproto').value= existing?.protocol||'manual';
+  document.getElementById('fip').value   = existing?.ip_address||'';
+  document.getElementById('fusr').value  = existing?.username||'admin';
+  document.getElementById('fpwd').value  = existing?.password||'';
+  document.getElementById('fprt').value  = existing?.port||80;
+  document.getElementById('fcom').value  = existing?.snmp_community||'public';
+  if(editMode&&IS[existing.id]){
+    // Tampilkan icon lama di preview TAPI jangan set pendingIcon =
+    // biar kalau user tidak ubah icon, payload PUT tidak ikut kirim icon_data
+    document.getElementById('iprev').src=IS[existing.id];
+    document.getElementById('iprev').classList.add('show');
+    document.getElementById('izph').style.display='none';
+    document.getElementById('irm').classList.add('show');
+    document.getElementById('izone').classList.add('has');
+  }
+  const tn=(existing?.type||type); document.getElementById('mtitle').textContent=(editMode?'Edit ':'Add ')+tn.charAt(0).toUpperCase()+tn.slice(1);
+  document.getElementById('msbtn').textContent=editMode?'Save Changes':'Add Device';
+  onProto();
+  document.getElementById('dmod').classList.add('show');
+  if(!editMode) toggleAddPanel();
+}
+
+function closeForm(){document.getElementById('dmod').classList.remove('show'); document.getElementById('dform').reset(); clearIcon();}
+
+function onProto(){
+  const p=document.getElementById('fproto').value;
+  document.getElementById('mtf').style.display=p==='mikrotik'?'':'none';
+  document.getElementById('snf').style.display=p==='snmp'?'':'none';
+}
+
+async function submitForm(){
+  const id=document.getElementById('fid').value;
+  const type=document.getElementById('ftype').value;
+  const name=document.getElementById('fname').value.trim();
+  const proto=document.getElementById('fproto').value;
+  const ip=document.getElementById('fip').value.trim();
+  if(!name){alert('Name required'); return;}
+
+  if(editMode){
+    const d=devices.find(x=>String(x.id)===id);
+    if(d){
+      d.name=name; d.protocol=proto; d.ip_address=ip||null;
+      if(proto==='mikrotik'){d.username=document.getElementById('fusr').value; d.password=document.getElementById('fpwd').value; d.port=document.getElementById('fprt').value;}
+      if(proto==='snmp') d.snmp_community=document.getElementById('fcom').value;
+      // Update local icon store berdasarkan aksi user:
+      //   pendingIcon = string → user upload icon baru → simpan
+      //   pendingIcon = null   → user klik X → hapus dari store
+      //   pendingIcon = undefined → tidak ada perubahan → biarkan
+      if(typeof pendingIcon === 'string') IS[id] = pendingIcon;
+      else if(pendingIcon === null)       delete IS[id];
+    }
+    try{
+      const tk=localStorage.getItem('token');
+      const editPayload={name, protocol:proto, ip_address:ip||null};
+      if(proto==='mikrotik'){editPayload.username=document.getElementById('fusr').value; editPayload.password=document.getElementById('fpwd').value; editPayload.port=document.getElementById('fprt').value;}
+      if(proto==='snmp') editPayload.snmp_community=document.getElementById('fcom').value;
+      // icon_data: undefined = jangan ubah, null = hapus, string = update
+      if(pendingIcon !== undefined) editPayload.icon_data = pendingIcon;
+      // Hapus key undefined agar tidak terkirim ke server
+      Object.keys(editPayload).forEach(k=>editPayload[k]===undefined && delete editPayload[k]);
+      await fetch(`/api/topology/devices/${id}`,{method:'PUT',headers:{'Authorization':'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify(editPayload)});
+    }catch(e){}
+    closeForm(); renderNodes(); toast('Device updated','success'); return;
+  }
+
+  const cx=(cv.width/2-vx)/vs+(Math.random()*140-70);
+  const cy=(cv.height/2-vy)/vs+(Math.random()*140-70);
+  const payload={type,name,protocol:proto,ip_address:ip||null,position_x:Math.round(cx),position_y:Math.round(cy)};
+  if(proto==='mikrotik'){payload.username=document.getElementById('fusr').value||'admin'; payload.password=document.getElementById('fpwd').value||''; payload.port=document.getElementById('fprt').value||80;}
+  if(proto==='snmp') payload.snmp_community=document.getElementById('fcom').value||'public';
+
+  try{
+    const tk=localStorage.getItem('token');
+    const r=await fetch('/api/topology/devices',{method:'POST',headers:{'Authorization':'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await r.json();
+    if(res.success){if(pendingIcon) IS[res.data.id]=pendingIcon; toast('Device added','success'); closeForm(); await loadDevices();}
+    else alert(res.message||'Error');
+  }catch(e){alert('Failed: '+e.message);}
+}
+
+function onEdit(e,id){e.stopPropagation(); const d=devices.find(x=>String(x.id)===id); if(d) openForm(d.type,d);}
+async function onDel(e,id){e.stopPropagation(); const d=devices.find(x=>String(x.id)===id); if(d&&confirm(`Delete "${d.name}"?`)) apiDel(id);}
+
+/* ─────────────────────────────────────────────────
+   API
+───────────────────────────────────────────────── */
+const authH=()=>({'Authorization':'Bearer '+localStorage.getItem('token')});
+const authJH=()=>({...authH(),'Content-Type':'application/json'});
+
+async function loadDevices(){
+  try{
+    const r=await fetch('/api/topology/devices',{headers:authH()}); const d=await r.json();
+    if(d.success){
+      devices=(d.data||[]).map(x=>({...x,x:x.position_x||200,y:x.position_y||200}));
+      // Restore icon_data dari DB ke iconStore
+      devices.forEach(x=>{ if(x.icon_data) IS[x.id]=x.icon_data; });
+      dots={}; renderNodes();
+    }
+  }
+  catch(e){console.error(e);}
+}
+async function loadConns(){
+  try{const r=await fetch('/api/topology/connections',{headers:authH()}); const d=await r.json();
+    if(d.success){connections=d.data||[]; dots={};}}
+  catch(e){}
+}
+async function apiAddConn(sid,tid){
+  try{const r=await fetch('/api/topology/connections',{method:'POST',headers:authJH(),body:JSON.stringify({source_id:sid,target_id:tid,connection_type:'ethernet'})});
+    const d=await r.json(); if(d.success){toast('Connected','success'); await loadConns();} else toast(d.message,'error');}
+  catch(e){}
+}
+async function apiDelConn(id){
+  try{await fetch(`/api/topology/connections/${id}`,{method:'DELETE',headers:authH()}); toast('Connection removed','success'); await loadConns();}
+  catch(e){}
+}
+async function apiDel(id){
+  try{await fetch(`/api/topology/devices/${id}`,{method:'DELETE',headers:authH()}); delete IS[id]; toast('Deleted','success'); await loadDevices(); await loadConns();}
+  catch(e){}
+}
+async function apiUpdPos(d){
+  try{await fetch(`/api/topology/devices/${d.id}/position`,{method:'PUT',headers:authJH(),body:JSON.stringify({position_x:Math.round(d.x),position_y:Math.round(d.y)})});}
+  catch(e){}
+}
+
+async function refreshTopology(){
+  toast('Refreshing…','info');
+  try{const r=await fetch('/api/topology/refresh-all',{method:'POST',headers:authH()}); const d=await r.json();
+    if(d.success){toast(d.message,'success'); await loadDevices(); await loadConns();}}
+  catch(e){toast('Refresh failed','error');}
+}
+
+function saveTopology(){toast('Topology saved','success');}
+
+function toast(msg,type){
+  if(typeof App!=='undefined') App.showToast(msg,type); else console.log('['+type+']',msg);
+}
+
+/* ─────────────────────────────────────────────────
+   SAMPLE DATA
+───────────────────────────────────────────────── */
+function addSampleData(){
+  devices=[
+    {id:1,name:'Internet GW', type:'gateway', ip_address:'10.0.0.1',      protocol:'manual',   status:'online', x:500,y:90},
+    {id:2,name:'Firewall',    type:'firewall',ip_address:'192.168.1.254', protocol:'manual',   status:'online', x:500,y:210},
+    {id:3,name:'Core Router', type:'router',  ip_address:'192.168.1.1',   protocol:'mikrotik', status:'online', x:500,y:340},
+    {id:4,name:'Core Switch', type:'switch',  ip_address:'192.168.1.2',   protocol:'snmp',     status:'online', x:310,y:470},
+    {id:5,name:'Web Server',  type:'server',  ip_address:'192.168.1.10',  protocol:'manual',   status:'online', x:690,y:470},
+    {id:6,name:'Client PC 1', type:'client',  ip_address:'192.168.1.101', protocol:'manual',   status:'online', x:180,y:600},
+    {id:7,name:'Client PC 2', type:'client',  ip_address:'192.168.1.102', protocol:'manual',   status:'online', x:400,y:600},
+    {id:8,name:'ONT-01',      type:'ont',     ip_address:'192.168.2.1',   protocol:'snmp',     status:'online', x:750,y:600},
+    {id:9,name:'AP-Office',   type:'ap',      ip_address:'192.168.1.50',  protocol:'manual',   status:'offline',x:860,y:470},
+  ];
+  connections=[
+    {id:1,source_id:1,target_id:2},{id:2,source_id:2,target_id:3},
+    {id:3,source_id:3,target_id:4},{id:4,source_id:3,target_id:5},
+    {id:5,source_id:3,target_id:9},{id:6,source_id:4,target_id:6},
+    {id:7,source_id:4,target_id:7},{id:8,source_id:5,target_id:8},
+  ];
+  dots={}; fitView(); renderNodes(); toast('Sample loaded','success');
+}
+
+/* ─────────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────────── */
+window.addEventListener('resize',()=>{initCv(); syncPos();});
+window.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && tool==='connect'){
+    connSrc=null; hovTarget=null; setTool('select');
+  }
+});
+
+window.addEventListener('load',async()=>{
+  initTheme();
+  initCv();
+  await loadDevices();
+  await loadConns();
+  fitView();
+  startLoop();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cetak Voucher</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4; margin: 8mm 10mm; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{font-family:'DM Sans',sans-serif;background:#eef1f7;color:#0f1b34;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+
+    .toolbar{position:sticky;top:0;background:#fff;padding:13px 16px;border-bottom:1px solid #e0e7f3;
+      display:flex;gap:10px;align-items:center;z-index:10;box-shadow:0 2px 8px rgba(20,40,90,.05);}
+    .toolbar h2{font-size:15px;font-weight:800;flex:1;letter-spacing:-.3px;}
+    .toolbar .meta{font-size:11.5px;color:#8a95ad;font-weight:600;}
+    .btn{padding:9px 16px;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:12.5px;
+      font-family:inherit;display:inline-flex;align-items:center;gap:7px;text-decoration:none;}
+    .btn-print{background:linear-gradient(135deg,#0fb6a3,#0a8f80);color:#fff;}
+    .btn-cols{background:#f3f5fa;color:#46506a;}
+
+    .container{max-width:900px;margin:0 auto;padding:16px;}
+
+    /* Page header (printed) */
+    .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:9px;
+      border-bottom:2px solid #0a8f80;}
+    .ph-brand{display:flex;align-items:center;gap:9px;}
+    .ph-ico{width:32px;height:32px;border-radius:9px;background:#0a8f80;display:flex;align-items:center;justify-content:center;}
+    .ph-name{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+    .ph-sub{font-size:11px;color:#8a95ad;font-weight:600;}
+    .ph-right{text-align:right;font-size:11px;color:#54607a;font-weight:600;}
+
+    .grid{display:grid;gap:8px;grid-template-columns:repeat(var(--cols,4),1fr);}
+
+    /* Voucher card */
+    .vc{border:1.5px dashed #b9c4d6;border-radius:11px;overflow:hidden;background:#fff;break-inside:avoid;}
+    .vc-head{background:linear-gradient(135deg,#0fb6a3,#0a8f80);color:#fff;padding:7px 10px;
+      display:flex;align-items:center;justify-content:space-between;}
+    .vc-head .b{font-size:11px;font-weight:800;letter-spacing:-.2px;}
+    .vc-head .wifi{opacity:.9;}
+    .vc-body{padding:9px 10px 10px;}
+    .vc-row{margin-bottom:6px;}
+    .vc-row .lbl{font-size:8px;font-weight:700;color:#8a95ad;letter-spacing:.06em;text-transform:uppercase;}
+    .vc-row .val{font-size:15px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:.5px;color:#0f1b34;margin-top:1px;}
+    .vc-foot{display:flex;align-items:center;justify-content:space-between;padding-top:7px;margin-top:7px;border-top:1px solid #eef1f7;}
+    .vc-foot .pkg{font-size:9px;font-weight:700;color:#0a8f80;background:#e6faf7;padding:2px 7px;border-radius:6px;}
+    .vc-foot .price{font-size:12px;font-weight:800;font-family:'DM Mono',monospace;}
+
+    .loading,.empty{text-align:center;padding:60px 16px;color:#8a95ad;font-size:14px;}
+    .spin{width:30px;height:30px;border:3px solid #dfe5ef;border-top-color:#0a8f80;border-radius:50%;
+      animation:spin .8s linear infinite;margin:0 auto 14px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    @media print{
+      body{background:#fff;}
+      .toolbar,.no-print{display:none !important;}
+      .container{padding:0;max-width:none;}
+      .vc{border-color:#9aa7bd;}
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <h2>Cetak Voucher</h2>
+    <span class="meta" id="metaInfo"></span>
+    <button class="btn btn-cols" onclick="cycleCols()">Kolom: <span id="colLabel">4</span></button>
+    <button class="btn btn-print" onclick="window.print()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Cetak
+    </button>
+  </div>
+
+  <div class="container">
+    <div class="ph" id="pageHeader" style="display:none">
+      <div class="ph-brand">
+        <div class="ph-ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        </div>
+        <div>
+          <div class="ph-name" id="phName">Voucher Hotspot</div>
+          <div class="ph-sub" id="phSub"></div>
+        </div>
+      </div>
+      <div class="ph-right" id="phRight"></div>
+    </div>
+
+    <div id="content">
+      <div class="loading"><div class="spin"></div>Memuat voucher…</div>
+    </div>
+  </div>
+
+<script>
+  const TOKEN = localStorage.getItem('reseller_token');
+  const TXID = "<%= txId %>";
+  const SCOPE = "<%= typeof scope !== 'undefined' ? scope : '' %>";
+  const SEL_MODE = <%= typeof selMode !== 'undefined' && selMode ? 'true' : 'false' %>;
+  let COLS = 4;
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const fmtRp = n => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+
+  function cycleCols(){
+    const opts=[3,4,5,6]; COLS = opts[(opts.indexOf(COLS)+1)%opts.length];
+    document.getElementById('colLabel').textContent=COLS;
+    document.querySelector('.grid')?.style.setProperty('--cols',COLS);
+  }
+
+  (async function(){
+    if(!TOKEN){ window.location.href='/reseller/login'; return; }
+    try{
+      let j;
+      if(SEL_MODE){
+        // Mode cetak berdasarkan PILIHAN: ambil daftar username dari sessionStorage.
+        let sel={};
+        try{ sel = JSON.parse(sessionStorage.getItem('reseller_print_sel')||'{}'); }catch(_){}
+        const usernames = Array.isArray(sel.usernames) ? sel.usernames : [];
+        if(!usernames.length){ document.getElementById('content').innerHTML='<div class="empty">Tidak ada voucher yang dipilih untuk dicetak.</div>'; return; }
+        const r = await fetch('/reseller/api/vouchers/print-data',{
+          method:'POST',
+          headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+          body: JSON.stringify({ usernames, label: sel.label||'Voucher Terpilih' })
+        });
+        if(r.status===401){ window.location.href='/reseller/login'; return; }
+        j = await r.json();
+      } else if(SCOPE){
+        // Mode cetak berdasarkan status (mis. semua "belum dipakai").
+        const r = await fetch('/reseller/api/vouchers/print-data',{
+          method:'POST',
+          headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+          body: JSON.stringify({ scope: SCOPE })
+        });
+        if(r.status===401){ window.location.href='/reseller/login'; return; }
+        j = await r.json();
+      } else {
+        const r = await fetch('/reseller/api/transactions/'+TXID,{
+          headers:{'Authorization':'Bearer '+TOKEN,'X-Requested-With':'XMLHttpRequest'}
+        });
+        if(r.status===401){ window.location.href='/reseller/login'; return; }
+        j = await r.json();
+      }
+      if(!j.success || !j.data){ document.getElementById('content').innerHTML='<div class="empty">Voucher tidak ditemukan.</div>'; return; }
+      render(j.data);
+    }catch(e){
+      document.getElementById('content').innerHTML='<div class="empty">Gagal memuat voucher.</div>';
+    }
+  })();
+
+  function render(d){
+    const info = JSON.parse(localStorage.getItem('reseller_info')||'{}');
+    const vouchers = d.vouchers||[];
+    const date = d.created_at
+      ? new Date(d.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : new Date().toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    document.getElementById('phName').textContent = (info.name||'Reseller')+' — Voucher Hotspot';
+    document.getElementById('phSub').textContent = (d.package_name||'')+' • '+(info.code||'');
+    document.getElementById('phRight').innerHTML = vouchers.length+' voucher<br>'+date;
+    document.getElementById('pageHeader').style.display='flex';
+    document.getElementById('metaInfo').textContent = vouchers.length+' voucher • '+(d.package_name||'');
+    document.title = 'Cetak '+vouchers.length+' Voucher — '+(d.package_name||'');
+
+    if(!vouchers.length){
+      document.getElementById('content').innerHTML='<div class="empty">Tidak ada voucher untuk dicetak.</div>';
+      return;
+    }
+
+    const batchPrice = (d.sell_price != null && d.sell_price > 0) ? fmtRp(d.sell_price) : '';
+    const cards = vouchers.map(v=>{
+      // Harga: pakai harga batch bila ada, kalau tidak pakai harga per-voucher.
+      const price = batchPrice || (v.price != null && v.price > 0 ? fmtRp(v.price) : '');
+      return `
+      <div class="vc">
+        <div class="vc-head">
+          <span class="b">${esc(info.name||'WIFI')}</span>
+          <span class="wifi"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg></span>
+        </div>
+        <div class="vc-body">
+          <div class="vc-row"><div class="lbl">Username</div><div class="val">${esc(v.username)}</div></div>
+          <div class="vc-row"><div class="lbl">Password</div><div class="val">${esc(v.password)}</div></div>
+          <div class="vc-foot">
+            <span class="pkg">${esc(d.package_name||v.profile||'Voucher')}</span>
+            <span class="price">${price}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('content').innerHTML = '<div class="grid" style="--cols:'+COLS+'">'+cards+'</div>';
+  }
+</script>
+</body>
+</html>

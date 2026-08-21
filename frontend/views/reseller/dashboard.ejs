@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1565e0">
+  <link rel="manifest" href="/reseller-manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reseller">
+  <link rel="apple-touch-icon" href="/img/reseller/icon-192.png">
+  <title>Dashboard Reseller</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --bg:#f4f7fb;--card:#fff;--ink:#0f1b34;--muted:#8a95ad;--line:#eef1f7;
+      --blue:#1f7aff;--blue-soft:#e8f1ff;--teal:#1f8bff;--teal-deep:#1565e0;
+      --green:#16a34a;--amber:#e08a00;--red:#e5484d;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);
+      padding-bottom:40px;-webkit-font-smoothing:antialiased;}
+    .money{font-family:'DM Sans',sans-serif;font-weight:600;}
+    .wrap{max-width:520px;margin:0 auto;}
+
+    /* Header */
+    .head{padding:20px 18px 6px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .head .greet{font-size:12.5px;color:var(--muted);font-weight:500;}
+    .head h1{font-size:19px;font-weight:800;letter-spacing:-.4px;margin-top:1px;}
+    .head .right{display:flex;align-items:center;gap:9px;}
+    .avatar{width:38px;height:38px;border-radius:12px;background:var(--teal);color:#fff;
+      display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+    .iconbtn{width:38px;height:38px;border-radius:12px;background:#fff;border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:#5a6781;}
+    .iconbtn:active{transform:scale(.94);}
+
+    /* ── Side drawer ── */
+    .drawer-bg{position:fixed;inset:0;background:rgba(15,27,52,.45);backdrop-filter:blur(2px);
+      opacity:0;visibility:hidden;transition:opacity .28s,visibility .28s;z-index:130;}
+    .drawer-bg.show{opacity:1;visibility:visible;}
+    .drawer{position:fixed;top:0;left:0;bottom:0;width:84%;max-width:330px;background:var(--bg);
+      z-index:131;display:flex;flex-direction:column;transform:translateX(-105%);
+      transition:transform .32s cubic-bezier(.3,.9,.3,1);box-shadow:0 0 40px rgba(15,27,52,.18);
+      padding-top:env(safe-area-inset-top,0px);overflow-y:auto;}
+    .drawer.show{transform:translateX(0);}
+    .dw-head{display:flex;align-items:center;gap:12px;padding:20px 18px 16px;}
+    .dw-avatar{width:46px;height:46px;flex-shrink:0;border-radius:14px;
+      background:linear-gradient(135deg,#1f8bff,#1565e0);color:#fff;display:flex;align-items:center;
+      justify-content:center;font-weight:800;font-size:18px;}
+    .dw-name{font-size:16px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .dw-code{font-size:11.5px;color:var(--muted);margin-top:1px;}
+    .dw-x{margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:10px;border:none;
+      background:#fff;border:1px solid var(--line);color:#5a6781;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+    .dw-balance{margin:0 16px 6px;background:linear-gradient(135deg,#1f8bff 0%,#1565e0 70%);border-radius:18px;
+      padding:15px 17px;color:#fff;box-shadow:0 10px 24px rgba(31,122,255,.26);}
+    .dw-bl{font-size:11.5px;font-weight:600;color:rgba(255,255,255,.85);}
+    .dw-bv{font-size:24px;font-weight:800;letter-spacing:-.6px;margin:3px 0 11px;}
+    .dw-topup{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);color:#1565e0;
+      border:none;padding:8px 15px;border-radius:100px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;}
+    .dw-nav{padding:10px 12px 4px;flex:1;}
+    .dw-sec{font-size:10.5px;font-weight:800;letter-spacing:.8px;color:var(--muted);padding:12px 10px 6px;}
+    .dw-item{display:flex;align-items:center;gap:13px;width:100%;border:none;background:transparent;
+      padding:12px 12px;border-radius:13px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);
+      cursor:pointer;text-align:left;transition:background .15s;}
+    .dw-item:active{background:#e9edf4;}
+    .dw-item svg{width:20px;height:20px;flex-shrink:0;color:#64718c;}
+    .dw-item.dw-danger{color:#dc2626;} .dw-item.dw-danger svg{color:#dc2626;}
+    .dw-foot{padding:14px 22px calc(20px + env(safe-area-inset-bottom,0px));font-size:11px;color:var(--muted);text-align:left;}
+
+    /* Hero saldo */
+    .hero{margin:10px 16px 0;background:linear-gradient(135deg,#1f8bff 0%,#1565e0 60%,#0e4fb8 100%);
+      border-radius:24px;padding:22px 22px 20px;box-shadow:0 14px 34px rgba(31,122,255,.28);
+      color:#fff;position:relative;overflow:hidden;}
+    .hero::after{content:'';position:absolute;top:-50px;right:-30px;width:170px;height:170px;
+      background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none;}
+    .hero .cap{font-size:12.5px;color:rgba(255,255,255,.88);font-weight:600;display:flex;
+      align-items:center;gap:7px;position:relative;}
+    .hero .cap .dot{width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25);}
+    .hero .big{font-size:33px;font-weight:800;letter-spacing:-1px;margin:8px 0 2px;position:relative;}
+    .hero .meta{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.85);position:relative;}
+    .hero .pill{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.22);
+      color:#fff;font-weight:700;padding:3px 10px;border-radius:100px;font-size:11px;}
+    .hero-split{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:18px;position:relative;}
+    .mini{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:13px 15px;}
+    .mini .l{font-size:11px;color:rgba(255,255,255,.82);font-weight:600;margin-bottom:5px;}
+    .mini .v{font-size:16px;font-weight:800;letter-spacing:-.4px;color:#fff;}
+
+    /* Tabs */
+    .tabs{display:flex;gap:4px;margin:18px 16px 6px;background:#e9edf4;padding:4px;border-radius:14px;}
+    .tab{flex:1;text-align:center;padding:10px 4px;border-radius:11px;font-size:12.5px;font-weight:700;
+      background:transparent;color:#7a869e;cursor:pointer;border:none;transition:all .18s;font-family:inherit;}
+    .tab.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(20,40,90,.1);}
+
+    .pane{display:none;padding:8px 16px;}
+    .pane.active{display:block;}
+
+    /* Section title */
+    .sec-title{font-size:12px;font-weight:700;color:#54607a;margin:14px 4px 10px;letter-spacing:.01em;}
+
+    /* Package picker */
+    .pkg-grid{display:flex;flex-direction:column;gap:10px;}
+    .pkg{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:15px 16px;cursor:pointer;
+      transition:border-color .15s,box-shadow .15s,transform .08s;position:relative;}
+    .pkg:active{transform:scale(.992);}
+    .pkg.sel{border-color:var(--teal);background:#f0f6ff;box-shadow:0 6px 18px rgba(31,122,255,.12);}
+    .pkg-top{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .pkg-name{font-size:15px;font-weight:800;letter-spacing:-.2px;}
+    .pkg-dur{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--teal-deep);
+      background:#e8f1ff;padding:3px 9px;border-radius:8px;margin-top:5px;}
+    .pkg-prices{text-align:right;flex-shrink:0;}
+    .pkg-cost{font-size:11px;color:var(--muted);font-weight:600;}
+    .pkg-cost b{color:#54607a;font-family:'DM Sans',sans-serif;}
+    .pkg-sell{font-size:17px;font-weight:800;letter-spacing:-.4px;color:var(--ink);margin-top:2px;}
+    .pkg-check{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;
+      background:var(--teal);display:none;align-items:center;justify-content:center;}
+    .pkg.sel .pkg-check{display:flex;}
+
+    /* Qty + generate */
+    .gen-box{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;
+      box-shadow:0 4px 16px rgba(20,40,90,.04);}
+    .qty-row{display:flex;align-items:center;gap:12px;}
+    .qty-label{flex:1;}
+    .qty-label .t{font-size:13.5px;font-weight:700;}
+    .qty-label .s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .stepper{display:flex;align-items:center;gap:0;border:1.5px solid var(--line);border-radius:13px;overflow:hidden;}
+    .stepper button{width:42px;height:44px;border:none;background:#f3f5fa;color:#46506a;font-size:20px;
+      font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .stepper button:active{background:#e7ebf3;}
+    .stepper input{width:62px;height:44px;border:none;text-align:center;font-size:16px;font-weight:800;
+      font-family:'DM Sans',sans-serif;outline:none;color:var(--ink);background:#fff;
+      border-left:1px solid var(--line);border-right:1px solid var(--line);}
+    .qty-chips{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap;}
+    .qty-chip{flex:1;min-width:56px;padding:9px 4px;border-radius:10px;border:1.5px solid var(--line);
+      background:#fff;color:#54607a;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+    .qty-chip:active{transform:scale(.97);}
+    .total-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px;
+      padding-top:15px;border-top:1px dashed var(--line);}
+    .total-row .l{font-size:13px;color:#54607a;font-weight:600;}
+    .total-row .v{font-size:22px;font-weight:800;letter-spacing:-.6px;font-family:'DM Sans',sans-serif;}
+    .total-row .v.over{color:var(--red);}
+
+    .btn{width:100%;padding:15px;border:none;border-radius:14px;font-family:inherit;font-size:15px;
+      font-weight:800;letter-spacing:-.2px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      gap:9px;transition:filter .15s,transform .08s;margin-top:14px;}
+    .btn:active{transform:scale(.985);}
+    .btn:disabled{opacity:.55;cursor:not-allowed;}
+    .btn-gen{background:linear-gradient(135deg,#2f6bff,#1d4fd0);color:#fff;box-shadow:0 10px 24px rgba(47,107,255,.3);}
+    .btn-teal{background:linear-gradient(135deg,#1f8bff,#1565e0);color:#fff;box-shadow:0 10px 24px rgba(31,122,255,.3);}
+    .btn-soft{background:#f3f5fa;color:#46506a;box-shadow:none;}
+    .spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;
+      border-radius:50%;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* History list */
+    .tx{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);
+      border-radius:16px;padding:13px 15px;margin-bottom:9px;cursor:pointer;
+      transition:box-shadow .15s,transform .08s;}
+    .tx:active{transform:scale(.992);}
+    .tx-ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .tx-ic.purchase{background:#eaf1ff;color:#2456d6;}
+    .tx-ic.topup{background:#e7f7ef;color:#0a9a5a;}
+    .tx-ic.refund{background:#fef6e0;color:#a9760a;}
+    .tx-ic.adjust{background:#f3f5fa;color:#54607a;}
+    .tx-mid{flex:1;min-width:0;}
+    .tx-desc{font-size:13.5px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tx-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .tx-amt{font-size:14.5px;font-weight:800;font-family:'DM Sans',sans-serif;flex-shrink:0;text-align:right;}
+    .tx-amt.plus{color:var(--green);}
+    .tx-amt.minus{color:var(--ink);}
+    .tx-bal{font-size:10.5px;color:var(--muted);margin-top:2px;font-family:'DM Sans',sans-serif;}
+
+    /* Report */
+    .rep-cards{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+    .rep-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;}
+    .rep-card .l{font-size:11.5px;color:var(--muted);font-weight:600;}
+    .rep-card .v{font-size:21px;font-weight:800;letter-spacing:-.5px;margin-top:5px;font-family:'DM Sans',sans-serif;}
+    .rep-card.full{grid-column:1/-1;}
+    .date-row{display:flex;gap:9px;margin-bottom:12px;}
+    .date-row .f{flex:1;}
+    .date-row label{display:block;font-size:11px;font-weight:700;color:#54607a;margin-bottom:5px;}
+    .date-row input{width:100%;padding:10px 11px;border:1.5px solid var(--line);border-radius:11px;
+      font-size:13px;font-family:inherit;outline:none;color:var(--ink);}
+    .date-row input:focus{border-color:var(--teal);}
+    .rep-pkg{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;
+      border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;}
+    .rep-pkg .n{font-size:13.5px;font-weight:700;}
+    .rep-pkg .c{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .rep-pkg .m{font-size:14px;font-weight:800;font-family:'DM Sans',sans-serif;color:var(--teal-deep);}
+
+    .empty{padding:48px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{color:#cdd5e3;margin-bottom:10px;}
+
+    /* Result modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(15,27,52,.5);z-index:90;display:none;
+      align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);}
+    .modal-bg.show{display:flex;}
+    .modal{background:#fff;width:100%;max-width:520px;border-radius:24px 24px 0 0;
+      padding:22px 20px 30px;animation:slideup .28s cubic-bezier(.2,.8,.25,1);max-height:88vh;overflow-y:auto;}
+    @keyframes slideup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+    .modal-grip{width:40px;height:4px;background:#e1e6ef;border-radius:100px;margin:0 auto 16px;}
+    .modal h3{font-size:18px;font-weight:800;letter-spacing:-.3px;display:flex;align-items:center;gap:9px;}
+    .modal .ok-ic{width:30px;height:30px;border-radius:50%;background:#e7f7ef;color:#0a9a5a;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .modal .msub{font-size:13px;color:var(--muted);margin:6px 0 16px;}
+    .vc-list{display:flex;flex-direction:column;gap:8px;max-height:42vh;overflow-y:auto;margin-bottom:6px;}
+    .vc{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f7f9fc;
+      border:1px solid var(--line);border-radius:12px;padding:11px 13px;}
+    .vc-user{font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;letter-spacing:.3px;}
+    .vc-pw{font-size:11.5px;color:var(--muted);margin-top:2px;font-family:'DM Sans',sans-serif;}
+    .vc-copy{background:none;border:none;color:var(--blue);cursor:pointer;padding:6px;display:flex;}
+
+    /* Toast */
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+      background:#0f1b34;color:#fff;padding:12px 18px;border-radius:13px;font-size:13px;font-weight:600;
+      z-index:120;opacity:0;transition:opacity .25s,transform .25s;box-shadow:0 12px 30px rgba(0,0,0,.25);
+      pointer-events:none;max-width:90%;text-align:center;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .skel{background:linear-gradient(90deg,#eef1f7 25%,#f6f8fb 50%,#eef1f7 75%);background-size:200% 100%;
+      animation:shine 1.3s infinite;border-radius:12px;}
+    @keyframes shine{to{background-position:-200% 0;}}
+
+    /* ── Confirm modal (pengganti window.confirm) ───────────────── */
+    /* ── Confirm modal (centered alert) ─────────────────────────── */
+    .cf-modal{max-width:380px;width:calc(100% - 40px);border-radius:22px;padding:30px 26px 24px;
+      text-align:center;align-self:center;animation:cfPop .26s cubic-bezier(.2,.9,.3,1.1);}
+    @keyframes cfPop{from{opacity:0;transform:translateY(8px) scale(.94);}to{opacity:1;transform:none;}}
+    .cf-ic{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      margin:0 auto 16px;}
+    .cf-ic.danger{background:#fdecec;color:#e5384d;}
+    .cf-ic.warn{background:#fff3e6;color:#ea580c;}
+    .cf-ic.info{background:#e8f1ff;color:#1565e0;}
+    .cf-modal h3{font-size:19px;font-weight:800;letter-spacing:-.3px;color:var(--ink);justify-content:center;}
+    .cf-modal .cf-msg{font-size:13px;line-height:1.6;color:#8a95ad;margin:8px auto 22px;max-width:300px;}
+    .cf-modal .cf-msg b{color:#5a657c;font-weight:700;}
+    .cf-actions{display:flex;flex-direction:column;gap:10px;}
+    .cf-actions .btn{margin-top:0;padding:14px;font-size:14.5px;border-radius:13px;width:100%;}
+    .btn-danger{background:#e5384d;color:#fff;box-shadow:0 8px 20px rgba(229,56,77,.26);}
+    .btn-danger:hover{background:#d62b40;}
+    .btn-warn{background:#ea580c;color:#fff;box-shadow:0 8px 20px rgba(234,88,12,.24);}
+    .btn-warn:hover{background:#d54d08;}
+    .cf-actions .btn-outline{background:#fff;color:#46506a;border:1.5px solid #e4e8f0;box-shadow:none;}
+    .cf-actions .btn-outline:hover{background:#f7f9fc;border-color:#d3dae6;}
+    .cf-ic.success{background:#e7f7ef;color:#0a9a5a;}
+    .cf-ic.error{background:#fdecec;color:#e5384d;}
+
+    /* ── Voucher detail modal ───────────────────────────────────── */
+    .vd-modal{padding:20px 18px 26px;}
+    .vd-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .vd-ic{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#e8f1ff;color:#1565e0;}
+    .vd-ic.s-active{background:#e7f7ef;color:#0a9a5a;}
+    .vd-ic.s-used{background:#fef6e0;color:#b9810b;}
+    .vd-ic.s-expired{background:#fdeaea;color:#dc2626;}
+    .vd-ic.s-unused{background:#eef1f7;color:#7a869e;}
+    .vd-name{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--ink);font-family:'DM Sans',sans-serif;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .vd-prof{font-size:12px;color:var(--muted);margin-top:2px;font-weight:600;}
+    .vd-badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;flex-shrink:0;letter-spacing:.3px;}
+    .vd-badge.s-active{background:#e7f7ef;color:#0a9a5a;} .vd-badge.s-used{background:#fef6e0;color:#b9810b;}
+    .vd-badge.s-expired{background:#fdeaea;color:#dc2626;} .vd-badge.s-unused{background:#f3f5fa;color:#7a869e;}
+    .vd-card{background:#f9fafc;border:1px solid var(--line);border-radius:16px;padding:4px 14px;}
+    .vd-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #eef1f7;}
+    .vd-row:last-child{border-bottom:none;}
+    .vd-row .l{color:var(--muted);font-size:12.5px;font-weight:500;}
+    .vd-row .v{font-weight:700;font-size:13px;text-align:right;color:var(--ink);font-family:'DM Sans',sans-serif;}
+    .vd-row .v.hl{color:#1565e0;}
+    .vd-row .v.mono{font-family:'DM Mono',monospace;letter-spacing:.3px;}
+    .vd-acts{display:flex;gap:9px;margin-top:16px;}
+    .vd-acts .btn{margin-top:0;flex:1;padding:13px;font-size:14px;border-radius:13px;}
+    .vd-acts .btn-del{background:#fdecec;color:#e5384d;box-shadow:none;}
+    .vd-acts .btn-del:hover{background:#fbdcdc;}
+    .vd-close{margin-top:9px;}
+    .vd-close.btn{margin-top:9px;padding:13px;font-size:14px;border-radius:13px;}
+
+    /* ── Selection modal (cetak / hapus dengan pilihan) ─────────── */
+    .sel-modal{max-width:540px;padding:20px 18px 16px;display:flex;flex-direction:column;max-height:90vh;}
+    .sel-head{display:flex;align-items:center;gap:11px;}
+    .sel-head .sel-ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .sel-head .sel-ic.blue{background:#e8f1ff;color:#1565e0;}
+    .sel-head .sel-ic.danger{background:#fdeaea;color:#dc2626;}
+    .sel-head .sel-ic.warn{background:#fff3e0;color:#ea580c;}
+    .sel-head .h{font-size:16px;font-weight:800;letter-spacing:-.3px;color:var(--ink);}
+    .sel-head .s{font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:600;}
+    .sel-tools{display:flex;gap:8px;align-items:center;margin:13px 0 9px;}
+    .sel-search{flex:1;position:relative;}
+    .sel-search input{width:100%;padding:10px 12px 10px 34px;border:1.5px solid var(--line);border-radius:11px;
+      font-size:13px;font-family:inherit;outline:none;background:#f7f9fc;color:var(--ink);}
+    .sel-search input:focus{border-color:var(--teal);background:#fff;}
+    .sel-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);}
+    .sel-allbtn{flex-shrink:0;border:1.5px solid var(--line);background:#fff;color:#46506a;font-weight:700;
+      font-size:12px;padding:10px 13px;border-radius:11px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:.12s;}
+    .sel-allbtn:hover{border-color:var(--teal);color:var(--teal-deep);}
+    .sel-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;
+      background:#f7f9fc;border:1px solid var(--line);border-radius:11px;margin-bottom:9px;}
+    .sel-bar .cinfo{font-size:12.5px;font-weight:700;color:var(--ink);}
+    .sel-bar .cinfo .n{color:var(--teal-deep);}
+    .sel-bar .lim{font-size:11px;color:var(--muted);font-weight:600;}
+    .sel-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:120px;
+      max-height:48vh;margin-bottom:6px;padding-right:2px;}
+    .sel-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border:1.5px solid var(--line);
+      border-radius:12px;cursor:pointer;transition:.12s;background:#fff;}
+    .sel-item:hover{border-color:#cfd8e6;}
+    .sel-item.on{border-color:var(--teal);background:#f0f6ff;}
+    .sel-cbox{width:21px;height:21px;border-radius:7px;border:2px solid #cdd5e3;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;transition:.12s;color:#fff;}
+    .sel-item.on .sel-cbox{background:var(--teal);border-color:var(--teal);}
+    .sel-cbox svg{opacity:0;transition:.12s;}
+    .sel-item.on .sel-cbox svg{opacity:1;}
+    .sel-item .si-mid{flex:1;min-width:0;}
+    .sel-item .si-u{font-size:13.5px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:.3px;
+      color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .sel-item .si-s{font-size:11px;color:var(--muted);margin-top:1px;}
+    .sel-item .si-badge{font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:7px;flex-shrink:0;}
+    .sel-loadmore{text-align:center;padding:9px;font-size:12px;font-weight:700;color:var(--teal-deep);
+      cursor:pointer;border:1.5px dashed var(--line);border-radius:11px;background:#fafbfd;}
+    .sel-loadmore:hover{border-color:var(--teal);background:#f0f6ff;}
+    .sel-empty{text-align:center;padding:34px 16px;color:var(--muted);font-size:12.5px;}
+    .sel-foot{display:flex;gap:9px;padding-top:4px;}
+    .sel-foot .btn{margin-top:0;padding:13px;font-size:14px;border-radius:13px;}
+
+    /* ── Laporan: stat grid (display-only, tidak bisa diklik) ── */
+    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .stat{position:relative;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;overflow:hidden;cursor:default;
+      transition:transform .2s cubic-bezier(.2,.8,.25,1),box-shadow .2s,border-color .2s;animation:statIn .42s cubic-bezier(.2,.8,.25,1) both;}
+    .stat:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(20,40,90,.09);border-color:#e2e8f3;}
+    @keyframes statIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:none;}}
+    /* stagger masuk antar kartu */
+    .stat-grid .stat:nth-child(1){animation-delay:.02s;} .stat-grid .stat:nth-child(2){animation-delay:.07s;}
+    .stat-grid .stat:nth-child(3){animation-delay:.12s;} .stat-grid .stat:nth-child(4){animation-delay:.17s;}
+    .stat-grid .stat:nth-child(5){animation-delay:.22s;} .stat-grid .stat:nth-child(6){animation-delay:.27s;}
+    .stat .si{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;transition:transform .2s;}
+    .stat:hover .si{transform:scale(1.08) rotate(-4deg);}
+    .stat .si svg{width:18px;height:18px;}
+    .stat .sl{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.2;padding-right:42px;}
+    .stat .sv{font-size:22px;font-weight:800;letter-spacing:-.6px;margin-top:8px;font-family:'DM Sans',sans-serif;color:var(--ink);}
+    .stat .ss{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.3;}
+    .stat.blue  .si{background:#eaf1ff;color:#2456d6;} .stat.blue  .sv{color:#2456d6;}
+    .stat.green .si{background:#e7f7ef;color:#0a9a5a;} .stat.green .sv{color:#0a9a5a;}
+    .stat.teal  .si{background:#e8f1ff;color:#1565e0;} .stat.teal  .sv{color:#1565e0;}
+    .stat.amber .si{background:#fef6e0;color:#b9810b;} .stat.amber .sv{color:#b9810b;}
+    .stat.slate .si{background:#eef1f7;color:#54607a;} .stat.slate .sv{color:#46506a;}
+    /* Chart card masuk halus + tab pane transition */
+    .chart-card{animation:chartFade .4s ease both;}
+    @keyframes chartFade{from{opacity:0;}to{opacity:1;}}
+    .pane.active{animation:paneIn .32s ease both;}
+    @keyframes paneIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+    @media (prefers-reduced-motion: reduce){
+      .stat,.chart-card,.pane.active{animation:none!important;}
+      .stat:hover{transform:none;}
+    }
+
+    /* ── Chart cards ── */
+    .chart-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 14px 8px;margin-bottom:13px;}
+    .chart-card .ch-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px 4px;}
+    .chart-card .ch-t{font-size:13.5px;font-weight:800;letter-spacing:-.2px;}
+    .chart-card .ch-s{font-size:11px;color:var(--muted);margin-top:1px;}
+    .chart-legend{display:flex;flex-wrap:wrap;gap:10px;padding:6px 6px 2px;}
+    .chart-legend .lg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:#54607a;}
+    .chart-legend .lg .sw{width:10px;height:10px;border-radius:3px;}
+
+    /* Segmented range switch */
+    .seg{display:inline-flex;background:#eef1f7;border-radius:10px;padding:3px;gap:2px;}
+    .seg button{border:none;background:transparent;font-family:inherit;font-size:11.5px;font-weight:700;color:#7a869e;
+      padding:6px 11px;border-radius:8px;cursor:pointer;transition:all .15s;}
+    .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(20,40,90,.12);}
+
+    /* ── Voucher manager ── */
+    .vfilter{display:flex;gap:7px;margin:2px 0 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;}
+    .vchip{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;
+      color:#54607a;font-size:12px;font-weight:700;padding:8px 13px;border-radius:100px;cursor:pointer;font-family:inherit;transition:all .15s;}
+    .vchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+    .vchip .cnt{font-size:10.5px;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:100px;font-family:'DM Sans',sans-serif;}
+    .vchip.on .cnt{background:rgba(255,255,255,.2);}
+
+    /* ── Tombol aksi massal (clean & minimal) ───────────────────── */
+    .vbulk{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px;}
+    .actbtn{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:11px;
+      border:1px solid var(--line);background:#fff;color:#54607a;font-family:inherit;font-size:12.5px;
+      font-weight:700;letter-spacing:-.1px;cursor:pointer;line-height:1;
+      transition:border-color .15s,color .15s,background .15s,box-shadow .15s,transform .08s;}
+    .actbtn svg{width:15px;height:15px;color:#9aa5bd;transition:color .15s;flex-shrink:0;}
+    .actbtn:hover{border-color:#cfd8e6;background:#fbfcfe;box-shadow:0 3px 10px rgba(20,40,90,.05);}
+    .actbtn:hover svg{color:#1565e0;}
+    .actbtn:active{transform:scale(.97);}
+    .actbtn.danger:hover{border-color:#f0c4c4;color:#dc2626;background:#fffafa;}
+    .actbtn.danger:hover svg{color:#dc2626;}
+    .vsearch{position:relative;margin-bottom:12px;}
+    .vsearch input{width:100%;padding:12px 13px 12px 40px;border:1.5px solid var(--line);border-radius:13px;
+      font-size:13.5px;font-family:inherit;outline:none;color:var(--ink);}
+    .vsearch input:focus{border-color:var(--teal);}
+    .vsearch svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);}
+    .vrow{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:15px;
+      padding:12px 13px;margin-bottom:9px;}
+    .vrow .vdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+    .vrow.s-active .vdot{background:#0a9a5a;box-shadow:0 0 0 3px rgba(10,154,90,.18);animation:vPulse 1.6s ease-in-out infinite;}
+    @keyframes vPulse{0%,100%{box-shadow:0 0 0 3px rgba(10,154,90,.18);}50%{box-shadow:0 0 0 5px rgba(10,154,90,.08);}}
+    .vrow.s-used .vdot{background:#b9810b;}
+    .vrow.s-expired .vdot{background:#dc2626;}
+    .vrow.s-unused .vdot{background:#c2cad8;}
+    .vrow .vmid{flex:1;min-width:0;}
+    .vrow .vu{font-size:14px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:.3px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .vrow .vs{font-size:11px;color:var(--muted);margin-top:2px;}
+    .vrow .vbadge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:7px;flex-shrink:0;}
+    .vbadge.b-active{background:#e7f7ef;color:#0a9a5a;} .vbadge.b-used{background:#fef6e0;color:#b9810b;}
+    .vbadge.b-expired{background:#fdeaea;color:#dc2626;}
+    .vbadge.b-unused{background:#f3f5fa;color:#7a869e;}
+    .vrow .vact{display:flex;gap:5px;flex-shrink:0;}
+    .vbtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff;display:flex;
+      align-items:center;justify-content:center;cursor:pointer;color:#7a869e;transition:all .12s;}
+    .vbtn:active{transform:scale(.9);}
+    .vbtn.cut:hover{color:#b9810b;border-color:#b9810b;background:#fef6e0;}
+    .vbtn.copy:hover{color:#1565e0;border-color:#1565e0;background:#e8f1ff;}
+
+    /* ── Monitor user aktif ── */
+    .mon-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .mon-sub{font-size:12px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:6px;}
+    .mon-sub .live{width:7px;height:7px;border-radius:50%;background:#0a9a5a;flex-shrink:0;box-shadow:0 0 0 3px rgba(10,154,90,.18);animation:vPulse 1.6s ease-in-out infinite;}
+    .mon-refresh{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:#fff;
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:#5a6781;flex-shrink:0;transition:opacity .2s,transform .12s;}
+    .mon-refresh:active{transform:scale(.92) rotate(-30deg);}
+    .mon-sum{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:16px;}
+    .ms-card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px 11px;display:flex;flex-direction:column;gap:10px;}
+    .ms-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+    .ms-ic svg{width:18px;height:18px;}
+    .ms-ic.ms-users{background:#eaf1ff;color:#2456d6;}
+    .ms-ic.ms-dl{background:#e7f7ef;color:#0a9a5a;}
+    .ms-ic.ms-ul{background:#fef0ec;color:#e2622f;}
+    .ms-n{font-size:14.5px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:-.4px;color:var(--ink);line-height:1.1;
+      transition:color .25s;}
+    .ms-t{font-size:9.5px;color:var(--muted);font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.3px;}
+
+    /* Kartu user */
+    .mon-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:12px;
+      box-shadow:0 1px 3px rgba(20,40,90,.03);animation:statIn .35s cubic-bezier(.2,.8,.25,1) both;}
+    .mc-top{display:flex;align-items:center;gap:9px;margin-bottom:13px;}
+    .mc-dot{width:9px;height:9px;border-radius:50%;background:#0a9a5a;flex-shrink:0;box-shadow:0 0 0 3px rgba(10,154,90,.18);animation:vPulse 1.6s ease-in-out infinite;}
+    .mc-name{font-size:15px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:.2px;color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mc-prof{font-size:10.5px;font-weight:800;color:#1565e0;background:#e8f1ff;padding:4px 10px;border-radius:100px;flex-shrink:0;}
+    /* Rate band: dua readout besar download/upload */
+    .mc-rate{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
+    .mc-r{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:13px;}
+    .mc-r.dl{background:#f0faf4;} .mc-r.ul{background:#fef3ef;}
+    .mc-r .ri{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .mc-r .ri svg{width:16px;height:16px;}
+    .mc-r.dl .ri{background:#0a9a5a;color:#fff;} .mc-r.ul .ri{background:#e2622f;color:#fff;}
+    .mc-r .rl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+    .mc-r .rv{font-size:15px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:-.4px;margin-top:1px;transition:color .2s;}
+    .mc-r.dl .rv{color:#0a9a5a;} .mc-r.ul .rv{color:#e2622f;}
+    /* Grid info 2×2 */
+    .mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;}
+    .mc-item .l{font-size:10px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px;margin-bottom:3px;text-transform:uppercase;letter-spacing:.2px;}
+    .mc-item .l svg{width:13px;height:13px;color:#9aa4ba;flex-shrink:0;}
+    .mc-item .v{font-size:14px;font-weight:800;font-family:'DM Sans',sans-serif;color:var(--ink);letter-spacing:-.3px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .2s;}
+    .mc-item .v.warn{color:#dc2626;} .mc-item .v.left{color:#2456d6;}
+    .mc-item .v.dlt{color:#0a9a5a;} .mc-item .v.ult{color:#e2622f;}
+    .mc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--line);}
+    .mc-chip{font-size:10.5px;color:#5a6781;background:#f3f5fa;padding:5px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;font-weight:600;}
+    .mc-chip svg{width:12px;height:12px;color:#9aa4ba;flex-shrink:0;}
+    .mc-act{display:flex;gap:8px;margin-top:13px;}
+    .mc-btn{flex:1;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;font-family:inherit;
+      font-size:12.5px;font-weight:700;color:#5a6781;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .12s;}
+    .mc-btn svg{width:14px;height:14px;}
+    .mc-btn.cut:hover{color:#dc2626;border-color:#dc2626;background:#fdeaea;}
+    .mc-btn.copy:hover{color:#1565e0;border-color:#1565e0;background:#e8f1ff;}
+    .mc-btn:active{transform:scale(.96);}
+    .mon-card .empty{padding:40px 10px;}
+    .vbtn.del:hover{color:#c0392f;border-color:#e5484d;background:#fdeaea;}
+    /* ── Kartu statistik voucher (satu card, pemisah antar kolom) ── */
+    .vstat-card{display:flex;background:#fff;border:1px solid var(--line);border-radius:18px;
+      padding:6px 4px;margin-bottom:14px;box-shadow:0 2px 10px rgba(20,40,90,.04);overflow:hidden;}
+    .vstat-card .vs-cell{flex:1;text-align:center;padding:11px 6px;position:relative;}
+    .vstat-card .vs-cell + .vs-cell::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line);}
+    .vstat-card .vs-cell .n{font-size:22px;font-weight:800;font-family:'DM Sans',sans-serif;letter-spacing:-.6px;line-height:1;color:var(--vc,var(--ink));}
+    .vstat-card .vs-cell .t{font-size:10px;color:var(--muted);font-weight:700;margin-top:6px;text-transform:uppercase;letter-spacing:.4px;}
+    .vstat-card .c-total{--vc:#1565e0;} .vstat-card .c-used{--vc:#b9810b;}
+    .vstat-card .c-online{--vc:#0a9a5a;} .vstat-card .c-unused{--vc:#7a869e;}
+
+    /* ── Bottom nav (untuk WebView Android) ── */
+    .botnav{position:fixed;left:0;right:0;bottom:0;z-index:80;background:#fff;
+      border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:stretch;
+      padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -4px 20px rgba(20,40,90,.06);width:100%;max-width:520px;margin:0 auto;
+      transition:box-shadow .2s;}
+    .botnav .bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+      border:none;background:transparent;color:#9aa4ba;font-family:inherit;font-size:10.5px;font-weight:700;
+      cursor:pointer;padding:7px 2px 5px;border-radius:12px;transition:color .18s,background .18s;position:relative;}
+    .botnav .bn:hover{color:var(--teal-deep);background:rgba(31,122,255,.05);}
+    .botnav .bn svg{width:22px;height:22px;stroke-width:2;transition:transform .2s cubic-bezier(.2,.8,.25,1);}
+    .botnav .bn.on{color:var(--teal-deep);}
+    .botnav .bn.on svg{transform:translateY(-2px) scale(1.06);}
+    .botnav .bn.on::before{content:'';position:absolute;top:0;width:26px;height:3px;border-radius:0 0 4px 4px;
+      background:var(--teal-deep);animation:bnPop .25s cubic-bezier(.2,.8,.25,1);}
+    @keyframes bnPop{from{transform:scaleX(.3);opacity:0;}to{transform:scaleX(1);opacity:1;}}
+    .botnav .bn .bn-badge{position:absolute;top:3px;right:50%;transform:translateX(16px);
+      min-width:16px;height:16px;padding:0 4px;border-radius:100px;background:var(--red);color:#fff;
+      font-size:9px;font-weight:800;display:none;align-items:center;justify-content:center;line-height:1;}
+    .botnav .bn .bn-badge.show{display:flex;}
+    body.has-botnav{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));}
+
+    /* ── Home menu grid ── */
+    .home-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px 12px;
+      margin-bottom:20px;box-shadow:0 2px 10px rgba(20,40,90,.04);}
+    .home-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;}
+    .hm{display:flex;flex-direction:column;align-items:center;gap:8px;border:none;background:transparent;
+      cursor:pointer;font-family:inherit;padding:4px 2px;border-radius:14px;transition:transform .12s;}
+    .hm:active{transform:scale(.93);}
+    .hm-ic{width:54px;height:54px;border-radius:17px;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 4px 12px rgba(20,40,90,.06);}
+    .hm-ic svg{width:24px;height:24px;}
+    .hm-t{font-size:11px;font-weight:700;color:#54607a;letter-spacing:-.1px;}
+    .ic-gen{background:#e8f1ff;color:#1565e0;} .ic-vou{background:#eaf1ff;color:#2456d6;}
+    .ic-mon{background:#e7f7ef;color:#0a9a5a;} .ic-his{background:#fef6e0;color:#b9810b;}
+    .ic-rep{background:#f0ecff;color:#6366f1;} .ic-top{background:#e6f6fb;color:#0891b2;}
+    .ic-tph{background:#fdeef0;color:#e5484d;} .ic-prof{background:#eef1f7;color:#54607a;}
+
+    /* ── Center FAB di bottom nav ── */
+    .botnav .bn-fab{position:relative;}
+    .botnav .bn-fab .fab-circle{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+      width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,#1f8bff,#1565e0);box-shadow:0 8px 20px rgba(31,122,255,.42);
+      border:4px solid var(--bg);transition:transform .2s cubic-bezier(.2,.8,.25,1);}
+    .botnav .bn-fab .fab-circle svg{width:26px;height:26px;stroke-width:2.6;color:#fff;transform:none;}
+    .botnav .bn-fab:active .fab-circle{transform:translateX(-50%) scale(.92);}
+    .botnav .bn-fab .fab-lbl{margin-top:30px;font-size:10.5px;font-weight:800;color:var(--teal-deep);}
+    .botnav .bn-fab.on::before{display:none;}
+    .botnav .bn-fab:hover{background:transparent;}
+    /* Desktop/laptop: jangka nav rapi mengikuti kolom konten 520px, beri sudut & border */
+    @media(min-width:521px){
+      .botnav{left:50%;right:auto;transform:translateX(-50%);border:1px solid var(--line);border-bottom:none;
+        border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(20,40,90,.1);}
+    }
+  </style>
+  <script src="/vendor/apexcharts/apexcharts.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="head">
+    <div style="display:flex;align-items:center;gap:11px;min-width:0">
+      <button class="iconbtn" id="menuBtn" onclick="openDrawer()" aria-label="Menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <h1 id="resName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Reseller</h1>
+    </div>
+    <div class="right">
+      <div class="avatar" id="avatar" onclick="openSettings()" role="button" tabindex="0" aria-label="Profil reseller" style="cursor:pointer">R</div>
+    </div>
+  </div>
+
+  <!-- Hero saldo -->
+  <div class="hero">
+    <div class="cap" style="display:flex;align-items:center;justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:7px"><span class="dot"></span> Saldo Deposit</span>
+      <button onclick="openTopup()" style="position:relative;z-index:2;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.95);color:#1565e0;border:none;padding:7px 13px;border-radius:100px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.12);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Isi Saldo
+      </button>
+    </div>
+    <div class="big money" id="balance">Rp —</div>
+    <div class="meta">
+      <span class="pill" id="devicePill">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M6 12h.01M12 12h.01"/></svg>
+        <span id="deviceName">Router</span>
+      </span>
+      <span>Kode: <b id="resCode">—</b></span>
+    </div>
+    <div class="hero-split">
+      <div class="mini"><div class="l">Voucher Hari Ini</div><div class="v" id="vToday">0</div></div>
+      <div class="mini"><div class="l">Voucher Bulan Ini</div><div class="v" id="vMonth">0</div></div>
+    </div>
+  </div>
+
+  <!-- Peringatan saldo menipis (muncul otomatis bila saldo rendah) -->
+  <div id="lowBalanceWarn" style="display:none;margin:14px 16px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:13px 15px;">
+    <div style="display:flex;align-items:flex-start;gap:11px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:800;color:#9a3412">Saldo menipis</div>
+        <div id="lowBalanceMsg" style="font-size:12px;color:#b45309;margin-top:2px;line-height:1.5">Saldo Anda hampir habis. Isi saldo agar bisa terus generate voucher.</div>
+        <button onclick="openTopup()" style="margin-top:9px;background:#ea580c;color:#fff;border:none;border-radius:9px;padding:7px 14px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer">Isi Saldo Sekarang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs (disembunyikan: navigasi utama kini via bottom nav) -->
+  <div class="tabs" style="display:none">
+    <button class="tab active" data-tab="generate" onclick="switchTab('generate')">Generate</button>
+    <button class="tab" data-tab="vouchers" onclick="switchTab('vouchers')">Voucher</button>
+    <button class="tab" data-tab="history" onclick="switchTab('history')">Riwayat</button>
+    <button class="tab" data-tab="report" onclick="switchTab('report')">Laporan</button>
+  </div>
+
+  <!-- TAB: Home (halaman awal) -->
+  <div class="pane active" id="pane-home">
+    <div class="sec-title">MENU</div>
+    <div class="home-card">
+      <div class="home-grid">
+      <button class="hm" onclick="switchTab('generate')">
+        <span class="hm-ic ic-gen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg></span>
+        <span class="hm-t">Generate</span>
+      </button>
+      <button class="hm" onclick="switchTab('vouchers')">
+        <span class="hm-ic ic-vou"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>
+        <span class="hm-t">Voucher</span>
+      </button>
+      <button class="hm" onclick="switchTab('monitor')">
+        <span class="hm-ic ic-mon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+        <span class="hm-t">Monitor</span>
+      </button>
+      <button class="hm" onclick="switchTab('history')">
+        <span class="hm-ic ic-his"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></span>
+        <span class="hm-t">Riwayat</span>
+      </button>
+      <button class="hm" onclick="switchTab('report')">
+        <span class="hm-ic ic-rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></span>
+        <span class="hm-t">Laporan</span>
+      </button>
+      <button class="hm" onclick="openTopup()">
+        <span class="hm-ic ic-top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+        <span class="hm-t">Isi Saldo</span>
+      </button>
+      <button class="hm" onclick="closeDrawer();openTopup();showTopupHistory()">
+        <span class="hm-ic ic-tph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>
+        <span class="hm-t">Top-up</span>
+      </button>
+      <button class="hm" onclick="openSettings()">
+        <span class="hm-ic ic-prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg></span>
+        <span class="hm-t">Profil</span>
+      </button>
+      </div>
+    </div>
+
+    <div class="sec-title" style="display:flex;align-items:center;justify-content:space-between">
+      <span>PAKET TERSEDIA</span>
+      <a onclick="switchTab('generate')" style="color:var(--teal-deep);font-size:11.5px;font-weight:800;cursor:pointer;letter-spacing:0">Lihat Semua</a>
+    </div>
+    <div class="pkg-grid" id="pkgGridHome">
+      <div class="skel" style="height:78px"></div>
+      <div class="skel" style="height:78px"></div>
+    </div>
+  </div>
+
+  <!-- TAB: Generate -->
+  <div class="pane" id="pane-generate">
+    <div class="sec-title">PILIH PAKET VOUCHER</div>
+    <div class="pkg-grid" id="pkgGrid">
+      <div class="skel" style="height:78px"></div>
+      <div class="skel" style="height:78px"></div>
+    </div>
+
+    <div class="gen-box" id="genBox" style="display:none">
+      <div class="qty-row">
+        <div class="qty-label">
+          <div class="t">Jumlah Voucher</div>
+          <div class="s" id="maxHint">Maksimal — per generate</div>
+        </div>
+        <div class="stepper">
+          <button onclick="stepQty(-1)" aria-label="Kurangi">−</button>
+          <input id="qty" type="number" value="5" min="1" inputmode="numeric" oninput="recalc()">
+          <button onclick="stepQty(1)" aria-label="Tambah">+</button>
+        </div>
+      </div>
+      <div class="qty-chips">
+        <button class="qty-chip" onclick="setQty(5)">5</button>
+        <button class="qty-chip" onclick="setQty(10)">10</button>
+        <button class="qty-chip" onclick="setQty(25)">25</button>
+        <button class="qty-chip" onclick="setQty(50)">50</button>
+      </div>
+      <div class="total-row">
+        <div class="l">Total potong saldo</div>
+        <div class="v money" id="totalCost">Rp 0</div>
+      </div>
+      <button class="btn btn-gen" id="btnGen" onclick="doGenerate()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+        <span id="btnGenText">Generate Voucher</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: Voucher (kelola user hotspot) -->
+  <div class="pane" id="pane-vouchers">
+    <div class="vstat-card">
+      <div class="vs-cell c-total"><div class="n" id="vmTotal">—</div><div class="t">Total</div></div>
+      <div class="vs-cell c-used"><div class="n" id="vmUsed">—</div><div class="t">Terpakai</div></div>
+      <div class="vs-cell c-online"><div class="n" id="vmActive">—</div><div class="t">Online</div></div>
+      <div class="vs-cell c-unused"><div class="n" id="vmUnused">—</div><div class="t">Belum</div></div>
+    </div>
+    <div class="vsearch">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="vQuery" type="text" placeholder="Cari username / profil voucher…" oninput="debouncedVouchers()">
+    </div>
+    <div class="vfilter" id="vFilter">
+      <button class="vchip on" data-f="" onclick="setVFilter('')">Semua <span class="cnt" id="fcAll">0</span></button>
+      <button class="vchip" data-f="active" onclick="setVFilter('active')">Online <span class="cnt" id="fcActive">0</span></button>
+      <button class="vchip" data-f="used_all" onclick="setVFilter('used_all')">Terpakai <span class="cnt" id="fcUsed">0</span></button>
+      <button class="vchip" data-f="expired" onclick="setVFilter('expired')">Expired <span class="cnt" id="fcExpired">0</span></button>
+      <button class="vchip" data-f="unused" onclick="setVFilter('unused')">Belum <span class="cnt" id="fcUnused">0</span></button>
+    </div>
+    <div id="vBulkBar" class="vbulk">
+      <button class="actbtn" onclick="openSelModal('print','unused')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>Cetak Belum Dipakai</span>
+      </button>
+      <button class="actbtn danger" onclick="openSelModal('delete','expired')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Hapus Expired</span>
+      </button>
+      <button class="actbtn danger" onclick="openSelModal('delete','unused')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span>Hapus Belum Dipakai</span>
+      </button>
+    </div>
+    <div id="vList"></div>
+  </div>
+
+  <!-- TAB: History -->
+  <div class="pane" id="pane-history">
+    <div class="sec-title">RIWAYAT TRANSAKSI</div>
+    <div id="histList"></div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn btn-soft" id="histMore" style="display:none;width:auto;padding:11px 22px;margin:0 auto;" onclick="loadMoreHistory()">Muat lebih banyak</button>
+    </div>
+  </div>
+
+  <!-- TAB: Report -->
+  <div class="pane" id="pane-report">
+    <div class="sec-title">PERIODE LAPORAN</div>
+    <div class="date-row">
+      <div class="f"><input type="date" id="repFrom"></div>
+      <div class="f"><input type="date" id="repTo"></div>
+    </div>
+    <button class="btn btn-teal" style="margin-top:0" onclick="loadReport()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      Tampilkan Laporan
+    </button>
+    <div id="repBody" style="margin-top:16px"></div>
+  </div>
+
+  <!-- TAB: Monitor user hotspot aktif -->
+  <div class="pane" id="pane-monitor">
+    <div class="mon-head">
+      <div>
+        <div class="sec-title" style="margin:0">MONITOR USER AKTIF</div>
+      </div>
+      <button class="mon-refresh" id="monRefreshBtn" onclick="loadMonitor()" aria-label="Segarkan">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Ringkasan total -->
+    <div class="mon-sum">
+      <div class="ms-card">
+        <div class="ms-ic ms-users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
+        <div><div class="ms-n" id="msUsers">0</div><div class="ms-t">User Online</div></div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-ic ms-dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 21h16"/></svg></div>
+        <div><div class="ms-n" id="msDown">0 bps</div><div class="ms-t">Total Download</div></div>
+      </div>
+      <div class="ms-card">
+        <div class="ms-ic ms-ul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0 4 4m-4-4-4 4"/><path d="M4 3h16"/></svg></div>
+        <div><div class="ms-n" id="msUp">0 bps</div><div class="ms-t">Total Upload</div></div>
+      </div>
+    </div>
+
+    <div id="monList"></div>
+  </div>
+
+</div>
+
+<!-- Result modal -->
+<div class="modal-bg" id="resultModal">
+  <div class="modal">
+    <div class="modal-grip"></div>
+    <h3><span class="ok-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> <span id="resTitle">Voucher dibuat</span></h3>
+    <div class="msub" id="resSub"></div>
+    <div class="vc-list" id="vcList"></div>
+    <button class="btn btn-teal" onclick="printVouchers()" style="margin-top:14px">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Cetak Semua Voucher
+    </button>
+    <button class="btn btn-soft" onclick="closeModal()" style="margin-top:9px">Tutup</button>
+  </div>
+</div>
+
+<!-- Voucher detail modal -->
+<div class="modal-bg" id="vDetailModal">
+  <div class="modal vd-modal">
+    <div class="modal-grip"></div>
+    <div class="vd-head">
+      <div class="vd-ic" id="vdIcon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="vd-name" id="vdTitle">Detail Voucher</div>
+        <div class="vd-prof" id="vdSub"></div>
+      </div>
+      <span class="vd-badge" id="vdBadge"></span>
+    </div>
+    <div id="vdBody"></div>
+    <div id="vdActions"></div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <div class="modal-grip"></div>
+    <h3>Profil Reseller</h3>
+    <div class="prof-card" style="display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--line);border-radius:14px;margin-bottom:14px">
+      <div class="avatar" id="profAvatar" style="width:46px;height:46px;font-size:18px">R</div>
+      <div style="min-width:0">
+        <div id="profName" style="font-weight:800;font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:2px">Kode: <b id="setCode">—</b></div>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:1px">Router: <span id="profDevice">—</span></div>
+      </div>
+    </div>
+    <div class="gen-box" style="margin-top:4px">
+      <div class="qty-label" style="margin-bottom:12px"><div class="t">Ganti Password</div></div>
+      <div style="margin-bottom:10px"><input id="oldPw" type="password" placeholder="Password lama" style="width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;font-family:inherit;outline:none"></div>
+      <div style="margin-bottom:4px"><input id="newPw" type="password" placeholder="Password baru (min. 6)" style="width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;font-family:inherit;outline:none"></div>
+      <button class="btn btn-teal" onclick="changePw()" style="margin-top:12px">Simpan Password</button>
+    </div>
+    <button class="btn btn-soft" onclick="closeModal()" style="margin-top:10px">Tutup</button>
+    <button class="btn" onclick="doLogout()" style="margin-top:9px;background:#fdeaea;color:#c0392f;box-shadow:none">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      Keluar
+    </button>
+  </div>
+</div>
+
+<!-- Topup modal -->
+<div class="modal-bg" id="topupModal">
+  <div class="modal">
+    <div class="modal-grip"></div>
+    <div id="topupStep1">
+      <h3>Isi Saldo</h3>
+      <div class="msub">Pilih nominal & metode pembayaran.</div>
+
+      <div class="sec-title" style="margin-top:4px">NOMINAL</div>
+      <div class="qty-chips" id="topupChips" style="margin-top:0"></div>
+      <div class="gen-box" style="margin-top:12px;padding:14px">
+        <label style="font-size:12.5px;font-weight:700;color:#54607a;display:block;margin-bottom:8px">Atau masukkan nominal</label>
+        <div style="position:relative">
+          <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-weight:700;color:#8a95ad;font-family:'DM Sans',sans-serif">Rp</span>
+          <input id="topupAmount" type="number" inputmode="numeric" placeholder="50000" oninput="onTopupAmount()" style="width:100%;padding:13px 14px 13px 44px;border:1.5px solid var(--line);border-radius:13px;font-size:16px;font-weight:800;font-family:'DM Sans',sans-serif;outline:none;color:var(--ink)">
+        </div>
+        <div id="topupMinHint" style="font-size:11.5px;color:var(--muted);margin-top:7px"></div>
+      </div>
+
+      <!-- Promo / kode bonus (#10) -->
+      <div style="margin-bottom:18px">
+        <label style="font-size:12.5px;font-weight:700;color:#54607a;display:block;margin-bottom:8px">Kode Promo (opsional)</label>
+        <div style="display:flex;gap:8px">
+          <input id="promoCode" type="text" placeholder="mis. BONUS10" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="flex:1;padding:12px 14px;border:1.5px solid var(--line);border-radius:13px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;outline:none;color:var(--ink)">
+          <button onclick="checkPromo()" style="flex-shrink:0;padding:0 18px;border:none;border-radius:13px;background:#1565e0;color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer">Cek</button>
+        </div>
+        <div id="promoMsg" style="font-size:12px;margin-top:8px;font-weight:600;display:none"></div>
+      </div>
+
+      <div class="sec-title">METODE PEMBAYARAN</div>
+      <div id="topupMethods" style="display:flex;flex-direction:column;gap:10px"></div>
+
+      <button class="btn btn-soft" onclick="showTopupHistory()" style="margin-top:14px">Riwayat Top-up</button>
+      <button class="btn btn-soft" onclick="closeModal()" style="margin-top:9px">Tutup</button>
+    </div>
+
+    <!-- Manual/QRIS instruction + upload -->
+    <div id="topupStep2" style="display:none">
+      <h3 id="t2Title">Selesaikan Pembayaran</h3>
+      <div class="msub" id="t2Sub"></div>
+      <div id="t2Accounts" style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px"></div>
+      <div class="gen-box" style="padding:15px">
+        <label style="font-size:12.5px;font-weight:700;color:#54607a;display:block;margin-bottom:8px">Unggah Bukti Transfer</label>
+        <input id="proofFile" type="file" accept="image/*,application/pdf" style="width:100%;font-size:13px;font-family:inherit;margin-bottom:10px">
+        <input id="proofNote" type="text" placeholder="Catatan (mis. nama pengirim, jam)" style="width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:13.5px;font-family:inherit;outline:none">
+        <button class="btn btn-teal" id="btnUploadProof" onclick="uploadProof()" style="margin-top:12px">
+          <span id="uploadText">Kirim Bukti</span>
+        </button>
+      </div>
+      <button class="btn btn-soft" onclick="backToTopupStep1()" style="margin-top:10px">Kembali</button>
+    </div>
+
+    <!-- Status / waiting -->
+    <div id="topupStep3" style="display:none;text-align:center;padding:14px 0">
+      <div id="t3Icon" style="width:62px;height:62px;border-radius:50%;background:#fef6e0;color:#a9760a;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <h3 id="t3Title" style="justify-content:center">Menunggu Verifikasi</h3>
+      <div class="msub" id="t3Sub" style="text-align:center"></div>
+      <button class="btn btn-teal" onclick="closeTopupDone()" style="margin-top:16px">Selesai</button>
+    </div>
+
+    <!-- History -->
+    <div id="topupStep4" style="display:none">
+      <h3>Riwayat Top-up</h3>
+      <div class="msub">Daftar permintaan isi saldo Anda.</div>
+      <div id="topupHistList" style="margin-top:8px;max-height:52vh;overflow-y:auto"></div>
+      <button class="btn btn-soft" onclick="backToTopupStep1()" style="margin-top:12px">Kembali</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal (pengganti window.confirm) -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal cf-modal">
+    <div class="cf-ic danger" id="cfIcon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    </div>
+    <h3 id="cfTitle">Konfirmasi</h3>
+    <div class="cf-msg" id="cfMsg"></div>
+    <div class="cf-actions">
+      <button class="btn btn-danger" id="cfOk" onclick="closeConfirm(true)">Ya, Lanjutkan</button>
+      <button class="btn btn-outline" id="cfCancel" onclick="closeConfirm(false)">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Result modal (status berhasil / gagal) -->
+<div class="modal-bg" id="resultStatusModal">
+  <div class="modal cf-modal">
+    <div class="cf-ic success" id="rsIcon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <h3 id="rsTitle">Berhasil</h3>
+    <div class="cf-msg" id="rsMsg"></div>
+    <div class="cf-actions">
+      <button class="btn btn-teal" id="rsOk" onclick="closeResult()">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- Selection modal (cetak / hapus dengan pilihan voucher) -->
+<div class="modal-bg" id="selModal">
+  <div class="modal sel-modal">
+    <div class="modal-grip"></div>
+    <div class="sel-head">
+      <div class="sel-ic blue" id="selIcon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="h" id="selTitle">Pilih Voucher</div>
+        <div class="s" id="selSub">—</div>
+      </div>
+    </div>
+    <div class="sel-tools">
+      <div class="sel-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="selSearch" type="text" placeholder="Cari username…" oninput="selOnSearch()">
+      </div>
+      <button class="sel-allbtn" id="selAllBtn" onclick="selToggleAll()">Pilih semua</button>
+    </div>
+    <div class="sel-bar">
+      <div class="cinfo"><span class="n" id="selCount">0</span> dipilih</div>
+      <div class="lim" id="selLimInfo"></div>
+    </div>
+    <div class="sel-list" id="selList"></div>
+    <div class="sel-foot">
+      <button class="btn btn-soft" style="flex:1" onclick="closeSelModal()">Tutup</button>
+      <button class="btn" id="selAction" style="flex:1.4" onclick="selConfirm()">Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Side drawer (hamburger menu) -->
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dw-head">
+    <div class="dw-avatar" id="dwAvatar">R</div>
+    <div style="min-width:0">
+      <div class="dw-name" id="dwName">Reseller</div>
+      <div class="dw-code">Kode: <b id="dwCode">—</b></div>
+    </div>
+    <button class="dw-x" onclick="closeDrawer()" aria-label="Tutup">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="dw-balance">
+    <div class="dw-bl">Saldo Deposit</div>
+    <div class="dw-bv" id="dwBalance">Rp —</div>
+    <button class="dw-topup" onclick="closeDrawer();openTopup()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Isi Saldo
+    </button>
+  </div>
+
+  <nav class="dw-nav">
+    <div class="dw-sec">MENU</div>
+    <button class="dw-item" onclick="drawerGo('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="dw-item" onclick="drawerGo('generate')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Generate Voucher</span>
+    </button>
+    <button class="dw-item" onclick="drawerGo('vouchers')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Daftar Voucher</span>
+    </button>
+    <button class="dw-item" onclick="drawerGo('monitor')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      <span>Monitor User Aktif</span>
+    </button>
+    <button class="dw-item" onclick="drawerGo('history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>Riwayat Transaksi</span>
+    </button>
+    <button class="dw-item" onclick="drawerGo('report')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+      <span>Laporan &amp; Statistik</span>
+    </button>
+
+    <div class="dw-sec">AKUN</div>
+    <button class="dw-item" onclick="closeDrawer();openTopup();showTopupHistory()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      <span>Riwayat Top-up</span>
+    </button>
+    <button class="dw-item" onclick="closeDrawer();openSettings()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+      <span>Profil Reseller</span>
+    </button>
+    <button class="dw-item dw-danger" onclick="closeDrawer();doLogout()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      <span>Keluar</span>
+    </button>
+  </nav>
+
+  <div class="dw-foot" id="dwFoot">FLAYNET Reseller</div>
+</aside>
+
+<!-- Bottom nav (WebView Android) -->
+<nav class="botnav" id="botNav">
+  <button class="bn on" data-tab="home" onclick="switchTab('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+    Home
+  </button>
+  <button class="bn" data-tab="vouchers" onclick="switchTab('vouchers')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Voucher
+  </button>
+  <button class="bn bn-fab" data-tab="generate" onclick="switchTab('generate')" aria-label="Generate Voucher">
+    <span class="fab-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+    <span class="fab-lbl">Generate</span>
+  </button>
+  <button class="bn" data-tab="report" onclick="switchTab('report')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+    Laporan
+  </button>
+  <button class="bn" data-tab="topup" onclick="openTopup()">
+    <span class="bn-badge" id="bnTopupBadge"></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+    Isi Saldo
+  </button>
+</nav>
+
+<script>
+  // Token: utamakan localStorage, fallback ke cookie (server meng-autentikasi
+  // halaman via cookie, jadi bila localStorage kosong tapi cookie ada kita
+  // pakai cookie — mencegah redirect-loop login↔dashboard).
+  function getCookie(name){
+    const m = document.cookie.match('(?:^|; )'+name.replace(/([.$?*|{}()\[\]\\\/\+^])/g,'\\$1')+'=([^;]*)');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  let TOKEN = localStorage.getItem('reseller_token') || getCookie('reseller_token');
+  // Sinkronkan kembali agar localStorage & cookie konsisten.
+  if(TOKEN){
+    try{ if(!localStorage.getItem('reseller_token')) localStorage.setItem('reseller_token', TOKEN); }catch(_){}
+  }
+  let RESELLER = null, PACKAGES = [], SELECTED = null, LAST_VOUCHERS = [], LAST_TXID = null;
+  let histPage = 1, histDone = false, histLoading = false;
+
+  // ── API helper (cookie HttpOnly + Bearer bila ada; auto-redirect 401) ──
+  async function api(path, opts = {}){
+    const headers = Object.assign({ 'X-Requested-With':'XMLHttpRequest' }, opts.headers || {});
+    // Hanya kirim Bearer bila token klien valid. Bila kosong, andalkan cookie
+    // HttpOnly yang otomatis ikut pada request same-origin (hindari "Bearer null").
+    if(TOKEN && TOKEN!=='null' && TOKEN!=='undefined') headers['Authorization']='Bearer '+TOKEN;
+    opts.headers = headers;
+    opts.credentials = 'same-origin';
+    if(opts.body && typeof opts.body !== 'string'){
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(opts.body);
+    }
+    const r = await fetch('/reseller/api'+path, opts);
+    if(r.status === 401){ logoutNoCall(); return Promise.reject(new Error('unauth')); }
+    return r.json();
+  }
+  function logoutNoCall(){
+    localStorage.removeItem('reseller_token'); localStorage.removeItem('reseller_info');
+    document.cookie = 'reseller_token=;path=/reseller;max-age=0';
+    window.location.href = '/reseller/login';
+  }
+
+  const fmtRp = n => 'Rp ' + Number(n||0).toLocaleString('id-ID');
+  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400); }
+
+  // ── Confirm modal (pengganti window.confirm) ──────────────────
+  let _cfResolve=null;
+  const CF_ICONS={
+    danger:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>',
+    warn:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    info:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>'
+  };
+  // confirmDialog({title, message(html), okText, cancelText, tone:'danger'|'warn'|'info'}) → Promise<bool>
+  function confirmDialog(opts={}){
+    const tone=opts.tone||'danger';
+    document.getElementById('cfTitle').textContent=opts.title||'Konfirmasi';
+    document.getElementById('cfMsg').innerHTML=opts.message||'';
+    const ic=document.getElementById('cfIcon'); ic.className='cf-ic '+tone; ic.innerHTML=CF_ICONS[tone]||CF_ICONS.danger;
+    const ok=document.getElementById('cfOk');
+    ok.textContent=opts.okText||'Ya, Lanjutkan';
+    ok.className='btn '+(tone==='warn'?'btn-warn':tone==='info'?'btn-teal':'btn-danger');
+    const cancel=document.getElementById('cfCancel');
+    cancel.textContent=opts.cancelText||'Batal';
+    cancel.className='btn btn-outline';
+    document.getElementById('confirmModal').classList.add('show');
+    return new Promise(res=>{ _cfResolve=res; });
+  }
+  function closeConfirm(val){
+    document.getElementById('confirmModal').classList.remove('show');
+    if(_cfResolve){ const r=_cfResolve; _cfResolve=null; r(!!val); }
+  }
+
+  // ── Result modal (status berhasil / gagal) — gaya sama dgn confirm ──
+  const RS_ICONS={
+    success:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+    error:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+  };
+  // resultDialog({ok, title, message, okText}) → menampilkan status sukses/gagal.
+  function resultDialog(opts={}){
+    const ok=opts.ok!==false;
+    const tone=ok?'success':'error';
+    document.getElementById('rsTitle').textContent = opts.title || (ok?'Berhasil':'Gagal');
+    document.getElementById('rsMsg').innerHTML = opts.message || '';
+    const ic=document.getElementById('rsIcon'); ic.className='cf-ic '+tone; ic.innerHTML=RS_ICONS[tone];
+    const btn=document.getElementById('rsOk');
+    btn.textContent=opts.okText||'Selesai';
+    btn.className='btn '+(ok?'btn-teal':'btn-danger');
+    document.getElementById('resultStatusModal').classList.add('show');
+  }
+  function closeResult(){ document.getElementById('resultStatusModal').classList.remove('show'); }
+
+  // ── Init ─────────────────────────────────────────────────────
+  (async function init(){
+    // Halaman ini HANYA tersaji bila server sudah meng-autentikasi via cookie
+    // (cookie HttpOnly tidak terbaca JS). Maka JANGAN bounce ke login meski
+    // TOKEN klien kosong — cukup andalkan cookie untuk request API.
+    try{ sessionStorage.removeItem('rsl_redir'); }catch(_){}
+    document.body.classList.add('has-botnav');
+
+    // ── PWA (#13): daftarkan service worker + tangani prompt install ──
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('/sw-reseller.js', { scope:'/reseller' }).catch(()=>{});
+    }
+    await loadDashboard();
+    await loadPackages();
+    // default tanggal laporan: bulan ini
+    const now=new Date(), first=new Date(now.getFullYear(),now.getMonth(),1);
+    document.getElementById('repFrom').value = first.toISOString().slice(0,10);
+    document.getElementById('repTo').value = now.toISOString().slice(0,10);
+  })();
+
+  async function loadDashboard(){
+    try{
+      const j = await api('/dashboard');
+      if(!j.success) return;
+      RESELLER = j.data.reseller;
+      const s = j.data.stats;
+      document.getElementById('resName').textContent = RESELLER.name;
+      document.getElementById('avatar').textContent = (RESELLER.name||'R').charAt(0).toUpperCase();
+      document.getElementById('balance').textContent = fmtRp(RESELLER.balance);
+      document.getElementById('resCode').textContent = RESELLER.code;
+      document.getElementById('deviceName').textContent = RESELLER.device_name || 'Router';
+      document.getElementById('vToday').textContent = s.today.vouchers;
+      document.getElementById('vMonth').textContent = s.month.vouchers;
+      document.getElementById('setCode').textContent = RESELLER.code;
+      document.getElementById('profName').textContent = RESELLER.name || '—';
+      document.getElementById('profDevice').textContent = RESELLER.device_name || 'Router';
+      document.getElementById('profAvatar').textContent = (RESELLER.name||'R').charAt(0).toUpperCase();
+      // Drawer
+      document.getElementById('dwName').textContent = RESELLER.name || 'Reseller';
+      document.getElementById('dwCode').textContent = RESELLER.code || '—';
+      document.getElementById('dwAvatar').textContent = (RESELLER.name||'R').charAt(0).toUpperCase();
+      document.getElementById('dwBalance').textContent = fmtRp(RESELLER.balance);
+      document.getElementById('dwFoot').textContent = RESELLER.brand_name || 'FLAYNET Reseller';
+      document.getElementById('maxHint').textContent = 'Maksimal '+RESELLER.max_per_batch+' per generate';
+
+      // Peringatan saldo menipis.
+      const lb = j.data.low_balance || {};
+      const warnEl = document.getElementById('lowBalanceWarn');
+      if (warnEl) {
+        if (lb.warn) {
+          let msg;
+          if ((lb.can_buy || 0) <= 0) {
+            msg = 'Saldo tidak cukup untuk generate voucher termurah sekalipun. Segera isi saldo.';
+          } else {
+            msg = 'Saldo Anda hanya cukup untuk sekitar <b>' + lb.can_buy + '</b> voucher termurah lagi. Isi saldo agar penjualan tidak terganggu.';
+          }
+          document.getElementById('lowBalanceMsg').innerHTML = msg;
+          warnEl.style.display = 'block';
+        } else {
+          warnEl.style.display = 'none';
+        }
+      }
+    }catch(e){}
+  }
+
+  async function loadPackages(){
+    try{
+      const j = await api('/packages');
+      PACKAGES = j.data || [];
+      const grid = document.getElementById('pkgGrid');
+      if(!PACKAGES.length){
+        grid.innerHTML = '<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><div>Belum ada paket voucher.<br>Hubungi admin untuk menambahkan paket.</div></div>';
+        return;
+      }
+      grid.innerHTML = PACKAGES.map((p,i)=>`
+        <div class="pkg" data-i="${i}" onclick="selectPkg(${i})">
+          <div class="pkg-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="pkg-top">
+            <div>
+              <div class="pkg-name">${esc(p.name)}</div>
+              ${p.duration_label?`<div class="pkg-dur"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${esc(p.duration_label)}</div>`:''}
+            </div>
+            <div class="pkg-prices">
+              <div class="pkg-cost">Modal <b>${fmtRp(p.cost_price)}</b></div>
+              <div class="pkg-sell">${fmtRp(p.sell_price)}</div>
+            </div>
+          </div>
+        </div>`).join('');
+
+      // Preview paket di Home (tap → buka Generate dengan paket terpilih).
+      const homeGrid = document.getElementById('pkgGridHome');
+      if(homeGrid){
+        homeGrid.innerHTML = PACKAGES.map((p,i)=>`
+          <div class="pkg" onclick="goGenerateWith(${i})">
+            <div class="pkg-top">
+              <div>
+                <div class="pkg-name">${esc(p.name)}</div>
+                ${p.duration_label?`<div class="pkg-dur"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${esc(p.duration_label)}</div>`:''}
+              </div>
+              <div class="pkg-prices">
+                <div class="pkg-cost">Modal <b>${fmtRp(p.cost_price)}</b></div>
+                <div class="pkg-sell">${fmtRp(p.sell_price)}</div>
+              </div>
+            </div>
+          </div>`).join('');
+      }
+    }catch(e){}
+  }
+
+  // Dari Home: buka tab Generate lalu pilih paket tertentu.
+  function goGenerateWith(i){
+    switchTab('generate');
+    setTimeout(()=>selectPkg(i), 60);
+  }
+
+  function selectPkg(i){
+    SELECTED = PACKAGES[i];
+    document.querySelectorAll('.pkg').forEach(el=>el.classList.toggle('sel', +el.dataset.i===i));
+    document.getElementById('genBox').style.display='block';
+    setQty(5);
+    document.getElementById('genBox').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  function stepQty(d){ const el=document.getElementById('qty'); setQty((parseInt(el.value)||0)+d); }
+  function setQty(v){
+    const max = RESELLER ? RESELLER.max_per_batch : 100;
+    v = Math.max(1, Math.min(max, v||1));
+    document.getElementById('qty').value = v; recalc();
+  }
+  function recalc(){
+    if(!SELECTED) return;
+    const qty = Math.max(0, parseInt(document.getElementById('qty').value)||0);
+    const total = qty * SELECTED.cost_price;
+    const el = document.getElementById('totalCost');
+    el.textContent = fmtRp(total);
+    const over = RESELLER && total > RESELLER.balance;
+    el.classList.toggle('over', over);
+    document.getElementById('btnGen').disabled = over || qty<1;
+    document.getElementById('btnGenText').textContent = over ? 'Saldo tidak cukup' : 'Generate Voucher';
+  }
+
+  async function doGenerate(){
+    if(!SELECTED) return;
+    const qty = parseInt(document.getElementById('qty').value)||0;
+    if(qty<1) return;
+    const btn=document.getElementById('btnGen'), txt=document.getElementById('btnGenText');
+    btn.disabled=true; const old=txt.innerHTML;
+    txt.innerHTML='<span class="spinner"></span>'; txt.style.display='flex'; txt.style.alignItems='center';
+    try{
+      const j = await api('/generate', { method:'POST', body:{ package_id: SELECTED.id, count: qty } });
+      if(!j.success){ toast(j.message||'Gagal generate'); }
+      else{
+        LAST_VOUCHERS = j.data.vouchers; LAST_TXID = j.data.transaction_id;
+        document.getElementById('balance').textContent = fmtRp(j.data.balance);
+        if(RESELLER) RESELLER.balance = j.data.balance;
+        showResult(j.data);
+        loadDashboard();
+      }
+    }catch(e){ toast('Terjadi kesalahan jaringan'); }
+    finally{ txt.innerHTML=old; btn.disabled=false; recalc(); }
+  }
+
+  function showResult(d){
+    document.getElementById('resTitle').textContent = d.created+' voucher dibuat';
+    document.getElementById('resSub').textContent =
+      d.package.name + ' • Harga jual '+fmtRp(d.package.sell_price)+' / voucher' +
+      (d.failed>0 ? ' • '+d.failed+' gagal (saldo dikembalikan)' : '');
+    document.getElementById('vcList').innerHTML = d.vouchers.map(v=>`
+      <div class="vc">
+        <div>
+          <div class="vc-user">${esc(v.username)}</div>
+          <div class="vc-pw">Sandi: ${esc(v.password)}</div>
+        </div>
+        <button class="vc-copy" onclick="copyVc('${esc(v.username)}','${esc(v.password)}')" aria-label="Salin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>`).join('');
+    document.getElementById('resultModal').classList.add('show');
+  }
+  function copyVc(u,p){ navigator.clipboard.writeText('User: '+u+'  Pass: '+p).then(()=>toast('Voucher disalin')); }
+  function printVouchers(){ if(LAST_TXID) window.open('/reseller/print/'+LAST_TXID,'_blank'); }
+
+  // ── History ──────────────────────────────────────────────────
+  const TX_META = {
+    purchase:{ic:'purchase',label:'Voucher',svg:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>'},
+    topup:{ic:'topup',label:'Top-up',svg:'<path d="M12 5v14M5 12h14"/>'},
+    refund:{ic:'refund',label:'Refund',svg:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>'},
+    adjust:{ic:'adjust',label:'Penyesuaian',svg:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'}
+  };
+  async function loadHistory(reset){
+    if(histLoading) return; histLoading=true;
+    if(reset){ histPage=1; histDone=false; document.getElementById('histList').innerHTML=''; }
+    try{
+      const j = await api('/history?page='+histPage+'&limit=15');
+      const list=document.getElementById('histList');
+      if(histPage===1 && (!j.data||!j.data.length)){
+        list.innerHTML='<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg><div>Belum ada transaksi.</div></div>';
+        histDone=true; document.getElementById('histMore').style.display='none'; histLoading=false; return;
+      }
+      list.insertAdjacentHTML('beforeend', j.data.map(tx=>{
+        const m=TX_META[tx.type]||TX_META.adjust;
+        const sign = tx.amount>=0?'plus':'minus';
+        const amt = (tx.amount>=0?'+':'') + fmtRp(Math.abs(tx.amount));
+        const d=new Date(tx.created_at);
+        const date=d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+' • '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+        const clickable = tx.type==='purchase' ? `onclick="openTx(${tx.id})"` : '';
+        return `<div class="tx" ${clickable}>
+          <div class="tx-ic ${m.ic}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${m.svg}</svg></div>
+          <div class="tx-mid">
+            <div class="tx-desc">${esc(tx.description||m.label)}</div>
+            <div class="tx-sub">${date}${tx.voucher_count?(' • '+tx.voucher_count+' voucher'):''}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="tx-amt ${sign}">${amt}</div>
+            <div class="tx-bal">Sisa ${fmtRp(tx.balance_after)}</div>
+          </div>
+        </div>`;
+      }).join(''));
+      if(j.pagination && histPage>=j.pagination.pages){ histDone=true; document.getElementById('histMore').style.display='none'; }
+      else { document.getElementById('histMore').style.display='inline-flex'; }
+    }catch(e){}
+    finally{ histLoading=false; }
+  }
+  function loadMoreHistory(){ if(histDone) return; histPage++; loadHistory(false); }
+
+  async function openTx(id){
+    try{
+      const j = await api('/transactions/'+id);
+      if(!j.success) return;
+      const d=j.data;
+      LAST_TXID=d.id; LAST_VOUCHERS=d.vouchers||[];
+      document.getElementById('resTitle').textContent = (d.voucher_count||0)+' voucher';
+      document.getElementById('resSub').textContent = (d.package_name||'')+' • '+new Date(d.created_at).toLocaleString('id-ID');
+      document.getElementById('vcList').innerHTML = (d.vouchers||[]).map(v=>`
+        <div class="vc"><div><div class="vc-user">${esc(v.username)}</div><div class="vc-pw">Sandi: ${esc(v.password)}</div></div>
+        <button class="vc-copy" onclick="copyVc('${esc(v.username)}','${esc(v.password)}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`).join('') ||
+        '<div class="empty" style="padding:20px">Detail voucher tidak tersedia.</div>';
+      document.getElementById('resultModal').classList.add('show');
+    }catch(e){}
+  }
+
+  // ── Report ───────────────────────────────────────────────────
+  let _chartSales=null, _chartDonut=null, _chartDays=14;
+  const CH_COLORS = { blue:'#2456d6', teal:'#1565e0', green:'#0a9a5a', amber:'#b9810b', donut:['#1565e0','#2456d6','#0a9a5a','#b9810b','#6366f1','#e5484d','#0891b2','#7a869e'] };
+
+  async function loadReport(){
+    const from=document.getElementById('repFrom').value, to=document.getElementById('repTo').value;
+    const body=document.getElementById('repBody');
+    body.innerHTML='<div class="skel" style="height:96px;margin-bottom:11px"></div><div class="skel" style="height:200px;margin-bottom:11px"></div><div class="skel" style="height:130px"></div>';
+    try{
+      const j = await api('/report?from='+from+'&to='+to);
+      if(!j.success){ body.innerHTML='<div class="empty">Gagal memuat laporan.</div>'; return; }
+      const s=j.data.summary, u=j.data.usage;
+      // "Terpakai" = semua voucher yang sudah pernah dipakai: sedang online (active)
+      // + sudah habis (expired) + pernah dipakai tapi tidak online (used).
+      const usedTotal = u ? ((u.used||0) + (u.active||0) + (u.expired||0)) : null;
+      const usedStr   = u ? usedTotal : '—';
+      const unusedStr = u ? u.unused : '—';
+      const activeStr = u ? u.active : 0;
+      const expiredStr = u ? (u.expired||0) : '—';
+
+      // Stat cards — DISPLAY ONLY (tidak bisa diklik).
+      let html = `<div class="stat-grid">
+        <div class="stat blue"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></div><div class="sl">Voucher Terjual</div><div class="sv">${s.total_vouchers}</div><div class="ss">pada periode ini</div></div>
+        <div class="stat teal"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sl">Penjualan (Omzet)</div><div class="sv">${fmtRp(s.total_revenue)}</div><div class="ss">harga jual × terjual</div></div>
+        <div class="stat green"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div><div class="sl">Keuntungan</div><div class="sv">${fmtRp(s.total_profit)}</div><div class="ss">omzet − modal</div></div>
+        <div class="stat slate"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="sl">Modal Terpakai</div><div class="sv">${fmtRp(s.total_modal)}</div><div class="ss">terpotong dari saldo</div></div>
+        <div class="stat amber"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="sl">Voucher Terpakai</div><div class="sv">${usedStr}</div><div class="ss">${u?((activeStr||0)+' online • '+expiredStr+' selesai'):'router tak terjangkau'}</div></div>
+        <div class="stat slate"><div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/></svg></div><div class="sl">Belum Terpakai</div><div class="sv">${unusedStr}</div><div class="ss">${u?('dari '+u.total+' voucher'):'siap dijual'}</div></div>
+      </div>`;
+
+      // Chart cards
+      html += `
+      <div class="chart-card">
+        <div class="ch-hd">
+          <div><div class="ch-t">Tren Penjualan Voucher</div><div class="ch-s">jumlah voucher per hari</div></div>
+          <div class="seg" id="chSeg">
+            <button data-d="7"  onclick="setChartRange(7)">7H</button>
+            <button data-d="14" class="on" onclick="setChartRange(14)">14H</button>
+            <button data-d="30" onclick="setChartRange(30)">30H</button>
+          </div>
+        </div>
+        <div id="chartSales" style="min-height:210px"></div>
+      </div>
+      <div class="chart-card">
+        <div class="ch-hd"><div><div class="ch-t">Komposisi Paket</div><div class="ch-s">voucher terjual per paket</div></div></div>
+        <div id="chartDonut" style="min-height:230px"></div>
+      </div>`;
+
+      // Rincian per paket (tabel ringkas, tampil omzet + untung)
+      html += '<div class="sec-title">RINCIAN PER PAKET</div>';
+      if(!j.data.per_package.length){
+        html += '<div class="empty" style="padding:30px">Belum ada penjualan pada periode ini.</div>';
+      } else {
+        html += j.data.per_package.map(p=>`
+          <div class="rep-pkg">
+            <div><div class="n">${esc(p.package_name)}</div><div class="c">${p.vouchers} voucher • ${p.batches}x generate • untung ${fmtRp(p.profit)}</div></div>
+            <div class="m">${fmtRp(p.revenue)}</div>
+          </div>`).join('');
+      }
+      body.innerHTML = html;
+
+      // Render chart setelah kartu ter-layout. Kartu kini hanya fade opacity
+      // (tanpa transform/delay) sehingga lebar kontainer langsung benar.
+      requestAnimationFrame(()=>requestAnimationFrame(()=>renderCharts()));
+    }catch(e){ body.innerHTML='<div class="empty">Gagal memuat laporan.</div>'; }
+  }
+
+  function setChartRange(d){
+    _chartDays = d;
+    document.querySelectorAll('#chSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.d===d));
+    renderCharts();
+  }
+
+  // Pastikan grafik ikut menyesuaikan saat ukuran layar berubah / rotasi
+  let _chResizeTimer=null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(_chResizeTimer);
+    _chResizeTimer=setTimeout(()=>{
+      const pane=document.getElementById('pane-report');
+      if(pane && pane.classList.contains('active')) renderCharts();
+    },250);
+  });
+
+  // Pastikan library ApexCharts tersedia. Bila script di <head> gagal dimuat
+  // (mis. CDN diblokir di WebView Android), coba muat ulang dari CDN cadangan.
+  let _apexLoading=null;
+  function ensureApex(){
+    if(typeof ApexCharts!=='undefined') return Promise.resolve(true);
+    if(_apexLoading) return _apexLoading;
+    const cdns=[
+      '/vendor/apexcharts/apexcharts.min.js',
+      'https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js',
+      'https://unpkg.com/apexcharts@3.45.2/dist/apexcharts.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.45.2/apexcharts.min.js'
+    ];
+    _apexLoading=new Promise(resolve=>{
+      let i=0;
+      const tryNext=()=>{
+        if(typeof ApexCharts!=='undefined') return resolve(true);
+        if(i>=cdns.length) return resolve(false);
+        const sc=document.createElement('script');
+        sc.src=cdns[i++]; sc.async=true;
+        sc.onload=()=>resolve(typeof ApexCharts!=='undefined');
+        sc.onerror=tryNext;
+        document.head.appendChild(sc);
+      };
+      tryNext();
+    });
+    return _apexLoading;
+  }
+
+  async function renderCharts(){
+    let data;
+    try{
+      const j = await api('/chart?days='+_chartDays);
+      if(!j.success) return;
+      data = j.data;
+    }catch(e){ return; }
+
+    const apexReady = await ensureApex();
+    const salesElPre = document.getElementById('chartSales');
+    const donutElPre = document.getElementById('chartDonut');
+    if(!apexReady){
+      const msg='<div class="empty" style="padding:40px 10px;text-align:center">Grafik tidak dapat dimuat.<br>Periksa koneksi internet lalu coba lagi.</div>';
+      if(salesElPre) salesElPre.innerHTML=msg;
+      if(donutElPre) donutElPre.innerHTML='';
+      return;
+    }
+
+    // Jaga-jaga: bila kontainer belum punya lebar (mis. tab baru aktif /
+    // animasi belum selesai), ApexCharts akan render dengan lebar 0 → kosong.
+    // Tunggu hingga lebar tersedia, maksimal ~1.5 detik.
+    const hostEl = salesElPre || donutElPre;
+    if(hostEl){
+      let tries=0;
+      while((hostEl.clientWidth||0) < 40 && tries < 15){
+        await new Promise(r=>setTimeout(r,100));
+        tries++;
+      }
+    }
+
+    // ── Bar/area: tren penjualan ──
+    const salesEl = document.getElementById('chartSales');
+    if(salesEl){
+      if(_chartSales){ try{_chartSales.destroy();}catch(_){} _chartSales=null; }
+      const hasSales = Array.isArray(data.vouchers) && data.vouchers.some(v=>v>0);
+      if(!hasSales){
+        salesEl.innerHTML = '<div class="empty" style="padding:54px 10px;text-align:center">Belum ada penjualan pada periode ini.</div>';
+      } else {
+        salesEl.innerHTML = '';
+        const labels = data.labels.map(d=>{ const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}); });
+        const opt = {
+          chart:{ type:'bar', height:210, width:'100%', fontFamily:"'DM Sans',sans-serif", toolbar:{show:false}, animations:{enabled:true,speed:450} },
+          series:[{ name:'Voucher', data:data.vouchers }],
+          plotOptions:{ bar:{ borderRadius:6, columnWidth:'52%' } },
+          dataLabels:{ enabled:false },
+          colors:[CH_COLORS.blue],
+          fill:{ type:'gradient', gradient:{ shade:'light', type:'vertical', gradientToColors:[CH_COLORS.teal], stops:[0,100], opacityFrom:1, opacityTo:.85 } },
+          grid:{ borderColor:'#eef1f7', strokeDashArray:4, padding:{left:4,right:4} },
+          xaxis:{ categories:labels, labels:{ style:{ colors:'#8a95ad', fontSize:'10px' }, rotate:0, hideOverlappingLabels:true }, axisBorder:{show:false}, axisTicks:{show:false} },
+          yaxis:{ labels:{ style:{ colors:'#8a95ad', fontSize:'10px' }, formatter:v=>Math.round(v) } },
+          tooltip:{ y:{ formatter:(v,o)=>{ const i=o.dataPointIndex; return v+' voucher • '+fmtRp((data.modal&&data.modal[i])||0); } } }
+        };
+        _chartSales = new ApexCharts(salesEl, opt);
+        _chartSales.render()
+          .then(()=>{ setTimeout(()=>{ try{ _chartSales && _chartSales.windowResize(); }catch(_){} }, 120); })
+          .catch(()=>{ salesEl.innerHTML='<div class="empty" style="padding:40px 10px;text-align:center">Gagal menampilkan grafik.</div>'; });
+      }
+    }
+
+    // ── Donut: komposisi paket ──
+    const donutEl = document.getElementById('chartDonut');
+    if(donutEl){
+      if(_chartDonut){ try{_chartDonut.destroy();}catch(_){} _chartDonut=null; }
+      const pkgs = (data.packages||[]).filter(p=>p.vouchers>0);
+      if(!pkgs.length){
+        donutEl.innerHTML = '<div class="empty" style="padding:54px 10px;text-align:center">Belum ada data paket pada periode ini.</div>';
+      } else {
+        donutEl.innerHTML = '';
+        const opt = {
+          chart:{ type:'donut', height:240, width:'100%', fontFamily:"'DM Sans',sans-serif" },
+          series: pkgs.map(p=>p.vouchers),
+          labels: pkgs.map(p=>p.name),
+          colors: CH_COLORS.donut,
+          legend:{ position:'bottom', fontSize:'12px', markers:{ radius:4 }, labels:{ colors:'#54607a' } },
+          dataLabels:{ enabled:true, formatter:(v)=>Math.round(v)+'%', style:{ fontSize:'10px', fontWeight:700 } },
+          stroke:{ width:2, colors:['#fff'] },
+          plotOptions:{ pie:{ donut:{ size:'66%', labels:{ show:true,
+            total:{ show:true, label:'Total Voucher', fontSize:'11px', color:'#8a95ad',
+              formatter:(w)=>w.globals.seriesTotals.reduce((a,b)=>a+b,0) } } } } },
+          tooltip:{ y:{ formatter:v=>v+' voucher' } }
+        };
+        _chartDonut = new ApexCharts(donutEl, opt);
+        _chartDonut.render()
+          .then(()=>{ setTimeout(()=>{ try{ _chartDonut && _chartDonut.windowResize(); }catch(_){} }, 120); })
+          .catch(()=>{ donutEl.innerHTML='<div class="empty" style="padding:40px 10px;text-align:center">Gagal menampilkan grafik.</div>'; });
+      }
+    }
+  }
+
+  // ── Voucher manager (kelola user hotspot) ────────────────────
+  let _vFilter='', _vTimer=null, VOUCHERS=[];
+  function debouncedVouchers(){ clearTimeout(_vTimer); _vTimer=setTimeout(()=>loadVouchers(),300); }
+  function setVFilter(f){
+    _vFilter=f;
+    document.querySelectorAll('#vFilter .vchip').forEach(c=>c.classList.toggle('on', (c.dataset.f||'')===f));
+    renderVouchers();
+  }
+  async function loadVouchers(){
+    const list=document.getElementById('vList');
+    list.innerHTML='<div class="skel" style="height:62px;margin-bottom:9px"></div><div class="skel" style="height:62px;margin-bottom:9px"></div><div class="skel" style="height:62px"></div>';
+    try{
+      const q=document.getElementById('vQuery').value.trim();
+      const j = await api('/vouchers'+(q?('?q='+encodeURIComponent(q)):''));
+      if(!j.success){ list.innerHTML='<div class="empty">'+esc(j.message||'Gagal memuat voucher.')+'</div>'; return; }
+      VOUCHERS = j.data||[];
+      const c=j.counts||{total:0,used:0,unused:0,active:0,expired:0,used_total:0};
+      const usedTotal = (c.used_total!=null) ? c.used_total : ((c.active||0)+(c.expired||0)+(c.used||0));
+      document.getElementById('vmTotal').textContent=c.total;
+      document.getElementById('vmActive').textContent=c.active;
+      document.getElementById('vmUsed').textContent=usedTotal;
+      document.getElementById('vmUnused').textContent=c.unused;
+      document.getElementById('fcAll').textContent=c.total;
+      document.getElementById('fcActive').textContent=c.active;
+      document.getElementById('fcUsed').textContent=usedTotal;
+      document.getElementById('fcExpired').textContent=c.expired||0;
+      document.getElementById('fcUnused').textContent=c.unused;
+      renderVouchers();
+    }catch(e){ list.innerHTML='<div class="empty">Gagal memuat voucher dari router.</div>'; }
+  }
+  function fmtBytes(n){ n=Number(n)||0; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; if(n<1073741824) return (n/1048576).toFixed(1)+' MB'; return (n/1073741824).toFixed(2)+' GB'; }
+  function fmtDurShort(sec){ sec=Number(sec)||0; if(sec<=0) return '0m'; const d=Math.floor(sec/86400),h=Math.floor((sec%86400)/3600),m=Math.floor((sec%3600)/60); const p=[]; if(d)p.push(d+'h'); if(h)p.push(h+'j'); if(m&&!d)p.push(m+'m'); return p.join(' ')||'<1m'; }
+  // Ringkasan sisa untuk voucher (waktu &/atau kuota), dipakai di list & detail.
+  function voucherRemain(v){
+    const parts=[];
+    if(v.time_left_sec!=null) parts.push('sisa waktu '+fmtDurShort(v.time_left_sec));
+    if(v.quota_left_bytes!=null) parts.push('sisa kuota '+fmtBytes(v.quota_left_bytes));
+    return parts.join(' • ');
+  }
+  const VBADGE={ active:{t:'ONLINE',c:'b-active'}, used:{t:'TERPAKAI',c:'b-used'}, expired:{t:'EXPIRED',c:'b-expired'}, unused:{t:'BELUM',c:'b-unused'} };
+  function renderVouchers(){
+    const list=document.getElementById('vList');
+    let rows = VOUCHERS;
+    if(_vFilter==='used_all') rows = rows.filter(v=>v.status==='active'||v.status==='used'||v.status==='expired');
+    else if(_vFilter) rows = rows.filter(v=>v.status===_vFilter);
+    if(!rows.length){
+      list.innerHTML='<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg><div>'+(VOUCHERS.length?'Tidak ada voucher pada filter ini.':'Belum ada voucher.<br>Buat voucher di tab Generate.')+'</div></div>';
+      return;
+    }
+    list.innerHTML = rows.map(v=>{
+      const b=VBADGE[v.status]||VBADGE.unused;
+      let sub;
+      const remain = voucherRemain(v);
+      if(v.status==='unused') sub='Profil '+esc(v.profile||'-')+' • belum dipakai';
+      else if(v.status==='expired') sub='Profil '+esc(v.profile||'-')+' • masa aktif habis • '+fmtBytes(v.bytes_total);
+      else {
+        sub='Profil '+esc(v.profile||'-')+' • '+esc(v.uptime||'0s')+' • '+fmtBytes(v.bytes_total);
+        if(remain) sub += ' • '+esc(remain);
+      }
+      const cut = v.status==='active'
+        ? `<button class="vbtn cut" title="Putus sesi" onclick="event.stopPropagation();vAction('${esc(v.username)}','disconnect')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg></button>`
+        : '';
+      return `<div class="vrow s-${v.status}" onclick="showVoucherDetail('${esc(v.username)}')" style="cursor:pointer">
+        <span class="vdot"></span>
+        <div class="vmid">
+          <div class="vu">${esc(v.username)}</div>
+          <div class="vs">${sub}</div>
+        </div>
+        <span class="vbadge ${b.c}">${b.t}</span>
+        <div class="vact" onclick="event.stopPropagation()">
+          <button class="vbtn copy" title="Salin voucher" onclick="copyVoucher('${esc(v.username)}','${esc(v.password||'')}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          ${cut}
+          <button class="vbtn del" title="Hapus voucher" onclick="vAction('${esc(v.username)}','delete')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  function copyVoucher(username, password){
+    const text = password ? ('Voucher: '+username+'\nSandi: '+password) : ('Voucher: '+username);
+    const done = ()=>toast('Voucher disalin');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+    } else { fallbackCopy(text,done); }
+  }
+  function fallbackCopy(text, cb){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      if(cb) cb();
+    }catch(e){ toast('Gagal menyalin'); }
+  }
+
+  // ── Monitor user hotspot aktif ───────────────────────────────
+  let _monTimer=null, _monPrev={}, _monCountdown=null, _monBusy=false;
+  const MON_INTERVAL=4000; // poll tiap 4 detik
+
+  function startMonitor(){
+    if(_monTimer) return;
+    loadMonitor();
+    _monTimer=setInterval(loadMonitor, MON_INTERVAL);
+    // countdown sisa waktu tiap detik (tanpa hit API)
+    if(!_monCountdown) _monCountdown=setInterval(tickCountdown, 1000);
+  }
+  function stopMonitor(){
+    if(_monTimer){ clearInterval(_monTimer); _monTimer=null; }
+    if(_monCountdown){ clearInterval(_monCountdown); _monCountdown=null; }
+    _monPrev={};
+  }
+
+  function fmtRate(bitsPerSec){
+    const b=Number(bitsPerSec)||0;
+    if(b<1000) return Math.round(b)+' bps';
+    if(b<1e6) return (b/1e3).toFixed(1)+' Kbps';
+    if(b<1e9) return (b/1e6).toFixed(2)+' Mbps';
+    return (b/1e9).toFixed(2)+' Gbps';
+  }
+  function fmtDur(sec){
+    sec=Math.max(0,Math.floor(Number(sec)||0));
+    const d=Math.floor(sec/86400); sec-=d*86400;
+    const h=Math.floor(sec/3600); sec-=h*3600;
+    const m=Math.floor(sec/60); const s=sec-m*60;
+    const p=n=>String(n).padStart(2,'0');
+    if(d>0) return d+'h '+p(h)+':'+p(m)+':'+p(s);
+    return p(h)+':'+p(m)+':'+p(s);
+  }
+
+  async function loadMonitor(){
+    if(_monBusy) return; _monBusy=true;
+    const btn=document.getElementById('monRefreshBtn');
+    if(btn) btn.style.opacity='.5';
+    try{
+      const j=await api('/monitor');
+      if(!j.success){ toast(j.message||'Gagal memuat data monitor'); return; }
+      const list=j.data||[]; const now=Date.now();
+
+      // Hitung kecepatan real-time dari selisih byte antar polling.
+      // download = bytes_download (data KE user), upload = bytes_upload (DARI user).
+      let totDl=0, totUl=0;
+      list.forEach(u=>{
+        const prev=_monPrev[u.username];
+        u._dlRate=0; u._ulRate=0;
+        if(prev){
+          const dt=(now-prev.ts)/1000;
+          if(dt>0.5){
+            u._dlRate=Math.max(0,(u.bytes_download - prev.dl))*8/dt;
+            u._ulRate=Math.max(0,(u.bytes_upload   - prev.ul))*8/dt;
+          } else { u._dlRate=prev._dlRate||0; u._ulRate=prev._ulRate||0; }
+        }
+        totDl+=u._dlRate; totUl+=u._ulRate;
+        // simpan snapshot baru + sisa waktu basis untuk countdown lokal
+        _monPrev[u.username]={ dl:u.bytes_download, ul:u.bytes_upload, ts:now,
+          _dlRate:u._dlRate, _ulRate:u._ulRate,
+          left_sec:(u.left_sec==null?null:u.left_sec), left_ts:now };
+      });
+      // bersihkan snapshot user yang sudah offline
+      const liveNames=new Set(list.map(u=>u.username));
+      Object.keys(_monPrev).forEach(k=>{ if(!liveNames.has(k)) delete _monPrev[k]; });
+
+      document.getElementById('msUsers').textContent=list.length;
+      document.getElementById('msDown').textContent=fmtRate(totDl);
+      document.getElementById('msUp').textContent=fmtRate(totUl);
+
+      renderMonitor(list);
+    }catch(e){
+      toast('Terjadi kesalahan memuat data monitor');
+    }finally{
+      _monBusy=false; if(btn) btn.style.opacity='1';
+    }
+  }
+
+  // Render daftar kartu monitor.
+  // Kunci: kartu dibuat SEKALI per username, lalu polling berikutnya hanya
+  // meng-update nilai teks (kecepatan, uptime, sisa waktu) tanpa membongkar
+  // DOM — supaya angka berubah halus tanpa berkedip/loncat.
+  function renderMonitor(list){
+    const wrap=document.getElementById('monList');
+    if(!list.length){
+      wrap.innerHTML='<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><div>Tidak ada user yang sedang online.</div></div>';
+      return;
+    }
+    // Hapus placeholder kosong bila ada
+    const emptyEl=wrap.querySelector('.empty'); if(emptyEl) wrap.innerHTML='';
+
+    const seen=new Set();
+    list.forEach(u=>{
+      seen.add(u.username);
+      let card=wrap.querySelector('.mon-card[data-u="'+cssEsc(u.username)+'"]');
+      if(!card){ card=buildMonCard(u); wrap.appendChild(card); }
+      updateMonCard(card,u);
+    });
+    // Buang kartu user yang sudah offline
+    wrap.querySelectorAll('.mon-card').forEach(c=>{
+      if(!seen.has(c.getAttribute('data-u'))) c.remove();
+    });
+  }
+
+  function cssEsc(s){ return String(s).replace(/["\\]/g,'\\$&'); }
+
+  // Buat kerangka kartu (struktur statis, nilai diisi updateMonCard).
+  function buildMonCard(u){
+    const c=document.createElement('div');
+    c.className='mon-card';
+    c.setAttribute('data-u',u.username);
+    c.innerHTML=`
+      <div class="mc-top">
+        <span class="mc-dot"></span>
+        <span class="mc-name">${esc(u.username)}</span>
+        <span class="mc-prof" data-f="prof"></span>
+      </div>
+      <div class="mc-rate">
+        <div class="mc-r dl">
+          <span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 5-5m-5 5-5-5"/><path d="M4 21h16"/></svg></span>
+          <div><div class="rl">Download</div><div class="rv" data-f="dl">0 bps</div></div>
+        </div>
+        <div class="mc-r ul">
+          <span class="ri"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0 5 5m-5-5-5 5"/><path d="M4 3h16"/></svg></span>
+          <div><div class="rl">Upload</div><div class="rv" data-f="ul">0 bps</div></div>
+        </div>
+      </div>
+      <div class="mc-grid">
+        <div class="mc-item">
+          <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Paket</div>
+          <div class="v" data-f="pkg">-</div>
+        </div>
+        <div class="mc-item">
+          <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Uptime</div>
+          <div class="v" data-f="up">-</div>
+        </div>
+        <div class="mc-item">
+          <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>Sisa Waktu</div>
+          <div class="v left" data-f="left">-</div>
+        </div>
+        <div class="mc-item">
+          <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 5-5m-5 5-5-5"/><path d="M4 21h16"/></svg>Total Download</div>
+          <div class="v dlt" data-f="totIn">-</div>
+        </div>
+        <div class="mc-item">
+          <div class="l"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9m0 0 5 5m-5-5-5 5"/><path d="M4 3h16"/></svg>Total Upload</div>
+          <div class="v ult" data-f="totOut">-</div>
+        </div>
+      </div>
+      <div class="mc-meta">
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M22 9H2"/></svg><span data-f="ip"></span></span>
+        <span class="mc-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg><span data-f="mac"></span></span>
+      </div>
+      <div class="mc-act">
+        <button class="mc-btn copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin User</button>
+        <button class="mc-btn cut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg>Putus Sesi</button>
+      </div>`;
+    const uname=u.username;
+    c.querySelector('.mc-btn.copy').addEventListener('click',()=>copyVoucher(uname,''));
+    c.querySelector('.mc-btn.cut').addEventListener('click',()=>monDisconnect(uname));
+    return c;
+  }
+
+  // Update nilai-nilai kartu yang berubah (dipanggil tiap polling).
+  function updateMonCard(card,u){
+    const set=(f,val)=>{ const el=card.querySelector('[data-f="'+f+'"]'); if(el && el.textContent!==val) el.textContent=val; };
+    const prof=u.profile||'-';
+    set('prof',prof);
+    set('pkg',prof);
+    set('dl',fmtRate(u._dlRate||0));
+    set('ul',fmtRate(u._ulRate||0));
+    set('up',u.uptime||'-');
+    set('ip',u.address||'-');
+    set('mac',u.mac||'-');
+    set('totIn',fmtBytes(Number(u.bytes_download)||0));
+    set('totOut',fmtBytes(Number(u.bytes_upload)||0));
+    // Sisa waktu
+    const leftEl=card.querySelector('[data-f="left"]');
+    if(leftEl){
+      if(u.left_sec==null){
+        leftEl.textContent='∞ Unlimited';
+        leftEl.className='v left';
+        leftEl.removeAttribute('data-left');
+      } else {
+        leftEl.setAttribute('data-left',u.username);
+        leftEl.textContent=fmtDur(u.left_sec);
+        leftEl.className='v '+(u.left_sec<300?'warn':'left');
+      }
+    }
+  }
+
+  // Countdown sisa waktu lokal (update angka tanpa polling API).
+  function tickCountdown(){
+    const now=Date.now();
+    document.querySelectorAll('[data-left]').forEach(el=>{
+      const name=el.getAttribute('data-left');
+      const p=_monPrev[name];
+      if(!p || p.left_sec==null) return;
+      const elapsed=(now-p.left_ts)/1000;
+      const remain=Math.max(0,p.left_sec-elapsed);
+      el.textContent=fmtDur(remain);
+      el.classList.toggle('warn', remain<300);
+      el.classList.toggle('left', remain>=300);
+    });
+  }
+
+  async function monDisconnect(username){
+    if(!await confirmDialog({ title:'Putuskan Sesi?', tone:'warn', okText:'Ya, Putuskan',
+      message:'Sesi user <b>'+esc(username)+'</b> akan diputus dari router.' })) return;
+    try{
+      const j=await api('/vouchers/action',{ method:'POST', body:{ username, action:'disconnect' } });
+      if(j.success){ toast(j.message||'Sesi diputus'); delete _monPrev[username]; loadMonitor(); }
+      else toast(j.message||'Gagal');
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+
+  async function vAction(username, action){
+    const labels={ delete:'Hapus voucher', disconnect:'Putus sesi', disable:'Nonaktifkan', enable:'Aktifkan' };
+    if(action==='delete' && !await confirmDialog({ title:'Hapus Voucher?', tone:'danger', okText:'Ya, Hapus',
+      message:'Voucher <b>'+esc(username)+'</b> akan dihapus dari router. Tindakan ini tidak bisa dibatalkan.' })) return;
+    try{
+      const j = await api('/vouchers/action',{ method:'POST', body:{ username, action } });
+      if(action==='delete'){
+        if(j.success){ loadVouchers(); resultDialog({ ok:true, title:'Voucher Dihapus', message:'Voucher <b>'+esc(username)+'</b> berhasil dihapus dari router.' }); }
+        else resultDialog({ ok:false, title:'Gagal Menghapus', message:esc(j.message||'Voucher gagal dihapus. Coba lagi.') });
+      } else {
+        if(j.success){ toast(j.message||(labels[action]+' berhasil')); loadVouchers(); }
+        else toast(j.message||'Gagal');
+      }
+    }catch(e){
+      if(action==='delete') resultDialog({ ok:false, title:'Gagal Menghapus', message:'Terjadi kesalahan saat menghubungi router.' });
+      else toast('Terjadi kesalahan');
+    }
+  }
+
+  // Detail lengkap satu voucher (dari data yang sudah dimuat).
+  const VSTATUS_LABEL={ active:'Online (sedang dipakai)', used:'Terpakai', expired:'Expired / habis', unused:'Belum dipakai' };
+  const VD_BADGE={ active:'ONLINE', used:'TERPAKAI', expired:'EXPIRED', unused:'BELUM DIPAKAI' };
+  function showVoucherDetail(username){
+    const v=(VOUCHERS||[]).find(x=>x.username===username);
+    if(!v){ toast('Data voucher tidak ditemukan'); return; }
+    const st=v.status||'unused';
+
+    // Header: nama, profil, badge & ikon sesuai status.
+    document.getElementById('vdTitle').textContent='Voucher '+v.username;
+    document.getElementById('vdSub').textContent='Profil '+(v.profile||'-');
+    const badge=document.getElementById('vdBadge');
+    badge.className='vd-badge s-'+st; badge.textContent=VD_BADGE[st]||st.toUpperCase();
+    document.getElementById('vdIcon').className='vd-ic s-'+st;
+
+    // Baris detail dalam kartu.
+    const row=(label,val,cls)=>`<div class="vd-row"><span class="l">${esc(label)}</span><span class="v ${cls||''}">${val}</span></div>`;
+    let rows='';
+    rows+=row('Status', esc(VSTATUS_LABEL[st]||st));
+    rows+=row('Username', esc(v.username), 'mono');
+    if(v.password) rows+=row('Sandi', esc(v.password), 'mono');
+    rows+=row('Profil', esc(v.profile||'-'));
+    if(v.server) rows+=row('Server', esc(v.server));
+    if(st!=='unused'){
+      rows+=row('Waktu terpakai', esc(v.uptime||'0s'));
+      rows+=row('Data terpakai', fmtBytes(v.bytes_total));
+    }
+    if(v.time_left_sec!=null) rows+=row('Sisa waktu', fmtDurShort(v.time_left_sec), 'hl');
+    if(v.limit_uptime) rows+=row('Batas waktu', esc(v.limit_uptime));
+    if(v.quota_left_bytes!=null) rows+=row('Sisa kuota', fmtBytes(v.quota_left_bytes), 'hl');
+    if(v.limit_bytes_total>0) rows+=row('Batas kuota', fmtBytes(v.limit_bytes_total));
+    document.getElementById('vdBody').innerHTML='<div class="vd-card">'+rows+'</div>';
+
+    // Aksi cepat.
+    const close="document.getElementById('vDetailModal').classList.remove('show')";
+    let actions='<div class="vd-acts">';
+    actions+=`<button class="btn btn-soft" onclick="copyVoucher('${esc(v.username)}','${esc(v.password||'')}')">Salin</button>`;
+    if(st==='active') actions+=`<button class="btn btn-soft" onclick="${close};vAction('${esc(v.username)}','disconnect')">Putus Sesi</button>`;
+    actions+=`<button class="btn btn-del" onclick="${close};vAction('${esc(v.username)}','delete')">Hapus</button>`;
+    actions+='</div>';
+    actions+=`<button class="btn btn-outline vd-close" onclick="${close}">Tutup</button>`;
+    document.getElementById('vdActions').innerHTML=actions;
+
+    document.getElementById('vDetailModal').classList.add('show');
+  }
+
+  // ── Selection modal: pilih voucher untuk cetak / hapus ────────
+  // State modal pilihan voucher.
+  const SEL_BADGE={ active:{t:'ONLINE',c:'b-active'}, used:{t:'TERPAKAI',c:'b-used'}, expired:{t:'EXPIRED',c:'b-expired'}, unused:{t:'BELUM',c:'b-unused'} };
+  const SEL_RENDER_STEP=80;          // render bertahap agar ratusan/ribuan voucher tidak berat
+  let _sel={ mode:'print', scope:'unused', pool:[], filtered:[], picked:new Set(), shown:0, q:'' };
+
+  function _scopeLabel(s){ return ({expired:'Expired', unused:'Belum dipakai', active:'Online', used:'Terpakai'})[s]||s; }
+
+  // Buka modal pilihan. mode: 'print' | 'delete'. scope menentukan voucher kandidat.
+  function openSelModal(mode, scope){
+    const pool=(VOUCHERS||[]).filter(v=>v.status===scope);
+    if(!pool.length){
+      toast(mode==='print' ? 'Tidak ada voucher untuk dicetak' : 'Tidak ada voucher '+_scopeLabel(scope));
+      return;
+    }
+    _sel={ mode, scope, pool, filtered:pool.slice(), picked:new Set(pool.map(v=>v.username)), shown:0, q:'' };
+
+    // Header & tombol aksi sesuai mode.
+    const icon=document.getElementById('selIcon');
+    const actBtn=document.getElementById('selAction');
+    if(mode==='print'){
+      icon.className='sel-ic blue';
+      icon.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>';
+      document.getElementById('selTitle').textContent='Cetak Voucher';
+      actBtn.className='btn btn-teal';
+    } else {
+      const danger=scope==='expired';
+      icon.className='sel-ic '+(danger?'danger':'warn');
+      icon.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      document.getElementById('selTitle').textContent='Hapus Voucher';
+      actBtn.className='btn '+(danger?'btn-danger':'btn-warn');
+    }
+    document.getElementById('selSub').textContent=_scopeLabel(scope)+' • '+pool.length+' voucher';
+    document.getElementById('selSearch').value='';
+    document.getElementById('selModal').classList.add('show');
+    selRenderList(true);
+    selUpdateBar();
+  }
+  function closeSelModal(){ document.getElementById('selModal').classList.remove('show'); }
+
+  function selOnSearch(){
+    _sel.q=document.getElementById('selSearch').value.trim().toLowerCase();
+    _sel.filtered = _sel.q
+      ? _sel.pool.filter(v=>v.username.toLowerCase().includes(_sel.q) || (v.profile||'').toLowerCase().includes(_sel.q))
+      : _sel.pool.slice();
+    selRenderList(true);
+    selUpdateBar();
+  }
+
+  // Render daftar voucher secara bertahap (chunk) agar ribuan item tetap ringan.
+  function selRenderList(reset){
+    const box=document.getElementById('selList');
+    if(reset){ _sel.shown=0; box.innerHTML=''; }
+    if(!_sel.filtered.length){
+      box.innerHTML='<div class="sel-empty">Tidak ada voucher yang cocok.</div>';
+      return;
+    }
+    const end=Math.min(_sel.shown+SEL_RENDER_STEP, _sel.filtered.length);
+    const frag=[];
+    for(let i=_sel.shown;i<end;i++){
+      const v=_sel.filtered[i];
+      const b=SEL_BADGE[v.status]||SEL_BADGE.unused;
+      const on=_sel.picked.has(v.username);
+      frag.push(`<div class="sel-item${on?' on':''}" data-u="${esc(v.username)}" onclick="selToggleItem('${esc(v.username)}',this)">
+        <span class="sel-cbox"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div class="si-mid">
+          <div class="si-u">${esc(v.username)}</div>
+          <div class="si-s">Profil ${esc(v.profile||'-')}</div>
+        </div>
+        <span class="si-badge ${b.c}">${b.t}</span>
+      </div>`);
+    }
+    _sel.shown=end;
+    // Hapus tombol "muat lebih" lama bila ada, lalu render chunk + tombol baru.
+    const oldMore=box.querySelector('.sel-loadmore'); if(oldMore) oldMore.remove();
+    box.insertAdjacentHTML('beforeend', frag.join(''));
+    if(_sel.shown < _sel.filtered.length){
+      const rest=_sel.filtered.length-_sel.shown;
+      box.insertAdjacentHTML('beforeend',
+        `<div class="sel-loadmore" onclick="selRenderList(false)">Tampilkan ${Math.min(SEL_RENDER_STEP,rest)} lagi (sisa ${rest})</div>`);
+    }
+  }
+
+  function selToggleItem(username, el){
+    if(_sel.picked.has(username)){ _sel.picked.delete(username); el.classList.remove('on'); }
+    else { _sel.picked.add(username); el.classList.add('on'); }
+    selUpdateBar();
+  }
+
+  // "Pilih semua" / "Hapus pilihan" — berlaku pada hasil filter saat ini.
+  function selToggleAll(){
+    const allPicked=_sel.filtered.every(v=>_sel.picked.has(v.username));
+    if(allPicked) _sel.filtered.forEach(v=>_sel.picked.delete(v.username));
+    else _sel.filtered.forEach(v=>_sel.picked.add(v.username));
+    // Sinkronkan tampilan item yang sudah terender.
+    document.querySelectorAll('#selList .sel-item').forEach(el=>{
+      el.classList.toggle('on', _sel.picked.has(el.dataset.u));
+    });
+    selUpdateBar();
+  }
+
+  function selUpdateBar(){
+    const n=_sel.picked.size;
+    document.getElementById('selCount').textContent=n;
+    const total=_sel.pool.length, fcount=_sel.filtered.length;
+    document.getElementById('selLimInfo').textContent =
+      (_sel.q ? (fcount+' cocok dari '+total) : ('Total '+total+' voucher'));
+    const allPicked=_sel.filtered.length && _sel.filtered.every(v=>_sel.picked.has(v.username));
+    document.getElementById('selAllBtn').textContent = allPicked ? 'Hapus pilihan' : 'Pilih semua';
+    const actBtn=document.getElementById('selAction');
+    actBtn.disabled = (n===0);
+    actBtn.textContent = _sel.mode==='print' ? ('Cetak '+n+' Voucher') : ('Hapus '+n+' Voucher');
+  }
+
+  // Jalankan aksi atas voucher yang dipilih.
+  async function selConfirm(){
+    const usernames=[..._sel.picked];
+    if(!usernames.length){ toast('Belum ada voucher dipilih'); return; }
+
+    if(_sel.mode==='print'){
+      // Simpan daftar pilihan untuk dibaca halaman cetak (POST tak praktis untuk window baru).
+      try{
+        sessionStorage.setItem('reseller_print_sel', JSON.stringify({
+          usernames, label:_scopeLabel(_sel.scope)+' (terpilih)'
+        }));
+      }catch(_){}
+      closeSelModal();
+      window.open('/reseller/print-sel','_blank');
+      return;
+    }
+
+    // mode delete → konfirmasi tegas lebih dulu.
+    const danger=_sel.scope==='expired';
+    const ok=await confirmDialog({
+      title:'Hapus '+usernames.length+' Voucher?',
+      tone: danger?'danger':'warn',
+      okText:'Ya, Hapus '+usernames.length,
+      message:'<b>'+usernames.length+'</b> voucher "'+esc(_scopeLabel(_sel.scope))+'" akan dihapus dari router. Tindakan ini tidak bisa dibatalkan.'
+    });
+    if(!ok) return;
+    closeSelModal();
+    toast('Menghapus '+usernames.length+' voucher…');
+    try{
+      const j=await api('/vouchers/bulk',{ method:'POST', body:{ action:'delete', usernames } });
+      if(j.success){
+        loadVouchers();
+        const n=(j.deleted!=null?j.deleted:usernames.length);
+        const failed=(j.failed||0);
+        if(failed && n){
+          resultDialog({ ok:true, title:'Sebagian Dihapus', message:'<b>'+n+'</b> voucher berhasil dihapus, <b>'+failed+'</b> gagal.' });
+        } else if(!n && failed){
+          resultDialog({ ok:false, title:'Gagal Menghapus', message:'Semua voucher gagal dihapus ('+failed+').' });
+        } else {
+          resultDialog({ ok:true, title:'Voucher Dihapus', message:'<b>'+n+'</b> voucher berhasil dihapus dari router.' });
+        }
+      } else {
+        resultDialog({ ok:false, title:'Gagal Menghapus', message:esc(j.message||'Voucher gagal dihapus. Coba lagi.') });
+      }
+    }catch(e){
+      resultDialog({ ok:false, title:'Gagal Menghapus', message:'Terjadi kesalahan saat menghubungi router.' });
+    }
+  }
+
+  // ── Tabs ─────────────────────────────────────────────────────
+  function switchTab(name){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('active', p.id==='pane-'+name));
+    // Sinkronkan bottom nav (item 'topup' tidak ikut karena membuka modal).
+    document.querySelectorAll('.botnav .bn').forEach(b=>b.classList.toggle('on', b.dataset.tab===name));
+    if(name==='vouchers') loadVouchers();
+    if(name==='history') loadHistory(true);
+    if(name==='report') loadReport();
+    if(name==='monitor') startMonitor(); else stopMonitor();
+    try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(_){}
+  }
+
+  // ── Side drawer (hamburger) ──────────────────────────────────
+  function openDrawer(){
+    document.getElementById('drawerBg').classList.add('show');
+    document.getElementById('drawer').classList.add('show');
+    document.getElementById('drawer').setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  }
+  function closeDrawer(){
+    document.getElementById('drawerBg').classList.remove('show');
+    document.getElementById('drawer').classList.remove('show');
+    document.getElementById('drawer').setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  }
+  function drawerGo(tab){ closeDrawer(); switchTab(tab); }
+
+  // ── Settings / password / logout ─────────────────────────────
+  function openSettings(){ document.getElementById('settingsModal').classList.add('show'); }
+  function closeModal(){ document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('show')); }
+  document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) closeModal(); }));
+
+  async function changePw(){
+    const oldPw=document.getElementById('oldPw').value, newPw=document.getElementById('newPw').value;
+    if(!newPw || newPw.length<6){ toast('Password baru minimal 6 karakter'); return; }
+    try{
+      const j = await api('/password',{ method:'PUT', body:{ old_password:oldPw, new_password:newPw } });
+      if(j.success){ toast('Password berhasil diubah'); document.getElementById('oldPw').value=''; document.getElementById('newPw').value=''; closeModal(); }
+      else toast(j.message||'Gagal mengubah password');
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+
+  async function doLogout(){
+    try{
+      const _h={};
+      if(TOKEN && TOKEN!=='null' && TOKEN!=='undefined') _h['Authorization']='Bearer '+TOKEN;
+      await fetch('/reseller/api/auth/logout',{method:'POST',headers:_h,credentials:'same-origin'});
+    }catch(e){}
+    logoutNoCall();
+  }
+
+  // ════════════════════════════════════════════════════════════
+  //  TOP-UP SALDO
+  // ════════════════════════════════════════════════════════════
+  let TOPUP_CFG = null, CURRENT_TOPUP = null, _pollTimer = null;
+  const TOPUP_PRESETS = [20000, 50000, 100000, 200000];
+
+  async function openTopup(){
+    showTopupStep(1);
+    document.getElementById('topupModal').classList.add('show');
+    document.getElementById('topupChips').innerHTML = TOPUP_PRESETS.map(v=>
+      `<button class="qty-chip" onclick="pickPreset(${v})">${(v/1000)}rb</button>`).join('');
+    document.getElementById('topupAmount').value='';
+    const pc=document.getElementById('promoCode'); if(pc) pc.value='';
+    const pm=document.getElementById('promoMsg'); if(pm) pm.style.display='none';
+    document.getElementById('topupMethods').innerHTML='<div class="skel" style="height:60px"></div>';
+    try{
+      const j = await api('/topup/config');
+      TOPUP_CFG = j.data;
+      document.getElementById('topupMinHint').textContent = 'Minimal top-up '+fmtRp(TOPUP_CFG.min_topup);
+      renderTopupMethods();
+    }catch(e){ document.getElementById('topupMethods').innerHTML='<div class="empty">Gagal memuat metode.</div>'; }
+  }
+  function showTopupStep(n){
+    [1,2,3,4].forEach(i=>{ const el=document.getElementById('topupStep'+i); if(el) el.style.display = (i===n)?'block':'none'; });
+    if(n===3) document.getElementById('topupStep3').style.display='block';
+  }
+  function backToTopupStep1(){ if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null;} showTopupStep(1); }
+  function pickPreset(v){ document.getElementById('topupAmount').value=v; onTopupAmount(); }
+  function onTopupAmount(){ const m=document.getElementById('promoMsg'); if(m) m.style.display='none'; }
+  async function checkPromo(){
+    const code=(document.getElementById('promoCode').value||'').trim();
+    const amount=parseInt(document.getElementById('topupAmount').value)||0;
+    const msg=document.getElementById('promoMsg');
+    if(!amount){ toast('Isi nominal top-up dulu'); return; }
+    msg.style.display='block'; msg.style.color='#8a95ad'; msg.textContent='Mengecek…';
+    try{
+      const j=await api('/topup/promo-check?code='+encodeURIComponent(code)+'&amount='+amount);
+      if(j.success){ msg.style.color='#0a9a5a'; msg.textContent='✓ '+(j.message||'Promo berlaku'); }
+      else { msg.style.color='#dc2626'; msg.textContent='✕ '+(j.message||'Promo tidak berlaku'); }
+    }catch(e){ msg.style.color='#dc2626'; msg.textContent='Gagal mengecek promo'; }
+  }
+
+  function renderTopupMethods(){
+    const box=document.getElementById('topupMethods');
+    const items=[];
+    if(TOPUP_CFG.gateway_enabled){
+      items.push(`<div class="pkg" onclick="chooseMethod('gateway',this)" data-m="gateway">
+        <div class="pkg-top"><div><div class="pkg-name">Pembayaran Otomatis</div>
+        <div class="pkg-dur"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>QRIS / VA / E-Wallet • Instan</div></div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1565e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div></div>`);
+    }
+    if(TOPUP_CFG.manual_enabled){
+      const hasQris = TOPUP_CFG.accounts.some(a=>a.type==='qris');
+      items.push(`<div class="pkg" onclick="chooseMethod('manual',this)" data-m="manual">
+        <div class="pkg-top"><div><div class="pkg-name">Transfer Manual</div>
+        <div class="pkg-dur"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Bank / E-Wallet • Verifikasi admin</div></div>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2456d6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h12"/></svg></div></div>`);
+      if(hasQris){
+        items.push(`<div class="pkg" onclick="chooseMethod('qris',this)" data-m="qris">
+          <div class="pkg-top"><div><div class="pkg-name">QRIS (Scan Manual)</div>
+          <div class="pkg-dur">Scan QRIS • Verifikasi admin</div></div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1565e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M21 14v7h-7"/></svg></div></div>`);
+      }
+    }
+    box.innerHTML = items.length ? items.join('') : '<div class="empty" style="padding:24px">Belum ada metode top-up aktif. Hubungi admin.</div>';
+  }
+
+  async function chooseMethod(method, el){
+    const amount = parseInt(document.getElementById('topupAmount').value)||0;
+    if(!TOPUP_CFG || amount < TOPUP_CFG.min_topup){ toast('Minimal top-up '+fmtRp(TOPUP_CFG?TOPUP_CFG.min_topup:10000)); return; }
+    document.querySelectorAll('#topupMethods .pkg').forEach(p=>p.classList.remove('sel'));
+    if(el) el.classList.add('sel');
+
+    try{
+      const promoCode = (document.getElementById('promoCode')?.value || '').trim();
+      const j = await api('/topup', { method:'POST', body:{ method, amount, promo_code: promoCode || undefined, tripay_method: method==='gateway'?(TOPUP_CFG.gateway_provider==='tripay'?'QRIS':undefined):undefined } });
+      if(!j.success){ toast(j.message||'Gagal membuat top-up'); return; }
+      CURRENT_TOPUP = j.data;
+      if(method==='gateway'){
+        // MIDTRANS → tampilkan Snap popup IN-PAGE (tetap di halaman ini).
+        // Provider lain (tripay/duitku/xendit) tetap diarahkan ke URL bayar.
+        if(j.data.mode==='midtrans' && j.data.snap_token){
+          showTopupStep(3);
+          document.getElementById('t3Title').textContent='Menunggu Pembayaran';
+          document.getElementById('t3Sub').innerHTML='Selesaikan pembayaran pada jendela yang muncul.<br>Saldo akan masuk otomatis setelah lunas.';
+          startPollStatus(j.data.id);
+          try{
+            await loadMidtransSnap(j.data.client_key, j.data.env);
+            window.snap.pay(j.data.snap_token, {
+              onSuccess: ()=>{ pollStatusOnce(j.data.id); },
+              onPending: ()=>{ toast('Pembayaran tertunda, menunggu konfirmasi'); },
+              onError:   ()=>{ toast('Pembayaran gagal / dibatalkan'); },
+              onClose:   ()=>{ /* tetap di step 3, polling jalan terus */ }
+            });
+          }catch(e){
+            // Fallback: kalau Snap.js gagal dimuat, buka URL bayar.
+            toast('Membuka halaman pembayaran…');
+            if(j.data.payment_url) window.open(j.data.payment_url, '_blank');
+          }
+        } else {
+          // tripay / duitku / xendit → buka URL pembayaran provider.
+          if(j.data.payment_url){ window.open(j.data.payment_url, '_blank'); }
+          showTopupStep(3);
+          document.getElementById('t3Title').textContent='Menunggu Pembayaran';
+          document.getElementById('t3Sub').innerHTML='Selesaikan pembayaran di halaman yang terbuka.<br>Saldo akan masuk otomatis setelah lunas.';
+          startPollStatus(j.data.id);
+        }
+      } else {
+        // Manual / QRIS → tampilkan instruksi + upload
+        renderManualInstructions(method, j.data);
+        showTopupStep(2);
+      }
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+
+  function renderManualInstructions(method, data){
+    document.getElementById('t2Title').textContent = method==='qris' ? 'Scan QRIS' : 'Transfer Manual';
+    document.getElementById('t2Sub').innerHTML = 'Transfer tepat <b>'+fmtRp(data.amount)+'</b> lalu unggah bukti. Ref: <b>'+esc(data.ref)+'</b>';
+    const accts = (data.accounts||[]).filter(a=> method==='qris' ? a.type==='qris' : a.type!=='qris');
+    document.getElementById('t2Accounts').innerHTML = accts.length ? accts.map(a=>{
+      if(a.type==='qris'){
+        return `<div class="vc" style="flex-direction:column;align-items:center;padding:14px">
+          ${a.qris_image?`<img src="${esc(a.qris_image)}" style="max-width:200px;width:100%;border-radius:10px">`:'<div style="color:var(--muted);font-size:12px">QRIS belum diunggah admin</div>'}
+          <div style="font-size:12px;font-weight:700;margin-top:8px">${esc(a.account_owner||'QRIS')}</div></div>`;
+      }
+      return `<div class="vc"><div><div class="vc-user" style="font-size:13px">${esc(String(a.provider||a.type||'').toUpperCase())} — ${esc(a.account_number)}</div><div class="vc-pw">a.n. ${esc(a.account_owner||'')}</div></div>
+        <button class="vc-copy" onclick="copyText('${esc(a.account_number)}')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+    }).join('') : '<div class="empty" style="padding:16px">Belum ada rekening tujuan. Hubungi admin.</div>';
+  }
+  function copyText(t){ navigator.clipboard.writeText(t).then(()=>toast('Disalin')); }
+
+  async function uploadProof(){
+    if(!CURRENT_TOPUP) return;
+    const f = document.getElementById('proofFile').files[0];
+    if(!f){ toast('Pilih file bukti dulu'); return; }
+    const btn=document.getElementById('btnUploadProof'), txt=document.getElementById('uploadText');
+    btn.disabled=true; const old=txt.textContent; txt.textContent='Mengirim…';
+    try{
+      const fd=new FormData();
+      fd.append('proof', f);
+      fd.append('note', document.getElementById('proofNote').value||'');
+      const _h={'X-Requested-With':'XMLHttpRequest'};
+      if(TOKEN && TOKEN!=='null' && TOKEN!=='undefined') _h['Authorization']='Bearer '+TOKEN;
+      const r = await fetch('/reseller/api/topup/'+CURRENT_TOPUP.id+'/proof', {
+        method:'POST', headers:_h, credentials:'same-origin', body: fd
+      });
+      const j = await r.json();
+      if(j.success){
+        showTopupStep(3);
+        document.getElementById('t3Title').textContent='Menunggu Verifikasi';
+        document.getElementById('t3Sub').innerHTML='Bukti terkirim. Saldo akan ditambahkan setelah admin memverifikasi.';
+      } else toast(j.message||'Gagal mengunggah');
+    }catch(e){ toast('Terjadi kesalahan'); }
+    finally{ btn.disabled=false; txt.textContent=old; }
+  }
+
+  function _markTopupPaid(d){
+    document.getElementById('balance').textContent = fmtRp(d.balance);
+    if(RESELLER) RESELLER.balance = d.balance;
+    const ic=document.getElementById('t3Icon');
+    ic.style.background='#e7f7ef'; ic.style.color='#0a9a5a';
+    ic.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+    document.getElementById('t3Title').textContent='Saldo Berhasil Ditambahkan';
+    document.getElementById('t3Sub').innerHTML='Saldo Anda sekarang <b>'+fmtRp(d.balance)+'</b>.';
+    loadDashboard();
+  }
+  // Cek status sekali (dipakai setelah Snap onSuccess, lebih responsif).
+  async function pollStatusOnce(id){
+    try{
+      const j = await api('/topup/'+id+'/status');
+      if(j.success && j.data.status==='paid'){
+        if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
+        _markTopupPaid(j.data);
+      }
+    }catch(e){}
+  }
+  function startPollStatus(id){
+    if(_pollTimer) clearInterval(_pollTimer);
+    let tries=0;
+    _pollTimer = setInterval(async ()=>{
+      tries++;
+      if(tries>60){ clearInterval(_pollTimer); _pollTimer=null; return; } // stop ~5 menit
+      try{
+        const j = await api('/topup/'+id+'/status');
+        if(j.success && j.data.status==='paid'){
+          clearInterval(_pollTimer); _pollTimer=null;
+          _markTopupPaid(j.data);
+        }
+      }catch(e){}
+    }, 5000);
+  }
+
+  // Muat Snap.js Midtrans sekali (in-page popup, seperti portal customer).
+  function loadMidtransSnap(clientKey, env){
+    return new Promise((resolve, reject)=>{
+      if(window.snap) return resolve();
+      const existing = document.getElementById('midtrans-snap');
+      if(existing){
+        let tries=0;
+        const iv=setInterval(()=>{
+          if(window.snap){ clearInterval(iv); resolve(); }
+          else if(++tries>50){ clearInterval(iv); reject(new Error('Snap.js timeout')); }
+        },100);
+        return;
+      }
+      const s=document.createElement('script');
+      s.id='midtrans-snap';
+      s.src = (env==='production')
+        ? 'https://app.midtrans.com/snap/snap.js'
+        : 'https://app.sandbox.midtrans.com/snap/snap.js';
+      s.setAttribute('data-client-key', clientKey||'');
+      s.onload = ()=>resolve();
+      s.onerror = ()=>reject(new Error('Gagal load Snap.js'));
+      document.head.appendChild(s);
+    });
+  }
+
+  function closeTopupDone(){ if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null;} closeModal(); loadDashboard(); }
+
+  const TOPUP_STATUS = {
+    pending:{t:'Menunggu',c:'#a9760a',b:'#fef6e0'},
+    waiting_verification:{t:'Menunggu Verifikasi',c:'#a9760a',b:'#fef6e0'},
+    paid:{t:'Lunas',c:'#0a9a5a',b:'#e7f7ef'},
+    rejected:{t:'Ditolak',c:'#c0392f',b:'#fdeaea'},
+    expired:{t:'Kedaluwarsa',c:'#8a95ad',b:'#f3f5fa'}
+  };
+  async function showTopupHistory(){
+    showTopupStep(4);
+    const list=document.getElementById('topupHistList');
+    list.innerHTML='<div class="skel" style="height:60px"></div>';
+    try{
+      const j = await api('/topups?limit=30');
+      const rows=j.data||[];
+      if(!rows.length){ list.innerHTML='<div class="empty">Belum ada top-up.</div>'; return; }
+      list.innerHTML = rows.map(t=>{
+        const st=TOPUP_STATUS[t.status]||TOPUP_STATUS.pending;
+        const ml = t.method==='gateway'?'Otomatis':(t.method==='qris'?'QRIS':'Manual');
+        const d=new Date(t.created_at).toLocaleDateString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+        const resume = (t.status==='pending'&&t.method==='gateway'&&t.payment_url)?`<button class="vc-copy" onclick="window.open('${esc(t.payment_url)}','_blank')" title="Lanjut bayar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>`:'';
+        // Tombol batalkan untuk top-up yang masih menunggu (belum lunas).
+        const canCancel = (t.status==='pending'||t.status==='waiting_verification');
+        const cancelBtn = canCancel?`<button class="vc-copy" onclick="cancelTopup(${t.id})" title="Batalkan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c0392f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`:'';
+        return `<div class="tx" style="cursor:default">
+          <div class="tx-ic topup"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+          <div class="tx-mid"><div class="tx-desc">${fmtRp(t.amount)} • ${ml}</div>
+          <div class="tx-sub">${d} • <span style="color:${st.c};font-weight:700">${st.t}</span></div></div>
+          ${resume}${cancelBtn}
+        </div>`;
+      }).join('');
+    }catch(e){ list.innerHTML='<div class="empty">Gagal memuat.</div>'; }
+  }
+
+  async function cancelTopup(id){
+    if(!await confirmDialog({ title:'Batalkan Top-up?', tone:'warn', okText:'Ya, Batalkan', cancelText:'Tidak',
+      message:'Permintaan isi saldo ini akan dibatalkan. <b>Jika Anda sudah terlanjur membayar, jangan dibatalkan.</b>' })) return;
+    try{
+      const j = await api('/topup/'+id+'/cancel',{ method:'POST' });
+      if(j.success){ toast(j.message||'Top-up dibatalkan'); showTopupHistory(); }
+      else toast(j.message||'Gagal membatalkan');
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+</script>
+</body>
+</html>

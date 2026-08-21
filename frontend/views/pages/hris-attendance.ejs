@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .hris-page { font-family:'DM Sans',sans-serif; background:#eef2f9 !important; }
+    .h-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+    .h-input { padding:9px 13px; border:1.5px solid #e0e7f3; border-radius:10px; font-size:13px; font-family:inherit; background:#fff; }
+    .h-table-wrap { background:#fff; border:1px solid #e8eaed; border-radius:16px; overflow:auto; }
+    table.h-table { width:100%; border-collapse:collapse; font-size:13px; min-width:820px; }
+    .h-table th { text-align:left; padding:12px 14px; background:#f8fafc; color:#64748b; font-weight:600; font-size:11.5px; text-transform:uppercase; }
+    .h-table td { padding:11px 14px; border-top:1px solid #f1f5f9; }
+    .h-table tr:hover td { background:#fafbff; }
+    .h-pill { padding:2px 9px; border-radius:100px; font-size:11px; font-weight:700; }
+    .p-green{background:#dcfce7;color:#16a34a;} .p-amber{background:#fef3c7;color:#b45309;}
+    .p-blue{background:#dbeafe;color:#1d4ed8;} .p-red{background:#fee2e2;color:#dc2626;} .p-gray{background:#f1f5f9;color:#64748b;}
+    .selfie-th { width:34px; height:34px; border-radius:8px; object-fit:cover; cursor:pointer; border:1px solid #e2e8f0; }
+    .flag { color:#dc2626; font-weight:700; font-size:11px; }
+    .lightbox { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:2000; }
+    .lightbox.show{ display:flex; } .lightbox img{ max-width:90%; max-height:90%; border-radius:12px; }
+    .toast { position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px; color:#fff; font-size:14px; font-weight:600; z-index:2500; display:none; }
+  </style>
+</head>
+<body>
+<div class="app-layout hris-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#0d1b3e">Absensi</div>
+          <div style="font-size:13px;color:#6b7fa8;margin-top:2px" id="attCount">Memuat…</div>
+        </div>
+        <a href="/hris/absen" target="_blank" class="btn-outline" style="text-decoration:none">Buka Kiosk Absensi ↗</a>
+      </div>
+
+      <div class="h-toolbar">
+        <input class="h-input" id="dateInp" type="date">
+        <select class="h-input" id="statusFilter">
+          <option value="">Semua status</option>
+          <option value="hadir">Hadir</option><option value="terlambat">Terlambat</option>
+          <option value="pulang_cepat">Pulang Cepat</option><option value="alfa">Alfa</option>
+          <option value="izin">Izin</option><option value="cuti">Cuti</option><option value="sakit">Sakit</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#475569"><input type="checkbox" id="flaggedOnly"> Hanya yang ditandai</label>
+        <button class="btn-blue" onclick="loadAtt()">Terapkan</button>
+      </div>
+
+      <div class="h-table-wrap">
+        <table class="h-table">
+          <thead><tr><th>Karyawan</th><th>Masuk</th><th>Pulang</th><th>Selfie</th><th>Telat</th><th>Kerja</th><th>Lokasi</th><th>Status</th></tr></thead>
+          <tbody id="attBody"><tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('show')"><img id="lightboxImg"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}` });
+function toast(m,ok=true){ const t=document.getElementById('toast'); t.textContent=m; t.style.background=ok?'#16a34a':'#dc2626'; t.style.display='block'; setTimeout(()=>t.style.display='none',2600); }
+function fmtT(ts){ return ts? new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '–'; }
+function mins(m){ if(!m) return '–'; const h=Math.floor(m/60), mm=m%60; return h?`${h}j ${mm}m`:`${mm}m`; }
+function openImg(src){ document.getElementById('lightboxImg').src=src; document.getElementById('lightbox').classList.add('show'); }
+
+document.getElementById('dateInp').value = new Date().toISOString().slice(0,10);
+
+const statusPill = s => {
+  const map={hadir:'p-green',terlambat:'p-amber',pulang_cepat:'p-blue',alfa:'p-red',izin:'p-gray',sakit:'p-gray',cuti:'p-gray',libur:'p-gray'};
+  return `<span class="h-pill ${map[s]||'p-gray'}">${s}</span>`;
+};
+
+async function loadAtt(){
+  const date=document.getElementById('dateInp').value;
+  const status=document.getElementById('statusFilter').value;
+  const flagged=document.getElementById('flaggedOnly').checked;
+  const qs=new URLSearchParams(); if(date) qs.set('date',date); if(status) qs.set('status',status); if(flagged) qs.set('flagged','true');
+  try {
+    const r=await fetch(API+'/hris/attendance?'+qs,{headers:authH()});
+    const j=await r.json();
+    const body=document.getElementById('attBody');
+    document.getElementById('attCount').textContent=(j.data?.length||0)+' record';
+    if(!j.data||!j.data.length){ body.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8">Tidak ada data</td></tr>'; return; }
+    body.innerHTML=j.data.map(a=>{
+      const inSelfie=a.check_in_selfie?`<img class="selfie-th" src="/${a.check_in_selfie}" onclick="openImg('/${a.check_in_selfie}')">`:'';
+      const outSelfie=a.check_out_selfie?`<img class="selfie-th" src="/${a.check_out_selfie}" onclick="openImg('/${a.check_out_selfie}')">`:'';
+      const dist = a.check_in_distance!=null?`${Math.round(a.check_in_distance)}m`:'–';
+      return `<tr>
+        <td><div style="font-weight:600">${a.employee?.full_name||'?'}</div><div style="font-size:11px;color:#94a3b8">${a.employee?.employee_no||''}${a.is_valid?'':' · <span class=flag>⚑ ditandai</span>'}</div></td>
+        <td>${fmtT(a.check_in_at)}</td>
+        <td>${fmtT(a.check_out_at)}</td>
+        <td><div style="display:flex;gap:4px">${inSelfie}${outSelfie}</div></td>
+        <td>${a.late_minutes?mins(a.late_minutes):'–'}</td>
+        <td>${mins(a.work_minutes)}</td>
+        <td>${a.work_location?.name||'–'}<div style="font-size:11px;color:#94a3b8">jarak ${dist}</div></td>
+        <td>${statusPill(a.status)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e){ toast('Gagal memuat', false); }
+}
+loadAtt();
+</script>
+</body>
+</html>

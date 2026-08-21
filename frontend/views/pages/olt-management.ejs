@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ot-blue:#2563eb; --ot-blue-d:#1d4ed8; --ot-blue-l:#eff6ff;
+      --ot-green:#16a34a;--ot-green-d:#15803d;--ot-green-l:#f0fdf4;
+      --ot-red:#dc2626;  --ot-red-d:#b91c1c;  --ot-red-l:#fef2f2;
+      --ot-amber:#d97706;--ot-amber-d:#b45309;--ot-amber-l:#fffbeb;
+      --ot-teal:#0891b2; --ot-teal-l:#ecfeff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+    }
+    * { box-sizing:border-box; }
+    .oltm { font-family:'Plus Jakarta Sans', system-ui, sans-serif; }
+
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ot-hdr-l h1 { font-size:24px; font-weight:800; color:var(--text); margin:0 0 4px; letter-spacing:-.4px; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ot-hdr-l p .sep { color:var(--faint); }
+    .ot-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:14px; height:14px; flex-shrink:0; stroke-width:2; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); border-color:var(--ot-blue-d); }
+    .btn-green { background:var(--ot-green); border-color:var(--ot-green); color:#fff; }
+    .btn-green:hover { background:var(--ot-green-d); }
+    .btn-red { background:var(--ot-red); border-color:var(--ot-red); color:#fff; }
+    .btn-red:hover { background:var(--ot-red-d); }
+    .btn-red-outline { background:#fff; border-color:#fecaca; color:#b91c1c; }
+    .btn-red-outline:hover { background:#fef2f2; border-color:#fca5a5; }
+    .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Stat cards */
+    .ot-cards { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-radius:16px; border:1px solid #e8eaed; overflow:hidden; margin-bottom:20px; }
+    .ot-cards-top { margin-top:4px; }
+    .ot-card { padding:20px 22px 18px; border-right:1px solid #e8eaed; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+    .ot-card:last-child { border-right:none; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+    .pill-blue  { background:#eff6ff; color:#1d4ed8; }
+    .pill-green { background:#dcfce7; color:#15803d; }
+    .pill-teal  { background:#ecfeff; color:#0891b2; }
+    .pill-amber { background:#fef3c7; color:#b45309; }
+    .pill-red   { background:#fee2e2; color:#b91c1c; }
+    .pill-gray  { background:#f1f5f9; color:#64748b; }
+    .card-sub { font-size:11px; color:var(--faint); }
+
+    /* Stat card clickable + state aktif (background biru) */
+    .ot-card-click { cursor:pointer; transition:background .15s; }
+    .ot-card-click:hover { background:#f6f9ff; }
+    .ot-card.active { background:var(--ot-blue); }
+    .ot-card.active .card-lbl { color:#dbeafe; }
+    .ot-card.active .card-val { color:#fff; }
+    .ot-card.active .card-sub { color:#dbeafe; }
+    .ot-card.active .card-pill { background:rgba(255,255,255,.22); color:#fff; }
+    /* Saat aktif, hilangkan garis pemisah kanan agar blok biru bersih */
+    .ot-card.active { border-right-color:transparent; }
+
+    /* Panel */
+    .ot-panel { background:#fff; border:1px solid #e8eaed; border-radius:16px; overflow:hidden; margin-bottom:20px; }
+    .ot-panel-hdr { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid #eef2f7; background:#fafbfc; }
+    .ot-panel-hdr-l { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ot-panel-hdr-l h2 { font-size:14px; font-weight:800; color:var(--text); margin:0; display:flex; align-items:center; gap:8px; }
+    .ot-panel-hdr-l h2 svg { width:17px; height:17px; color:var(--ot-blue); }
+    .ot-panel-count { font-size:10.5px; font-weight:700; color:var(--muted); background:#f1f5f9; padding:2px 8px; border-radius:20px; border:1px solid #e8eaed; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:240px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+
+    /* OLT device chips (selector bar) */
+    .olt-bar { display:flex; gap:10px; padding:14px 20px; flex-wrap:wrap; align-items:center; }
+    .olt-chip { display:inline-flex; align-items:center; gap:8px; padding:8px 13px; border-radius:11px; border:1px solid #e8eaed; background:#fff; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .olt-chip:hover { border-color:#cbd5e1; box-shadow:0 2px 8px rgba(15,23,42,.05); }
+    .olt-chip.active { border-color:var(--ot-blue); background:var(--ot-blue-l); box-shadow:0 0 0 3px #2563eb12; }
+    .olt-chip-ic { width:30px; height:30px; border-radius:8px; background:#eff6ff; color:#1d4ed8; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .olt-chip-ic svg { width:15px; height:15px; }
+    .olt-chip.off .olt-chip-ic { background:#f1f5f9; color:#94a3b8; }
+    .olt-chip-txt { display:flex; flex-direction:column; gap:1px; min-width:0; text-align:left; }
+    .olt-chip-name { font-size:12.5px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
+    .olt-chip-host { font-family:'Geist Mono',ui-monospace,monospace; font-size:10.5px; color:var(--muted); }
+    .olt-chip-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .dot-ok { background:#22c55e; } .dot-err { background:#ef4444; } .dot-idle { background:#cbd5e1; }
+    .olt-chip-acts { display:flex; gap:3px; margin-left:4px; opacity:0; transition:opacity .15s; }
+    .olt-chip:hover .olt-chip-acts { opacity:1; }
+    .olt-chip-act { width:24px; height:24px; padding:0; border-radius:6px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:#64748b; transition:all .15s; }
+    .olt-chip-act svg { width:12px; height:12px; }
+    .olt-chip-act:hover { background:#eff6ff; border-color:#bfdbfe; color:#2563eb; }
+    .olt-chip-act.del:hover { background:#fef2f2; border-color:#fecaca; color:#dc2626; }
+    @media(hover:none){ .olt-chip-acts { opacity:1; } }
+
+    /* PON port pills */
+    .pon-bar { display:flex; gap:8px; padding:0 20px 14px; flex-wrap:wrap; align-items:center; }
+    .pon-bar .pon-lbl { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-right:4px; }
+    .pon-pill { padding:6px 12px; border-radius:9px; border:1px solid #e8eaed; background:#fff; cursor:pointer; font-size:12px; font-weight:700; color:#475569; font-family:'Geist Mono',ui-monospace,monospace; transition:all .15s; }
+    .pon-pill:hover { border-color:#cbd5e1; background:#f8fafc; }
+    .pon-pill.active { border-color:var(--ot-teal); background:var(--ot-teal-l); color:#0e7490; }
+    .pon-input { width:120px; padding:6px 10px; border:1px solid var(--border); border-radius:9px; font-size:12px; font-family:'Geist Mono',ui-monospace,monospace; outline:none; }
+    .pon-input:focus { border-color:var(--ot-teal); box-shadow:0 0 0 3px #0891b214; }
+
+    /* ONU table */
+    .onu-power-hint { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:#0891b2;
+      background:#ecfeff; padding:3px 10px; border-radius:20px; font-weight:600; margin-left:8px; }
+    .spin-sm { width:11px; height:11px; border-width:2px; }
+    .onu-table-wrap { overflow-x:auto; }
+    /* Pagination footer */
+    .onu-pager { display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px 20px; border-top:1px solid #eef2f7; flex-wrap:wrap; }
+    .pager-left { display:flex; align-items:center; gap:8px; font-size:13px; color:#64748b; }
+    .pager-select { height:32px; border:1px solid #e2e8f0; border-radius:8px; padding:0 8px;
+      font-size:13px; color:#334155; background:#fff; cursor:pointer; font-family:inherit; }
+    .pager-select:hover { border-color:#cbd5e1; }
+    .pager-info { color:#94a3b8; font-size:12.5px; }
+    .pager-right { display:flex; align-items:center; gap:4px; }
+    .pager-btn { min-width:32px; height:32px; padding:0 9px; border:1px solid #e2e8f0; border-radius:8px;
+      background:#fff; color:#475569; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+      display:inline-flex; align-items:center; justify-content:center; transition:all .12s; }
+    .pager-btn:hover:not(:disabled):not(.active) { border-color:#bfd3ee; background:#f8fafc; }
+    .pager-btn.active { background:#2563eb; border-color:#2563eb; color:#fff; cursor:default; }
+    .pager-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .pager-ellipsis { padding:0 4px; color:#cbd5e1; font-size:13px; }
+    @media(max-width:560px){ .onu-pager { justify-content:center; } .pager-info { display:none; } }
+
+    /* PON filter chips (multi-PON auto-discover) */
+    .pon-chips { display:flex; gap:7px; flex-wrap:wrap; padding:12px 20px 4px; align-items:center; }
+    .pon-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:9px; border:1px solid var(--border); background:#fff; color:var(--muted); font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .pon-chip:hover { border-color:#cbd5e1; background:#f8fafc; color:var(--text); }
+    .pon-chip.active { border-color:var(--ot-blue); background:var(--ot-blue-l); color:var(--ot-blue-d); }
+    .pon-chip-n { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#f1f5f9; color:#64748b; font-size:10.5px; font-weight:800; }
+    .pon-chip.active .pon-chip-n { background:#dbeafe; color:var(--ot-blue-d); }
+    .onu-pon-tag { display:inline-block; margin-left:7px; padding:1px 6px; border-radius:6px; background:#eff6ff; color:#1d4ed8; font-size:10px; font-weight:700; vertical-align:middle; }
+
+    /* VLAN detail modal */
+    .vlan-detail-grid { display:flex; flex-direction:column; gap:2px; }
+    .vd-row { display:flex; align-items:flex-start; gap:12px; padding:9px 2px; border-bottom:1px solid #f1f5f9; }
+    .vd-row:last-child { border-bottom:none; }
+    .vd-k { flex:0 0 110px; font-size:12px; font-weight:700; color:#64748b; padding-top:1px; }
+    .vd-v { flex:1; font-size:13px; color:var(--text); word-break:break-word; }
+    tr.vlan-row:hover { background:#f8fafc; }
+
+    /* Traffic ONU modal */
+    .traffic-cards { display:flex; gap:12px; }
+    .tc { flex:1; border:1px solid var(--border); border-radius:12px; padding:14px; background:#fff; }
+    .tc-down { border-color:#bfdbfe; background:linear-gradient(180deg,#eff6ff,#fff); }
+    .tc-up { border-color:#a7f3d0; background:linear-gradient(180deg,#ecfdf5,#fff); }
+    .tc-lbl { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.03em; }
+    .tc-down .tc-lbl svg { width:14px; height:14px; color:#2563eb; }
+    .tc-up .tc-lbl svg { width:14px; height:14px; color:#059669; }
+    .tc-val { font-size:26px; font-weight:800; color:var(--text); margin-top:8px; font-variant-numeric:tabular-nums; }
+    .tc-down .tc-val { color:#1d4ed8; }
+    .tc-up .tc-val { color:#047857; }
+    .tc-sub { font-size:11px; color:#94a3b8; margin-top:2px; }
+    .traffic-spark { margin-top:14px; border:1px solid var(--border); border-radius:10px; padding:8px; background:#fafbfc; }
+    .traffic-foot { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+    .ra.traffic:hover { border-color:#a7f3d0; color:#059669; background:#ecfdf5; }
+
+    table.onu-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .onu-table thead th { position:sticky; top:0; background:#fafbfc; text-align:left; font-size:10.5px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; padding:11px 14px; border-bottom:1px solid #eef2f7; white-space:nowrap; }
+    .onu-table tbody td { padding:11px 14px; border-bottom:1px solid #f3f5f8; vertical-align:middle; }
+    .onu-table tbody tr:hover { background:#fafbfc; }
+    .onu-if  { font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; font-weight:700; color:#334155; }
+    .onu-sn  { font-family:'Geist Mono',ui-monospace,monospace; font-size:11.5px; color:var(--muted); }
+    .onu-name { font-weight:600; color:var(--text); }
+    .onu-namecell { text-align:left; }
+    .mut { color:var(--faint); }
+
+    .st-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+    .st-pill .pd { width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .st-online { background:#dcfce7; color:#15803d; } .st-online .pd { animation:oltpulse 2s infinite; }
+    .st-offline { background:#f1f5f9; color:#94a3b8; }
+    .st-disabled { background:#fef3c7; color:#b45309; }
+    @keyframes oltpulse { 0%,100%{opacity:1}50%{opacity:.35} }
+
+    .rx-badge { font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; font-weight:700; padding:3px 9px; border-radius:7px; white-space:nowrap; }
+    .rx-good { background:#dcfce7; color:#15803d; }
+    .rx-warning { background:#fef3c7; color:#b45309; }
+    .rx-critical { background:#fee2e2; color:#b91c1c; }
+    .rx-los { background:#fee2e2; color:#b91c1c; }
+    .rx-unknown { background:#f1f5f9; color:#94a3b8; }
+    .rx-loading { background:#ecfeff; color:#0891b2; display:inline-flex; align-items:center; padding:4px 10px; }
+
+    .row-acts { display:flex; gap:4px; justify-content:flex-end; }
+    .ra { width:28px; height:28px; padding:0; border-radius:8px; border:1px solid #e8eaed; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; color:#64748b; font-family:inherit; }
+    .ra svg { width:13px; height:13px; stroke-width:1.9; }
+    .ra:hover { transform:translateY(-1px); box-shadow:0 2px 6px -1px rgba(15,23,42,.08); }
+    .ra.info:hover { color:var(--ot-blue); border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .ra.edit:hover { color:var(--ot-teal); border-color:#a5f3fc; background:var(--ot-teal-l); }
+    .ra.vlan:hover { color:var(--ot-blue); border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .ra.reboot:hover { color:var(--ot-amber); border-color:#fde68a; background:var(--ot-amber-l); }
+    .ra.del:hover { color:var(--ot-red); border-color:#fecaca; background:var(--ot-red-l); }
+
+    .ot-empty { padding:70px 20px; text-align:center; color:var(--faint); }
+    .ot-empty svg { width:44px; height:44px; opacity:.3; margin:0 auto 14px; display:block; stroke:currentColor; fill:none; stroke-width:1.5; }
+    .ot-empty h3 { font-size:15px; font-weight:700; color:var(--muted); margin:0 0 6px; }
+    .ot-empty p { font-size:13px; margin:0 0 18px; }
+
+    .ot-alert { display:none; border-radius:12px; padding:10px 14px; margin-bottom:16px; font-size:12.5px; font-weight:600; align-items:center; gap:8px; }
+    .ot-alert.show { display:flex; }
+    .ot-alert svg { width:14px; height:14px; flex-shrink:0; }
+    .ot-alert.err { background:var(--ot-red-l); border:1px solid #fecaca; color:#b91c1c; }
+    .ot-alert.ok  { background:var(--ot-green-l); border:1px solid #bbf7d0; color:#15803d; }
+
+    .loading-row td { text-align:center; padding:40px 20px; color:var(--faint); font-size:13px; }
+    .spin { display:inline-block; width:16px; height:16px; border:2px solid #e2e8f0; border-top-color:var(--ot-blue); border-radius:50%; animation:sp .7s linear infinite; vertical-align:middle; margin-right:8px; }
+    @keyframes sp { to { transform:rotate(360deg); } }
+
+    /* Modal */
+    .ot-modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); backdrop-filter:blur(4px); z-index:1100; align-items:center; justify-content:center; padding:16px; }
+    .ot-modal-overlay.show { display:flex; }
+    .ot-modal-box { background:#fff; border-radius:16px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; font-family:inherit; box-shadow:0 20px 50px rgba(15,23,42,.2); }
+    .ot-modal-box.wide { width:600px; }
+    .ot-modal-hdr { padding:18px 22px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #eef2f7; }
+    .ot-modal-hdr h3 { font-size:16px; font-weight:800; color:var(--text); margin:0; letter-spacing:-.2px; }
+    .ot-modal-close { width:30px; height:30px; padding:0; border-radius:8px; background:#f8fafc; border:1px solid var(--border); cursor:pointer; color:var(--muted); font-family:inherit; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; }
+    .ot-modal-close:hover { background:#f1f5f9; color:var(--text); }
+    .ot-modal-body { padding:18px 22px; }
+
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+    .form-label span.opt { font-weight:500; color:var(--faint); text-transform:none; letter-spacing:0; }
+    .form-control { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:10px; font-size:13px; background:#fff; color:var(--text); outline:none; font-family:inherit; transition:all .15s; }
+    .form-control:focus { border-color:var(--ot-blue); box-shadow:0 0 0 3px #2563eb14; }
+    .form-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .form-row  { display:flex; gap:12px; }
+    .form-row .form-group { flex:1; }
+
+    .ot-modal-foot { padding:14px 22px; display:flex; justify-content:space-between; align-items:center; gap:8px; border-top:1px solid #eef2f7; background:#fafbfc; }
+    .ot-modal-foot-r { display:flex; gap:8px; }
+
+    .test-result { display:none; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:500; margin-top:10px; line-height:1.5; }
+    .test-ok  { background:var(--ot-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .test-err { background:var(--ot-red-l);   color:#b91c1c; border:1px solid #fecaca; }
+
+    /* Detail grid (modal) */
+    .det-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#eef2f7; border:1px solid #eef2f7; border-radius:12px; overflow:hidden; margin-bottom:14px; }
+    .det-cell { background:#fff; padding:11px 13px; }
+    .det-cell.full { grid-column:1/-1; }
+    .det-k { font-size:9.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:3px; }
+    .det-v { font-size:13px; font-weight:600; color:var(--text); word-break:break-word; }
+    .det-v.mono { font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; }
+    .power-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:6px; }
+    .power-box { border:1px solid #e8eaed; border-radius:11px; padding:12px 14px; }
+    .power-box .pk { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+    .power-box .pv { font-family:'Geist Mono',ui-monospace,monospace; font-size:20px; font-weight:800; letter-spacing:-.5px; }
+
+    .info-note { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 13px; font-size:11.5px; color:#1e40af; line-height:1.5; margin-top:8px; }
+
+    /* Wizard provisioning */
+    .wiz-steps { display:flex; align-items:center; padding:16px 22px 0; gap:8px; }
+    .wiz-step { display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:700; color:var(--faint); }
+    .wiz-step .wiz-num { width:22px; height:22px; border-radius:50%; background:#eef2f7; color:var(--muted); display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+    .wiz-step.active { color:var(--ot-blue); }
+    .wiz-step.active .wiz-num { background:var(--ot-blue); color:#fff; }
+    .wiz-step.done .wiz-num { background:#22c55e; color:#fff; }
+    .wiz-line { flex:1; height:2px; background:#eef2f7; border-radius:2px; }
+    .wiz-pane { display:none; }
+    .wiz-pane.active { display:block; animation:fadeIn .2s ease; }
+    .wiz-mode-tabs { display:inline-flex; gap:4px; background:#f6f8fa; border-radius:9px; padding:4px; margin-bottom:16px; }
+    .wiz-mode { padding:7px 14px; border:none; background:transparent; border-radius:7px; font-size:12.5px; font-weight:700; color:var(--muted); cursor:pointer; font-family:inherit; }
+    .wiz-mode.active { background:#fff; color:var(--ot-blue); box-shadow:0 1px 3px rgba(15,23,42,.08); }
+    .wiz-srcrow { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .wiz-uncfg-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid #e8eaed; border-radius:10px; cursor:pointer; margin-bottom:6px; transition:all .15s; }
+    .wiz-uncfg-item:hover { border-color:var(--ot-blue); background:var(--ot-blue-l); }
+    .wiz-uncfg-item.sel { border-color:var(--ot-blue); background:var(--ot-blue-l); }
+    .wiz-uncfg-item .ui-sn { font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:700; color:var(--text); }
+    .wiz-review-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #f1f5f9; font-size:13px; }
+    .wiz-review-row .rk { color:var(--muted); font-weight:600; }
+    .wiz-review-row .rv { color:var(--text); font-weight:700; font-family:'Geist Mono',monospace; }
+    .wiz-bulk-result { font-size:12.5px; padding:6px 10px; border-radius:7px; margin-bottom:4px; }
+    .wiz-bulk-result.ok { background:#f0fdf4; color:#15803d; }
+    .wiz-bulk-result.err { background:#fef2f2; color:#dc2626; }
+    .ot-tab { display:inline-flex; align-items:center; padding:9px 16px; border-radius:9px; border:none; background:transparent; color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s; font-family:inherit; }
+    .ot-tab:hover { color:var(--text); }
+    .ot-tab.active { background:var(--ot-blue); color:#fff; }
+    .ot-tabpane { display:none; animation:fadeIn .2s ease; }
+    .ot-tabpane.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+    /* Toggle switch */
+    .ot-toggle { display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+    .ot-toggle input { display:none; }
+    .ot-toggle-track { width:36px; height:20px; border-radius:20px; background:#cbd5e1; position:relative; transition:background .2s; flex-shrink:0; }
+    .ot-toggle-dot { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .ot-toggle input:checked + .ot-toggle-track { background:var(--ot-blue); }
+    .ot-toggle input:checked + .ot-toggle-track .ot-toggle-dot { transform:translateX(16px); }
+    .ot-toggle-lbl { font-size:12.5px; font-weight:600; color:var(--muted); }
+    .ot-inline-check { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); font-weight:600; cursor:pointer; }
+    .ot-inline-check input { accent-color:var(--ot-blue); }
+
+    /* 2-col grid */
+    .ot-grid-2 { display:grid; grid-template-columns:1.2fr 1fr; gap:20px; }
+    @media(max-width:1100px){ .ot-grid-2 { grid-template-columns:1fr; } }
+
+    /* Port summary */
+    .ot-portsum-input { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+    .ot-portsum-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+    .ot-portsum-card { border:1px solid #e8eaed; border-radius:12px; padding:12px 14px; transition:all .15s; }
+    .ot-portsum-card:hover { border-color:#cbd5e1; box-shadow:0 2px 8px rgba(15,23,42,.05); }
+    .ot-portsum-card .ps-port { font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:8px; }
+    .ot-portsum-card .ps-total { font-size:24px; font-weight:800; color:var(--text); letter-spacing:-.5px; line-height:1; }
+    .ot-portsum-card .ps-meta { display:flex; gap:8px; margin-top:8px; font-size:11px; font-weight:700; }
+    .ps-on { color:#15803d; } .ps-off { color:#94a3b8; }
+    .ps-bar { height:5px; border-radius:3px; background:#f1f5f9; margin-top:8px; overflow:hidden; }
+    .ps-bar span { display:block; height:100%; background:#22c55e; }
+
+    /* System cards */
+    .ot-sys-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    @media(max-width:760px){ .ot-sys-cards { grid-template-columns:repeat(2,1fr); } }
+    .ot-sys-card { border:1px solid #e8eaed; border-radius:13px; padding:14px 16px; }
+    .ot-sys-card .sys-k { font-size:10.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+    .ot-sys-card .sys-v { font-size:24px; font-weight:800; color:var(--text); letter-spacing:-.6px; line-height:1.1; }
+    .ot-sys-card .sys-v.sm { font-size:15px; letter-spacing:-.2px; word-break:break-word; }
+    .ot-sys-card .sys-sub { font-size:11px; color:var(--faint); margin-top:4px; }
+    .sys-bar { height:6px; border-radius:4px; background:#f1f5f9; margin-top:9px; overflow:hidden; }
+    .sys-bar span { display:block; height:100%; background:linear-gradient(90deg,#22c55e,#16a34a); transition:width .4s; }
+
+    /* GPON Card list (detail per slot) */
+    .gpon-cards-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .gpon-card { border:1px solid #e8eaed; border-radius:14px; padding:16px 18px 14px; background:#fff; transition:all .15s; position:relative; display:flex; flex-direction:column; }
+    .gpon-card:hover { border-color:#cbd5e1; box-shadow:0 6px 18px rgba(15,23,42,.07); transform:translateY(-1px); }
+    .gpon-card.is-off { background:#fafbfc; }
+    .gpon-card.is-off .gc-v { color:#94a3b8; }
+
+    .gpon-card-hdr { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .gpon-card-pos { display:inline-flex; align-items:center; gap:11px; min-width:0; flex:1; }
+    .gpon-card-ic { width:36px; height:36px; border-radius:10px; background:#eff6ff; color:#1d4ed8; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .gpon-card-ic.ctrl { background:#ecfeff; color:#0891b2; }
+    .gpon-card-ic.off { background:#f1f5f9; color:#94a3b8; }
+    .gpon-card-ic svg { width:18px; height:18px; }
+    .gpon-card-title { display:flex; flex-direction:column; gap:3px; min-width:0; }
+    .gpon-card-name { font-family:'Geist Mono',ui-monospace,monospace; font-size:14px; font-weight:800; color:var(--text); letter-spacing:-.3px; line-height:1; }
+    .gpon-card-sub { font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; line-height:1; }
+    .gpon-card-st { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; flex-shrink:0; }
+    .gpon-card-st .pd { width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .gc-st-inservice { background:#dcfce7; color:#15803d; } .gc-st-inservice .pd { animation:oltpulse 2s infinite; }
+    .gc-st-active    { background:#dcfce7; color:#15803d; } .gc-st-active .pd { animation:oltpulse 2s infinite; }
+    .gc-st-ready     { background:#dcfce7; color:#15803d; }
+    .gc-st-register  { background:#dbeafe; color:#1d4ed8; }
+    .gc-st-standby   { background:#fef3c7; color:#b45309; }
+    .gc-st-offline   { background:#f1f5f9; color:#64748b; }
+    .gc-st-nopower   { background:#fee2e2; color:#b91c1c; }
+    .gc-st-other     { background:#eff6ff; color:#1d4ed8; }
+
+    .gpon-card-body { display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; padding-top:12px; margin-top:12px; border-top:1px solid #f1f5f9; }
+    .gc-row { display:flex; flex-direction:column; gap:3px; min-width:0; }
+    .gc-k { font-size:9.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.06em; }
+    .gc-v { font-family:'Geist Mono',ui-monospace,monospace; font-weight:700; color:var(--text); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
+    .gc-v.muted { color:#cbd5e1; font-weight:600; }
+
+    /* Bagian utama: gauge suhu melingkar + info ringkas (gaya monitoring modern) */
+    .gpon-card-main { display:flex; align-items:center; gap:16px; }
+    .gc-gauge { position:relative; width:84px; height:84px; flex-shrink:0; }
+    .gc-gauge svg { width:84px; height:84px; transform:rotate(0deg); }
+    .gc-gauge-bg { fill:none; stroke:#eef2f7; stroke-width:7; }
+    .gc-gauge-fg { fill:none; stroke-width:7; stroke-linecap:round; transition:stroke-dasharray .5s ease; }
+    .gc-gauge-c { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+    .gc-gauge-num { font-family:'Geist Mono',ui-monospace,monospace; font-size:21px; font-weight:800; letter-spacing:-1px; line-height:1; color:var(--text); }
+    .gc-gauge-num.mut { color:#cbd5e1; }
+    .gc-gauge-u { font-size:11px; font-weight:700; }
+    .gc-gauge-lbl { font-size:9px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.06em; }
+    .gc-main-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; }
+    .gc-mi-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .gc-mi-k { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; }
+    .gc-mi-v { font-family:'Geist Mono',ui-monospace,monospace; font-weight:800; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+    .gc-mi-v.gc-v { font-weight:700; font-size:12px; }
+
+    /* Bar mini untuk CPU / Memory (hanya tampil untuk control card INSERVICE) */
+    .gc-bars { display:flex; flex-direction:column; gap:7px; margin-top:10px; }
+    .gc-bar-row { display:grid; grid-template-columns:40px 1fr auto; gap:8px; align-items:center; }
+    .gc-bar-lbl { font-size:9.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; }
+    .gc-bar-track { height:5px; border-radius:3px; background:#f1f5f9; overflow:hidden; }
+    .gc-bar-fill { height:100%; border-radius:3px; transition:width .4s; }
+    .gc-bar-fill.cpu { background:linear-gradient(90deg,#2563eb,#1d4ed8); }
+    .gc-bar-fill.cpu.warn { background:linear-gradient(90deg,#f59e0b,#d97706); }
+    .gc-bar-fill.cpu.hot  { background:linear-gradient(90deg,#ef4444,#dc2626); }
+    .gc-bar-fill.mem { background:linear-gradient(90deg,#22c55e,#16a34a); }
+    .gc-bar-fill.mem.warn { background:linear-gradient(90deg,#f59e0b,#d97706); }
+    .gc-bar-fill.mem.hot  { background:linear-gradient(90deg,#ef4444,#dc2626); }
+    .gc-bar-val { font-family:'Geist Mono',ui-monospace,monospace; font-weight:700; font-size:11px; color:var(--text); min-width:36px; text-align:right; }
+
+    .gpon-cards-loading { padding:34px 10px; text-align:center; color:var(--faint); font-size:13px; grid-column:1/-1; }
+    .gpon-cards-summary { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; padding:11px 14px; background:#f8fafc; border:1px solid #eef2f7; border-radius:11px; }
+    .gpon-cards-summary:empty { display:none; }
+    .gcs-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; }
+    .gcs-pill .d { width:7px; height:7px; border-radius:50%; }
+    .gcs-on  { background:#f0fdf4; color:#15803d; } .gcs-on .d  { background:#22c55e; }
+    .gcs-off { background:#f1f5f9; color:#64748b; } .gcs-off .d { background:#cbd5e1; }
+    .gcs-other { background:#fffbeb; color:#b45309; } .gcs-other .d { background:#f59e0b; }
+    .gcs-tot { background:#eff6ff; color:#1d4ed8; margin-left:auto; }
+
+    @media(max-width:1024px){ .ot-cards { grid-template-columns:repeat(2,1fr); } .ot-card { border-right:none; border-bottom:1px solid #e8eaed; } .ot-card:nth-child(1),.ot-card:nth-child(3){ border-right:1px solid #e8eaed; } .ot-card:nth-child(3),.ot-card:nth-child(4){ border-bottom:none; } }
+    @media(max-width:640px){
+      .ot-cards { grid-template-columns:1fr; }
+      .ot-card { border-right:none !important; border-bottom:1px solid #e8eaed; padding:16px 18px; }
+      .ot-card:last-child { border-bottom:none; }
+      .search-wrap input { width:100%; }
+      .search-wrap { flex:1; min-width:0; }
+      .det-grid { grid-template-columns:1fr; }
+      .form-row { flex-direction:column; gap:0; }
+      .ot-hdr-l h1 { font-size:20px; }
+    }
+
+    /* ═══════════ RESPONSIVE LAYOUT REVISION ═══════════ */
+    /* Toolbar ONU: rapi & wrap di layar sempit */
+    .pon-bar { flex-wrap:wrap; gap:8px; }
+    @media(max-width:900px){
+      .pon-bar .search-wrap { margin-left:0 !important; order:10; flex:1 1 100%; }
+      .pon-bar .ot-inline-check { order:9; }
+      .pon-bar .btn { flex:0 0 auto; }
+    }
+    /* Tabs: pill bar clean (gaya Sales Dashboard) — container putih membulat */
+    .ot-tabs { display:inline-flex; gap:6px; background:#fff; border:1px solid var(--border); border-radius:13px; padding:5px; margin-bottom:18px; overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch; max-width:100%; }
+    .ot-tabs::-webkit-scrollbar { display:none; }
+    .ot-tab { flex:0 0 auto; }
+
+    /* ONU table → KARTU di mobile (≤820px), pola seperti /collect & /reseller */
+    @media(max-width:820px){
+      .onu-table thead { display:none; }
+      .onu-table, .onu-table tbody, .onu-table tr, .onu-table td { display:block; width:100%; }
+      .onu-table tbody tr {
+        border:1px solid #e8eef4; border-radius:13px; margin-bottom:11px;
+        padding:6px 4px 10px; background:#fff; box-shadow:0 1px 2px rgba(15,23,42,.03);
+      }
+      .onu-table tbody tr:hover { background:#fff; }
+      .onu-table tbody td {
+        border:none; padding:7px 14px; display:flex; align-items:center;
+        justify-content:space-between; gap:12px;
+      }
+      .onu-table tbody td::before {
+        content:attr(data-label); font-size:10.5px; font-weight:800; color:var(--muted);
+        text-transform:uppercase; letter-spacing:.05em; flex:0 0 auto;
+      }
+      .onu-table tbody td:first-child {
+        background:#f8fafc; border-radius:11px 11px 0 0; margin:-6px -4px 4px;
+        padding:11px 16px; border-bottom:1px solid #eef2f7;
+      }
+      .onu-table tbody td:first-child::before { display:none; }
+      .onu-namecell { text-align:right; }
+      .row-acts { justify-content:flex-end; flex-wrap:wrap; }
+      .det-actions { gap:6px; }
+      .det-actions .btn { flex:1 1 auto; min-width:120px; }
+    }
+    /* Panel & grid lebih luwes */
+    @media(max-width:760px){
+      .ot-panel-hdr { flex-wrap:wrap; gap:10px; }
+      .ot-panel-hdr-l { min-width:0; }
+      .traffic-cards { flex-direction:column; }
+    }
+    /* Stat cards 2 kolom di tablet, 1 di hp kecil */
+    @media(max-width:680px){
+      .det-actions .btn { min-width:0; flex:1 1 46%; font-size:12px; }
+    }
+    /* ═══════════ Tren chart redesign ═══════════ */
+    .trend-stats { display:flex; gap:12px; padding:6px 16px 2px; }
+    .trend-stat {
+      flex:1; border:1px solid #eceff3; border-radius:14px; padding:13px 16px;
+      background:#fff; position:relative; transition:border-color .15s;
+    }
+    .trend-stat:hover { border-color:#dde3ea; }
+    .ts-label { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; }
+    .ts-dot { width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
+    .ts-value { font-size:26px; font-weight:800; color:#0f172a; margin-top:7px; font-variant-numeric:tabular-nums; line-height:1.05; letter-spacing:-.01em; }
+    .ts-unit { font-size:13px; font-weight:600; color:#94a3b8; }
+    .ts-sub { font-size:11px; color:#94a3b8; margin-top:3px; }
+    .ts-delta { font-size:11px; font-weight:700; margin-left:8px; vertical-align:middle; }
+    .ts-delta.up { color:#16a34a; } .ts-delta.down { color:#dc2626; } .ts-delta.flat { color:#cbd5e1; }
+    .ts-value.rx-ok   { color:#15803d; }
+    .ts-value.rx-warn { color:#b45309; }
+    .ts-value.rx-bad  { color:#b91c1c; }
+    @media(max-width:480px){ .trend-stats { flex-direction:column; } .ts-value { font-size:22px; } }
+
+    /* ═══════════ Distribusi kualitas redaman ═══════════ */
+    .rxdist-wrap { display:flex; gap:20px; padding:16px 20px 20px; align-items:center; flex-wrap:wrap; }
+    .rxdist-chart { flex:0 0 280px; max-width:100%; }
+    .rxdist-legend { flex:1 1 280px; display:flex; flex-direction:column; gap:10px; min-width:240px; }
+    .rxq-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border:1px solid #eef2f7; border-radius:12px; transition:border-color .15s, background .15s; cursor:pointer; }
+    .rxq-row:hover { border-color:#cbd5e1; background:#fafbfc; }
+    .rxq-row.disabled { cursor:default; opacity:.55; }
+    .rxq-row.disabled:hover { border-color:#eef2f7; background:transparent; }
+    .rxq-row.active { border-color:#bfd3ee; background:#f5f8ff; box-shadow:0 0 0 2px #2563eb18; }
+    .rxq-ic { width:12px; height:12px; border-radius:50%; flex:0 0 auto; }
+    .rxq-meta { flex:1; min-width:0; }
+    .rxq-name { font-size:13px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px; }
+    .rxq-chevron { width:13px; height:13px; color:#cbd5e1; transition:transform .15s; }
+    .rxq-row.active .rxq-chevron { transform:rotate(90deg); color:#2563eb; }
+    .rxq-desc { font-size:11px; color:#94a3b8; margin-top:1px; }
+    .rxq-count { font-size:20px; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums; }
+    .rxq-pct { font-size:11px; color:#94a3b8; text-align:right; margin-top:1px; }
+    @media(max-width:560px){ .rxdist-chart { flex:1 1 100%; } }
+
+    /* Panel detail daftar ONU per kategori */
+    .rxq-detail { border-top:1px solid #eef2f7; margin:4px 20px 0; padding:14px 0 18px; }
+    .rxq-detail-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .rxq-detail-title { font-size:13px; font-weight:700; color:#0f172a; }
+    .rxq-detail-close { width:28px; height:28px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:#64748b; }
+    .rxq-detail-close:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .rxq-detail-close svg { width:15px; height:15px; }
+    .rxq-detail-body { max-height:320px; overflow:auto; }
+    .rxq-table-wrap { overflow-x:auto; border:1px solid #eef2f7; border-radius:12px; }
+    .rxq-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+    .rxq-table thead th { position:sticky; top:0; background:#f8fafc; z-index:1;
+      text-align:left; padding:9px 14px; font-size:11px; font-weight:700; color:#94a3b8;
+      text-transform:uppercase; letter-spacing:.03em; border-bottom:1px solid #eef2f7; white-space:nowrap; }
+    .rxq-table tbody td { padding:9px 14px; border-bottom:1px solid #f4f6f9; }
+    .rxq-table tbody tr:last-child td { border-bottom:0; }
+    .rxq-table tbody tr:hover { background:#fafbfc; }
+    .rxq-table tbody tr.rxq-clickable { cursor:pointer; }
+    .rxq-table tbody tr.rxq-clickable:hover { background:#f5f8ff; }
+    .rxq-td-name { font-weight:600; color:#0f172a; }
+    .rxq-td-idx, .rxq-td-sn { font-family:'Geist Mono',monospace; font-size:11.5px; color:#64748b; white-space:nowrap; }
+    .rxq-td-rx { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  </style>
+</head>
+<body>
+<div class="app-layout oltm">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ot-hdr">
+        <div class="ot-hdr-l">
+          <h1>OLT Management</h1>
+          <p>
+            <span>Dashboard manajemen OLT — ONU, redaman, VLAN & info sistem</span>
+            <span class="sep">·</span>
+            <span id="connLbl">Pilih OLT untuk mulai</span>
+          </p>
+        </div>
+        <div class="ot-hdr-r">
+          <label class="ot-toggle" id="autoRefreshWrap" title="Auto-refresh berkala">
+            <input type="checkbox" id="chkAutoRefresh"><span class="ot-toggle-track"><span class="ot-toggle-dot"></span></span>
+            <span class="ot-toggle-lbl">Auto-refresh</span>
+          </label>
+          <button class="btn btn-outline btn-sm" id="btnUncfg" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+            ONU Belum Terdaftar
+          </button>
+          <button class="btn btn-blue btn-sm" id="btnAddOlt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah OLT
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat cards — clickable, memfilter daftar ONU (aktif = biru) -->
+      <div class="ot-cards ot-cards-top">
+        <div class="ot-card ot-card-click" id="cardOnline" onclick="OltMgmt.setStatFilter('online')" title="Tampilkan ONU online">
+          <div class="card-lbl">ONU Online</div>
+          <div class="card-body"><div class="card-left">
+            <span class="card-val" id="statOnline">0</span>
+            <div class="card-meta"><span class="card-pill pill-green" id="statOnlinePill">0 aktif</span></div>
+          </div></div>
+        </div>
+        <div class="ot-card ot-card-click" id="cardOffline" onclick="OltMgmt.setStatFilter('offline')" title="Tampilkan ONU offline">
+          <div class="card-lbl">ONU Offline</div>
+          <div class="card-body"><div class="card-left">
+            <span class="card-val" id="statOffline">0</span>
+            <div class="card-meta"><span class="card-pill pill-gray" id="statOfflinePill">0 offline</span></div>
+          </div></div>
+        </div>
+        <div class="ot-card ot-card-click" id="cardTotal" onclick="OltMgmt.setStatFilter('total')" title="Tampilkan semua ONU">
+          <div class="card-lbl">Total ONU</div>
+          <div class="card-body"><div class="card-left">
+            <span class="card-val" id="statTotal">0</span>
+            <div class="card-meta"><span class="card-pill pill-teal" id="statTotalPill">0 ONU</span></div>
+          </div></div>
+        </div>
+        <div class="ot-card ot-card-click" id="cardBad" onclick="OltMgmt.setStatFilter('badrx')" title="Tampilkan ONU dengan redaman bermasalah">
+          <div class="card-lbl">Redaman Bermasalah</div>
+          <div class="card-body"><div class="card-left">
+            <span class="card-val" id="statBad">0</span>
+            <div class="card-meta"><span class="card-pill pill-amber" id="statBadPill">0 lemah</span><span class="card-sub">Rx &lt; -25 dBm</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="ot-alert err" id="oltAlert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="oltAlertMsg">—</span>
+      </div>
+
+      <!-- OLT selector (selalu tampil) -->
+      <div class="ot-panel">
+        <div class="ot-panel-hdr">
+          <div class="ot-panel-hdr-l">
+            <h2>
+              Perangkat OLT
+            </h2>
+            <span class="ot-panel-count" id="oltCount">0 OLT</span>
+          </div>
+        </div>
+        <div class="olt-bar" id="oltBar">
+          <span class="mut" style="font-size:13px;padding:6px 0">Memuat daftar OLT...</span>
+        </div>
+      </div>
+
+      <!-- Tab bar -->
+      <div class="ot-tabs" id="otTabs">
+        <button class="ot-tab active" data-tab="overview">Overview</button>
+        <button class="ot-tab" data-tab="onu">ONU</button>
+        <button class="ot-tab" data-tab="vlan">VLAN</button>
+        <button class="ot-tab" data-tab="profil">Profil</button>
+        <button class="ot-tab" data-tab="system">Sistem</button>
+        <button class="ot-tab" data-tab="cards">Card</button>
+        <button class="ot-tab" data-tab="cli">Diagnostik</button>
+      </div>
+
+      <!-- ════════ TAB: OVERVIEW ════════ -->
+      <section class="ot-tabpane active" data-pane="overview">
+
+        <div class="ot-grid-2">
+          <!-- Tren chart -->
+          <div class="ot-panel">
+            <div class="ot-panel-hdr">
+              <div class="ot-panel-hdr-l">
+                <h2>Tren ONU Online &amp; Redaman</h2>
+              </div>
+              <span class="card-sub" id="trendHint">menunggu data…</span>
+            </div>
+            <!-- Stat callouts: ONU online + rata-rata Rx (dBm) -->
+            <div class="trend-stats">
+              <div class="trend-stat">
+                <div class="ts-label"><span class="ts-dot" style="background:#3b6ef5"></span>ONU Online</div>
+                <div class="ts-value" id="tsOnline">—</div>
+              </div>
+              <div class="trend-stat">
+                <div class="ts-label"><span class="ts-dot" style="background:#0891b2"></span>Rata-rata Rx</div>
+                <div class="ts-value" id="tsRx">— <span class="ts-unit">dBm</span></div>
+                <div class="ts-sub" id="tsRxNote">menunggu data redaman…</div>
+              </div>
+            </div>
+            <div style="padding:4px 8px 12px"><div id="trendChart" style="height:230px;overflow:hidden"></div></div>
+          </div>
+
+          <!-- Ringkasan per-PON -->
+          <div class="ot-panel">
+            <div class="ot-panel-hdr">
+              <div class="ot-panel-hdr-l">
+                <h2>Ringkasan per PON Port</h2>
+              </div>
+              <button class="btn btn-outline btn-sm" id="btnLoadSummary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+                Refresh
+              </button>
+            </div>
+            <div style="padding:12px 16px 16px">
+              <div class="ot-portsum-input">
+                <input type="text" id="summaryPorts" class="form-control" placeholder="Daftar port, mis. 1,2,3,4" style="max-width:280px">
+                <span class="card-sub" id="summaryPortsHint">pisahkan dengan koma</span>
+              </div>
+              <div id="portSummaryGrid" class="ot-portsum-grid">
+                <div class="ot-empty" style="padding:30px 10px;grid-column:1/-1"><p>Masukkan daftar port lalu klik Refresh untuk melihat ringkasan tiap PON.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Distribusi kualitas redaman (dBm): good / warning / bad -->
+        <div class="ot-panel" style="margin-top:16px">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2>Distribusi Kualitas Redaman (dBm)</h2>
+            </div>
+            <span class="card-sub" id="rxDistHint">menunggu data redaman…</span>
+          </div>
+          <div class="rxdist-wrap">
+            <div class="rxdist-chart"><div id="rxQualityChart" style="height:240px;overflow:hidden"></div></div>
+            <div class="rxdist-legend" id="rxQualityLegend">
+              <div class="ot-empty" style="padding:30px 10px"><p>Data kualitas redaman akan muncul otomatis setelah ONU dimuat.</p></div>
+            </div>
+          </div>
+          <!-- Panel daftar ONU saat kategori diklik -->
+          <div class="rxq-detail" id="rxQualityDetail" style="display:none">
+            <div class="rxq-detail-hdr">
+              <div class="rxq-detail-title" id="rxqDetailTitle">—</div>
+              <button class="rxq-detail-close" id="rxqDetailClose" aria-label="Tutup">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="rxq-detail-body" id="rxqDetailBody"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ TAB: ONU ════════ -->
+      <section class="ot-tabpane" data-pane="onu">
+        <div class="ot-panel">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6.01" y2="10"/><line x1="10" y1="10" x2="18" y2="10"/></svg>Daftar ONU</h2>
+              <span class="ot-panel-count" id="onuCount">0 ONU</span>
+              <span class="onu-power-hint" id="onuPowerHint" style="display:none"><span class="spin spin-sm"></span> memuat redaman…</span>
+            </div>
+          </div>
+          <div class="pon-bar" id="ponBar" style="display:none">
+            <span class="pon-lbl" id="ponBarLbl">PON Port</span>
+            <input type="text" class="pon-input" id="ponInput" placeholder="1/2/1">
+            <button class="btn btn-blue btn-sm" id="btnLoadPon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+              Refresh 1 PON
+            </button>
+            <button class="btn btn-outline btn-sm" id="btnReloadAll" title="Temukan semua PON port & muat semua ONU">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+              Refresh Semua
+            </button>
+            <div class="search-wrap" style="margin-left:auto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input type="text" id="onuSearch" placeholder="Cari SN, nama, index...">
+            </div>
+            <button class="btn btn-green btn-sm" id="btnAddOnu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Authorize
+            </button>
+          </div>
+
+          <!-- Filter chip PON port (muncul saat multi-PON auto-discover) -->
+          <div class="pon-chips" id="ponChips" style="display:none"></div>
+
+          <div class="onu-table-wrap">
+            <table class="onu-table">
+              <thead>
+                <tr>
+                  <th>ONU Index</th><th>Nama / SN</th><th>Type</th><th>Status</th><th>Redaman (Rx)</th>
+                  <th style="text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="onuBody">
+                <tr><td colspan="6"><div class="ot-empty" style="padding:50px 20px">
+                  <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6.01" y2="10"/></svg>
+                  <h3>Memuat data ONU otomatis…</h3>
+                  <p>Pilih perangkat OLT — daftar ONU akan muncul otomatis tanpa perlu refresh manual.</p>
+                </div></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Footer: jumlah tampilan + pagination -->
+          <div class="onu-pager" id="onuPager" style="display:none">
+            <div class="pager-left">
+              <span>Tampilkan</span>
+              <select id="onuPageSize" class="pager-select">
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="all">Semua</option>
+              </select>
+              <span id="onuRangeInfo" class="pager-info">—</span>
+            </div>
+            <div class="pager-right" id="onuPagerBtns"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ TAB: VLAN ════════ -->
+      <section class="ot-tabpane" data-pane="vlan">
+        <div class="ot-panel">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>VLAN Global OLT</h2>
+              <span class="ot-panel-count" id="vlanCount">0 VLAN</span>
+            </div>
+            <div class="ot-hdr-r">
+              <button class="btn btn-outline btn-sm" id="btnLoadVlans">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+                Refresh VLAN
+              </button>
+              <button class="btn btn-green btn-sm" id="btnAddVlan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Buat VLAN
+              </button>
+            </div>
+          </div>
+          <div class="onu-table-wrap">
+            <table class="onu-table">
+              <thead><tr><th>VLAN ID</th><th>Nama</th><th>Type</th><th>Port/Member</th><th style="text-align:right">Aksi</th></tr></thead>
+              <tbody id="vlanBody">
+                <tr><td colspan="5"><div class="ot-empty" style="padding:50px 20px">
+                  <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+                  <h3>Belum dimuat</h3><p>Pilih OLT lalu klik "Refresh VLAN" untuk menampilkan daftar VLAN di OLT</p>
+                </div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="info-note" style="margin-top:4px">
+          VLAN per-ONU (service-port) diatur dari tab <b>ONU</b> → tombol VLAN (⌗) pada baris ONU.
+        </div>
+      </section>
+
+      <!-- ════════ TAB: PROFIL (T-CONT & Traffic) ════════ -->
+      <section class="ot-tabpane" data-pane="profil">
+        <div class="ot-grid-2">
+          <!-- Profil T-CONT -->
+          <div class="ot-panel">
+            <div class="ot-panel-hdr">
+              <div class="ot-panel-hdr-l">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-5"/></svg>Profil T-CONT</h2>
+                <p class="ot-panel-sub">Alokasi bandwidth tunnel (upstream). Type 3/5 = "up-to" agar muat banyak ONU per PON.</p>
+              </div>
+              <button class="btn btn-green btn-sm" onclick="OltMgmt.openProfileForm('tcont')">+ Tambah</button>
+            </div>
+            <div id="tcontProfileList" class="onu-table-wrap"><div style="padding:20px;color:var(--faint)">Memuat…</div></div>
+          </div>
+          <!-- Profil Traffic -->
+          <div class="ot-panel">
+            <div class="ot-panel-hdr">
+              <div class="ot-panel-hdr-l">
+                <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Profil Traffic</h2>
+                <p class="ot-panel-sub">Limit bandwidth (kbps). Dipakai di GEM port untuk membatasi kecepatan downstream pelanggan.</p>
+              </div>
+              <button class="btn btn-green btn-sm" onclick="OltMgmt.openProfileForm('traffic')">+ Tambah</button>
+            </div>
+            <div id="trafficProfileList" class="onu-table-wrap"><div style="padding:20px;color:var(--faint)">Memuat…</div></div>
+          </div>
+        </div>
+        <div class="info-note" style="margin-top:4px">
+          ⚠ Total MBW T-CONT dalam 1 PON sebaiknya tidak melebihi kapasitas PON (mis. 1000M untuk muat ~120 ONU). Gunakan type 3/5 (up-to), bukan type 1 (fixed).
+        </div>
+      </section>
+
+      <!-- ════════ TAB: SYSTEM ════════ -->
+      <section class="ot-tabpane" data-pane="system">
+        <div class="ot-panel">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>Informasi Sistem OLT</h2>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btnLoadSystem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div style="padding:18px 20px">
+            <div class="ot-sys-cards">
+              <div class="ot-sys-card"><div class="sys-k">CPU</div><div class="sys-v" id="sysCpu">—</div><div class="sys-bar"><span id="sysCpuBar" style="width:0%"></span></div></div>
+              <div class="ot-sys-card"><div class="sys-k">Suhu</div><div class="sys-v" id="sysTemp">—</div><div class="sys-sub" id="sysTempSub">&nbsp;</div></div>
+              <div class="ot-sys-card"><div class="sys-k">Uptime</div><div class="sys-v sm" id="sysUptime">—</div></div>
+              <div class="ot-sys-card"><div class="sys-k">Versi</div><div class="sys-v sm" id="sysVersion">—</div></div>
+            </div>
+            <div class="det-grid" style="margin-top:16px">
+              <div class="det-cell"><div class="det-k">Model / Produk</div><div class="det-v" id="sysModel">—</div></div>
+              <div class="det-cell"><div class="det-k">Hardware</div><div class="det-v" id="sysHw">—</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════════ TAB: CARD / SLOT GPON ════════ -->
+      <section class="ot-tabpane" data-pane="cards">
+        <!-- Daftar Card / Slot GPON (hanya untuk ZTE) -->
+        <div class="ot-panel" id="cardsPanel" style="display:none">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><line x1="7" y1="10" x2="7" y2="14"/><line x1="11" y1="10" x2="11" y2="14"/><line x1="15" y1="10" x2="15" y2="14"/><line x1="19" y1="10" x2="19" y2="14"/></svg>
+                Card / Slot GPON
+              </h2>
+              <span class="ot-panel-count" id="cardsCount">0 slot</span>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btnLoadCards">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div style="padding:14px 18px 18px">
+            <div id="cardsSummary" class="gpon-cards-summary"></div>
+            <div id="cardsGrid" class="gpon-cards-grid">
+              <div class="gpon-cards-loading"><span class="spin"></span> Menunggu data card…</div>
+            </div>
+            <div class="info-note" style="margin-top:14px">
+              Data diambil dari <code>show card</code>, <code>show temperature</code>, dan <code>show processor</code> di OLT. Kolom suhu / CPU / memory tampil bila firmware OLT menyediakannya.
+            </div>
+          </div>
+        </div>
+        <div class="ot-empty" id="cardsEmpty" style="display:none;padding:50px 20px">
+          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><line x1="7" y1="10" x2="7" y2="14"/><line x1="11" y1="10" x2="11" y2="14"/></svg>
+          <h3>Card / Slot GPON</h3><p>Fitur ini tersedia untuk OLT ZTE. Pilih OLT ZTE untuk melihat daftar card/slot.</p>
+        </div>
+      </section>
+
+      <!-- ════════ TAB: DIAGNOSTIK CLI ════════ -->
+      <section class="ot-tabpane" data-pane="cli">
+        <!-- Diagnostik CLI -->
+        <div class="ot-panel">
+          <div class="ot-panel-hdr">
+            <div class="ot-panel-hdr-l">
+              <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>Diagnostik CLI</h2>
+            </div>
+            <span class="card-sub">hanya perintah <code>show</code> (read-only)</span>
+          </div>
+          <div style="padding:16px 20px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+              <input type="text" id="rawCmd" class="form-control" placeholder="cth: show card  /  show gpon onu state gpon-olt_1/1/1" style="flex:1;min-width:240px;font-family:'Geist Mono',monospace;font-size:12px">
+              <button class="btn btn-blue btn-sm" id="btnRunRaw" onclick="OltMgmt.runRaw()">Jalankan</button>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="rawSuggest"></div>
+            <pre id="rawOutput" style="display:none;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px 16px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;line-height:1.55;overflow-x:auto;max-height:380px;white-space:pre-wrap;word-break:break-word;margin:0"></pre>
+            <div class="info-note" style="margin-top:10px">Gunakan ini untuk melihat output asli OLT bila daftar ONU / info sistem kosong. Salin hasilnya agar parser bisa disesuaikan dengan format firmware Anda.</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Add/Edit OLT -->
+<div class="ot-modal-overlay" id="oltModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3 id="oltModalTitle">Tambah OLT</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeOltModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <input type="hidden" id="oltId">
+      <div class="form-group">
+        <label class="form-label">Nama OLT</label>
+        <input type="text" id="oltName" class="form-control" placeholder="cth: OLT-Pasaraya">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2">
+          <label class="form-label">IP Address OLT</label>
+          <input type="text" id="oltHost" class="form-control" placeholder="10.0.0.1">
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">Brand</label>
+          <select id="oltBrand" class="form-control" onchange="OltMgmt.onBrandChange()">
+            <option value="zte">ZTE (C320/C300)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Protokol</label>
+          <select id="oltProtocol" class="form-control" onchange="OltMgmt.onProtoChange()">
+            <option value="telnet">Telnet</option>
+            <option value="ssh">SSH</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Port</label>
+          <input type="number" id="oltPort" class="form-control" value="23">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="oltUser" class="form-control" placeholder="admin" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="oltPass" class="form-control" placeholder="••••••" autocomplete="new-password">
+          <div class="form-hint" id="passHint">Kosongkan jika tidak ingin mengubah</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Enable Password <span class="opt">(opsional)</span></label>
+        <input type="password" id="oltEnablePass" class="form-control" placeholder="Jika OLT minta 'enable' sebelum config" autocomplete="new-password">
+        <div class="form-hint">Hanya jika privilege mode butuh password terpisah</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="oltEnabled" class="form-control">
+          <option value="true">Aktif</option>
+          <option value="false">Nonaktif</option>
+        </select>
+      </div>
+
+      <!-- SNMP (monitoring cepat — khusus ZTE) -->
+      <div id="snmpSection" style="border-top:1px solid #eef2f7;margin-top:6px;padding-top:14px">
+        <label class="ot-toggle" style="margin-bottom:4px">
+          <input type="checkbox" id="oltSnmpEnabled" onchange="OltMgmt.onSnmpToggle()">
+          <span class="ot-toggle-track"><span class="ot-toggle-dot"></span></span>
+          <span class="ot-toggle-lbl" style="font-weight:700;color:var(--text)">Aktifkan SNMP untuk monitoring</span>
+        </label>
+        <div class="form-hint" style="margin-bottom:10px">Baca ONU, redaman & sistem via SNMP (cepat &amp; andal). Aksi authorize/hapus/VLAN tetap via CLI.</div>
+        <div id="snmpFields" style="display:none">
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label class="form-label">SNMP Community</label>
+              <input type="password" id="oltSnmpCommunity" class="form-control" placeholder="cth: public" autocomplete="new-password">
+              <div class="form-hint" id="snmpCommHint">Read community OLT</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Versi</label>
+              <select id="oltSnmpVersion" class="form-control">
+                <option value="2c">v2c</option>
+                <option value="1">v1</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Port</label>
+              <input type="number" id="oltSnmpPort" class="form-control" value="161">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="test-result" id="oltTestResult"></div>
+    </div>
+    <div class="ot-modal-foot">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" id="btnTestConn" onclick="OltMgmt.testConnection()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+          Test Koneksi
+        </button>
+        <button class="btn btn-red btn-sm" id="btnDeleteOlt" onclick="OltMgmt.deleteOltFromModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          Hapus
+        </button>
+      </div>
+      <div class="ot-modal-foot-r">
+        <button class="btn btn-outline btn-sm" onclick="OltMgmt.closeOltModal()">Batal</button>
+        <button class="btn btn-blue btn-sm" id="btnSaveOlt" onclick="OltMgmt.saveOlt()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Authorize / Edit ONU -->
+<div class="ot-modal-overlay" id="onuModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3 id="onuModalTitle">Authorize ONU</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeOnuModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <input type="hidden" id="onuEditIf">
+      <div class="form-group" id="grpGponOlt">
+        <label class="form-label" id="onuGponOltLbl">PON Port (gpon-olt)</label>
+        <input type="text" id="onuGponOlt" class="form-control" placeholder="1/2/1">
+        <div class="form-hint" id="onuGponOltHint">Frame/Slot/Port — mis. 1/2/1</div>
+      </div>
+      <div class="form-row" id="grpIdSn">
+        <div class="form-group">
+          <label class="form-label">ONU ID</label>
+          <input type="number" id="onuId" class="form-control" placeholder="3" min="1">
+        </div>
+        <div class="form-group" style="flex:2">
+          <label class="form-label" id="onuSnLbl">Serial Number</label>
+          <input type="text" id="onuSn" class="form-control" placeholder="ZTEGC0B82FE8" style="font-family:'Geist Mono',monospace">
+        </div>
+      </div>
+      <div class="form-group" id="grpType">
+        <label class="form-label">Type ONU</label>
+        <input type="text" id="onuType" class="form-control" placeholder="ZTEG-F660" list="onuTypeList" value="ZTEG-F660">
+        <datalist id="onuTypeList">
+          <option value="ZTEG-F660"><option value="ZTEG-F609"><option value="ZTEG-F670L">
+          <option value="ZTEG-F620"><option value="ZTEG-F601"><option value="ZTEG-F612">
+          <option value="ZXHN-F660"><option value="ZXHN-F663N"><option value="ALL">
+        </datalist>
+        <div class="form-hint">Isi type ONU (mis. ZTEG-F660). Bila ditolak firmware, sistem otomatis mencoba type lain yang terdaftar di OLT. Jalankan <code>show onu-type gpon</code> di Diagnostik untuk daftar lengkap.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nama <span class="opt">(opsional)</span></label>
+          <input type="text" id="onuNameInput" class="form-control" placeholder="Nama pelanggan">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi <span class="opt">(opsional)</span></label>
+          <input type="text" id="onuDescInput" class="form-control" placeholder="cth: Internet-50M">
+        </div>
+      </div>
+      <div class="info-note" id="onuModalNote">
+        ONU akan di-authorize ke PON port di atas. Pastikan ONU ID belum dipakai.
+      </div>
+    </div>
+    <div class="ot-modal-foot">
+      <div></div>
+      <div class="ot-modal-foot-r">
+        <button class="btn btn-outline btn-sm" onclick="OltMgmt.closeOnuModal()">Batal</button>
+        <button class="btn btn-green btn-sm" id="btnSaveOnu" onclick="OltMgmt.saveOnu()">Authorize</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: ONU Detail -->
+<div class="ot-modal-overlay" id="detailModal">
+  <div class="ot-modal-box wide">
+    <div class="ot-modal-hdr">
+      <h3 id="detailTitle">Detail ONU</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeDetail()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body" id="detailBody">
+      <div style="text-align:center;padding:40px;color:var(--faint)"><span class="spin"></span> Memuat detail...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Uncfg ONU list -->
+<div class="ot-modal-overlay" id="uncfgModal">
+  <div class="ot-modal-box wide">
+    <div class="ot-modal-hdr">
+      <h3>ONU Belum Terdaftar (uncfg)</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeUncfg()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body" id="uncfgBody">
+      <div style="text-align:center;padding:40px;color:var(--faint)"><span class="spin"></span> Memuat...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Wizard Provisioning ONU (ZTE) -->
+<div class="ot-modal-overlay" id="wizModal">
+  <div class="ot-modal-box wide">
+    <div class="ot-modal-hdr">
+      <h3>Provisioning ONU</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeWizard()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="wiz-steps">
+      <div class="wiz-step active" data-step="1"><span class="wiz-num">1</span> Pilih ONU</div>
+      <div class="wiz-line"></div>
+      <div class="wiz-step" data-step="2"><span class="wiz-num">2</span> Profil &amp; VLAN</div>
+      <div class="wiz-line"></div>
+      <div class="wiz-step" data-step="3"><span class="wiz-num">3</span> Review</div>
+    </div>
+
+    <div class="ot-modal-body">
+      <!-- STEP 1 -->
+      <div class="wiz-pane active" data-pane="1">
+        <div class="wiz-mode-tabs">
+          <button class="wiz-mode active" data-mode="single" onclick="OltMgmt.wizSetMode('single')">Satu ONU</button>
+          <button class="wiz-mode" data-mode="bulk" onclick="OltMgmt.wizSetMode('bulk')">Bulk (banyak ONU)</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">PON Port</label>
+          <input type="text" id="wizPon" class="form-control" placeholder="1/2/1" style="max-width:200px;font-family:'Geist Mono',monospace">
+          <div class="form-hint">Frame/Slot/Port — sesuai kartu GPON (mis. 1/2/1)</div>
+        </div>
+
+        <!-- Mode single -->
+        <div id="wizSingle">
+          <div class="wiz-srcrow">
+            <button class="btn btn-outline btn-sm" id="wizBtnAutofind" onclick="OltMgmt.wizLoadUncfg()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+              Cari ONU belum terdaftar (auto-find)
+            </button>
+            <span class="card-sub">atau ketik SN manual di bawah</span>
+          </div>
+          <div id="wizUncfgList" style="margin:10px 0"></div>
+          <div class="form-row">
+            <div class="form-group" style="flex:2">
+              <label class="form-label">Serial Number</label>
+              <input type="text" id="wizSn" class="form-control" placeholder="ZTEGC0B82FE8" style="font-family:'Geist Mono',monospace">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type ONU</label>
+              <input type="text" id="wizType" class="form-control" placeholder="ZTEG-F660" list="onuTypeList" value="ZTEG-F660">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Nama <span class="opt">(opsional)</span></label><input type="text" id="wizName" class="form-control" placeholder="Nama pelanggan"></div>
+            <div class="form-group"><label class="form-label">ONU ID <span class="opt">(auto bila kosong)</span></label><input type="number" id="wizOnuId" class="form-control" placeholder="auto"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Deskripsi <span class="opt">(opsional)</span></label><input type="text" id="wizDesc" class="form-control" placeholder="Alamat / catatan"></div>
+        </div>
+
+        <!-- Mode bulk -->
+        <div id="wizBulk" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Daftar ONU (satu baris per ONU)</label>
+            <textarea id="wizBulkText" class="form-control" rows="6" placeholder="Format: SN,Nama,Deskripsi (Nama & Deskripsi opsional)&#10;ZTEGC0B82FE8,Budi,Jl. Mawar 1&#10;ZTEGC0B82FF9,Siti,Jl. Melati 2&#10;ELWGC44A1711"></textarea>
+            <div class="form-hint">Satu SN per baris. Type, profil & VLAN dari Step 2 dipakai untuk semua.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="wiz-pane" data-pane="2">
+        <div class="info-note" style="margin-bottom:14px">Profil dibaca langsung dari OLT. Pilih yang sudah ada, atau biarkan "default".</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Profil TCONT (uplink/DBA)</label>
+            <select id="wizTcont" class="form-control"><option value="">default</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Profil Traffic (downlink) <span class="opt">(opsional)</span></label>
+            <select id="wizTraffic" class="form-control"><option value="">— tidak diset —</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">VLAN</label>
+            <input type="number" id="wizVlan" class="form-control" placeholder="671" min="1" max="4094">
+            <div class="form-hint">VLAN layanan (service-port)</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">User VLAN <span class="opt">(default = VLAN)</span></label>
+            <input type="number" id="wizUserVlan" class="form-control" placeholder="sama dengan VLAN">
+          </div>
+        </div>
+        <div id="wizProfileLoading" style="color:var(--faint);font-size:13px"><span class="spin"></span> Memuat profil dari OLT…</div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="wiz-pane" data-pane="3">
+        <div class="info-note" style="margin-bottom:14px">Periksa konfigurasi sebelum dikirim ke OLT.</div>
+        <div id="wizReview"></div>
+      </div>
+    </div>
+
+    <div class="ot-modal-foot">
+      <button class="btn btn-outline btn-sm" id="wizBack" onclick="OltMgmt.wizPrev()" style="visibility:hidden">← Kembali</button>
+      <div class="ot-modal-foot-r">
+        <button class="btn btn-outline btn-sm" onclick="OltMgmt.closeWizard()">Batal</button>
+        <button class="btn btn-blue btn-sm" id="wizNext" onclick="OltMgmt.wizNext()">Lanjut →</button>
+        <button class="btn btn-green btn-sm" id="wizSubmit" onclick="OltMgmt.wizSubmit()" style="display:none">Provision Sekarang</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Buat VLAN -->
+<div class="ot-modal-overlay" id="vlanModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3>Buat VLAN</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeVlanModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">VLAN ID</label><input type="number" id="vlanVid" class="form-control" placeholder="100" min="1" max="4094"></div>
+        <div class="form-group" style="flex:2"><label class="form-label">Nama <span class="opt">(opsional)</span></label><input type="text" id="vlanName" class="form-control" placeholder="INTERNET"></div>
+      </div>
+      <div class="info-note">VLAN ID harus 1–4094. Pembuatan VLAN berlaku global di OLT.</div>
+    </div>
+    <div class="ot-modal-foot"><div></div><div class="ot-modal-foot-r">
+      <button class="btn btn-outline btn-sm" onclick="OltMgmt.closeVlanModal()">Batal</button>
+      <button class="btn btn-green btn-sm" id="btnSaveVlan" onclick="OltMgmt.saveVlan()">Buat VLAN</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- Modal: Detail & Edit VLAN -->
+<div class="ot-modal-overlay" id="vlanDetailModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3>Detail VLAN <span id="vlanDetailVid" class="onu-if" style="margin-left:6px"></span></h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeVlanDetail()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <div id="vlanDetailBody">
+        <div class="loading-row" style="padding:30px;text-align:center"><span class="spin"></span> Memuat detail…</div>
+      </div>
+      <div class="form-group" style="margin-top:14px">
+        <label class="form-label">Nama / Deskripsi VLAN</label>
+        <input type="text" id="vlanEditName" class="form-control" placeholder="mis. INTERNET / CCTV">
+        <div class="info-note" style="margin-top:8px">Mengubah nama akan menjalankan <code>vlan &lt;id&gt; → description</code> di OLT. VLAN profile bernama dikelola dari konfigurasi profil OLT.</div>
+      </div>
+    </div>
+    <div class="ot-modal-foot">
+      <button class="btn btn-red-outline btn-sm" id="btnDeleteVlanDetail" onclick="OltMgmt.deleteVlanFromDetail()">Hapus VLAN</button>
+      <div class="ot-modal-foot-r">
+        <button class="btn btn-outline btn-sm" onclick="OltMgmt.closeVlanDetail()">Tutup</button>
+        <button class="btn btn-blue btn-sm" id="btnSaveVlanEdit" onclick="OltMgmt.saveVlanEdit()">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Traffic real-time ONU -->
+<div class="ot-modal-overlay" id="onuTrafficModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3>Traffic ONU <span id="trafficOnuTitle" class="onu-if" style="margin-left:6px"></span></h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeOnuTraffic()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <div class="traffic-cards">
+        <div class="tc tc-down">
+          <div class="tc-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg> Download (ke pelanggan)</div>
+          <div class="tc-val" id="tfDown">—</div>
+          <div class="tc-sub" id="tfDownPps">&nbsp;</div>
+        </div>
+        <div class="tc tc-up">
+          <div class="tc-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg> Upload (dari pelanggan)</div>
+          <div class="tc-val" id="tfUp">—</div>
+          <div class="tc-sub" id="tfUpPps">&nbsp;</div>
+        </div>
+      </div>
+      <div class="traffic-spark">
+        <canvas id="tfSpark" height="90"></canvas>
+      </div>
+      <div class="traffic-foot">
+        <label class="ot-inline-check"><input type="checkbox" id="tfAuto" checked> Auto-refresh (3 dtk)</label>
+        <span id="tfStamp" class="mut" style="font-size:11px"></span>
+      </div>
+      <div class="info-note" style="margin-top:10px">Angka adalah rate sesaat dari OLT (<code>show interface</code>). Download = arah ke pelanggan, Upload = dari pelanggan.</div>
+    </div>
+    <div class="ot-modal-foot"><div></div><div class="ot-modal-foot-r">
+      <button class="btn btn-outline btn-sm" id="tfRefreshBtn" onclick="OltMgmt.refreshOnuTraffic()">Refresh</button>
+      <button class="btn btn-blue btn-sm" onclick="OltMgmt.closeOnuTraffic()">Tutup</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- Modal: VLAN per-ONU (service-port) -->
+<div class="ot-modal-overlay" id="onuVlanModal">
+  <div class="ot-modal-box wide">
+    <div class="ot-modal-hdr">
+      <h3 id="onuVlanTitle">VLAN ONU</h3>
+      <button class="ot-modal-close" onclick="OltMgmt.closeOnuVlan()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="ot-modal-body">
+      <input type="hidden" id="onuVlanRef">
+      <div id="onuVlanList" style="margin-bottom:16px">
+        <div style="text-align:center;padding:24px;color:var(--faint)"><span class="spin"></span> Memuat service-port...</div>
+      </div>
+      <div style="border-top:1px solid #eef2f7;padding-top:14px">
+        <div class="form-label" style="margin-bottom:10px">Tambah / Set Service-Port</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">SP</label><input type="number" id="spSp" class="form-control" value="1" min="1"></div>
+          <div class="form-group"><label class="form-label">GEM</label><input type="number" id="spGem" class="form-control" value="1" min="1"></div>
+          <div class="form-group"><label class="form-label">User VLAN</label><input type="number" id="spUserVlan" class="form-control" placeholder="100"></div>
+          <div class="form-group"><label class="form-label">VLAN</label><input type="number" id="spVlan" class="form-control" placeholder="100"></div>
+        </div>
+        <button class="btn btn-green btn-sm" onclick="OltMgmt.saveOnuVlan()" style="width:100%;justify-content:center">Terapkan VLAN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/vendor/apexcharts/apexcharts.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/olt-management.js"></script>
+</body>
+</html>

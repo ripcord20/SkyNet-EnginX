@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="page-header">
+        <div class="page-header-left"><h1>User Management</h1></div>
+        <div class="page-header-right">
+          <button class="btn btn-primary" onclick="openAddUser()">+ Tambah User</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="userTable">
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="userModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <h3 id="userModalTitle" style="font-size:16px;font-weight:600;margin:0;">Tambah User</h3>
+      <button onclick="closeUserModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b;">x</button>
+    </div>
+    <form id="userForm" onsubmit="event.preventDefault();saveUser();">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Nama *</label>
+        <input id="userName" type="text" placeholder="Nama lengkap" required style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Email *</label>
+        <input id="userEmail" type="email" placeholder="email@domain.com" required style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">No. HP</label>
+        <input id="userPhone" type="text" placeholder="08xxxxxxxxxx" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div id="passwordGroup" style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Password *</label>
+        <input id="passwordField" type="password" placeholder="Minimal 6 karakter" style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:13px;font-weight:500;margin-bottom:6px;">Role *</label>
+        <select id="userRole" required style="width:100%;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;box-sizing:border-box;">
+          <option value="">-- Pilih Role --</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" onclick="closeUserModal()" class="btn btn-secondary">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/users.js"></script>
+</body>
+</html>

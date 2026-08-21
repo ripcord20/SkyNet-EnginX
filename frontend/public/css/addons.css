@@ -1,0 +1,114 @@
+/* ============================================================
+   NETOPS - Addons CSS
+   Tambahkan ke bagian bawah frontend/public/css/app.css
+   ============================================================ */
+
+/* ── Badge variants ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.badge-primary   { background: #dbeafe; color: #1d4ed8; }
+.badge-success   { background: #dcfce7; color: #16a34a; }
+.badge-warning   { background: #fef3c7; color: #d97706; }
+.badge-danger    { background: #fee2e2; color: #dc2626; }
+.badge-secondary { background: #f1f5f9; color: #64748b; }
+
+/* ── Button sizes ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-primary  { background: var(--primary); color: #fff; }
+.btn-primary:hover  { background: var(--primary-dark); }
+.btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ── Icon button small ── */
+.icon-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-btn-sm:hover { background: var(--border); color: var(--text); }
+
+/* ── Live badge ── */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #16a34a;
+}
+.live-dot-sm {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse-dot 1.5s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.page-header-left  { display: flex; align-items: center; gap: 10px; }
+.page-header-left h1 { font-size: 20px; font-weight: 700; }
+.page-header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ── Card ── */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 0; }
+.card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+.card-title-group { display: flex; align-items: center; gap: 8px; }
+.card-icon { width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
+.card-header h3 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 16px 18px; }
+
+/* ── Data table ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); background: var(--bg); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.data-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: var(--bg); }
+
+/* ── Nav badge ── */
+.nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; margin-left: auto; }
+.nav-badge.blue { background: #dbeafe; color: #1d4ed8; }
+.nav-badge.red  { background: #fee2e2; color: #dc2626; }
+
+/* ── Select form control inline ── */
+.form-control { padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--bg); color: var(--text); }
+.form-control:focus { outline: none; border-color: var(--primary); }
+
+/* ── Scrollbar thin ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Loading state ── */
+.loading-state { display: flex; align-items: center; justify-content: center; padding: 40px; color: var(--text-muted); font-size: 13px; gap: 8px; }

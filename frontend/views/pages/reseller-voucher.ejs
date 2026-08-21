@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="/js/app.js"></script>
+  <style>
+    /* ── Reseller Voucher admin — scoped to .rv-scope to avoid clashing app.css ── */
+    /* Bridge: app.css mendefinisikan --bg/--bg-card/--text/--primary/dst.
+       Di sini kita petakan ke nama token yang dipakai komponen halaman ini,
+       sekaligus sediakan fallback supaya aman di tema terang/gelap. */
+    .rv-scope{
+      --rv-teal:#0fb6a3; --rv-teal-deep:#0a8f80;
+      --surface:var(--bg-card,#fff);
+      --surface2:var(--bg,#f8fafc);
+      --text2:var(--text-secondary,#64748b);
+      --text3:var(--text-muted,#94a3b8);
+      --border2:var(--border,#e2e8f0);
+      --blue:var(--primary,#3b82f6);
+      --green:var(--success,#22c55e);
+      --green-l:rgba(34,197,94,.13);
+      --red:var(--danger,#ef4444);
+      --red-l:rgba(239,68,68,.12);
+      --teal:var(--rv-teal);
+      --f:'DM Sans',sans-serif; --fm:'DM Sans',sans-serif;
+      --rv-radius:16px; --rv-radius-sm:11px;
+    }
+    .rv-scope, .rv-scope *{font-family:'DM Sans',sans-serif;}
+    .rv-page{padding:0 0 24px;width:100%;}
+
+    /* Header */
+    .rv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+    .rv-head .ttl h1{font-size:23px;font-weight:700;letter-spacing:-.5px;color:var(--text);line-height:1.1;}
+    .rv-head .ttl p{font-size:13px;color:var(--text2);margin-top:4px;}
+    .rv-head .actions{display:flex;gap:9px;flex-wrap:wrap;}
+
+    /* Overview stat cards — clickable, gaya halaman /collect */
+    .rv-overview{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+    .ov-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:18px;
+      padding:17px 19px;overflow:hidden;transition:box-shadow .18s,transform .18s,border-color .18s;cursor:pointer;
+      -webkit-tap-highlight-color:transparent;}
+    .ov-card:hover{box-shadow:0 12px 30px rgba(20,40,90,.1);transform:translateY(-3px);}
+    .ov-card:active{transform:translateY(-1px);}
+    .ov-card .l{font-size:11.5px;font-weight:600;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:9px;}
+    .ov-card .l .ic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ov-card .l .ic svg{width:17px;height:17px;}
+    .ov-card .v{font-size:26px;font-weight:800;letter-spacing:-.7px;line-height:1;color:#0d1b3e;font-family:var(--fm);}
+    .ov-card .sub{font-size:11.5px;color:var(--text3);margin-top:7px;}
+    .ov-card .arrow{position:absolute;top:16px;right:16px;color:#cbd5e1;opacity:0;transform:translateX(-4px);transition:opacity .18s,transform .18s;}
+    .ov-card:hover .arrow{opacity:1;transform:translateX(0);}
+    /* Varian warna — biru sebagai aksen utama (sesuai halaman lain) */
+    .ov-card.blue{background:linear-gradient(160deg,#f5f9ff,var(--surface));border-color:#e3edfe;}
+    .ov-card.blue:hover{border-color:#bfd7fe;} .ov-card.blue .v{color:var(--blue);} .ov-card.blue .ic{background:var(--blue);color:#fff;}
+    .ov-card.teal{background:linear-gradient(160deg,#f1fdfb,var(--surface));border-color:#d7f3ee;}
+    .ov-card.teal:hover{border-color:#a9e6dc;} .ov-card.teal .v{color:var(--rv-teal-deep);} .ov-card.teal .ic{background:var(--rv-teal-deep);color:#fff;}
+    .ov-card.amber{background:linear-gradient(160deg,#fffaf2,var(--surface));border-color:#f6e7cf;}
+    .ov-card.amber:hover{border-color:#eccfa0;} .ov-card.amber .v{color:#b45309;} .ov-card.amber .ic{background:#d98324;color:#fff;}
+    .ov-card.green{background:linear-gradient(160deg,#f1fbf5,var(--surface));border-color:#cfeedd;}
+    .ov-card.green:hover{border-color:#a7e0c2;} .ov-card.green .v{color:#0a9a5a;} .ov-card.green .ic{background:#0a9a5a;color:#fff;}
+    /* highlight (kartu utama, biru solid) */
+    .ov-card.hl{background:linear-gradient(135deg,var(--blue),#1e3a8a);border:none;}
+    .ov-card.hl .l{color:rgba(255,255,255,.85);} .ov-card.hl .v{color:#fff;} .ov-card.hl .sub{color:rgba(255,255,255,.7);}
+    .ov-card.hl .ic{background:rgba(255,255,255,.2);color:#fff;}
+    .ov-card.hl:hover{box-shadow:0 14px 34px rgba(30,58,138,.32);}
+    .ov-card.hl .arrow{color:rgba(255,255,255,.8);}
+    [data-theme="dark"] .ov-card .v{color:var(--text);}
+    /* Kartu statistik non-klik (mis. di tab Laporan) */
+    .ov-card.static{cursor:default;}
+    .ov-card.static:hover{transform:none;box-shadow:none;}
+    .ov-card.static:hover .arrow{opacity:0;}
+
+    /* Tabs — segmented, scrollable on mobile */
+    .rv-tabs{display:flex;gap:4px;background:var(--surface2,var(--surface));border:1px solid var(--border);
+      padding:4px;border-radius:13px;margin-bottom:18px;width:fit-content;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .rv-tab{padding:9px 18px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;
+      border-radius:9px;cursor:pointer;font-family:var(--f);transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
+    .rv-tab:hover{color:var(--text);}
+    .rv-tab.active{background:#2563eb;color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.32);}
+    .rv-pane{display:none;animation:rvFade .25s ease;} .rv-pane.active{display:block;}
+    @keyframes rvFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+    /* Toolbar */
+    .rv-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+    .rv-search{flex:1;min-width:200px;position:relative;}
+    .rv-search input{width:100%;padding:11px 13px 11px 38px;border:1px solid var(--border);
+      border-radius:var(--rv-radius-sm);font-size:13.5px;font-family:var(--f);outline:none;background:var(--surface);color:var(--text);transition:border-color .15s;}
+    .rv-search input:focus{border-color:var(--blue);}
+    .rv-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);}
+    .rv-select{padding:11px 13px;border:1px solid var(--border);border-radius:var(--rv-radius-sm);
+      font-size:13.5px;font-family:var(--f);background:var(--surface);color:var(--text);outline:none;cursor:pointer;}
+    .rv-select:focus{border-color:var(--blue);}
+
+    .btn{padding:11px 17px;border:none;border-radius:var(--rv-radius-sm);font-size:13.5px;font-weight:600;cursor:pointer;
+      font-family:var(--f);display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:filter .15s,transform .08s;white-space:nowrap;}
+    .btn:active{transform:scale(.98);}
+    .btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--blue) 28%,transparent);}
+    .btn-primary:hover{filter:brightness(1.06);}
+    .btn-soft{background:var(--surface);border:1px solid var(--border);color:var(--text);}
+    .btn-soft:hover{border-color:var(--text3);}
+    .btn-teal{background:linear-gradient(135deg,var(--rv-teal),var(--rv-teal-deep));color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--rv-teal) 30%,transparent);}
+    .btn-block{width:100%;}
+
+    /* Data list — renders as table on desktop, cards on mobile */
+    .rv-list{background:var(--surface);border:1px solid var(--border);border-radius:var(--rv-radius);overflow:hidden;}
+    table.rv-tbl{width:100%;border-collapse:collapse;}
+    .rv-tbl th{text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;
+      letter-spacing:.04em;padding:13px 18px;border-bottom:1px solid var(--border);background:var(--surface2,transparent);}
+    .rv-tbl td{padding:14px 18px;font-size:13.5px;border-bottom:1px solid var(--border2,var(--border));color:var(--text);vertical-align:middle;}
+    .rv-tbl tr:last-child td{border-bottom:none;}
+    .rv-tbl tbody tr{transition:background .12s;}
+    .rv-tbl tbody tr:hover{background:color-mix(in srgb,var(--blue) 4%,transparent);}
+
+    .cell-main{display:flex;align-items:center;gap:11px;}
+    .avatar{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:14px;background:color-mix(in srgb,var(--rv-teal) 15%,transparent);color:var(--rv-teal-deep);font-family:var(--f);}
+    .r-name{font-weight:600;letter-spacing:-.1px;}
+    .r-sub{font-size:12px;color:var(--text2);margin-top:1px;}
+    .r-code{font-family:var(--fm);font-size:12px;color:var(--text2);}
+    .r-bal{font-family:var(--fm);font-weight:700;font-size:14px;}
+    .mono{font-family:var(--fm);}
+
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:11.5px;font-weight:600;}
+    .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+    .badge.on{background:var(--green-l,#e7f7ef);color:var(--green,#0a9a5a);}
+    .badge.off{background:var(--surface2,#f1f3f7);color:var(--text2);}
+    .badge.warn{background:#fef3e0;color:#c47d12;}
+    .badge.danger{background:var(--red-l,#fdeaea);color:var(--red,#e5484d);}
+
+    .row-actions{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end;align-items:center;}
+    .ico-btn{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all .12s;}
+    .ico-btn:hover{color:var(--blue);border-color:var(--blue);background:color-mix(in srgb,var(--blue) 6%,transparent);}
+    .ico-btn.ok:hover{color:var(--green,#0a9a5a);border-color:var(--green,#0a9a5a);background:var(--green-l,#e7f7ef);}
+    .ico-btn.danger:hover{color:var(--red,#e5484d);border-color:var(--red,#e5484d);background:var(--red-l,#fdeaea);}
+
+    .empty{padding:54px 16px;text-align:center;color:var(--text3);font-size:13.5px;}
+    .empty svg{color:var(--border);margin-bottom:12px;}
+    .empty .e-ttl{font-weight:600;color:var(--text2);margin-bottom:3px;}
+    .skel{background:linear-gradient(90deg,var(--border2,#eef1f7) 25%,var(--surface2,#f6f8fb) 50%,var(--border2,#eef1f7) 75%);
+      background-size:200% 100%;animation:rvShine 1.3s infinite;border-radius:8px;}
+    @keyframes rvShine{to{background-position:-200% 0;}}
+
+    /* Modal */
+    .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200;display:none;
+      align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+    .modal-bg.show{display:flex;animation:rvFade .2s ease;}
+    .modal{background:var(--surface);border-radius:20px;width:100%;max-width:540px;max-height:92vh;
+      display:flex;flex-direction:column;box-shadow:0 30px 70px rgba(0,0,0,.3);overflow:hidden;
+      animation:rvModalIn .28s cubic-bezier(.2,.8,.25,1);}
+    @keyframes rvModalIn{from{opacity:0;transform:translateY(16px) scale(.98);}to{opacity:1;transform:none;}}
+    .modal-hd{padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border);}
+    .modal-hd .hd-ttl{display:flex;align-items:center;gap:11px;}
+    .modal-hd .hd-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      background:color-mix(in srgb,var(--rv-teal) 14%,transparent);color:var(--rv-teal-deep);}
+    .modal-hd h3{font-size:16.5px;font-weight:700;letter-spacing:-.2px;}
+    .modal-hd .hd-sub{font-size:12px;color:var(--text2);margin-top:1px;}
+    .modal-x{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--surface);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0;transition:all .12s;}
+    .modal-x:hover{color:var(--text);border-color:var(--text3);}
+    .modal-bd{padding:22px 24px;overflow-y:auto;}
+    .modal-ft{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;background:var(--surface);}
+
+    .fg{margin-bottom:16px;}
+    .fg:last-child{margin-bottom:0;}
+    .fg label{display:block;font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:7px;}
+    .fg label .req{color:var(--red,#e5484d);}
+    .fg input,.fg select,.fg textarea{width:100%;padding:11px 13px;border:1px solid var(--border);
+      border-radius:var(--rv-radius-sm);font-size:14px;font-family:var(--f);outline:none;background:var(--surface);color:var(--text);transition:border-color .12s,box-shadow .12s;}
+    .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 14%,transparent);}
+    .fg input:disabled{background:var(--surface2,#f4f6fa);color:var(--text2);cursor:not-allowed;}
+    .fg .hint{font-size:11.5px;color:var(--text3);margin-top:6px;line-height:1.4;}
+    .fg-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .fg-money{position:relative;}
+    .fg-money input{padding-left:38px;font-family:var(--fm);font-weight:600;}
+    .fg-money::before{content:'Rp';position:absolute;left:13px;top:38px;font-size:13px;color:var(--text3);font-weight:600;pointer-events:none;}
+
+    /* Toggle switch */
+    .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;
+      border:1px solid var(--border);border-radius:var(--rv-radius-sm);background:var(--surface2,transparent);}
+    .switch-row .sl{font-size:13.5px;font-weight:600;}
+    .switch-row .sd{font-size:11.5px;color:var(--text2);margin-top:2px;}
+    .switch{position:relative;width:44px;height:25px;flex-shrink:0;}
+    .switch input{opacity:0;width:0;height:0;position:absolute;}
+    .switch .track{position:absolute;inset:0;background:var(--border);border-radius:100px;transition:background .2s;cursor:pointer;}
+    .switch .track::before{content:'';position:absolute;width:19px;height:19px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .switch input:checked + .track{background:var(--rv-teal);}
+    .switch input:checked + .track::before{transform:translateX(19px);}
+    /* Compact toggle for in-table use */
+    .switch.sm{width:38px;height:21px;}
+    .switch.sm .track::before{width:15px;height:15px;left:3px;top:3px;}
+    .switch.sm input:checked + .track::before{transform:translateX(17px);}
+    .pub-cell{display:flex;align-items:center;gap:9px;}
+    .pub-price{font-size:11px;color:var(--rv-teal);font-weight:700;white-space:nowrap;}
+    .pub-price.off{color:var(--text3,#9aa3b2);font-weight:500;}
+
+    /* Transactions / proof list in modal */
+    .tx-mini{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--border2,var(--border));}
+    .tx-mini:last-child{border-bottom:none;}
+    .tx-mini .ti{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .tx-mini .ti.topup{background:var(--green-l,#e7f7ef);color:var(--green,#0a9a5a);}
+    .tx-mini .ti.purchase{background:color-mix(in srgb,var(--blue) 12%,transparent);color:var(--blue);}
+    .tx-mini .ti.refund{background:#fef3e0;color:#c47d12;}
+    .tx-mini .ti.adjust{background:var(--surface2,#f1f3f7);color:var(--text2);}
+    .tx-mini .d{font-size:13px;font-weight:600;}
+    .tx-mini .s{font-size:11.5px;color:var(--text2);margin-top:2px;}
+    .tx-mini .a{font-family:var(--fm);font-weight:700;font-size:13.5px;}
+    .tx-mini .a.plus{color:var(--green,#0a9a5a);} .tx-mini .a.minus{color:var(--text);}
+
+    .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:#15151a;
+      color:#fff;padding:13px 20px;border-radius:13px;font-size:13.5px;font-weight:500;z-index:300;opacity:0;
+      transition:all .25s;pointer-events:none;box-shadow:0 12px 32px rgba(0,0,0,.28);max-width:88%;text-align:center;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    /* ── Mobile ── */
+    @media (max-width:1100px){
+      .rv-overview{grid-template-columns:repeat(2,1fr);}
+      #repStats{grid-template-columns:repeat(3,1fr);}
+    }
+    @media (max-width:880px){
+      .rv-overview{grid-template-columns:repeat(2,1fr);}
+      #repStats{grid-template-columns:1fr !important;}
+    }
+    @media (max-width:560px){
+      .rv-overview{grid-template-columns:1fr;}
+    }
+    @media (max-width:640px){
+      .rv-page{padding:0 0 24px;}
+      .rv-head{flex-direction:column;align-items:stretch;gap:14px;}
+      .rv-head .actions{width:100%;}
+      .rv-head .actions .btn{flex:1;}
+      .ov-card{padding:15px 16px;}
+      .ov-card .v{font-size:22px;}
+      .rv-tabs{width:100%;}
+      .rv-tab{flex:1;justify-content:center;padding:9px 10px;}
+      .rv-toolbar{flex-direction:column;align-items:stretch;}
+      .rv-toolbar .btn,.rv-toolbar .rv-select{width:100%;}
+      .rv-search{min-width:0;max-width:none !important;}
+
+      /* Table → cards */
+      .rv-tbl thead{display:none;}
+      .rv-tbl,.rv-tbl tbody,.rv-tbl tr,.rv-tbl td{display:block;width:100%;}
+      .rv-tbl tr{border:1px solid var(--border);border-radius:var(--rv-radius);margin-bottom:11px;padding:6px 4px;background:var(--surface);}
+      .rv-tbl tbody tr:hover{background:var(--surface);}
+      .rv-tbl td{border:none !important;padding:8px 15px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:right;}
+      .rv-tbl td::before{content:attr(data-label);font-size:11.5px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.03em;text-align:left;flex-shrink:0;}
+      .rv-tbl td.cell-main-td{justify-content:flex-start;text-align:left;padding-top:13px;}
+      .rv-tbl td.cell-main-td::before{display:none;}
+      .rv-tbl td.cell-actions{justify-content:flex-end;padding-bottom:13px;}
+      .rv-tbl td.cell-actions::before{display:none;}
+      .row-actions{justify-content:flex-end;}
+      .rv-list{background:transparent;border:none;border-radius:0;overflow:visible;}
+
+      .modal-bg{padding:0;align-items:flex-end;}
+      .modal{max-width:none;max-height:94vh;border-radius:22px 22px 0 0;animation:rvSheetIn .3s cubic-bezier(.2,.8,.25,1);}
+      @keyframes rvSheetIn{from{transform:translateY(100%);}to{transform:none;}}
+      .fg-row{grid-template-columns:1fr;gap:0;}
+      .fg-row .fg{margin-bottom:16px;}
+      .fg-money::before{top:39px;}
+      .modal-ft{flex-direction:column-reverse;}
+      .modal-ft .btn{width:100%;}
+    }
+
+    /* ── Report charts (admin) ── */
+    .rep-charts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
+    @media(max-width:980px){ .rep-charts{grid-template-columns:1fr;} }
+    .rep-chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rv-radius);padding:17px 16px 8px;}
+    .rep-chart-card .rcc-hd{display:flex;align-items:center;justify-content:space-between;padding:0 4px 6px;}
+    .rep-chart-card .rcc-t{font-size:14px;font-weight:800;letter-spacing:-.2px;color:var(--text);}
+    .rep-chart-card .rcc-s{font-size:11.5px;color:var(--text3);margin-top:1px;}
+    .sec-title-rep{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);margin:4px 2px 11px;}
+    .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9px;
+      font-family:var(--fm);font-weight:800;font-size:12px;background:var(--surface2,#eef2f9);color:var(--text2);}
+    .rank-badge.r1{background:#fef3c7;color:#b45309;} .rank-badge.r2{background:#e5e9f0;color:#475569;} .rank-badge.r3{background:#fde9d9;color:#b45309;}
+
+    /* ── Reseller hotspot vouchers (admin modal) ── */
+    .rvv-meta{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+    @media(max-width:560px){ .rvv-meta{grid-template-columns:repeat(3,1fr);} }
+    .rvv-mc{background:var(--surface2,#f6f9ff);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;}
+    .rvv-mc .n{font-size:18px;font-weight:800;font-family:var(--fm);letter-spacing:-.4px;}
+    .rvv-mc .t{font-size:10px;color:var(--text3);font-weight:600;margin-top:2px;}
+    .rvv-mc.c-active .n{color:#0a9a5a;} .rvv-mc.c-used .n{color:#b9810b;}
+    .rvv-mc.c-expired .n{color:#dc2626;} .rvv-mc.c-unused .n{color:#64748b;}
+    .rvv-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+    .rvv-chips{display:flex;gap:6px;flex-wrap:wrap;}
+    .rvv-chip{border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:700;
+      padding:6px 11px;border-radius:100px;cursor:pointer;font-family:var(--f);transition:all .15s;display:inline-flex;gap:5px;align-items:center;}
+    .rvv-chip.on{background:#0d1b3e;color:#fff;border-color:#0d1b3e;}
+    .rvv-chip span{font-family:var(--fm);font-size:10.5px;opacity:.8;}
+    .rvv-row{display:flex;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:11px 13px;margin-bottom:8px;}
+    .rvv-row .d{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+    .rvv-row.s-active .d{background:#0a9a5a;box-shadow:0 0 0 3px rgba(10,154,90,.18);}
+    .rvv-row.s-used .d{background:#b9810b;} .rvv-row.s-expired .d{background:#dc2626;} .rvv-row.s-unused .d{background:#c2cad8;}
+    .rvv-row .mid{flex:1;min-width:0;}
+    .rvv-row .u{font-size:13.5px;font-weight:800;font-family:var(--fm);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .rvv-row .s{font-size:11px;color:var(--text3);margin-top:2px;}
+    .rvv-bdg{font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:7px;flex-shrink:0;letter-spacing:.03em;}
+    .rvv-bdg.active{background:#e7f7ef;color:#0a9a5a;} .rvv-bdg.used{background:#fef6e0;color:#b9810b;}
+    .rvv-bdg.expired{background:#fdeaea;color:#dc2626;} .rvv-bdg.unused{background:#f3f5fa;color:#64748b;}
+    .rvv-row .acts{display:flex;gap:5px;flex-shrink:0;}
+    .rvv-ib{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:all .12s;}
+    .rvv-ib:active{transform:scale(.9);}
+    .rvv-ib.cut:hover{color:#b9810b;border-color:#b9810b;} .rvv-ib.del:hover{color:#dc2626;border-color:#dc2626;}
+
+    /* ── Styled confirm dialog (ganti confirm/prompt bawaan browser) ── */
+    .cf-overlay{position:fixed;inset:0;z-index:240;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);
+      display:none;align-items:center;justify-content:center;padding:20px;}
+    .cf-overlay.show{display:flex;animation:rvFade .16s ease;}
+    .cf-box{background:var(--surface);border-radius:20px;width:min(420px,94vw);padding:26px 24px 22px;
+      text-align:center;box-shadow:0 26px 70px rgba(13,27,62,.4);animation:rvModalIn .22s cubic-bezier(.2,.8,.25,1);}
+    .cf-icn{width:56px;height:56px;border-radius:17px;margin:0 auto 15px;display:flex;align-items:center;justify-content:center;}
+    .cf-icn.ok{background:var(--green-l,#e7f7ef);color:var(--green,#0a9a5a);}
+    .cf-icn.warn{background:#fef2f2;color:var(--red,#dc2626);}
+    .cf-icn.info{background:color-mix(in srgb,var(--blue) 12%,transparent);color:var(--blue);}
+    .cf-ttl{font-size:18px;font-weight:800;letter-spacing:-.3px;color:var(--text);margin-bottom:7px;}
+    .cf-msg{font-size:13.5px;color:var(--text2);line-height:1.55;}
+    .cf-field{text-align:left;margin-top:15px;}
+    .cf-field label{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+    .cf-field textarea{width:100%;box-sizing:border-box;padding:11px 13px;border:1.5px solid var(--border);border-radius:11px;
+      font-size:13.5px;font-family:inherit;resize:vertical;outline:none;background:var(--surface);color:var(--text);}
+    .cf-field textarea:focus{border-color:var(--blue);}
+    .cf-btns{display:flex;gap:10px;margin-top:22px;}
+    .cf-btn{flex:1;padding:12px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;transition:filter .15s;}
+    .cf-cancel{background:var(--surface2,#f1f5f9);color:var(--text2);} .cf-cancel:hover{filter:brightness(.97);}
+    .cf-ok.is-ok{background:var(--green,#0a9a5a);color:#fff;} .cf-ok.is-warn{background:var(--red,#dc2626);color:#fff;} .cf-ok.is-info{background:var(--blue);color:#fff;}
+    .cf-ok:hover{filter:brightness(.95);}
+
+    /* ── Topup detail modal (mewah: kartu nominal + foto bukti + info) ── */
+    .td-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:0;}
+    @media(max-width:720px){ .td-grid{grid-template-columns:1fr;} }
+    .td-imgcol{padding:20px;border-right:1px solid var(--border);display:flex;flex-direction:column;}
+    @media(max-width:720px){ .td-imgcol{border-right:none;border-bottom:1px solid var(--border);} }
+    .td-lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;}
+    .td-frame{flex:1;min-height:230px;max-height:52vh;border-radius:14px;border:1px solid var(--border);background:var(--surface2,#f4f8ff);
+      overflow:auto;display:flex;align-items:center;justify-content:center;}
+    .td-frame img{display:block;max-width:100%;height:auto;}
+    .td-frame iframe{width:100%;height:52vh;border:none;}
+    .td-frame.empty-frame{border-style:dashed;}
+    .td-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;gap:5px;}
+    .td-empty .ei{width:60px;height:60px;border-radius:17px;background:var(--surface2,#eef2f9);color:var(--text3);display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+    .td-empty .et{font-size:14px;font-weight:800;color:var(--text2);} .td-empty .es{font-size:12px;color:var(--text3);max-width:220px;line-height:1.5;}
+    .td-open{margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:var(--blue);
+      text-decoration:none;padding:10px;border-radius:11px;background:color-mix(in srgb,var(--blue) 8%,transparent);border:1px solid color-mix(in srgb,var(--blue) 25%,transparent);transition:filter .15s;}
+    .td-open:hover{filter:brightness(.97);}
+    .td-infocol{padding:20px;display:flex;flex-direction:column;}
+    .td-amt{background:linear-gradient(135deg,var(--blue),#1e3a8a);border-radius:15px;padding:16px 18px;margin-bottom:16px;}
+    .td-amt .k{font-size:11px;font-weight:600;color:rgba(255,255,255,.72);letter-spacing:.03em;}
+    .td-amt .v{font-size:27px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-top:3px;color:#fff;font-family:var(--fm);}
+    .td-st{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:4px 11px;border-radius:8px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.2);color:#fff;}
+    .td-rows{display:flex;flex-direction:column;}
+    .td-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--border);}
+    .td-row:last-child{border-bottom:none;}
+    .td-row .rk{font-size:12px;color:var(--text3);font-weight:600;flex-shrink:0;}
+    .td-row .rv{font-size:12.5px;color:var(--text);font-weight:700;text-align:right;word-break:break-word;}
+    .td-acts{display:flex;gap:10px;margin-top:18px;}
+    .td-acts .btn{flex:1;justify-content:center;}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+</head>
+<body>
+<div class="app-layout rv-scope">
+<%- include('../partials/sidebar') %>
+
+<div class="main-content">
+  <%- include('../partials/topbar') %>
+
+  <main class="page-content">
+  <div class="rv-page">
+    <div class="rv-head">
+      <div class="ttl">
+        <h1>Reseller Voucher</h1>
+        <p>Kelola akun reseller, isi saldo deposit, dan atur paket voucher hotspot</p>
+      </div>
+      <div class="actions">
+        <button class="btn btn-soft" onclick="openPromoManager()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          Promo
+        </button>
+        <button class="btn btn-soft" onclick="openTopupSettings()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+          Pengaturan
+        </button>
+        <a class="btn btn-soft" href="/reseller/login" target="_blank">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg>
+          Dashboard Reseller
+        </a>
+      </div>
+    </div>
+
+    <!-- Overview stats — clickable -->
+    <div class="rv-overview" id="overview">
+      <div class="ov-card hl" onclick="rvTab('resellers')" role="button" tabindex="0">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg></span>
+        <div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Total Reseller</div>
+        <div class="v" id="ovResellers">—</div>
+        <div class="sub">akun penjual voucher</div>
+      </div>
+      <div class="ov-card blue" onclick="rvTab('topups')" role="button" tabindex="0">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg></span>
+        <div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>Saldo Beredar</div>
+        <div class="v" id="ovBalance">—</div>
+        <div class="sub">total deposit reseller</div>
+      </div>
+      <div class="ov-card amber" onclick="rvTab('topups', 'waiting_verification')" role="button" tabindex="0">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg></span>
+        <div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>Perlu Verifikasi</div>
+        <div class="v" id="ovPending">—</div>
+        <div class="sub">top-up menunggu konfirmasi</div>
+      </div>
+      <div class="ov-card teal" onclick="rvTab('report')" role="button" tabindex="0">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 18l6-6-6-6"/></svg></span>
+        <div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v10H2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>Voucher Terjual</div>
+        <div class="v" id="ovVouchers">—</div>
+        <div class="sub">lihat laporan penjualan</div>
+      </div>
+    </div>
+
+    <div class="rv-tabs">
+      <button class="rv-tab active" data-tab="resellers" onclick="rvTab('resellers')">Reseller</button>
+      <button class="rv-tab" data-tab="topups" onclick="rvTab('topups')">Top-up <span id="topupBadge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;padding:1px 7px;font-size:10px;line-height:1.5">0</span></button>
+      <button class="rv-tab" data-tab="packages" onclick="rvTab('packages')">Paket Voucher</button>
+      <button class="rv-tab" data-tab="puborders" onclick="rvTab('puborders')">Order Publik <span id="pubOrderBadge" style="display:none;background:#ef4444;color:#fff;border-radius:100px;padding:1px 7px;font-size:10px;line-height:1.5">0</span></button>
+      <button class="rv-tab" data-tab="report" onclick="rvTab('report')">Laporan</button>
+    </div>
+
+    <!-- PANE: Resellers -->
+    <div class="rv-pane active" id="pane-resellers">
+      <div class="rv-toolbar">
+        <div class="rv-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="rSearch" placeholder="Cari nama, kode, atau telepon…" oninput="debouncedLoadResellers()">
+        </div>
+        <button class="btn btn-primary" onclick="openResellerModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+          Reseller Baru
+        </button>
+      </div>
+      <div class="rv-list">
+        <table class="rv-tbl">
+          <thead><tr><th>Reseller</th><th>Saldo</th><th>Router</th><th>Status</th><th style="width:1%;text-align:right">Aksi</th></tr></thead>
+          <tbody id="resellerRows"><tr><td colspan="5" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANE: Top-ups -->
+    <div class="rv-pane" id="pane-topups">
+      <div class="rv-toolbar">
+        <select id="topupStatusFilter" class="rv-select" onchange="loadTopups()">
+          <option value="waiting_verification">Perlu Verifikasi</option>
+          <option value="">Semua status</option>
+          <option value="pending">Menunggu pembayaran</option>
+          <option value="paid">Lunas</option>
+          <option value="rejected">Ditolak</option>
+          <option value="expired">Kedaluwarsa</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-soft" onclick="loadTopups()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+          Muat ulang
+        </button>
+      </div>
+      <div class="rv-list">
+        <table class="rv-tbl">
+          <thead><tr><th>Reseller</th><th>Nominal</th><th>Metode</th><th>Status</th><th>Waktu</th><th style="width:1%;text-align:right">Aksi</th></tr></thead>
+          <tbody id="topupRows"><tr><td colspan="6" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANE: Packages -->
+    <div class="rv-pane" id="pane-packages">
+      <div class="rv-toolbar">
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="openPackageModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>
+          Paket Baru
+        </button>
+      </div>
+      <div class="rv-list">
+        <table class="rv-tbl">
+          <thead><tr><th>Paket</th><th>Profile MikroTik</th><th>Modal</th><th>Harga Jual</th><th>Status</th><th>Publik</th><th style="width:1%;text-align:right">Aksi</th></tr></thead>
+          <tbody id="packageRows"><tr><td colspan="7" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANE: Order Publik (pembelian voucher dari /beli-voucher) -->
+    <div class="rv-pane" id="pane-puborders">
+      <div class="rv-toolbar">
+        <div class="rv-search" style="flex:1;min-width:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" id="pubOrderSearch" placeholder="Cari kode / nama / WA…" oninput="debouncePubOrders()">
+        </div>
+        <select id="pubOrderStatus" class="rv-select" onchange="loadPublicOrders()">
+          <option value="">Semua status</option>
+          <option value="pending">Menunggu bayar</option>
+          <option value="paid">Sudah bayar</option>
+          <option value="delivered">Terkirim</option>
+          <option value="failed">Gagal/ditolak</option>
+          <option value="expired">Kadaluarsa</option>
+        </select>
+        <button class="btn btn-soft" onclick="loadPublicOrders()" title="Muat ulang">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
+      <div class="rv-list">
+        <table class="rv-tbl">
+          <thead><tr><th>Order</th><th>Paket</th><th>Pembeli</th><th>Bayar</th><th>Status</th><th style="width:1%;text-align:right">Aksi</th></tr></thead>
+          <tbody id="pubOrderRows"><tr><td colspan="6" class="empty">Memuat…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PANE: Report -->
+    <div class="rv-pane" id="pane-report">
+      <div class="rv-toolbar">
+        <div class="rv-search" style="flex:0 0 auto;min-width:0">
+          <input type="date" id="gRepFrom" class="rv-select" style="padding-left:13px">
+        </div>
+        <div class="rv-search" style="flex:0 0 auto;min-width:0">
+          <input type="date" id="gRepTo" class="rv-select" style="padding-left:13px">
+        </div>
+        <button class="btn btn-teal" onclick="loadGlobalReport()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Tampilkan
+        </button>
+      </div>
+      <div class="rv-overview" id="repStats" style="margin-bottom:16px"></div>
+
+      <!-- Charts -->
+      <div class="rep-charts">
+        <div class="rep-chart-card">
+          <div class="rcc-hd">
+            <div><div class="rcc-t">Pemasukan & Penjualan</div><div class="rcc-s">deposit masuk vs modal voucher terpakai per hari</div></div>
+          </div>
+          <div id="repChartIncome" style="min-height:280px"></div>
+        </div>
+        <div class="rep-chart-card">
+          <div class="rcc-hd"><div><div class="rcc-t">Performa Reseller</div><div class="rcc-s">voucher terjual per reseller (top 8)</div></div></div>
+          <div id="repChartPerf" style="min-height:280px"></div>
+        </div>
+      </div>
+
+      <div class="sec-title-rep">PERINGKAT RESELLER</div>
+      <div class="rv-list">
+        <table class="rv-tbl">
+          <thead><tr><th style="width:46px">#</th><th>Reseller</th><th style="text-align:right">Voucher</th><th style="text-align:right">Omzet</th><th style="text-align:right">Keuntungan</th></tr></thead>
+          <tbody id="repRows"><tr><td colspan="5" class="empty">Pilih periode lalu tekan Tampilkan.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  </main>
+</div>
+</div>
+
+<!-- Reseller modal -->
+<div class="modal-bg rv-scope" id="resellerModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></div>
+        <div><h3 id="rmTitle">Reseller Baru</h3><div class="hd-sub">Akun penjual voucher hotspot</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="rmId">
+      <div class="fg-row">
+        <div class="fg"><label>Kode Reseller <span class="req">*</span></label><input id="rmCode" placeholder="WARUNG01" style="text-transform:uppercase"><div class="hint">Dipakai untuk login. Tidak bisa diubah setelah dibuat.</div></div>
+        <div class="fg"><label>Nama <span class="req">*</span></label><input id="rmName" placeholder="Warung Kopi Bu Sri"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Telepon</label><input id="rmPhone" placeholder="08xxxxxxxxxx"></div>
+        <div class="fg"><label id="rmPwLabel">Password <span class="req">*</span></label><input id="rmPassword" type="text" placeholder="min. 6 karakter"></div>
+      </div>
+      <div class="fg"><label>Alamat</label><input id="rmAddress" placeholder="Opsional"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Router MikroTik</label><select id="rmDevice" onchange="loadHotspotServers()"><option value="">Default (env)</option></select></div>
+        <div class="fg"><label>Hotspot Server</label><select id="rmServer"><option value="all">all (semua server)</option></select><div class="hint" id="rmServerHint">Diambil otomatis dari router. Pilih "all" untuk semua server.</div></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Maks. voucher / generate</label><input id="rmMaxBatch" type="number" value="100"></div>
+        <div class="fg fg-money" id="rmInitWrap"><label>Saldo Awal</label><input id="rmInitBalance" type="number" value="0"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Diskon Modal (%)</label><input id="rmDiscount" type="number" min="0" max="100" step="0.5" value="0"><div class="hint">Diskon dari harga modal paket (mis. 10 = bayar 90%). Override khusus per paket lewat tombol "Harga".</div></div>
+        <div class="fg"><label>Tier Harga</label><select id="rmTier"><option value="">—</option><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option><option value="platinum">Platinum</option></select></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Induk (Master Agen)</label><select id="rmParent"><option value="">— (langsung di bawah admin)</option></select><div class="hint">Untuk keagenan bertingkat. Penjualan sub-reseller bisa beri komisi ke induk.</div></div>
+        <div class="fg"><label>Komisi untuk Induk (%)</label><input id="rmCommission" type="number" min="0" max="100" step="0.5" value="0"></div>
+      </div>
+      <div class="fg" id="rmActiveWrap" style="display:none">
+        <div class="switch-row">
+          <div><div class="sl">Akun aktif</div><div class="sd">Reseller bisa login & generate voucher</div></div>
+          <label class="switch"><input type="checkbox" id="rmActive" checked><span class="track"></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-soft" onclick="closeModals()">Batal</button>
+      <button class="btn btn-primary" id="rmSave" onclick="saveReseller()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topup (admin isi saldo manual) modal -->
+<div class="modal-bg rv-scope" id="topupModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h2"/></svg></div>
+        <div><h3>Isi / Atur Saldo</h3><div class="hd-sub" id="tuName">—</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="tuId">
+      <div class="fg"><label>Saldo saat ini</label><input id="tuBalance" disabled></div>
+      <div class="fg"><label>Jenis</label>
+        <select id="tuType"><option value="topup">Top-up (tambah saldo)</option><option value="adjust">Penyesuaian (+/-)</option></select>
+      </div>
+      <div class="fg fg-money"><label>Nominal</label><input id="tuAmount" type="number" placeholder="50000"><div class="hint">Untuk penyesuaian, gunakan nilai negatif untuk mengurangi saldo.</div></div>
+      <div class="fg"><label>Keterangan</label><input id="tuDesc" placeholder="mis. Transfer BCA 12 Jun"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-soft" onclick="openTransactions()">Lihat Riwayat</button>
+      <button class="btn btn-primary" onclick="submitTopup()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transactions modal -->
+<div class="modal-bg rv-scope" id="txModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <div><h3>Riwayat Transaksi</h3><div class="hd-sub">Mutasi saldo reseller</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd" id="txBody"><div class="empty">Memuat…</div></div>
+  </div>
+</div>
+
+<!-- Package modal -->
+<div class="modal-bg rv-scope" id="packageModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v10H2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+        <div><h3 id="pmTitle">Paket Baru</h3><div class="hd-sub">Paket voucher yang dijual reseller</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <input type="hidden" id="pmId">
+      <div class="fg-row">
+        <div class="fg"><label>Nama Paket <span class="req">*</span></label><input id="pmName" placeholder="Voucher 1 Jam"></div>
+        <div class="fg"><label>Profile MikroTik <span class="req">*</span></label><input id="pmProfile" placeholder="1jam"><div class="hint">Nama hotspot user-profile di RouterOS.</div></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Label Durasi</label><input id="pmDuration" placeholder="1 Jam"></div>
+        <div class="fg"><label>Limit Uptime</label><input id="pmUptime" placeholder="1h"><div class="hint">mis. 1h, 1d, 30d. Kosong = unlimited.</div></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg fg-money"><label>Harga Modal <span class="req">*</span></label><input id="pmCost" type="number" placeholder="1000"><div class="hint">Dipotong dari saldo reseller / voucher.</div></div>
+        <div class="fg fg-money"><label>Harga Jual Sugesti</label><input id="pmSell" type="number" placeholder="2000"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Prefix Kode</label><input id="pmPrefix" placeholder="wifi" value="v"></div>
+        <div class="fg"><label>Panjang Kode</label><input id="pmCodeLen" type="number" value="5"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Router (opsional)</label><select id="pmDevice"><option value="">Semua router</option></select></div>
+        <div class="fg"><label>Urutan</label><input id="pmSort" type="number" value="0"></div>
+      </div>
+      <div class="fg">
+        <div class="switch-row">
+          <div><div class="sl">Paket aktif</div><div class="sd">Tampil di dashboard reseller</div></div>
+          <label class="switch"><input type="checkbox" id="pmActive" checked><span class="track"></span></label>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="switch-row">
+          <div><div class="sl">Jual di halaman publik</div><div class="sd">Tampil di /beli-voucher untuk umum</div></div>
+          <label class="switch"><input type="checkbox" id="pmPublic"><span class="track"></span></label>
+        </div>
+      </div>
+      <div class="fg fg-money">
+        <label>Harga Jual Publik</label>
+        <input id="pmPublicPrice" type="number" placeholder="Kosongkan = ikut Harga Jual Sugesti">
+        <div class="hint">Harga ke pembeli di halaman publik. Kosong/0 = pakai Harga Jual Sugesti.</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-soft" onclick="closeModals()">Batal</button>
+      <button class="btn btn-primary" onclick="savePackage()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topup settings modal -->
+<div class="modal-bg rv-scope" id="topupSettingsModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div>
+        <div><h3>Pengaturan Top-up</h3><div class="hd-sub">Metode isi saldo untuk reseller</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <div class="fg">
+        <div class="switch-row">
+          <div><div class="sl">Transfer Manual / QRIS</div><div class="sd">Reseller upload bukti, admin verifikasi</div></div>
+          <label class="switch"><input type="checkbox" id="setManual"><span class="track"></span></label>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="switch-row">
+          <div><div class="sl">Pembayaran Otomatis</div><div class="sd">Payment gateway — saldo masuk otomatis</div></div>
+          <label class="switch"><input type="checkbox" id="setGateway"><span class="track"></span></label>
+        </div>
+        <div class="hint" id="setGatewayHint">Butuh payment gateway aktif di Pengaturan utama.</div>
+      </div>
+      <div class="fg fg-money"><label>Minimal Top-up</label><input id="setMin" type="number" placeholder="10000"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-soft" onclick="closeModals()">Batal</button>
+      <button class="btn btn-primary" onclick="saveTopupSettings()">Simpan Pengaturan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Styled confirm dialog -->
+<div class="cf-overlay rv-scope" id="confirmDialog">
+  <div class="cf-box">
+    <div class="cf-icn info" id="cfIcn"></div>
+    <div class="cf-ttl" id="cfTitle">Konfirmasi</div>
+    <div class="cf-msg" id="cfMsg"></div>
+    <div class="cf-field" id="cfField" style="display:none">
+      <label id="cfFieldLbl">Alasan</label>
+      <textarea id="cfInput" rows="3" placeholder="Opsional…"></textarea>
+    </div>
+    <div class="cf-btns">
+      <button class="cf-btn cf-cancel" id="cfCancel">Batal</button>
+      <button class="cf-btn cf-ok is-info" id="cfOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Topup detail modal -->
+<div class="modal-bg rv-scope" id="topupDetailModal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/></svg></div>
+        <div><h3>Detail Top-up</h3><div class="hd-sub" id="tdRef">—</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd" style="padding:0">
+      <div class="td-grid">
+        <div class="td-imgcol">
+          <div class="td-lbl">Bukti Pembayaran</div>
+          <div class="td-frame" id="tdFrame"><div class="td-empty"><div class="ei"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div><div class="td-empty-txt">Memuat…</div></div></div>
+          <a id="tdOpen" href="#" target="_blank" rel="noopener" class="td-open" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            Buka gambar ukuran penuh
+          </a>
+        </div>
+        <div class="td-infocol">
+          <div class="td-lbl">Informasi Top-up</div>
+          <div class="td-amt">
+            <div class="k">Nominal Top-up</div>
+            <div class="v" id="tdAmount">Rp 0</div>
+            <div id="tdStatusWrap"></div>
+          </div>
+          <div class="td-rows">
+            <div class="td-row"><span class="rk">Reseller</span><span class="rv" id="tdReseller">—</span></div>
+            <div class="td-row"><span class="rk">Kode</span><span class="rv" id="tdCode">—</span></div>
+            <div class="td-row"><span class="rk">No. HP</span><span class="rv" id="tdPhone">—</span></div>
+            <div class="td-row"><span class="rk">Metode</span><span class="rv" id="tdMethod">—</span></div>
+            <div class="td-row"><span class="rk">Ref</span><span class="rv mono" id="tdRefRow">—</span></div>
+            <div class="td-row"><span class="rk">Dibuat</span><span class="rv" id="tdCreated">—</span></div>
+            <div class="td-row" id="tdNoteRow" style="display:none"><span class="rk">Catatan</span><span class="rv" id="tdNote">—</span></div>
+            <div class="td-row" id="tdRejectRow" style="display:none"><span class="rk" style="color:var(--red)">Alasan Tolak</span><span class="rv" id="tdReject" style="color:var(--red)">—</span></div>
+            <div class="td-row" id="tdVerifierRow" style="display:none"><span class="rk">Diverifikasi oleh</span><span class="rv" id="tdVerifier">—</span></div>
+          </div>
+          <div class="td-acts" id="tdActions" style="display:none">
+            <button class="btn btn-soft" id="tdRejectBtn">Tolak</button>
+            <button class="btn btn-teal" id="tdVerifyBtn">Setujui &amp; Kredit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reseller hotspot vouchers modal -->
+<div class="modal-bg rv-scope" id="rvVouchersModal">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+        <div><h3 id="rvvTitle">Voucher Hotspot</h3><div class="hd-sub" id="rvvSub">—</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()" aria-label="Tutup"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <div class="rvv-meta" id="rvvMeta"></div>
+      <div class="rvv-toolbar">
+        <div class="rvv-chips" id="rvvChips">
+          <button class="rvv-chip on" data-f="" onclick="rvvFilter('')">Semua <span id="rvc-all">0</span></button>
+          <button class="rvv-chip" data-f="active" onclick="rvvFilter('active')">Online <span id="rvc-active">0</span></button>
+          <button class="rvv-chip" data-f="used" onclick="rvvFilter('used')">Terpakai <span id="rvc-used">0</span></button>
+          <button class="rvv-chip" data-f="expired" onclick="rvvFilter('expired')">Expired <span id="rvc-expired">0</span></button>
+          <button class="rvv-chip" data-f="unused" onclick="rvvFilter('unused')">Belum <span id="rvc-unused">0</span></button>
+        </div>
+        <button class="btn btn-soft" onclick="bulkDeleteExpired()" title="Hapus semua voucher expired" style="color:#dc2626"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Expired</button>
+        <button class="btn btn-soft" onclick="reloadResellerVouchers()" title="Muat ulang"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+      </div>
+      <div id="rvvList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Promo manager modal (#10) -->
+<div class="modal-bg rv-scope" id="promoModal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-hd">
+      <div class="hd-ttl">
+        <div class="hd-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg></div>
+        <div><h3>Promo Top-up</h3><div class="hd-sub">Bonus saldo untuk reseller</div></div>
+      </div>
+      <button class="modal-x" onclick="closeModals()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-bd">
+      <button class="btn btn-teal" onclick="newPromo()" style="margin-bottom:14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Promo Baru</button>
+      <div id="promoForm" style="display:none;background:var(--surface2,#f6f9ff);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px">
+        <input type="hidden" id="pmoId">
+        <div class="fg-row">
+          <div class="fg"><label>Nama Promo</label><input id="pmoName" placeholder="mis. Bonus Akhir Bulan"></div>
+          <div class="fg"><label>Kode (kosong = auto)</label><input id="pmoCode" placeholder="BONUS10" style="text-transform:uppercase"></div>
+        </div>
+        <div class="fg-row">
+          <div class="fg"><label>Tipe</label><select id="pmoType"><option value="percent">Persen (%)</option><option value="fixed">Nominal tetap (Rp)</option></select></div>
+          <div class="fg"><label>Nilai</label><input id="pmoValue" type="number" placeholder="10"></div>
+        </div>
+        <div class="fg-row">
+          <div class="fg"><label>Min. Top-up (Rp)</label><input id="pmoMin" type="number" value="0"></div>
+          <div class="fg"><label>Maks. Bonus (Rp, 0=∞)</label><input id="pmoMaxBonus" type="number" value="0"></div>
+        </div>
+        <div class="fg-row">
+          <div class="fg"><label>Kuota Total (0=∞)</label><input id="pmoQuotaTotal" type="number" value="0"></div>
+          <div class="fg"><label>Kuota / Reseller</label><input id="pmoQuotaPer" type="number" value="1"></div>
+        </div>
+        <div class="fg-row">
+          <div class="fg"><label>Mulai</label><input id="pmoStart" type="date"></div>
+          <div class="fg"><label>Berakhir</label><input id="pmoEnd" type="date"></div>
+        </div>
+        <div class="switch-row" style="margin-top:4px"><div><div class="sl">Auto-apply</div><div class="sd">Berlaku otomatis tanpa kode</div></div><label class="switch"><input type="checkbox" id="pmoAuto"><span class="track"></span></label></div>
+        <div class="switch-row"><div><div class="sl">Aktif</div></div><label class="switch"><input type="checkbox" id="pmoActive" checked><span class="track"></span></label></div>
+        <div style="display:flex;gap:9px;margin-top:14px">
+          <button class="btn btn-soft" onclick="document.getElementById('promoForm').style.display='none'" style="flex:1">Batal</button>
+          <button class="btn btn-teal" onclick="savePromo()" style="flex:1">Simpan</button>
+        </div>
+      </div>
+      <div id="promoList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const API = '/api/reseller-admin';
+  let DEVICES = [];
+
+  function authHeaders(extra){
+    const t = localStorage.getItem('token') || '';
+    return Object.assign({ 'Authorization':'Bearer '+t, 'X-Requested-With':'XMLHttpRequest' }, extra||{});
+  }
+  async function apiCall(path, opts={}){
+    opts.headers = authHeaders(opts.headers);
+    if(opts.body && typeof opts.body!=='string'){ opts.headers['Content-Type']='application/json'; opts.body=JSON.stringify(opts.body); }
+    const r = await fetch(API+path, opts);
+    return r.json();
+  }
+  const fmtRp = n => 'Rp '+Number(n||0).toLocaleString('id-ID');
+  function fmtDate(d){ if(!d) return '—'; try{ return new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(_){ return String(d); } }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2400); }
+  function closeModals(){ document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('show')); }
+
+  // ── Styled confirm dialog (Promise-based, ganti confirm/prompt) ──
+  // opts: { title, message, okText, tone:'ok'|'warn'|'info', input:{label,placeholder} }
+  function rvConfirm(opts){
+    return new Promise(resolve=>{
+      const ov=document.getElementById('confirmDialog');
+      const icn=document.getElementById('cfIcn'), ok=document.getElementById('cfOk'), cancel=document.getElementById('cfCancel');
+      const field=document.getElementById('cfField'), input=document.getElementById('cfInput');
+      const tone=opts.tone||'info';
+      document.getElementById('cfTitle').textContent=opts.title||'Konfirmasi';
+      document.getElementById('cfMsg').textContent=opts.message||'';
+      icn.className='cf-icn '+tone;
+      const icons={ ok:'<path d="M20 6 9 17l-5-5"/>', warn:'<path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>' };
+      icn.innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+(icons[tone]||icons.info)+'</svg>';
+      ok.textContent=opts.okText||'OK';
+      ok.className='cf-btn cf-ok is-'+tone;
+      if(opts.input){ field.style.display='block'; document.getElementById('cfFieldLbl').textContent=opts.input.label||'Catatan'; input.value=opts.input.value||''; input.placeholder=opts.input.placeholder||''; }
+      else field.style.display='none';
+      ov.classList.add('show');
+      if(opts.input) setTimeout(()=>input.focus(),60);
+      function cleanup(){ ov.classList.remove('show'); ok.onclick=null; cancel.onclick=null; }
+      ok.onclick=()=>{ const val=opts.input?input.value.trim():true; cleanup(); resolve(opts.input?val:true); };
+      cancel.onclick=()=>{ cleanup(); resolve(opts.input?null:false); };
+      ov.onclick=e=>{ if(e.target===ov){ cleanup(); resolve(opts.input?null:false); } };
+    });
+  }
+
+  function rvTab(name, opt){
+    document.querySelectorAll('.rv-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+    document.querySelectorAll('.rv-pane').forEach(p=>p.classList.toggle('active', p.id==='pane-'+name));
+    if(name==='packages') loadPackages();
+    if(name==='puborders') loadPublicOrders();
+    if(name==='topups'){
+      if(opt){ const sel=document.getElementById('topupStatusFilter'); if(sel) sel.value=opt; }
+      loadTopups();
+    }
+    if(name==='report') loadGlobalReport();
+    try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(_){}
+  }
+  // Aksesibilitas: kartu/clickable bisa ditekan via Enter/Space
+  document.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ') && e.target.classList && e.target.classList.contains('ov-card')){
+      e.preventDefault(); e.target.click();
+    }
+  });
+
+  // ── Devices for selects ──────────────────────────────────────
+  async function loadDevices(){
+    try{
+      const t = localStorage.getItem('token')||'';
+      const r = await fetch('/api/devices?type=router', { headers: authHeaders() });
+      const j = await r.json();
+      DEVICES = (j.data||j.devices||[]).filter(d=>!d.type||d.type==='router');
+      const opts = DEVICES.map(d=>`<option value="${d.id}">${esc(d.name)}</option>`).join('');
+      const rd=document.getElementById('rmDevice'); if(rd) rd.innerHTML='<option value="">Default (env)</option>'+opts;
+      const pd=document.getElementById('pmDevice'); if(pd) pd.innerHTML='<option value="">Semua router</option>'+opts;
+    }catch(e){}
+  }
+
+  // ── Hotspot servers (auto dari MikroTik, untuk dropdown server) ──
+  async function loadHotspotServers(selected){
+    const sel = document.getElementById('rmServer');
+    const hint = document.getElementById('rmServerHint');
+    const deviceId = document.getElementById('rmDevice').value;
+    const want = selected || sel.value || 'all';
+    sel.innerHTML = '<option value="all">memuat…</option>'; sel.disabled = true;
+    try{
+      const r = await fetch('/api/reseller-admin/hotspot-servers'+(deviceId?('?device_id='+deviceId):''), { headers: authHeaders() });
+      const j = await r.json();
+      const servers = (j.data && j.data.servers) || [];
+      let opts = '<option value="all">all (semua server)</option>';
+      opts += servers.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+      sel.innerHTML = opts;
+      // pertahankan pilihan lama bila masih ada; jika tidak, tambahkan agar tak hilang
+      if(want && want!=='all' && !servers.includes(want)){
+        sel.insertAdjacentHTML('beforeend', `<option value="${esc(want)}">${esc(want)} (tersimpan)</option>`);
+      }
+      sel.value = want;
+      if(hint) hint.textContent = j.success
+        ? (servers.length? 'Diambil otomatis dari router.' : 'Router tak punya server hotspot — pakai "all".')
+        : 'Router tak terjangkau — pilihan "all" tetap bisa dipakai.';
+    }catch(e){
+      sel.innerHTML = '<option value="all">all (semua server)</option>';
+      if(want && want!=='all'){ sel.insertAdjacentHTML('beforeend', `<option value="${esc(want)}">${esc(want)}</option>`); sel.value=want; }
+      if(hint) hint.textContent = 'Gagal mengambil server dari router — pakai "all".';
+    }finally{ sel.disabled = false; }
+  }
+
+  // ── Resellers ────────────────────────────────────────────────
+  let _t;
+  function debouncedLoadResellers(){ clearTimeout(_t); _t=setTimeout(loadResellers,300); }
+  async function loadResellers(){
+    const q = document.getElementById('rSearch').value.trim();
+    const tb = document.getElementById('resellerRows');
+    try{
+      const j = await apiCall('/resellers'+(q?('?q='+encodeURIComponent(q)):''));
+      const rows = j.data||[];
+      window.__RESELLERS = rows;
+      // Update overview: total reseller (hanya saat tanpa filter pencarian)
+      if(!q){
+        document.getElementById('ovResellers').textContent = rows.length;
+        const totalBal = rows.reduce((s,r)=>s+Number(r.balance||0),0);
+        document.getElementById('ovBalance').textContent = fmtRp(totalBal);
+      }
+      if(!rows.length){
+        tb.innerHTML = '<tr><td colspan="5"><div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><div class="e-ttl">'+(q?'Tidak ada hasil':'Belum ada reseller')+'</div><div>'+(q?'Coba kata kunci lain.':'Klik “Reseller Baru” untuk membuat yang pertama.')+'</div></div></td></tr>';
+        return;
+      }
+      tb.innerHTML = rows.map(r=>{
+        const initial = (r.name||'?').trim().charAt(0).toUpperCase();
+        return `<tr>
+          <td class="cell-main-td"><div class="cell-main">
+            <div class="avatar">${esc(initial)}</div>
+            <div><div class="r-name">${esc(r.name)}</div><div class="r-sub">${esc(r.code)}${r.phone?(' • '+esc(r.phone)):''}</div></div>
+          </div></td>
+          <td data-label="Saldo" class="r-bal">${fmtRp(r.balance)}</td>
+          <td data-label="Router">${esc(r.device_name||'Default')}</td>
+          <td data-label="Status"><span class="badge ${r.is_active?'on':'off'}">${r.is_active?'Aktif':'Nonaktif'}</span></td>
+          <td class="cell-actions"><div class="row-actions">
+            <button class="ico-btn" title="Voucher hotspot" onclick="openResellerVouchers(${r.id},'${esc(r.name).replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></button>
+            <button class="ico-btn" title="Isi saldo" onclick='openTopup(${JSON.stringify(r)})'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></button>
+            <button class="ico-btn" title="Edit" onclick='editReseller(${JSON.stringify(r)})'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button class="ico-btn danger" title="Hapus" onclick="removeReseller(${r.id},'${esc(r.name).replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+          </div></td>
+        </tr>`;
+      }).join('');
+    }catch(e){ tb.innerHTML='<tr><td colspan="5" class="empty">Gagal memuat data.</td></tr>'; }
+  }
+
+  // Isi dropdown induk (master agen), kecualikan diri sendiri (anti-loop).
+  function populateParents(selectedId, excludeId){
+    const sel=document.getElementById('rmParent'); if(!sel) return;
+    const list=(window.__RESELLERS||[]).filter(r=>r.id!==excludeId);
+    sel.innerHTML='<option value="">— (langsung di bawah admin)</option>'+
+      list.map(r=>`<option value="${r.id}">${esc(r.name)} (${esc(r.code)})</option>`).join('');
+    sel.value=selectedId||'';
+  }
+
+  function openResellerModal(){
+    document.getElementById('rmTitle').textContent='Reseller Baru';
+    document.getElementById('rmId').value='';
+    ['rmCode','rmName','rmPhone','rmPassword','rmAddress'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('rmMaxBatch').value=100;
+    document.getElementById('rmInitBalance').value=0;
+    document.getElementById('rmDevice').value='';
+    document.getElementById('rmDiscount').value=0;
+    document.getElementById('rmTier').value='';
+    document.getElementById('rmCommission').value=0;
+    populateParents(null);
+    document.getElementById('rmCode').disabled=false;
+    document.getElementById('rmInitWrap').style.display='';
+    document.getElementById('rmActiveWrap').style.display='none';
+    document.getElementById('rmPwLabel').innerHTML='Password <span class="req">*</span>';
+    document.getElementById('resellerModal').classList.add('show');
+    loadHotspotServers('all');
+  }
+  function editReseller(r){
+    document.getElementById('rmTitle').textContent='Edit Reseller';
+    document.getElementById('rmId').value=r.id;
+    document.getElementById('rmCode').value=r.code; document.getElementById('rmCode').disabled=true;
+    document.getElementById('rmName').value=r.name;
+    document.getElementById('rmPhone').value=r.phone||'';
+    document.getElementById('rmAddress').value=r.address||'';
+    document.getElementById('rmPassword').value='';
+    document.getElementById('rmMaxBatch').value=r.max_per_batch||100;
+    document.getElementById('rmDevice').value=r.device_id||'';
+    document.getElementById('rmDiscount').value=r.price_discount_percent!=null?r.price_discount_percent:0;
+    document.getElementById('rmTier').value=r.price_tier||'';
+    document.getElementById('rmCommission').value=r.commission_percent!=null?r.commission_percent:0;
+    populateParents(r.parent_id||null, r.id);
+    document.getElementById('rmInitWrap').style.display='none';
+    document.getElementById('rmActiveWrap').style.display='';
+    document.getElementById('rmActive').checked=!!r.is_active;
+    document.getElementById('rmPwLabel').textContent='Password baru (kosongkan jika tetap)';
+    document.getElementById('resellerModal').classList.add('show');
+    loadHotspotServers(r.hotspot_server||'all');
+  }
+  async function saveReseller(){
+    const id=document.getElementById('rmId').value;
+    const payload={
+      name:document.getElementById('rmName').value.trim(),
+      phone:document.getElementById('rmPhone').value.trim(),
+      address:document.getElementById('rmAddress').value.trim(),
+      device_id:document.getElementById('rmDevice').value||null,
+      hotspot_server:document.getElementById('rmServer').value.trim()||'all',
+      max_per_batch:document.getElementById('rmMaxBatch').value,
+      price_discount_percent:document.getElementById('rmDiscount').value,
+      price_tier:document.getElementById('rmTier').value||null,
+      parent_id:document.getElementById('rmParent').value||null,
+      commission_percent:document.getElementById('rmCommission').value
+    };
+    const pw=document.getElementById('rmPassword').value;
+    try{
+      let j;
+      if(id){
+        payload.is_active=document.getElementById('rmActive').checked;
+        if(pw) payload.password=pw;
+        j = await apiCall('/resellers/'+id,{method:'PUT',body:payload});
+      } else {
+        payload.code=document.getElementById('rmCode').value.trim();
+        payload.password=pw;
+        payload.initial_balance=document.getElementById('rmInitBalance').value;
+        j = await apiCall('/resellers',{method:'POST',body:payload});
+      }
+      if(j.success){ toast(j.message||'Tersimpan'); closeModals(); loadResellers(); }
+      else toast(j.message||'Gagal menyimpan');
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+  async function removeReseller(id,name){
+    const ok = await rvConfirm({ title:'Hapus Reseller', message:'Hapus / nonaktifkan reseller "'+name+'"? Akun tidak akan bisa login lagi.', okText:'Hapus', tone:'warn' });
+    if(!ok) return;
+    const j = await apiCall('/resellers/'+id,{method:'DELETE'});
+    if(j.success){ toast(j.message); loadResellers(); } else toast(j.message||'Gagal');
+  }
+
+  // ── Voucher hotspot per reseller (admin viewer) ──────────────
+  let _rvvId=null, _rvvName='', _rvvFilter='', _rvvData=[];
+  const RVV_BADGE={ active:{t:'ONLINE',c:'active'}, used:{t:'TERPAKAI',c:'used'}, expired:{t:'EXPIRED',c:'expired'}, unused:{t:'BELUM',c:'unused'} };
+  function rvvBytes(n){ n=Number(n)||0; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; if(n<1073741824) return (n/1048576).toFixed(1)+' MB'; return (n/1073741824).toFixed(2)+' GB'; }
+  function openResellerVouchers(id,name){
+    _rvvId=id; _rvvName=name; _rvvFilter='';
+    document.getElementById('rvvTitle').textContent='Voucher Hotspot';
+    document.getElementById('rvvSub').textContent=name;
+    document.querySelectorAll('#rvvChips .rvv-chip').forEach(c=>c.classList.toggle('on',(c.dataset.f||'')===''));
+    document.getElementById('rvVouchersModal').classList.add('show');
+    reloadResellerVouchers();
+  }
+  function reloadResellerVouchers(){
+    const list=document.getElementById('rvvList');
+    list.innerHTML='<div class="empty">Memuat voucher dari router…</div>';
+    apiCall('/resellers/'+_rvvId+'/vouchers').then(j=>{
+      if(!j.success){ list.innerHTML='<div class="empty"><div class="e-ttl">Gagal memuat</div><div>'+esc(j.message||'Router tak terjangkau')+'</div></div>'; document.getElementById('rvvMeta').innerHTML=''; return; }
+      _rvvData=j.data||[];
+      const c=j.counts||{total:0,active:0,expired:0,used:0,unused:0};
+      if(j.reseller) document.getElementById('rvvSub').textContent=j.reseller.name+' • '+(j.reseller.device_name||'Default');
+      document.getElementById('rvvMeta').innerHTML=`
+        <div class="rvv-mc"><div class="n">${c.total}</div><div class="t">Total</div></div>
+        <div class="rvv-mc c-active"><div class="n">${c.active}</div><div class="t">Online</div></div>
+        <div class="rvv-mc c-used"><div class="n">${c.used}</div><div class="t">Terpakai</div></div>
+        <div class="rvv-mc c-expired"><div class="n">${c.expired}</div><div class="t">Expired</div></div>
+        <div class="rvv-mc c-unused"><div class="n">${c.unused}</div><div class="t">Belum</div></div>`;
+      document.getElementById('rvc-all').textContent=c.total;
+      document.getElementById('rvc-active').textContent=c.active;
+      document.getElementById('rvc-used').textContent=c.used;
+      document.getElementById('rvc-expired').textContent=c.expired;
+      document.getElementById('rvc-unused').textContent=c.unused;
+      renderRvv();
+    }).catch(()=>{ list.innerHTML='<div class="empty">Gagal memuat voucher.</div>'; });
+  }
+  function rvvFilter(f){
+    _rvvFilter=f;
+    document.querySelectorAll('#rvvChips .rvv-chip').forEach(c=>c.classList.toggle('on',(c.dataset.f||'')===f));
+    renderRvv();
+  }
+  function renderRvv(){
+    const list=document.getElementById('rvvList');
+    let rows=_rvvData;
+    if(_rvvFilter) rows=rows.filter(v=>v.status===_rvvFilter);
+    if(!rows.length){ list.innerHTML='<div class="empty">'+(_rvvData.length?'Tidak ada voucher pada filter ini.':'Reseller ini belum punya voucher di router.')+'</div>'; return; }
+    list.innerHTML=rows.map(v=>{
+      const b=RVV_BADGE[v.status]||RVV_BADGE.unused;
+      let sub;
+      if(v.status==='unused') sub='Profil '+esc(v.profile||'-')+' • belum dipakai';
+      else if(v.status==='expired') sub='Profil '+esc(v.profile||'-')+' • masa aktif habis • '+rvvBytes(v.bytes_total);
+      else sub='Profil '+esc(v.profile||'-')+' • '+esc(v.uptime||'0s')+' • '+rvvBytes(v.bytes_total);
+      const cut=v.status==='active'?`<button class="rvv-ib cut" title="Putus sesi" onclick="rvvAction('${esc(v.username)}','disconnect')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><path d="M12 2v10"/></svg></button>`:'';
+      return `<div class="rvv-row s-${v.status}"><span class="d"></span>
+        <div class="mid"><div class="u">${esc(v.username)}</div><div class="s">${sub}</div></div>
+        <span class="rvv-bdg ${b.c}">${b.t}</span>
+        <div class="acts">${cut}<button class="rvv-ib del" title="Hapus" onclick="rvvAction('${esc(v.username)}','delete')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div>
+      </div>`;
+    }).join('');
+  }
+  async function rvvAction(username,action){
+    if(action==='delete'){ const ok=await rvConfirm({title:'Hapus Voucher',message:'Hapus voucher "'+username+'" dari router?',okText:'Hapus',tone:'warn'}); if(!ok) return; }
+    const j=await apiCall('/resellers/'+_rvvId+'/vouchers/action',{method:'POST',body:{username,action}});
+    if(j.success){ toast(j.message||'Berhasil'); reloadResellerVouchers(); } else toast(j.message||'Gagal');
+  }
+  async function bulkDeleteExpired(){
+    const ok=await rvConfirm({title:'Hapus Voucher Expired',message:'Hapus SEMUA voucher berstatus expired milik reseller ini dari router? Tindakan tidak bisa dibatalkan.',okText:'Hapus Semua',tone:'warn'});
+    if(!ok) return;
+    const j=await apiCall('/resellers/'+_rvvId+'/vouchers/bulk',{method:'POST',body:{action:'delete',status:'expired'}});
+    if(j.success){ toast(j.message||'Selesai'); reloadResellerVouchers(); } else toast(j.message||'Gagal');
+  }
+
+  // ── Promo manager (#10) ──────────────────────────────────────
+  function openPromoManager(){ document.getElementById('promoModal').classList.add('show'); document.getElementById('promoForm').style.display='none'; loadPromos(); }
+  async function loadPromos(){
+    const box=document.getElementById('promoList');
+    box.innerHTML='<div class="empty">Memuat…</div>';
+    const j=await apiCall('/promos');
+    const list=(j&&j.data)||[];
+    if(!list.length){ box.innerHTML='<div class="empty">Belum ada promo. Klik "Promo Baru".</div>'; return; }
+    box.innerHTML=list.map(p=>{
+      const val=p.type==='percent'?(Number(p.value)+'%'):fmtRp(p.value);
+      const tags=[]; if(p.auto_apply) tags.push('AUTO'); if(!p.is_active) tags.push('NONAKTIF');
+      return `<div style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:13.5px">${esc(p.name)} ${p.code?('· <span style=\"font-family:var(--fm);color:var(--blue)\">'+esc(p.code)+'</span>'):''} ${tags.map(t=>'<span style=\"font-size:9px;font-weight:800;background:#eef1f7;color:#64748b;padding:2px 6px;border-radius:5px;margin-left:4px\">'+t+'</span>').join('')}</div>
+          <div style="font-size:11.5px;color:var(--text3);margin-top:3px">Bonus ${val} · min ${fmtRp(p.min_topup)} · dipakai ${p.used_count}${p.quota_total>0?('/'+p.quota_total):''}</div>
+        </div>
+        <button class="ico-btn" title="Edit" onclick='editPromo(${JSON.stringify(p)})'><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+        <button class="ico-btn" title="Hapus" onclick="removePromo(${p.id})"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+      </div>`;
+    }).join('');
+  }
+  function newPromo(){
+    document.getElementById('promoForm').style.display='block';
+    ['pmoId','pmoName','pmoCode','pmoValue'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pmoType').value='percent';
+    document.getElementById('pmoMin').value=0; document.getElementById('pmoMaxBonus').value=0;
+    document.getElementById('pmoQuotaTotal').value=0; document.getElementById('pmoQuotaPer').value=1;
+    document.getElementById('pmoStart').value=''; document.getElementById('pmoEnd').value='';
+    document.getElementById('pmoAuto').checked=false; document.getElementById('pmoActive').checked=true;
+  }
+  function editPromo(p){
+    document.getElementById('promoForm').style.display='block';
+    document.getElementById('pmoId').value=p.id;
+    document.getElementById('pmoName').value=p.name||'';
+    document.getElementById('pmoCode').value=p.code||'';
+    document.getElementById('pmoType').value=p.type||'percent';
+    document.getElementById('pmoValue').value=p.value||0;
+    document.getElementById('pmoMin').value=p.min_topup||0;
+    document.getElementById('pmoMaxBonus').value=p.max_bonus||0;
+    document.getElementById('pmoQuotaTotal').value=p.quota_total||0;
+    document.getElementById('pmoQuotaPer').value=p.quota_per_reseller||1;
+    document.getElementById('pmoStart').value=p.starts_at?String(p.starts_at).slice(0,10):'';
+    document.getElementById('pmoEnd').value=p.ends_at?String(p.ends_at).slice(0,10):'';
+    document.getElementById('pmoAuto').checked=!!p.auto_apply;
+    document.getElementById('pmoActive').checked=!!p.is_active;
+  }
+  async function savePromo(){
+    const id=document.getElementById('pmoId').value;
+    const payload={
+      name:document.getElementById('pmoName').value.trim(),
+      code:document.getElementById('pmoCode').value.trim(),
+      type:document.getElementById('pmoType').value,
+      value:document.getElementById('pmoValue').value,
+      min_topup:document.getElementById('pmoMin').value,
+      max_bonus:document.getElementById('pmoMaxBonus').value,
+      quota_total:document.getElementById('pmoQuotaTotal').value,
+      quota_per_reseller:document.getElementById('pmoQuotaPer').value,
+      starts_at:document.getElementById('pmoStart').value||null,
+      ends_at:document.getElementById('pmoEnd').value||null,
+      auto_apply:document.getElementById('pmoAuto').checked,
+      is_active:document.getElementById('pmoActive').checked
+    };
+    if(!payload.name){ toast('Nama promo wajib diisi'); return; }
+    const j=id?await apiCall('/promos/'+id,{method:'PUT',body:payload}):await apiCall('/promos',{method:'POST',body:payload});
+    if(j.success){ toast(j.message||'Tersimpan'); document.getElementById('promoForm').style.display='none'; loadPromos(); }
+    else toast(j.message||'Gagal');
+  }
+  async function removePromo(id){
+    const ok=await rvConfirm({title:'Hapus Promo',message:'Hapus promo ini?',okText:'Hapus',tone:'warn'});
+    if(!ok) return;
+    const j=await apiCall('/promos/'+id,{method:'DELETE'});
+    if(j.success){ toast('Promo dihapus'); loadPromos(); } else toast(j.message||'Gagal');
+  }
+
+  // ── Topup ────────────────────────────────────────────────────
+  let _topupReseller=null;
+  function openTopup(r){
+    _topupReseller=r;
+    document.getElementById('tuId').value=r.id;
+    document.getElementById('tuName').value=r.name+' ('+r.code+')';
+    document.getElementById('tuBalance').value=fmtRp(r.balance);
+    document.getElementById('tuType').value='topup';
+    document.getElementById('tuAmount').value='';
+    document.getElementById('tuDesc').value='';
+    document.getElementById('topupModal').classList.add('show');
+  }
+  async function submitTopup(){
+    const id=document.getElementById('tuId').value;
+    const payload={
+      amount:document.getElementById('tuAmount').value,
+      type:document.getElementById('tuType').value,
+      description:document.getElementById('tuDesc').value.trim()
+    };
+    const j = await apiCall('/resellers/'+id+'/topup',{method:'POST',body:payload});
+    if(j.success){ toast('Saldo diperbarui'); closeModals(); loadResellers(); }
+    else toast(j.message||'Gagal');
+  }
+  async function openTransactions(){
+    const id=document.getElementById('tuId').value;
+    closeModals();
+    document.getElementById('txModal').classList.add('show');
+    const body=document.getElementById('txBody'); body.innerHTML='<div class="empty">Memuat…</div>';
+    const j = await apiCall('/resellers/'+id+'/transactions?limit=50');
+    const rows=j.data||[];
+    if(!rows.length){ body.innerHTML='<div class="empty">Belum ada transaksi.</div>'; return; }
+    body.innerHTML = rows.map(tx=>{
+      const sign=tx.amount>=0?'plus':'minus';
+      const amt=(tx.amount>=0?'+':'')+fmtRp(Math.abs(tx.amount));
+      const d=new Date(tx.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      return `<div class="tx-mini"><div><div class="d">${esc(tx.description||tx.type)}</div><div class="s">${d} • Sisa ${fmtRp(tx.balance_after)}</div></div><div class="a ${sign}">${amt}</div></div>`;
+    }).join('');
+  }
+
+  // ── Packages ─────────────────────────────────────────────────
+  async function loadPackages(){
+    const tb=document.getElementById('packageRows');
+    try{
+      const j = await apiCall('/packages');
+      const rows=j.data||[];
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="7"><div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h20v10H2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg><div class="e-ttl">Belum ada paket voucher</div><div>Klik “Paket Baru” untuk menambahkan paket pertama.</div></div></td></tr>'; return; }
+      tb.innerHTML = rows.map(p=>{
+        const pubPrice = (p.public_price!=null && p.public_price>0) ? p.public_price : p.sell_price;
+        return `
+        <tr>
+          <td class="cell-main-td"><div><div class="r-name">${esc(p.name)}</div><div class="r-sub">${esc(p.duration_label||'—')}${p.limit_uptime?(' • '+esc(p.limit_uptime)):''}</div></div></td>
+          <td data-label="Profile" class="mono">${esc(p.mikrotik_profile)}${p.device_name?('<br><span style="color:var(--text3);font-size:11px">'+esc(p.device_name)+'</span>'):''}</td>
+          <td data-label="Modal" class="r-bal">${fmtRp(p.cost_price)}</td>
+          <td data-label="Harga Jual" class="r-bal">${fmtRp(p.sell_price)}</td>
+          <td data-label="Status"><span class="badge ${p.is_active?'on':'off'}">${p.is_active?'Aktif':'Nonaktif'}</span></td>
+          <td data-label="Publik"><div class="pub-cell">
+            <label class="switch sm"><input type="checkbox" ${p.is_public?'checked':''} onchange="togglePublic(${p.id}, this.checked, this)"><span class="track"></span></label>
+            <span class="pub-price ${p.is_public?'':'off'}">${p.is_public?fmtRp(pubPrice):'—'}</span>
+          </div></td>
+          <td class="cell-actions"><div class="row-actions">
+            <button class="ico-btn" title="Edit" onclick='editPackage(${JSON.stringify(p)})'><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button class="ico-btn danger" title="Hapus" onclick="removePackage(${p.id},'${esc(p.name).replace(/'/g,"\\'")}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg></button>
+          </div></td>
+        </tr>`;}).join('');
+    }catch(e){ tb.innerHTML='<tr><td colspan="7" class="empty">Gagal memuat.</td></tr>'; }
+  }
+  function openPackageModal(){
+    document.getElementById('pmTitle').textContent='Paket Baru';
+    document.getElementById('pmId').value='';
+    ['pmName','pmProfile','pmDuration','pmUptime','pmCost','pmSell'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('pmPrefix').value='v';
+    document.getElementById('pmCodeLen').value=5;
+    document.getElementById('pmSort').value=0;
+    document.getElementById('pmDevice').value='';
+    document.getElementById('pmActive').checked=true;
+    document.getElementById('pmPublic').checked=false;
+    document.getElementById('pmPublicPrice').value='';
+    document.getElementById('packageModal').classList.add('show');
+  }
+  function editPackage(p){
+    document.getElementById('pmTitle').textContent='Edit Paket';
+    document.getElementById('pmId').value=p.id;
+    document.getElementById('pmName').value=p.name;
+    document.getElementById('pmProfile').value=p.mikrotik_profile;
+    document.getElementById('pmDuration').value=p.duration_label||'';
+    document.getElementById('pmUptime').value=p.limit_uptime||'';
+    document.getElementById('pmCost').value=p.cost_price;
+    document.getElementById('pmSell').value=p.sell_price;
+    document.getElementById('pmPrefix').value=p.prefix||'v';
+    document.getElementById('pmCodeLen').value=p.code_length||5;
+    document.getElementById('pmSort').value=p.sort_order||0;
+    document.getElementById('pmDevice').value=p.device_id||'';
+    document.getElementById('pmActive').checked=!!p.is_active;
+    document.getElementById('pmPublic').checked=!!p.is_public;
+    document.getElementById('pmPublicPrice').value=(p.public_price!=null?p.public_price:'');
+    document.getElementById('packageModal').classList.add('show');
+  }
+  async function savePackage(){
+    const id=document.getElementById('pmId').value;
+    const payload={
+      name:document.getElementById('pmName').value.trim(),
+      mikrotik_profile:document.getElementById('pmProfile').value.trim(),
+      duration_label:document.getElementById('pmDuration').value.trim(),
+      limit_uptime:document.getElementById('pmUptime').value.trim(),
+      cost_price:document.getElementById('pmCost').value,
+      sell_price:document.getElementById('pmSell').value,
+      prefix:document.getElementById('pmPrefix').value.trim()||'v',
+      code_length:document.getElementById('pmCodeLen').value,
+      sort_order:document.getElementById('pmSort').value,
+      device_id:document.getElementById('pmDevice').value||null,
+      is_active:document.getElementById('pmActive').checked,
+      is_public:document.getElementById('pmPublic').checked,
+      public_price:document.getElementById('pmPublicPrice').value===''?null:document.getElementById('pmPublicPrice').value
+    };
+    const j = id ? await apiCall('/packages/'+id,{method:'PUT',body:payload})
+                 : await apiCall('/packages',{method:'POST',body:payload});
+    if(j.success){ toast(j.message||'Tersimpan'); closeModals(); loadPackages(); }
+    else toast(j.message||'Gagal');
+  }
+  async function removePackage(id,name){
+    const ok = await rvConfirm({ title:'Hapus Paket', message:'Hapus paket voucher "'+name+'"?', okText:'Hapus', tone:'warn' });
+    if(!ok) return;
+    const j = await apiCall('/packages/'+id,{method:'DELETE'});
+    if(j.success){ toast(j.message); loadPackages(); } else toast(j.message||'Gagal');
+  }
+
+  // Toggle tampil/sembunyi paket di halaman publik /beli-voucher (1 klik, tanpa modal).
+  async function togglePublic(id, checked, el){
+    if(el) el.disabled=true;
+    const j = await apiCall('/packages/'+id,{method:'PUT',body:{ is_public: checked }});
+    if(el) el.disabled=false;
+    if(j.success){
+      toast(checked?'Paket ditampilkan di halaman publik':'Paket disembunyikan dari halaman publik');
+      loadPackages();
+    }else{
+      toast(j.message||'Gagal mengubah status publik');
+      if(el) el.checked=!checked; // rollback tampilan
+    }
+  }
+
+  // ── Order Publik (pembelian voucher dari /beli-voucher) ───────
+  let _pubOrderTimer=null;
+  function debouncePubOrders(){ clearTimeout(_pubOrderTimer); _pubOrderTimer=setTimeout(loadPublicOrders, 350); }
+
+  const PUB_STATUS = {
+    pending:  { label:'Menunggu bayar', cls:'warn' },
+    paid:     { label:'Sudah bayar',    cls:'on'   },
+    delivered:{ label:'Terkirim',       cls:'on'   },
+    failed:   { label:'Gagal',          cls:'danger' },
+    expired:  { label:'Kadaluarsa',     cls:'off'  }
+  };
+
+  async function loadPublicOrders(){
+    const tb=document.getElementById('pubOrderRows');
+    const status=document.getElementById('pubOrderStatus').value;
+    const q=document.getElementById('pubOrderSearch').value.trim();
+    try{
+      const qs=[]; if(status) qs.push('status='+encodeURIComponent(status)); if(q) qs.push('q='+encodeURIComponent(q));
+      const j = await apiCall('/public-orders'+(qs.length?('?'+qs.join('&')):''));
+      const rows=j.data||[];
+      // badge = jumlah yang butuh aksi (paid manual blm terkirim + pending dgn bukti)
+      const needAction=rows.filter(o=>o.payment_method==='manual' && (o.status==='paid' || o.status==='pending') && o.status!=='delivered').length;
+      const badge=document.getElementById('pubOrderBadge');
+      if(badge){ if(needAction>0){ badge.textContent=needAction; badge.style.display='inline-block'; } else badge.style.display='none'; }
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="6"><div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><div class="e-ttl">Belum ada order</div><div>Order dari halaman /beli-voucher akan muncul di sini.</div></div></td></tr>'; return; }
+      tb.innerHTML = rows.map(o=>{
+        const st=PUB_STATUS[o.status]||{label:o.status,cls:'off'};
+        const isManual=o.payment_method==='manual';
+        const canVerify=isManual && (o.status==='pending' || o.status==='paid');
+        const contact = o.buyer_wa ? ('<a href="https://wa.me/'+esc(o.buyer_wa)+'" target="_blank" style="color:var(--rv-teal);text-decoration:none">'+esc(o.buyer_wa)+'</a>') : (o.buyer_email?esc(o.buyer_email):'—');
+        let actions='';
+        if(o.status==='delivered' && o.voucher_username){
+          actions=`<span class="mono" style="font-size:11.5px">${esc(o.voucher_username)} / ${esc(o.voucher_password||'')}</span>`;
+        } else if(canVerify){
+          actions=`<div class="row-actions">`
+            + (o.has_proof?`<button class="ico-btn" title="Lihat bukti" onclick="viewProof(${o.id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>`:'')
+            + `<button class="btn btn-primary" style="padding:6px 12px;font-size:12.5px" onclick="verifyPubOrder(${o.id})">Verifikasi</button>`
+            + `<button class="ico-btn danger" title="Tolak" onclick="rejectPubOrder(${o.id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`
+            + `</div>`;
+        } else { actions='<span style="color:var(--text3)">—</span>'; }
+        const payBadge = isManual ? '<span class="badge off" style="margin-top:3px">Manual</span>' : '<span class="badge on" style="margin-top:3px">'+esc(o.gateway_provider||'Gateway')+'</span>';
+        return `
+        <tr>
+          <td class="cell-main-td"><div><div class="r-name mono">${esc(o.order_code)}</div><div class="r-sub">${fmtDate(o.created_at)}</div></div></td>
+          <td data-label="Paket">${esc(o.package_name||'—')}</td>
+          <td data-label="Pembeli"><div>${esc(o.buyer_name||'—')}</div><div class="r-sub">${contact}</div></td>
+          <td data-label="Bayar" class="r-bal">${fmtRp(o.amount)}<br>${payBadge}</td>
+          <td data-label="Status"><span class="badge ${st.cls}">${st.label}</span></td>
+          <td class="cell-actions">${actions}</td>
+        </tr>`;
+      }).join('');
+    }catch(e){ tb.innerHTML='<tr><td colspan="6" class="empty">Gagal memuat.</td></tr>'; }
+  }
+
+  async function viewProof(id){
+    try{
+      toast('Memuat bukti…');
+      const r = await fetch(API+'/public-orders/'+id+'/proof', { headers: authHeaders() });
+      if(!r.ok){ toast('Bukti tidak ditemukan'); return; }
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    }catch(e){ toast('Gagal memuat bukti'); }
+  }
+
+  async function verifyPubOrder(id){
+    const ok = await rvConfirm({ title:'Verifikasi Pembayaran', message:'Konfirmasi pembayaran diterima? Voucher akan dibuat di MikroTik dan dikirim ke pembeli.', okText:'Ya, Verifikasi & Kirim', tone:'ok' });
+    if(!ok) return;
+    toast('Memproses…');
+    const j = await apiCall('/public-orders/'+id+'/verify',{method:'POST'});
+    if(j.success){
+      const v=j.data||{};
+      toast('Voucher dibuat & dikirim'+(v.voucher_username?(': '+v.voucher_username):''));
+      loadPublicOrders();
+    } else toast(j.message||'Gagal memverifikasi');
+  }
+
+  async function rejectPubOrder(id){
+    const reason = await rvConfirm({ title:'Tolak Order', message:'Tolak order ini?', okText:'Tolak', tone:'warn', input:{ label:'Alasan (opsional)', placeholder:'mis. bukti transfer tidak valid' } });
+    if(reason===null) return;
+    const j = await apiCall('/public-orders/'+id+'/reject',{method:'POST',body:{ reason: reason||'' }});
+    if(j.success){ toast('Order ditolak'); loadPublicOrders(); } else toast(j.message||'Gagal');
+  }
+
+  // ── Global report ────────────────────────────────────────────
+  let _repChartIncome=null, _repChartPerf=null;
+  const REP_COLORS = { blue:'#2563eb', teal:'#0d9488', green:'#0a9a5a', amber:'#b45309', navy:'#1e3a8a' };
+  async function loadGlobalReport(){
+    let from=document.getElementById('gRepFrom').value, to=document.getElementById('gRepTo').value;
+    if(!from || !to){
+      const now=new Date(), first=new Date(now.getFullYear(),now.getMonth(),1);
+      if(!from){ from=first.toISOString().slice(0,10); document.getElementById('gRepFrom').value=from; }
+      if(!to){ to=now.toISOString().slice(0,10); document.getElementById('gRepTo').value=to; }
+    }
+    const j = await apiCall('/report?from='+from+'&to='+to);
+    if(!j.success) return toast('Gagal memuat laporan');
+    const s = j.data.summary || {};
+    // Sinkron ke overview voucher terjual
+    document.getElementById('ovVouchers').textContent = s.total_vouchers || 0;
+
+    // Stat cards (display-only) — pemasukan deposit, omzet, keuntungan, dst.
+    document.getElementById('repStats').style.gridTemplateColumns='';
+    document.getElementById('repStats').innerHTML=`
+      <div class="ov-card hl static"><div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Pemasukan Deposit</div><div class="v">${fmtRp(s.total_topup)}</div><div class="sub">${s.topup_count||0}x top-up masuk</div></div>
+      <div class="ov-card blue static"><div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 7h20v10H2z"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></span>Penjualan (Omzet)</div><div class="v">${fmtRp(s.total_revenue)}</div><div class="sub">${s.total_vouchers||0} voucher terjual</div></div>
+      <div class="ov-card green static"><div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>Keuntungan</div><div class="v">${fmtRp(s.total_profit)}</div><div class="sub">omzet − modal</div></div>
+      <div class="ov-card amber static"><div class="l"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>Saldo Beredar</div><div class="v">${fmtRp(s.total_outstanding_balance)}</div><div class="sub">${s.reseller_count||0} reseller aktif</div></div>`;
+
+    // Charts
+    renderReportCharts(j.data);
+
+    // Ranking table
+    const tb=document.getElementById('repRows');
+    const ranking = j.data.ranking || [];
+    if(!ranking.length){ tb.innerHTML='<tr><td colspan="5"><div class="empty"><div class="e-ttl">Belum ada penjualan</div><div>Tidak ada voucher terjual pada periode ini.</div></div></td></tr>'; return; }
+    tb.innerHTML=ranking.map((r,i)=>{
+      const rk = i<3 ? `<span class="rank-badge r${i+1}">${i+1}</span>` : `<span class="rank-badge">${i+1}</span>`;
+      return `<tr>
+        <td data-label="#" class="no-label">${rk}</td>
+        <td class="cell-main-td"><div class="cell-main"><div class="avatar">${esc((r.name||'?').charAt(0).toUpperCase())}</div><div><div class="r-name">${esc(r.name)}</div><div class="r-sub">${esc(r.code)}</div></div></div></td>
+        <td data-label="Voucher" style="text-align:right">${r.vouchers}</td>
+        <td data-label="Omzet" class="r-bal" style="text-align:right">${fmtRp(r.revenue)}</td>
+        <td data-label="Keuntungan" class="r-bal" style="text-align:right;color:var(--green,#0a9a5a)">${fmtRp(r.profit)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderReportCharts(data){
+    const ch = data.chart || { labels:[], vouchers:[], modal:[], topup:[] };
+    // Income vs sales (combo: bar topup + area modal)
+    const incomeEl=document.getElementById('repChartIncome');
+    if(incomeEl){
+      const labels = ch.labels.map(d=>{ const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}); });
+      const opt={
+        chart:{ type:'line', height:280, fontFamily:"'DM Sans',sans-serif", toolbar:{show:false}, animations:{enabled:true,speed:500} },
+        series:[
+          { name:'Deposit Masuk', type:'column', data:ch.topup },
+          { name:'Modal Voucher', type:'area', data:ch.modal }
+        ],
+        stroke:{ width:[0,3], curve:'smooth' },
+        plotOptions:{ bar:{ borderRadius:5, columnWidth:'48%' } },
+        fill:{ type:['solid','gradient'], opacity:[1,.18], gradient:{ shadeIntensity:1, opacityFrom:.35, opacityTo:.05 } },
+        colors:[REP_COLORS.blue, REP_COLORS.teal],
+        dataLabels:{ enabled:false },
+        grid:{ borderColor:'rgba(148,163,184,.18)', strokeDashArray:4, padding:{left:6,right:6} },
+        xaxis:{ categories:labels, labels:{ style:{ colors:'#94a3b8', fontSize:'10px' }, hideOverlappingLabels:true }, axisBorder:{show:false}, axisTicks:{show:false} },
+        yaxis:{ labels:{ style:{ colors:'#94a3b8', fontSize:'10px' }, formatter:v=>v>=1000?(Math.round(v/1000)+'k'):Math.round(v) } },
+        legend:{ position:'top', horizontalAlign:'right', fontSize:'12px', labels:{ colors:'#64748b' }, markers:{ radius:3 } },
+        tooltip:{ shared:true, y:{ formatter:v=>fmtRp(v) } }
+      };
+      if(_repChartIncome){ _repChartIncome.updateOptions(opt,true,true); }
+      else { _repChartIncome=new ApexCharts(incomeEl,opt); _repChartIncome.render(); }
+    }
+    // Performance: horizontal bar voucher per reseller (top 8)
+    const perfEl=document.getElementById('repChartPerf');
+    if(perfEl){
+      const top=(data.ranking||[]).slice(0,8);
+      if(!top.length){
+        perfEl.innerHTML='<div class="empty" style="padding:40px">Belum ada data performa reseller.</div>';
+        if(_repChartPerf){ try{_repChartPerf.destroy();}catch(_){} _repChartPerf=null; }
+      } else {
+        const opt={
+          chart:{ type:'bar', height:280, fontFamily:"'DM Sans',sans-serif", toolbar:{show:false}, animations:{enabled:true,speed:500} },
+          series:[{ name:'Voucher Terjual', data: top.map(r=>r.vouchers) }],
+          plotOptions:{ bar:{ horizontal:true, borderRadius:6, barHeight:'62%', distributed:true } },
+          colors:[REP_COLORS.blue, REP_COLORS.teal, REP_COLORS.green, REP_COLORS.amber, REP_COLORS.navy, '#0891b2', '#6366f1', '#64748b'],
+          dataLabels:{ enabled:true, style:{ fontSize:'11px', fontWeight:700, colors:['#fff'] }, formatter:v=>v },
+          grid:{ borderColor:'rgba(148,163,184,.18)', strokeDashArray:4 },
+          xaxis:{ categories: top.map(r=>r.name), labels:{ style:{ colors:'#94a3b8', fontSize:'10px' } }, axisBorder:{show:false}, axisTicks:{show:false} },
+          yaxis:{ labels:{ style:{ colors:'#475569', fontSize:'11.5px', fontWeight:600 } } },
+          legend:{ show:false },
+          tooltip:{ y:{ formatter:(v,o)=>{ const r=top[o.dataPointIndex]; return v+' voucher • omzet '+fmtRp(r.revenue); } } }
+        };
+        if(_repChartPerf){ _repChartPerf.updateOptions(opt,true,true); }
+        else { _repChartPerf=new ApexCharts(perfEl,opt); _repChartPerf.render(); }
+      }
+    }
+  }
+
+  // ── Top-up management ────────────────────────────────────────
+  const TUP_STATUS = {
+    pending:{t:'Menunggu',cls:'warn'}, waiting_verification:{t:'Perlu Verifikasi',cls:'warn'},
+    paid:{t:'Lunas',cls:'on'}, rejected:{t:'Ditolak',cls:'danger'}, expired:{t:'Kedaluwarsa',cls:'off'}
+  };
+  const eyeBtn = id => `<button class="ico-btn" title="Lihat detail" onclick="openTopupDetail(${id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
+  async function loadTopups(){
+    const status=document.getElementById('topupStatusFilter').value;
+    const tb=document.getElementById('topupRows');
+    tb.innerHTML='<tr><td colspan="6" class="empty">Memuat…</td></tr>';
+    try{
+      const j = await apiCall('/topups'+(status?('?status='+status):''));
+      const rows=j.data||[];
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="6"><div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><div class="e-ttl">Tidak ada permintaan</div><div>Tidak ada top-up dengan status ini.</div></div></td></tr>'; return; }
+      tb.innerHTML = rows.map(t=>{
+        const st=TUP_STATUS[t.status]||TUP_STATUS.pending;
+        const ml=t.method==='gateway'?('Otomatis'+(t.gateway_provider?(' · '+t.gateway_provider):'')):(t.method==='qris'?'QRIS':'Transfer Manual');
+        const d=new Date(t.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+        let actions='';
+        if(t.status==='waiting_verification' && t.method!=='gateway'){
+          actions=`<div class="row-actions">
+            ${t.has_proof?eyeBtn(t.id):''}
+            <button class="ico-btn ok" title="Setujui" onclick="verifyTopup(${t.id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+            <button class="ico-btn danger" title="Tolak" onclick="rejectTopup(${t.id})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>`;
+        } else if(t.has_proof){
+          actions=`<div class="row-actions">${eyeBtn(t.id)}</div>`;
+        } else { actions='<span style="color:var(--text3)">—</span>'; }
+        return `<tr>
+          <td class="cell-main-td"><div><div class="r-name">${esc(t.reseller?t.reseller.name:'-')}</div><div class="r-sub">${esc(t.reseller?t.reseller.code:'')}${t.note?(' • '+esc(t.note)):''}</div></div></td>
+          <td data-label="Nominal" class="r-bal">${fmtRp(t.amount)}</td>
+          <td data-label="Metode">${esc(ml)}</td>
+          <td data-label="Status"><span class="badge ${st.cls}">${st.t}</span></td>
+          <td data-label="Waktu" style="font-size:12.5px;color:var(--text2)">${d}</td>
+          <td class="cell-actions">${actions}</td>
+        </tr>`;
+      }).join('');
+      // badge + overview jumlah perlu verifikasi
+      if(status==='waiting_verification'){
+        setPendingCount(rows.length);
+      }
+    }catch(e){ tb.innerHTML='<tr><td colspan="6" class="empty">Gagal memuat.</td></tr>'; }
+  }
+  function setPendingCount(n){
+    const b=document.getElementById('topupBadge');
+    document.getElementById('ovPending').textContent = n;
+    if(n){ b.textContent=n; b.style.display='inline-block'; } else b.style.display='none';
+  }
+  async function verifyTopup(id){
+    const ok = await rvConfirm({ title:'Setujui Top-up', message:'Setujui top-up ini? Saldo reseller akan langsung bertambah.', okText:'Setujui', tone:'ok' });
+    if(!ok) return;
+    const j = await apiCall('/topups/'+id+'/verify',{method:'POST',body:{}});
+    if(j.success){ toast('Disetujui — saldo dikreditkan'); closeModals(); loadTopups(); loadResellers(); refreshPending(); } else toast(j.message||'Gagal');
+  }
+  async function rejectTopup(id){
+    const reason = await rvConfirm({ title:'Tolak Top-up', message:'Top-up akan ditolak. Beri alasan singkat (opsional).', okText:'Tolak', tone:'warn', input:{ label:'Alasan penolakan', placeholder:'mis. Bukti tidak valid', value:'Bukti tidak valid' } });
+    if(reason===null) return;
+    const j = await apiCall('/topups/'+id+'/reject',{method:'POST',body:{reason}});
+    if(j.success){ toast('Top-up ditolak'); closeModals(); loadTopups(); refreshPending(); } else toast(j.message||'Gagal');
+  }
+
+  // ── Detail Top-up (modal kaya: nominal + bukti + info + aksi) ──
+  const _TDMETHOD = { gateway:'Pembayaran Otomatis', qris:'QRIS (Manual)', manual:'Transfer Manual' };
+  async function openTopupDetail(id){
+    const modal=document.getElementById('topupDetailModal');
+    modal.classList.add('show');
+    document.getElementById('tdRef').textContent='Memuat…';
+    document.getElementById('tdFrame').innerHTML='<div class="td-empty"><div class="td-empty-txt" style="color:var(--text3)">Memuat…</div></div>';
+    document.getElementById('tdOpen').style.display='none';
+    document.getElementById('tdActions').style.display='none';
+    try{
+      const j = await apiCall('/topups/'+id);
+      if(!j.success){ toast(j.message||'Gagal memuat detail'); return; }
+      const d=j.data;
+      const st=TUP_STATUS[d.status]||TUP_STATUS.pending;
+      document.getElementById('tdRef').textContent=d.ref||('#'+d.id);
+      document.getElementById('tdRefRow').textContent=d.ref||'—';
+      document.getElementById('tdAmount').textContent=fmtRp(d.amount);
+      document.getElementById('tdStatusWrap').innerHTML='<span class="td-st">'+esc(st.t)+'</span>';
+      document.getElementById('tdReseller').textContent=d.reseller?d.reseller.name:'—';
+      document.getElementById('tdCode').textContent=d.reseller?d.reseller.code:'—';
+      document.getElementById('tdPhone').textContent=(d.reseller&&d.reseller.phone)?d.reseller.phone:'—';
+      const ml = d.method==='gateway' ? (_TDMETHOD.gateway+(d.gateway_provider?(' · '+d.gateway_provider):'')) : (_TDMETHOD[d.method]||d.method);
+      document.getElementById('tdMethod').textContent=ml;
+      document.getElementById('tdCreated').textContent=new Date(d.created_at).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      // optional rows
+      const noteRow=document.getElementById('tdNoteRow'); if(d.note){ noteRow.style.display='flex'; document.getElementById('tdNote').textContent=d.note; } else noteRow.style.display='none';
+      const rejRow=document.getElementById('tdRejectRow'); if(d.reject_reason){ rejRow.style.display='flex'; document.getElementById('tdReject').textContent=d.reject_reason; } else rejRow.style.display='none';
+      const vRow=document.getElementById('tdVerifierRow'); if(d.verifier&&d.verifier.name){ vRow.style.display='flex'; document.getElementById('tdVerifier').textContent=d.verifier.name; } else vRow.style.display='none';
+      // proof image
+      const frame=document.getElementById('tdFrame'), open=document.getElementById('tdOpen');
+      if(d.has_proof && d.proof_url){
+        const url=d.proof_url;
+        // coba render gambar; kalau PDF tampilkan iframe
+        frame.classList.remove('empty-frame');
+        frame.innerHTML='<img src="'+url+'" alt="Bukti" onerror="this.parentNode.innerHTML=\'<iframe src=&quot;'+url+'&quot;></iframe>\'">';
+        open.href=url; open.style.display='inline-flex';
+      } else {
+        frame.classList.add('empty-frame');
+        frame.innerHTML='<div class="td-empty"><div class="ei"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div><div class="et">Tanpa bukti</div><div class="es">'+(d.method==='gateway'?'Pembayaran otomatis (gateway) tidak memerlukan bukti manual.':'Reseller belum mengunggah bukti transfer.')+'</div></div>';
+        open.style.display='none';
+      }
+      // action buttons (hanya untuk manual/qris yg masih perlu verifikasi)
+      const acts=document.getElementById('tdActions');
+      if(d.status==='waiting_verification' && d.method!=='gateway'){
+        acts.style.display='flex';
+        document.getElementById('tdVerifyBtn').onclick=()=>verifyTopup(d.id);
+        document.getElementById('tdRejectBtn').onclick=()=>rejectTopup(d.id);
+      } else acts.style.display='none';
+    }catch(e){ toast('Terjadi kesalahan'); }
+  }
+  function refreshPending(){
+    apiCall('/topups?status=waiting_verification').then(j=>setPendingCount((j.data||[]).length)).catch(()=>{});
+  }
+
+  // ── Topup settings (modal) ───────────────────────────────────
+  async function openTopupSettings(){
+    try{
+      const j = await apiCall('/topup-settings');
+      const c = j.data||{};
+      document.getElementById('setManual').checked = !!c.manual_enabled;
+      document.getElementById('setGateway').checked = !!c.gateway_enabled;
+      document.getElementById('setMin').value = c.min_topup || 10000;
+      document.getElementById('topupSettingsModal').classList.add('show');
+    }catch(e){ toast('Gagal memuat pengaturan'); }
+  }
+  async function saveTopupSettings(){
+    const payload={
+      manual_enabled: document.getElementById('setManual').checked,
+      gateway_enabled: document.getElementById('setGateway').checked,
+      min_topup: parseInt(document.getElementById('setMin').value)||10000
+    };
+    const r = await apiCall('/topup-settings',{method:'PUT',body:payload});
+    if(r.success){ toast('Pengaturan disimpan'); closeModals(); } else toast(r.message||'Gagal');
+  }
+
+  document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{ if(e.target===bg) closeModals(); }));
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModals(); });
+
+  (function init(){
+    loadDevices();
+    loadResellers();
+    const now=new Date(), first=new Date(now.getFullYear(),now.getMonth(),1);
+    document.getElementById('gRepFrom').value=first.toISOString().slice(0,10);
+    document.getElementById('gRepTo').value=now.toISOString().slice(0,10);
+    refreshPending();
+    // Muat ringkasan voucher terjual (sepanjang waktu) untuk overview.
+    apiCall('/report').then(j=>{
+      if(j.success){ document.getElementById('ovVouchers').textContent = j.data.per_reseller.reduce((s,r)=>s+r.vouchers,0); }
+    }).catch(()=>{});
+  })();
+</script>
+</body>
+</html>

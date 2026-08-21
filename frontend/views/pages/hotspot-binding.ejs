@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --hb-bg:#f4f6fb; --hb-card:#fff; --hb-border:#e7ecf3; --hb-text:#0f1b34;
+      --hb-muted:#6b7a99; --hb-navy:#1e3a8a; --hb-blue:#2563eb; --hb-blue-soft:#eff4ff;
+      --hb-red:#e11d48; --hb-green:#059669; --hb-amber:#d97706;
+      --hb-shadow:0 1px 2px rgba(16,30,54,.04),0 4px 16px rgba(16,30,54,.05);
+    }
+    body,html{font-family:'DM Sans',sans-serif;}
+    .page-content{background:var(--hb-bg);}
+    *{-webkit-tap-highlight-color:transparent;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .3s ease both}.a2{animation:fadeUp .3s .06s ease both}.a3{animation:fadeUp .3s .12s ease both}
+
+    /* ── HEADER ── */
+    .hb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+    .hb-title{font-size:21px;font-weight:800;color:var(--hb-text);letter-spacing:-.5px;display:flex;align-items:center;gap:9px;}
+    .hb-title .ic{width:30px;height:30px;border-radius:9px;background:var(--hb-navy);display:grid;place-items:center;}
+    .hb-title .ic svg{width:17px;height:17px;stroke:#fff;}
+    .hb-sub{font-size:13px;color:var(--hb-muted);margin-top:3px;margin-left:39px;}
+    @media(max-width:600px){.hb-sub{margin-left:0;}}
+
+    /* ── ROUTER BAR ── */
+    .hb-routerbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      background:var(--hb-card);border:1px solid var(--hb-border);border-radius:13px;padding:11px 14px;margin-bottom:14px;box-shadow:var(--hb-shadow);}
+    .hb-routerbar label{font-size:12px;font-weight:700;color:var(--hb-muted);}
+    .hb-routerbar select{font-family:'DM Sans';font-size:13px;font-weight:600;padding:8px 12px;border:1.5px solid var(--hb-border);
+      border-radius:9px;background:#fff;min-width:200px;color:var(--hb-text);}
+    .hb-routerbar select:focus{outline:none;border-color:var(--hb-blue);}
+    .hb-proto{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:100px;background:var(--hb-blue-soft);color:var(--hb-blue);letter-spacing:.3px;}
+
+    /* ── TABS (scrollable on mobile) ── */
+    .hb-tabs{display:flex;gap:3px;margin-bottom:16px;background:var(--hb-card);border:1px solid var(--hb-border);
+      border-radius:13px;padding:5px;overflow-x:auto;scrollbar-width:none;box-shadow:var(--hb-shadow);}
+    .hb-tabs::-webkit-scrollbar{display:none;}
+    .hb-tab{padding:9px 15px;font-size:13px;font-weight:700;color:var(--hb-muted);cursor:pointer;border:none;background:none;
+      border-radius:9px;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+    .hb-tab svg{width:15px;height:15px;}
+    .hb-tab:hover{color:var(--hb-navy);background:var(--hb-bg);}
+    .hb-tab.active{color:#fff;background:var(--hb-navy);}
+    .hb-panel{display:none;animation:fadeUp .25s ease both;}
+    .hb-panel.active{display:block;}
+
+    /* ── CARDS ── */
+    .hb-card{background:var(--hb-card);border:1px solid var(--hb-border);border-radius:14px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--hb-shadow);}
+    .hb-card-h{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+    .hb-card-t{font-size:14px;font-weight:800;color:var(--hb-text);}
+    .hb-card-h .sp{flex:1;}
+
+    /* ── STAT STRIP ── */
+    .hb-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+    @media(max-width:760px){.hb-stats{grid-template-columns:repeat(2,1fr);}}
+    .hb-stat{background:var(--hb-card);border:1px solid var(--hb-border);border-radius:13px;padding:15px 16px;box-shadow:var(--hb-shadow);}
+    .hb-stat .l{font-size:11.5px;color:var(--hb-muted);font-weight:600;margin-bottom:7px;}
+    .hb-stat .v{font-size:25px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--hb-text);}
+
+    /* ── BUTTONS ── */
+    .btn{font-family:'DM Sans';font-size:13px;font-weight:700;padding:9px 16px;border-radius:9px;border:none;cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;}
+    .btn svg{width:14px;height:14px;}
+    .btn-primary{background:var(--hb-navy);color:#fff;}.btn-primary:hover{background:#16306e;}
+    .btn-primary:disabled{background:#9aa8c4;cursor:not-allowed;}
+    .btn-blue{background:var(--hb-blue);color:#fff;}.btn-blue:hover{background:#1d4ed8;}
+    .btn-danger{background:var(--hb-red);color:#fff;}.btn-danger:hover{background:#be123c;}
+    .btn-green{background:var(--hb-green);color:#fff;}.btn-green:hover{background:#047857;}
+    .btn-amber{background:#d97706;color:#fff;}.btn-amber:hover{background:#b45309;}
+    .btn-ghost{background:var(--hb-bg);color:#334155;border:1px solid var(--hb-border);}.btn-ghost:hover{background:#e9eef6;}
+    .btn-sm{padding:6px 11px;font-size:12px;border-radius:8px;}
+
+    /* ── TABLE (responsive → cards on mobile) ── */
+    .hb-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .hb-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;}
+    .hb-tbl th{text-align:left;padding:9px 12px;font-size:10.5px;font-weight:800;color:var(--hb-muted);
+      text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--hb-border);background:#fafbfe;white-space:nowrap;}
+    .hb-tbl td{padding:11px 12px;border-bottom:1px solid #f1f4f9;color:var(--hb-text);vertical-align:middle;}
+    .hb-tbl tr:last-child td{border-bottom:none;}
+    .hb-tbl tr:hover td{background:#fafbff;}
+    .mono{font-family:'DM Mono',monospace;font-size:12px;}
+    .tag{font-family:'DM Mono',monospace;font-size:12px;padding:2px 8px;border-radius:6px;display:inline-block;}
+    .tag-ip{background:var(--hb-blue-soft);border:1px solid #c7dafe;color:#1e40af;}
+    .tag-mac{background:#f1f4f9;border:1px solid #e2e8f0;color:#334155;}
+    .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px;display:inline-flex;align-items:center;gap:3px;}
+    .badge.green{background:#d1fae5;color:#047857;}.badge.red{background:#ffe4e6;color:#be123c;}
+    .badge.amber{background:#fef3c7;color:#92400e;}.badge.blue{background:var(--hb-blue-soft);color:#1d4ed8;}
+    .badge.gray{background:#f1f4f9;color:#64748b;}
+
+    .empty{padding:42px 18px;text-align:center;color:#9aa8c4;font-size:13px;}
+    .empty svg{width:38px;height:38px;margin-bottom:9px;opacity:.5;}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+    .spinner.dark{border-color:#cbd5e1;border-top-color:var(--hb-navy);}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── FORMS / GRID ── */
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    .scan-grid{display:grid;grid-template-columns:1.2fr 1.2fr .7fr auto;gap:11px;align-items:end;}
+    @media(max-width:760px){.grid2,.grid3,.scan-grid{grid-template-columns:1fr;}}
+    .fg{display:flex;flex-direction:column;gap:5px;}
+    .fg label{font-size:12px;font-weight:600;color:#475569;}
+    .fg input,.fg select{font-family:'DM Sans';font-size:13px;padding:9px 12px;border:1.5px solid var(--hb-border);border-radius:9px;background:#fff;color:var(--hb-text);}
+    .fg input.mono{font-family:'DM Mono',monospace;}
+    .fg input:focus,.fg select:focus{outline:none;border-color:var(--hb-blue);}
+    .fhint{font-size:11px;color:#94a3b8;}
+
+    /* ── MODAL ── */
+    .modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;}
+    .modal-back.show{display:flex;}
+    .modal-box{background:#fff;border-radius:16px;padding:22px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;animation:fadeUp .22s ease both;}
+    .modal-box h3{font-size:17px;font-weight:800;color:var(--hb-text);margin:0 0 5px;}
+    .modal-box p{font-size:12.5px;color:var(--hb-muted);margin:0 0 16px;}
+    .modal-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;}
+    @media(max-width:600px){.modal-box{padding:18px;border-radius:14px;}}
+
+    /* ── TRAFFIC MONITOR ── */
+    .traf-range{display:flex;gap:3px;background:var(--hb-bg);border:1px solid var(--hb-border);border-radius:9px;padding:3px;}
+    .traf-rbtn{padding:5px 11px;border:none;background:none;color:var(--hb-muted);font-size:11.5px;font-weight:700;border-radius:7px;cursor:pointer;font-family:'DM Sans';transition:all .15s;}
+    .traf-rbtn:hover{color:var(--hb-navy);}
+    .traf-rbtn.active{background:var(--hb-navy);color:#fff;}
+    .sp-chk{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--hb-text);cursor:pointer;}
+    .sp-chk input{width:15px;height:15px;accent-color:var(--hb-blue);cursor:pointer;}
+    /* ── HOST SUMMARY BAR ── */
+    .host-summary{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--hb-card);border:1px solid var(--hb-border);border-radius:10px;padding:11px 16px;margin-bottom:12px;font-family:'DM Mono','DM Sans',monospace;font-size:12.5px;}
+    .host-summary .hs-item{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;}
+    .host-summary .hs-dot{width:11px;height:3px;border-radius:2px;flex-shrink:0;}
+    .host-summary .hs-sep{width:1px;height:16px;background:var(--hb-border);}
+    @media(max-width:600px){.host-summary{gap:10px;}}
+    .conn-badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:20px;}
+    .conn-badge .dot{width:7px;height:7px;border-radius:50%;}
+    .conn-badge.ok{background:#dcfce7;color:#15803d;} .conn-badge.ok .dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+    .conn-badge.bad{background:#fee2e2;color:#b91c1c;} .conn-badge.bad .dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18);}
+    .conn-badge.chk{background:#eef2f9;color:#64748b;} .conn-badge.chk .dot{background:#94a3b8;}
+    .ar-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--hb-muted);cursor:pointer;}
+    .ar-toggle input{width:15px;height:15px;accent-color:var(--hb-blue);cursor:pointer;}
+    .hb-tblbar{display:flex;align-items:center;gap:9px;margin-bottom:12px;flex-wrap:wrap;}
+    .hb-search{flex:1;min-width:180px;position:relative;}
+    .hb-search input{width:100%;font-family:'DM Sans';font-size:13px;padding:8px 12px 8px 34px;border:1.5px solid var(--hb-border);border-radius:9px;background:#fff;color:var(--hb-text);}
+    .hb-search input:focus{outline:none;border-color:var(--hb-blue);}
+    .hb-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:#94a3b8;}
+    .hb-fselect{font-family:'DM Sans';font-size:12.5px;font-weight:600;padding:8px 11px;border:1.5px solid var(--hb-border);border-radius:9px;background:#fff;color:var(--hb-text);}
+    .row-chk{width:16px;height:16px;accent-color:var(--hb-blue);cursor:pointer;}
+    .bulk-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--hb-navy);color:#fff;border-radius:10px;margin-bottom:12px;font-size:13px;font-weight:600;}
+    .bulk-bar.show{display:flex;}
+    .bulk-bar .sp{flex:1}
+    .bulk-bar button{font-size:12.5px;}
+
+    /* ── CONFIRM MODAL (konfirmasi aksi) ── */
+    .confirm-back{position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(2px);display:none;
+      align-items:center;justify-content:center;z-index:10000;padding:16px;}
+    .confirm-back.show{display:flex;animation:cfFade .18s ease both;}
+    @keyframes cfFade{from{opacity:0}to{opacity:1}}
+    .confirm-box{background:#fff;border-radius:18px;padding:26px 24px 20px;max-width:380px;width:100%;text-align:center;
+      box-shadow:0 20px 60px rgba(15,23,42,.28);animation:cfPop .24s cubic-bezier(.34,1.56,.64,1) both;}
+    @keyframes cfPop{from{opacity:0;transform:scale(.9) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .confirm-ic{width:56px;height:56px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;}
+    .confirm-ic svg{width:28px;height:28px;stroke-width:2;}
+    .confirm-ic.danger{background:#fee2e2;color:#dc2626;}
+    .confirm-ic.warn{background:#fef3c7;color:#d97706;}
+    .confirm-ic.info{background:var(--hb-blue-soft);color:var(--hb-blue);}
+    .confirm-ic.success{background:#d1fae5;color:#059669;}
+    .confirm-box h3{font-size:18px;font-weight:800;color:var(--hb-text);margin:0 0 7px;}
+    .confirm-box p{font-size:13px;color:var(--hb-muted);margin:0 0 22px;line-height:1.55;}
+    .confirm-actions{display:flex;gap:10px;}
+    .confirm-actions .btn{flex:1;justify-content:center;padding:11px 16px;font-size:13.5px;}
+    .confirm-actions .btn-ghost{background:var(--hb-bg);color:#475569;border:1px solid var(--hb-border);}
+    .confirm-ok-danger{background:linear-gradient(135deg,#e11d48,#f43f5e);color:#fff;}
+    .confirm-ok-warn{background:linear-gradient(135deg,#d97706,#f59e0b);color:#fff;}
+    .confirm-ok-info{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;}
+    .confirm-ok-success{background:linear-gradient(135deg,#059669,#10b981);color:#fff;}
+
+    /* ══════════════════════════════════════════════════════
+       REDESIGN v2 — cleaner, modern, mobile-first
+       ══════════════════════════════════════════════════════ */
+    .ta-r{text-align:right;}
+    .row-actions{display:inline-flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+
+    /* Softer page + card polish */
+    .hb-card{border-radius:16px;transition:box-shadow .2s,transform .2s;}
+    .hb-card:hover{box-shadow:0 2px 6px rgba(16,30,54,.05),0 10px 28px rgba(16,30,54,.07);}
+    .hb-title .ic{background:linear-gradient(135deg,#1e3a8a,#2563eb);box-shadow:0 4px 12px rgba(37,99,235,.28);}
+
+    /* Router bar + tabs: solid blue active state (match Hotspot page) */
+    .hb-tab.active{background:#2563eb;box-shadow:0 4px 12px rgba(37,99,235,.25);}
+    .hb-tab.active:hover{background:#1d4ed8;color:#fff;}
+    .hb-proto{background:linear-gradient(135deg,#eff4ff,#e0ebff);}
+
+    /* Buttons: subtle lift */
+    .btn{transition:all .15s;}
+    .btn:hover{transform:translateY(-1px);}
+    .btn:active{transform:translateY(0);}
+    .btn-primary{background:linear-gradient(135deg,#1e3a8a,#2563eb);}
+    .btn-blue{background:linear-gradient(135deg,#2563eb,#3b82f6);}
+    .btn-green{background:linear-gradient(135deg,#059669,#10b981);}
+    .btn-danger{background:linear-gradient(135deg,#e11d48,#f43f5e);}
+
+    /* ── IP SCAN — Hasil Scan: tabel clean, tanpa gradien ── */
+    .scan-summary{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--hb-muted);margin-bottom:14px;}
+    .scan-summary strong{color:var(--hb-text);font-weight:800;}
+    .scan-summary .scan-sep{width:1px;height:13px;background:var(--hb-border);}
+    .scan-tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--hb-border);border-radius:12px;}
+    .scan-tbl{width:100%;border-collapse:collapse;font-size:13px;min-width:560px;background:#fff;}
+    .scan-tbl th{text-align:left;padding:11px 14px;font-size:10.5px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;background:#fafbfc;border-bottom:1px solid var(--hb-border);}
+    .scan-tbl th.ta-r{text-align:right;}
+    .scan-tbl td{padding:12px 14px;border-bottom:1px solid #f1f4f9;color:var(--hb-text);vertical-align:middle;background:#fff;}
+    .scan-tbl tr:last-child td{border-bottom:none;}
+    .scan-tbl tr:hover td{background:#f8fafc;}
+    .scan-tbl td.ta-r{text-align:right;}
+    .scan-muted{color:#cbd5e1;}
+    .scan-cust{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+    .scan-cust.act{background:#dcfce7;color:#15803d;}
+    .scan-cust.iso{background:#fee2e2;color:#b91c1c;}
+    .scan-bound{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#94a3b8;}
+
+    /* ── STAT CARDS — gaya halaman Traffic (lebih besar, clickable) ── */
+    .hbs-grid{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid var(--hb-border);
+      border-radius:16px;overflow:hidden;margin-bottom:14px;box-shadow:var(--hb-shadow);}
+    .hbs-card{padding:22px 24px 20px;min-height:150px;border-right:1px solid var(--hb-border);
+      position:relative;transition:background .15s,transform .15s;display:flex;flex-direction:column;
+      cursor:pointer;}
+    .hbs-card:last-child{border-right:none;}
+    .hbs-card:hover{background:#fafbff;}
+    .hbs-card.sc-active{background:#2563eb;}
+    .hbs-card.sc-active:hover{background:#1d4ed8;}
+    .hbs-card.sc-active .hbs-label{color:rgba(255,255,255,.72);}
+    .hbs-card.sc-active .hbs-num{color:#fff !important;}
+    .hbs-card.sc-active .hbs-sub{color:rgba(255,255,255,.6);}
+    .hbs-card.sc-active .hbs-spark-line{stroke:rgba(255,255,255,.75) !important;}
+    .hbs-card.sc-active .hbs-spark-fill{fill:rgba(255,255,255,.14) !important;}
+    .hbs-card.sc-active .hbs-spark-dot{fill:#fff !important;}
+    .hbs-label{font-size:13px;font-weight:600;color:var(--hb-muted);margin-bottom:14px;transition:color .15s;}
+    .hbs-body{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex:1;}
+    .hbs-left{display:flex;flex-direction:column;min-width:0;}
+    .hbs-num{font-size:38px;font-weight:800;color:var(--hb-text);letter-spacing:-1.5px;line-height:1;transition:color .15s;}
+    .hbs-sub{font-size:12px;color:#94a3b8;margin-top:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
+    .hbs-spark{flex-shrink:0;width:88px;height:44px;align-self:flex-end;}
+    .hbs-spark svg{width:88px;height:44px;}
+    .hbs-spark-line{stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s;}
+    /* tag filter di header tabel pelanggan */
+    .hbs-filter-tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:var(--hb-blue-soft);
+      color:var(--hb-blue);display:inline-flex;align-items:center;gap:6px;margin-left:8px;}
+    .hbs-filter-tag button{background:none;border:none;cursor:pointer;color:inherit;font-size:13px;line-height:1;padding:0;font-weight:800;}
+    @media(max-width:760px){
+      .hbs-grid{grid-template-columns:repeat(2,1fr);}
+      .hbs-card{border-right:none;border-bottom:1px solid var(--hb-border);min-height:128px;padding:18px 18px 16px;}
+      .hbs-card:nth-child(odd){border-right:1px solid var(--hb-border);}
+      .hbs-card:nth-last-child(-n+2){border-bottom:none;}
+      .hbs-num{font-size:30px;}
+      .hbs-spark{width:64px;height:34px;}.hbs-spark svg{width:64px;height:34px;}
+    }
+    @media(max-width:420px){
+      .hbs-grid{grid-template-columns:1fr;}
+      .hbs-card{border-right:none !important;border-bottom:1px solid var(--hb-border);}
+      .hbs-card:last-child{border-bottom:none;}
+    }
+
+    /* ── RESPONSIVE TABLE → CARDS (mobile) ── */
+    @media(max-width:680px){
+      .hb-tbl{min-width:0;width:100%;border-collapse:separate;border-spacing:0 10px;}
+      .hb-tbl thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+      .hb-tbl tr{display:block;background:#fff;border:1px solid var(--hb-border);border-radius:13px;
+        padding:12px 14px;box-shadow:0 1px 3px rgba(16,30,54,.05);}
+      .hb-tbl tr:hover td{background:none;}
+      .hb-tbl td{display:flex;align-items:center;justify-content:space-between;gap:12px;
+        padding:6px 0;border:none;border-bottom:1px dashed #eef2f9;}
+      .hb-tbl td:last-child{border-bottom:none;padding-top:10px;}
+      .hb-tbl td::before{content:attr(data-l);font-size:10.5px;font-weight:800;color:var(--hb-muted);
+        text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
+      .hb-tbl td[data-l=""]::before{content:none;}
+      .hb-tbl td.ta-r{justify-content:flex-end;}
+      .row-actions{width:100%;justify-content:flex-end;}
+      .hb-tblwrap{overflow:visible;}
+      /* Scan table → kartu di mobile */
+      .scan-tblwrap{border:none;overflow:visible;}
+      .scan-tbl{min-width:0;width:100%;border-collapse:separate;border-spacing:0 10px;background:none;}
+      .scan-tbl thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+      .scan-tbl tr{display:block;background:#fff;border:1px solid var(--hb-border);border-radius:13px;
+        padding:12px 14px;box-shadow:0 1px 3px rgba(16,30,54,.05);}
+      .scan-tbl tr:hover td{background:none;}
+      .scan-tbl td{display:flex;align-items:center;justify-content:space-between;gap:12px;
+        padding:6px 0;border:none;border-bottom:1px dashed #eef2f9;background:none;}
+      .scan-tbl td:last-child{border-bottom:none;padding-top:10px;}
+      .scan-tbl td::before{content:attr(data-l);font-size:10.5px;font-weight:800;color:var(--hb-muted);
+        text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;}
+      .scan-tbl td[data-l=""]::before{content:none;}
+      .scan-tbl td.ta-r{justify-content:flex-end;}
+      .scan-grid{grid-template-columns:1fr;}
+      .hb-stat .v{font-size:22px;}
+    }
+    @media(max-width:420px){
+      .hb-title{font-size:18px;}
+      .btn-sm{padding:7px 10px;}
+    }
+
+    /* ── IP SCAN — RADAR ANIMATION ── */
+    .scan-anim{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 18px 30px;gap:6px;}
+    .radar{position:relative;width:150px;height:150px;border-radius:50%;
+      background:radial-gradient(circle,#eaf1ff 0%,#f6f9ff 70%);
+      box-shadow:inset 0 0 0 1px #d7e4ff;overflow:hidden;margin-bottom:14px;}
+    .radar .ring{position:absolute;border:1px solid #cfe0ff;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);}
+    .radar .r1{width:46%;height:46%;}.radar .r2{width:72%;height:72%;}.radar .r3{width:96%;height:96%;}
+    .radar .dot{position:absolute;top:50%;left:50%;width:8px;height:8px;background:var(--hb-blue);border-radius:50%;
+      transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(37,99,235,.18);}
+    .radar .sweep{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;
+      background:conic-gradient(from 0deg, rgba(37,99,235,.32), rgba(37,99,235,0) 70%);
+      animation:radarspin 1.6s linear infinite;}
+    @keyframes radarspin{to{transform:rotate(360deg);}}
+    .radar .blip{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--hb-green);
+      box-shadow:0 0 8px rgba(5,150,105,.7);opacity:0;animation:blip 1.6s ease-in-out infinite;}
+    .radar .b1{top:30%;left:62%;animation-delay:.2s;}
+    .radar .b2{top:60%;left:38%;animation-delay:.6s;}
+    .radar .b3{top:42%;left:30%;animation-delay:1.0s;}
+    .radar .b4{top:68%;left:66%;animation-delay:1.3s;}
+    @keyframes blip{0%,100%{opacity:0;transform:scale(.4);}40%{opacity:1;transform:scale(1);}}
+    .scan-anim-txt{font-size:13.5px;color:var(--hb-text);font-weight:600;}
+    .scan-anim-sub{font-size:12px;color:var(--hb-muted);font-weight:700;}
+    .scan-prog{width:min(280px,80%);height:6px;background:#e6edf8;border-radius:100px;overflow:hidden;margin-top:6px;}
+    .scan-prog span{display:block;height:100%;width:0;background:linear-gradient(90deg,#2563eb,#3b82f6);
+      border-radius:100px;transition:width .15s linear;}
+    @media(prefers-reduced-motion:reduce){.radar .sweep,.radar .blip{animation:none;}}
+    /* ── Pagination IP Binding ── */
+    .hb-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap;}
+    .hb-pg-info{font-size:12.5px;color:#94a3b8;font-weight:600;}
+    .hb-pg-ctrl{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+    .hb-pg-btn{font-family:'DM Sans';font-size:12.5px;font-weight:700;min-width:34px;padding:7px 11px;border:1.5px solid var(--hb-border);border-radius:9px;background:#fff;color:var(--hb-text);cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+    .hb-pg-btn:hover:not(:disabled){background:#f1f5fb;border-color:#2563eb;color:#2563eb;}
+    .hb-pg-btn.act{background:#2563eb;border-color:#2563eb;color:#fff;}
+    .hb-pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .hb-pg-dots{color:#94a3b8;padding:0 3px;font-weight:700;}
+    @media(max-width:600px){ .hb-pager{justify-content:center;} }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="hb-head a1">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;color:#0d1b3e;margin:0 0 3px;letter-spacing:-.3px;">Hotspot Binding</h1>
+          <p style="font-size:12.5px;color:var(--hb-muted);margin:0;">Management Customer dengan Metode Hotspot IP Binding</p>
+        </div>
+        <button class="btn btn-ghost" onclick="location.reload()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg> Refresh
+        </button>
+      </div>
+
+      <div class="hb-routerbar a2">
+        <label>Router:</label>
+        <select id="routerSel" onchange="onRouterChange()"><option value="">— Memuat… —</option></select>
+        <span class="hb-proto" id="routerProto" style="display:none"></span>
+        <span class="conn-badge" id="connBadge" style="display:none"></span>
+        <span class="sp" style="flex:1"></span>
+        <label class="ar-toggle" title="Auto-refresh tabel tiap 30 detik">
+          <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+          <span>Auto-refresh</span>
+        </label>
+      </div>
+
+      <!-- ════ STAT CARDS (selalu di atas, di bawah router selector) ════ -->
+      <div class="hbs-grid a2">
+        <div class="hbs-card sc-active" id="hbs-total" onclick="statCardClick('total')" title="Lihat semua pelanggan hotspot">
+          <div class="hbs-label">IP Binding</div>
+          <div class="hbs-body">
+            <div class="hbs-left">
+              <span class="hbs-num" id="stTotal">—</span>
+              <span class="hbs-sub">Customer IP Binding Hotspot</span>
+            </div>
+            <div class="hbs-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="hbs-spark-fill" d="M0,28 L12,22 L24,25 L36,16 L48,20 L60,10 L72,14 L72,36 L0,36 Z" fill="#2563eb" opacity=".12"/><path class="hbs-spark-line" d="M0,28 L12,22 L24,25 L36,16 L48,20 L60,10 L72,14" stroke="#2563eb"/><circle class="hbs-spark-dot" cx="72" cy="14" r="2.5" fill="#2563eb"/></svg></div>
+          </div>
+        </div>
+        <div class="hbs-card" id="hbs-active" onclick="statCardClick('active')" title="Lihat pelanggan aktif">
+          <div class="hbs-label">Aktif</div>
+          <div class="hbs-body">
+            <div class="hbs-left">
+              <span class="hbs-num" id="stActive" style="color:var(--hb-green)">—</span>
+              <span class="hbs-sub">Akses internet aktif</span>
+            </div>
+            <div class="hbs-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="hbs-spark-fill" d="M0,24 L12,26 L24,18 L36,20 L48,12 L60,16 L72,9 L72,36 L0,36 Z" fill="#16a34a" opacity=".12"/><path class="hbs-spark-line" d="M0,24 L12,26 L24,18 L36,20 L48,12 L60,16 L72,9" stroke="#16a34a"/><circle class="hbs-spark-dot" cx="72" cy="9" r="2.5" fill="#16a34a"/></svg></div>
+          </div>
+        </div>
+        <div class="hbs-card" id="hbs-isolated" onclick="statCardClick('isolated')" title="Lihat pelanggan terisolir">
+          <div class="hbs-label">Terisolir</div>
+          <div class="hbs-body">
+            <div class="hbs-left">
+              <span class="hbs-num" id="stIsolated" style="color:var(--hb-red)">—</span>
+              <span class="hbs-sub">Akses diblokir</span>
+            </div>
+            <div class="hbs-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="hbs-spark-fill" d="M0,16 L12,14 L24,20 L36,18 L48,24 L60,22 L72,28 L72,36 L0,36 Z" fill="#dc2626" opacity=".12"/><path class="hbs-spark-line" d="M0,16 L12,14 L24,20 L36,18 L48,24 L60,22 L72,28" stroke="#dc2626"/><circle class="hbs-spark-dot" cx="72" cy="28" r="2.5" fill="#dc2626"/></svg></div>
+          </div>
+        </div>
+        <div class="hbs-card" id="hbs-mismatch" onclick="statCardClick('mismatch')" title="Lihat data yang tidak sinkron">
+          <div class="hbs-label">Mismatch (Sync)</div>
+          <div class="hbs-body">
+            <div class="hbs-left">
+              <span class="hbs-num" id="stMismatch" style="color:var(--hb-amber)">—</span>
+              <span class="hbs-sub">Database & Router Beda</span>
+            </div>
+            <div class="hbs-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="hbs-spark-fill" d="M0,20 L12,24 L24,16 L36,26 L48,18 L60,22 L72,17 L72,36 L0,36 Z" fill="#d97706" opacity=".12"/><path class="hbs-spark-line" d="M0,20 L12,24 L24,16 L36,26 L48,18 L60,22 L72,17" stroke="#d97706"/><circle class="hbs-spark-dot" cx="72" cy="17" r="2.5" fill="#d97706"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ TRAFFIC MONITOR (selalu tampil, auto-jalan) ════ -->
+      <div class="hb-card a2" id="trafCard" style="margin-bottom:14px;">
+        <div class="hb-card-h" style="margin-bottom:12px;">
+          <span class="hb-card-t">Traffic Interface Hotspot</span>
+          <span class="sp"></span>
+          <div class="traf-range" id="trafModeTabs" style="margin-right:8px">
+            <button class="traf-rbtn active" data-mode="live" onclick="setTrafMode('live')">Real-time</button>
+            <button class="traf-rbtn" data-mode="hist" onclick="setTrafMode('hist')">Riwayat</button>
+          </div>
+          <div class="traf-range" id="trafRange">
+            <button class="traf-rbtn active" data-min="1"  onclick="setTrafRange(1)">1m</button>
+            <button class="traf-rbtn" data-min="5"  onclick="setTrafRange(5)">5m</button>
+            <button class="traf-rbtn" data-min="10" onclick="setTrafRange(10)">10m</button>
+            <button class="traf-rbtn" data-min="30" onclick="setTrafRange(30)">30m</button>
+          </div>
+          <div class="traf-range" id="trafHistRange" style="display:none">
+            <button class="traf-rbtn active" data-h="24h" onclick="setTrafHistRange('24h')">24 jam</button>
+            <button class="traf-rbtn" data-h="7d" onclick="setTrafHistRange('7d')">7 hari</button>
+            <button class="traf-rbtn" data-h="30d" onclick="setTrafHistRange('30d')">30 hari</button>
+          </div>
+        </div>
+        <select id="trafIface" onchange="onTrafIfaceChange()" style="width:100%;font-family:'DM Sans';font-size:13px;font-weight:600;padding:10px 12px;border:1.5px solid var(--hb-border);border-radius:10px;background:#fff;color:var(--hb-text);margin-bottom:14px;">
+          <option value="">— Memuat interface hotspot… —</option>
+        </select>
+
+        <!-- Live stat row -->
+        <div id="trafStats" style="display:none;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:12.5px;">
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:3px;background:#2563eb;border-radius:2px;display:inline-block;"></span>RX <strong id="trafRx" style="color:#2563eb">0 bps</strong></span>
+          <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:3px;background:#059669;border-radius:2px;display:inline-block;"></span>TX <strong id="trafTx" style="color:#059669">0 bps</strong></span>
+          <span style="color:var(--hb-muted)">AVG↓ <strong id="trafRxAvg">0</strong></span>
+          <span style="color:var(--hb-muted)">AVG↑ <strong id="trafTxAvg">0</strong></span>
+          <span style="color:var(--hb-muted)">MAX↓ <strong id="trafRxPeak">0</strong></span>
+          <span style="color:var(--hb-muted)">MAX↑ <strong id="trafTxPeak">0</strong></span>
+        </div>
+
+        <div id="trafChartWrap" style="display:none;"><div id="trafChart"></div></div>
+        <div id="trafHistWrap" style="display:none;"><div id="trafHistChart"></div>
+          <div id="trafHistStats" style="display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-family:'DM Mono',monospace;font-size:12.5px;color:var(--hb-muted)"></div>
+        </div>
+        <div id="trafEmpty" class="empty" style="padding:30px 18px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 14l4-4 3 3 5-6"/></svg>
+          <div>Pilih interface hotspot untuk memantau traffic real-time.</div>
+        </div>
+      </div>
+
+      <div class="hb-tabs a2">
+        <button class="hb-tab active" data-tab="binding" onclick="switchTab('binding')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.69a4.5 4.5 0 011.24 7.24l-4.5 4.5a4.5 4.5 0 01-6.36-6.36l1.76-1.76m13.35-.62l1.76-1.76a4.5 4.5 0 00-6.36-6.36l-4.5 4.5a4.5 4.5 0 001.24 7.24"/></svg>Binding & Isolir</button>
+        <button class="hb-tab" data-tab="servers" onclick="switchTab('servers')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="17" r="1" fill="currentColor"/></svg>Servers</button>
+        <button class="hb-tab" data-tab="sprofiles" onclick="switchTab('sprofiles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v4H4zM4 12h16v7H4zM8 16h4"/></svg>Server Profiles</button>
+        <button class="hb-tab" data-tab="pools" onclick="switchTab('pools')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/><circle cx="6" cy="7" r="1.3" fill="currentColor"/><circle cx="6" cy="12" r="1.3" fill="currentColor"/><circle cx="6" cy="17" r="1.3" fill="currentColor"/></svg>IP Pool</button>
+        <button class="hb-tab" data-tab="profiles" onclick="switchTab('profiles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.5l1.5-6h15l1.5 6M5 13.5v6h14v-6M9 17h6"/></svg>User Profiles</button>
+        <button class="hb-tab" data-tab="users" onclick="switchTab('users')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/></svg>Users</button>
+        <button class="hb-tab" data-tab="active" onclick="switchTab('active')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Active</button>
+        <button class="hb-tab" data-tab="hosts" onclick="switchTab('hosts')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 21h8M12 17v4"/></svg>Hosts</button>
+        <button class="hb-tab" data-tab="walled" onclick="switchTab('walled')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18M9 21V9M3 5h18v16H3z"/></svg>Walled Garden</button>
+        <button class="hb-tab" data-tab="ipscan" onclick="switchTab('ipscan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.2-5.2m0 0A7.5 7.5 0 105.2 5.2a7.5 7.5 0 0010.6 10.6z"/></svg>IP Scan</button>
+      </div>
+
+      <!-- ════ TAB: BINDING & ISOLIR ════ -->
+      <div class="hb-panel active" id="panel-binding">
+        <!-- (1) Panel Perlu Perhatian: mismatch DB ↔ Router -->
+        <div class="hb-card a3" id="mismatchCard" style="display:none;border-color:#fde68a;background:#fffbeb;">
+          <div class="hb-card-h">
+            <span class="hb-card-t" style="color:#92400e;display:flex;align-items:center;gap:7px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" style="width:18px;height:18px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+              Perlu Perhatian — Tidak Sinkron
+            </span>
+            <span class="sp"></span>
+            <button class="btn btn-amber btn-sm" id="fixAllBtn" onclick="fixAllMismatch()">Perbaiki Semua</button>
+          </div>
+          <div class="hb-tblwrap" id="mismatchWrap"></div>
+        </div>
+
+        <div class="hb-card a3">
+          <div class="hb-card-h"><span class="hb-card-t">Customers (IP Binding)</span>
+            <span class="hbs-filter-tag" id="custFilterTag" style="display:none"></span><span class="sp"></span>
+            <button class="btn btn-ghost btn-sm" onclick="runSync()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg>Sync Data</button>
+          </div>
+          <div class="hb-tblwrap" id="custWrap"><div class="empty">Memuat…</div></div>
+        </div>
+        <div class="hb-card a3">
+          <div class="hb-card-h"><span class="hb-card-t">IP Binding di Router</span><span class="sp"></span>
+            <button class="btn btn-ghost btn-sm" onclick="dedupeBindings()" title="Hapus binding duplikat (MAC/IP sama)">Bersihkan Duplikat</button>
+            <button class="btn btn-ghost btn-sm" onclick="openBindingModal()">+ Binding</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadBindings()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="bindingsWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: SERVERS ════ -->
+      <div class="hb-panel" id="panel-servers">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Hotspot Servers</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openSetupModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Setup Server Baru</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadServers()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="serversWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: IP POOL ════ -->
+      <div class="hb-panel" id="panel-pools">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">IP Pool</span><span class="sp"></span>
+            <button class="btn btn-blue btn-sm" onclick="openPoolFromIface()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Buat dari Interface</button>
+            <button class="btn btn-primary btn-sm" onclick="openPoolModal()">+ Pool Manual</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadPools()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="poolsWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: SERVER PROFILES ════ -->
+      <div class="hb-panel" id="panel-sprofiles">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Server Profiles</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openSProfileModal()">+ Tambah Profile</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadSProfiles()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="sprofilesWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: USER PROFILES ════ -->
+      <div class="hb-panel" id="panel-profiles">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">User Profiles (Paket Bandwidth)</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openProfileModal()">+ Profile</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadProfiles()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="profilesWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: USERS ════ -->
+      <div class="hb-panel" id="panel-users">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Hotspot Users</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ User</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadUsers()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="usersWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: ACTIVE ════ -->
+      <div class="hb-panel" id="panel-active">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Active Sessions</span><span class="sp"></span>
+            <button class="btn btn-ghost btn-sm" onclick="loadActive()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="activeWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: HOSTS ════ -->
+      <div class="hb-panel" id="panel-hosts">
+        <div class="hb-card">
+          <div class="hb-card-h">
+            <span class="hb-card-t">Hotspot Hosts</span>
+            <span class="hbs-filter-tag" id="hostFilterTag" style="display:none"></span>
+            <span class="sp"></span>
+            <div class="search-box" style="max-width:230px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--hb-border);border-radius:9px;padding:7px 11px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="width:14px;height:14px;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/></svg>
+              <input id="hostSearch" placeholder="Cari MAC / IP / server…" oninput="renderHosts()" style="border:none;outline:none;font-family:'DM Sans';font-size:12.5px;width:100%;background:none;color:var(--hb-text)">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadHosts()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15.5 6.3L3 16"/><polyline points="3 21 3 16 8 16"/></svg>Muat Ulang</button>
+          </div>
+          <p style="font-size:12px;color:var(--hb-muted);margin:-6px 0 12px">Daftar perangkat yang terkoneksi ke hotspot server (DHCP lease + sesi). Host yang sudah login ditandai <strong>authorized</strong>; yang dilewati portal login ditandai <strong>bypassed</strong>.</p>
+          <div class="hb-tblwrap" id="hostsWrap"><div class="empty">Memuat…</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: WALLED GARDEN ════ -->
+      <div class="hb-panel" id="panel-walled">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Walled Garden — Host/Domain</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openWalledModal('host')">+ Host</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadWalled()">Muat Ulang</button>
+          </div>
+          <div class="hb-tblwrap" id="walledHostWrap"><div class="empty">Klik "Muat Ulang".</div></div>
+        </div>
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Walled Garden — IP List</span><span class="sp"></span>
+            <button class="btn btn-primary btn-sm" onclick="openWalledModal('ip')">+ IP</button>
+          </div>
+          <div class="hb-tblwrap" id="walledIpWrap"><div class="empty">Muat ulang dari tombol di atas.</div></div>
+        </div>
+      </div>
+
+      <!-- ════ TAB: IP SCAN ════ -->
+      <div class="hb-panel" id="panel-ipscan">
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">IP Scan</span></div>
+          <div class="scan-grid">
+            <div class="fg"><label>Interface</label><select id="scanIface" onchange="onScanIfaceChange()"><option value="">— Pilih router dulu —</option></select></div>
+            <div class="fg"><label>Address Range <span class="fhint">(opsional)</span></label><input class="mono" id="scanRange" placeholder="192.168.1.0/24"></div>
+            <div class="fg"><label>Durasi (detik)</label><input type="number" id="scanDuration" value="5" min="1" max="30"></div>
+            <button class="btn btn-primary" id="scanBtn" onclick="runScan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.2-5.2m0 0A7.5 7.5 0 105.2 5.2a7.5 7.5 0 0010.6 10.6z"/></svg>Start</button>
+          </div>
+          <div id="scanMeta" style="display:none;font-size:12px;color:var(--hb-muted);margin-top:11px;display:flex;gap:9px;align-items:center;flex-wrap:wrap"></div>
+        </div>
+        <div class="hb-card">
+          <div class="hb-card-h"><span class="hb-card-t">Hasil Scan</span></div>
+          <div class="hb-tblwrap" id="scanWrap"><div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.2-5.2m0 0A7.5 7.5 0 105.2 5.2a7.5 7.5 0 0010.6 10.6z"/></svg><div>Pilih interface lalu Start Scan.</div></div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+<div class="modal-back" id="mdGeneric"><div class="modal-box" id="mdBox"></div></div>
+
+<!-- Confirm modal (untuk semua konfirmasi aksi) -->
+<div class="confirm-back" id="confirmBack">
+  <div class="confirm-box" id="confirmBox">
+    <div class="confirm-ic" id="confirmIc"></div>
+    <h3 id="confirmTitle">Konfirmasi</h3>
+    <p id="confirmMsg"></p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirmCancel">Batal</button>
+      <button class="btn" id="confirmOk">Ya, lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="/js/hotspot-binding.js"></script>
+</body></html>

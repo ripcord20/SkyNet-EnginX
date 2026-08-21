@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ot-blue:#2563eb; --ot-blue-d:#1d4ed8; --ot-blue-l:#eff6ff;
+      --ot-green:#16a34a;--ot-green-d:#15803d;--ot-green-l:#f0fdf4;
+      --ot-red:#dc2626;  --ot-red-d:#b91c1c;  --ot-red-l:#fef2f2;
+      --ot-amber:#d97706;--ot-amber-d:#b45309;--ot-amber-l:#fffbeb;
+      --ot-teal:#0891b2; --ot-teal-l:#ecfeff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+    }
+    * { box-sizing:border-box; }
+    .olt { font-family:'Plus Jakarta Sans', system-ui, sans-serif; }
+
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ot-hdr-l h1 { font-size:24px; font-weight:800; color:var(--text); margin:0 0 4px; letter-spacing:-.4px; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .ot-hdr-l p .sep { color:var(--faint); }
+    .ot-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:14px; height:14px; flex-shrink:0; stroke-width:2; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); border-color:var(--ot-blue-d); }
+    .btn-red { background:var(--ot-red); border-color:var(--ot-red); color:#fff; }
+    .btn-red:hover { background:var(--ot-red-d); }
+    .btn-sm { padding:6px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Stat cards — genieacs pattern */
+    .ot-cards {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      background:#fff; border-radius:16px; border:1px solid #e8eaed;
+      overflow:hidden; margin-bottom:20px;
+    }
+    .ot-card {
+      padding:20px 22px 18px; border-right:1px solid #e8eaed;
+      display:flex; flex-direction:column; position:relative; overflow:hidden;
+      transition:background .15s;
+    }
+    .ot-card:last-child { border-right:none; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; align-items:center; gap:6px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 8px; border-radius:20px;
+      font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+      white-space:nowrap;
+    }
+    .pill-blue  { background:#eff6ff; color:#1d4ed8; }
+    .pill-green { background:#dcfce7; color:#15803d; }
+    .pill-teal  { background:#ecfeff; color:#0891b2; }
+    .pill-amber { background:#fef3c7; color:#b45309; }
+    .pill-gray  { background:#f1f5f9; color:#64748b; }
+    .card-sub { font-size:11px; color:var(--faint); }
+
+    .ot-card-sync .card-val { font-size:18px; font-weight:800; letter-spacing:-.3px; line-height:1.2; margin-top:4px; }
+    @media(max-width:1400px){ .ot-card-sync .card-val { font-size:15px; } }
+
+    /* Panel */
+    .ot-panel { background:#fff; border:1px solid #e8eaed; border-radius:16px; overflow:hidden; margin-bottom:20px; }
+    .ot-panel-hdr { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid #eef2f7; background:#fafbfc; }
+    .ot-panel-hdr-l { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ot-panel-hdr-l h2 { font-size:14px; font-weight:800; color:var(--text); margin:0; display:flex; align-items:center; gap:8px; }
+    .ot-panel-hdr-l h2 svg { width:17px; height:17px; color:var(--ot-blue); }
+    .ot-panel-count { font-size:10.5px; font-weight:700; color:var(--muted); background:#f1f5f9; padding:2px 8px; border-radius:20px; border:1px solid #e8eaed; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:240px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+
+    /* OLT Grid */
+    .ot-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:14px; padding:16px 20px; }
+
+    .olt-card {
+      background:#fff; border:1px solid #e8eaed; border-radius:14px; overflow:hidden;
+      transition:all .15s; position:relative;
+    }
+    .olt-card:hover { border-color:#cbd5e1; box-shadow:0 4px 14px rgba(15,23,42,.06); }
+
+    .olt-card-hdr { padding:14px 16px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; border-bottom:1px solid #f5f7fa; }
+    .olt-card-hdr-l { display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+    .olt-dev-ic {
+      width:38px; height:38px; border-radius:10px;
+      background:#eff6ff; color:#1d4ed8;
+      display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .olt-dev-ic svg { width:18px; height:18px; stroke-width:2; }
+    .olt-dev-ic.err { background:#fef2f2; color:#b91c1c; }
+    .olt-dev-ic.off { background:#f1f5f9; color:#64748b; }
+
+    .olt-hdr-txt { min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .olt-name { font-size:14px; font-weight:800; color:var(--text); letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .olt-host { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:11px; color:var(--muted); letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .olt-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:3px 9px; border-radius:20px;
+      font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+      white-space:nowrap; flex-shrink:0;
+    }
+    .olt-pill.on  { background:#dcfce7; color:#15803d; }
+    .olt-pill.off { background:#f1f5f9; color:#94a3b8; }
+    .olt-pill.err { background:#fee2e2; color:#b91c1c; }
+    .olt-pd { width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .olt-pill.on .olt-pd { animation:oltpulse 2s infinite; }
+    @keyframes oltpulse { 0%,100%{opacity:1}50%{opacity:.35} }
+
+    .olt-badges { display:flex; flex-wrap:wrap; gap:5px; padding:12px 16px 10px; }
+    .olt-badge {
+      font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px;
+      text-transform:uppercase; letter-spacing:.04em; white-space:nowrap;
+    }
+    .badge-brand { background:#eff6ff; color:#1d4ed8; }
+    .badge-mode  { background:#ecfeff; color:#0891b2; }
+    .badge-port  { background:#f1f5f9; color:var(--muted); }
+    .badge-on    { background:#dcfce7; color:#15803d; }
+    .badge-off   { background:#f1f5f9; color:var(--faint); }
+
+    .olt-metric { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid #f5f7fa; }
+    .olt-metric-cell { padding:12px 16px; border-right:1px solid #f5f7fa; min-width:0; }
+    .olt-metric-cell:last-child { border-right:none; }
+    .olt-metric-lbl { font-size:9.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+    .olt-metric-val { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:17px; font-weight:800; color:var(--text); letter-spacing:-.4px; line-height:1; }
+    .olt-metric-val.small { font-family:'Plus Jakarta Sans',sans-serif; font-size:12.5px; font-weight:700; line-height:1.2; letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .olt-metric-sub { font-size:10.5px; color:var(--faint); margin-top:2px; }
+
+    .olt-card-foot { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 16px; border-top:1px dashed #eef2f7; background:#fafbfc; }
+    .olt-foot-info { font-size:10.5px; color:var(--faint); font-weight:500; display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; }
+    .olt-foot-info b { color:#334155; font-weight:700; font-family:'Geist Mono',ui-monospace,monospace; font-size:10.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .olt-foot-acts { display:flex; gap:4px; flex-shrink:0; }
+    .olt-act {
+      width:28px; height:28px; padding:0; border-radius:8px;
+      border:1px solid #e8eaed; background:#fff; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:all .15s; color:#64748b; font-family:inherit;
+    }
+    .olt-act svg { width:13px; height:13px; stroke-width:1.9; }
+    .olt-act:hover { transform:translateY(-1px); box-shadow:0 2px 6px -1px rgba(15,23,42,.08); }
+    .olt-act.sync:hover { color:var(--ot-blue); border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .olt-act.edit:hover { color:#7c3aed; border-color:#ddd6fe; background:#f5f3ff; }
+    .olt-act.del:hover  { color:var(--ot-red); border-color:#fecaca; background:var(--ot-red-l); }
+
+    .olt-err-banner {
+      padding:8px 16px; background:var(--ot-red-l); border-top:1px solid #fecaca;
+      font-size:10.5px; color:#b91c1c; font-weight:600;
+      display:flex; align-items:center; gap:6px;
+    }
+    .olt-err-banner svg { width:12px; height:12px; flex-shrink:0; }
+    .olt-err-banner span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .ot-empty {
+      padding:70px 20px; text-align:center; color:var(--faint);
+      grid-column:1/-1;
+    }
+    .ot-empty svg { width:44px; height:44px; opacity:.3; margin:0 auto 14px; display:block; stroke:currentColor; fill:none; stroke-width:1.5; }
+    .ot-empty h3 { font-size:15px; font-weight:700; color:var(--muted); margin:0 0 6px; }
+    .ot-empty p { font-size:13px; margin:0 0 18px; }
+
+    .ot-alert {
+      display:none; background:var(--ot-red-l); border:1px solid #fecaca;
+      border-radius:12px; padding:10px 14px; margin-bottom:16px;
+      font-size:12.5px; color:#b91c1c; font-weight:600;
+      align-items:center; gap:8px;
+    }
+    .ot-alert.show { display:flex; }
+    .ot-alert svg { width:14px; height:14px; flex-shrink:0; }
+
+    .test-result { display:none; border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:500; margin-top:10px; line-height:1.5; }
+    .test-ok  { background:var(--ot-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .test-err { background:var(--ot-red-l);   color:#b91c1c; border:1px solid #fecaca; }
+
+    /* Modal */
+    .ot-modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); backdrop-filter:blur(4px); z-index:1100; align-items:center; justify-content:center; padding:16px; }
+    .ot-modal-overlay.show { display:flex; }
+    .ot-modal-box { background:#fff; border-radius:16px; width:480px; max-width:100%; max-height:92vh; overflow-y:auto; font-family:inherit; box-shadow:0 20px 50px rgba(15,23,42,.2); }
+    .ot-modal-hdr {
+      padding:18px 22px; display:flex; align-items:center; justify-content:space-between;
+      border-bottom:1px solid #eef2f7;
+    }
+    .ot-modal-hdr h3 { font-size:16px; font-weight:800; color:var(--text); margin:0; letter-spacing:-.2px; }
+    .ot-modal-close {
+      width:30px; height:30px; padding:0; border-radius:8px;
+      background:#f8fafc; border:1px solid var(--border);
+      cursor:pointer; color:var(--muted); font-family:inherit;
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:all .15s;
+    }
+    .ot-modal-close:hover { background:#f1f5f9; color:var(--text); }
+    .ot-modal-body { padding:18px 22px; }
+
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+    .form-label span.opt { font-weight:500; color:var(--faint); text-transform:none; letter-spacing:0; }
+    .form-control { width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:10px; font-size:13px; background:#fff; color:var(--text); outline:none; font-family:inherit; transition:all .15s; }
+    .form-control:focus { border-color:var(--ot-blue); box-shadow:0 0 0 3px #2563eb14; }
+    .form-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .form-row  { display:flex; gap:12px; }
+    .form-row .form-group { flex:1; }
+
+    .ot-modal-foot {
+      padding:14px 22px; display:flex; justify-content:space-between; align-items:center; gap:8px;
+      border-top:1px solid #eef2f7; background:#fafbfc;
+    }
+    .ot-modal-foot-r { display:flex; gap:8px; }
+
+    /* Responsive */
+    @media(max-width:1024px) {
+      .ot-cards { grid-template-columns:repeat(2,1fr); }
+      .ot-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .ot-card:nth-child(1),.ot-card:nth-child(3) { border-right:1px solid #e8eaed; }
+      .ot-card:nth-child(3),.ot-card:nth-child(4) { border-bottom:none; }
+    }
+    @media(max-width:720px) {
+      .ot-panel-hdr { padding:14px 16px; }
+      .search-wrap input { width:100%; }
+      .search-wrap { flex:1; min-width:0; }
+      .ot-grid { padding:14px 16px; }
+    }
+    @media(max-width:640px) {
+      .ot-cards { grid-template-columns:1fr; }
+      .ot-card { border-right:none !important; border-bottom:1px solid #e8eaed; padding:16px 18px; }
+      .ot-card:last-child { border-bottom:none; }
+      .ot-grid { grid-template-columns:1fr; gap:12px; padding:12px; }
+      .olt-card-hdr { padding:12px; }
+      .olt-dev-ic { width:34px; height:34px; }
+      .olt-dev-ic svg { width:16px; height:16px; }
+      .olt-name { font-size:13px; }
+      .olt-host { font-size:10.5px; }
+      .olt-badges { padding:10px 12px 8px; gap:4px; }
+      .olt-badge { font-size:9.5px; padding:2px 7px; }
+      .olt-metric-cell { padding:10px 12px; }
+      .olt-metric-val { font-size:15px; }
+      .olt-metric-val.small { font-size:11.5px; }
+      .olt-card-foot { padding:9px 12px; }
+      .olt-foot-info { font-size:10px; }
+      .olt-act { width:26px; height:26px; }
+      .olt-act svg { width:11px; height:11px; }
+      .ot-hdr { margin-bottom:18px; }
+      .ot-hdr-l h1 { font-size:20px; }
+      .btn-sm { padding:6px 10px; font-size:11.5px; }
+      .ot-modal-box { border-radius:14px; }
+      .form-row { flex-direction:column; gap:0; }
+      .card-val { font-size:24px; }
+      .ot-card-sync .card-val { font-size:14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout olt">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ot-hdr">
+        <div class="ot-hdr-l">
+          <h1>OLT Management</h1>
+          <p>
+            <span>Kelola koneksi OLT dan sinkronisasi data ONT via SNMP</span>
+            <span class="sep">·</span>
+            <span id="lastRefreshLbl">Memuat...</span>
+          </p>
+        </div>
+        <div class="ot-hdr-r">
+          <button class="btn btn-outline btn-sm" id="btnSyncAll">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15.5 6.3L3 16"/><polyline points="3 21 3 16 8 16"/></svg>
+            Sync Semua
+          </button>
+          <button class="btn btn-blue btn-sm" id="btnAddOlt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah OLT
+          </button>
+        </div>
+      </div>
+
+      <div class="ot-alert" id="oltAlert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="oltAlertMsg">—</span>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="ot-cards">
+        <div class="ot-card">
+          <div class="card-lbl">Total OLT</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statTotal">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="statTotalPill">0 device</span>
+                <span class="card-sub">OLT terdaftar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card">
+          <div class="card-lbl">OLT Aktif</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statActive">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="statActivePill">0 aktif</span>
+                <span class="card-sub">Enabled & terhubung</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card">
+          <div class="card-lbl">Total ONT</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statOnts">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-teal" id="statOntsPill">0 ONT</span>
+                <span class="card-sub">ONT dari semua OLT</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card ot-card-sync">
+          <div class="card-lbl">Status Sync</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statLastSync">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="statSyncPill">Idle</span>
+                <span class="card-sub">Terakhir sinkronisasi</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel list -->
+      <div class="ot-panel">
+        <div class="ot-panel-hdr">
+          <div class="ot-panel-hdr-l">
+            <h2>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><rect x="2" y="4" width="20" height="7" rx="2"/><rect x="2" y="13" width="20" height="7" rx="2"/><line x1="6" y1="7.5" x2="6.01" y2="7.5"/><line x1="6" y1="16.5" x2="6.01" y2="16.5"/></svg>
+              Daftar OLT
+            </h2>
+            <span class="ot-panel-count" id="oltCount">0 device</span>
+          </div>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="oltSearch" placeholder="Cari nama, host, brand...">
+          </div>
+        </div>
+
+        <div class="ot-grid" id="oltGrid">
+          <div class="ot-empty">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="7" rx="2"/><rect x="2" y="13" width="20" height="7" rx="2"/></svg>
+            <h3>Memuat data OLT...</h3>
+            <p>Tunggu sebentar</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal Add/Edit OLT -->
+<div class="ot-modal-overlay" id="oltModal">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <h3 id="modalTitle">Tambah OLT</h3>
+      <button class="ot-modal-close" onclick="OltPage.closeModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="ot-modal-body">
+      <input type="hidden" id="oltId">
+
+      <div class="form-group">
+        <label class="form-label">Nama OLT</label>
+        <input type="text" id="oltName" class="form-control" placeholder="cth: OLT-Gedung-A">
+      </div>
+      <div class="form-group">
+        <label class="form-label">IP Address OLT</label>
+        <input type="text" id="oltHost" class="form-control" placeholder="192.168.1.1">
+        <div class="form-hint">IP address OLT yang bisa diakses dari server</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Brand / Model</label>
+        <select id="oltBrand" class="form-control" onchange="OltPage.onBrandChange()">
+          <option value="hsgq">HSGQ (E04I, E08I, dll)</option>
+          <option value="zte">ZTE (C320, C600, dll)</option>
+          <option value="huawei">Huawei (MA5600, MA5800)</option>
+          <option value="fiberhome">Fiberhome (AN5516)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">SNMP Community</label>
+          <input type="text" id="oltCommunity" class="form-control" placeholder="public" value="public">
+          <div class="form-hint">Default: public</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SNMP Port</label>
+          <input type="number" id="oltSnmpPort" class="form-control" value="161">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MIB Mode <span class="opt">(opsional)</span></label>
+        <select id="oltMibMode" class="form-control">
+          <option value="auto">Auto Detect (Recommended)</option>
+          <option value="hsgq">HSGQ Private MIB</option>
+          <option value="zte">ZTE Compatible MIB</option>
+          <option value="gpon">Generic GPON MIB</option>
+        </select>
+        <div class="form-hint">Biarkan "Auto Detect" jika tidak yakin</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="oltEnabled" class="form-control">
+          <option value="true">Aktif (sync otomatis)</option>
+          <option value="false">Nonaktif (tidak disync)</option>
+        </select>
+      </div>
+
+      <div class="test-result" id="testResult"></div>
+    </div>
+
+    <div class="ot-modal-foot">
+      <button class="btn btn-outline btn-sm" id="btnTestConn" onclick="OltPage.testConnection()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+        Test SNMP
+      </button>
+      <div class="ot-modal-foot-r">
+        <button class="btn btn-outline btn-sm" onclick="OltPage.closeModal()">Batal</button>
+        <button class="btn btn-blue btn-sm" id="btnSaveOlt" onclick="OltPage.save()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/olt.js"></script>
+</body>
+</html>

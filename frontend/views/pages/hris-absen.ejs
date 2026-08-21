@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Absensi Online - <%= appName %></title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'DM Sans',system-ui,sans-serif; background:#0f172a; color:#0f172a; }
+    .wrap { max-width:480px; margin:0 auto; min-height:100vh; background:#f1f5f9; display:flex; flex-direction:column; }
+    .topbar { background:linear-gradient(135deg,#1a6ef5,#0047cc); color:#fff; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; }
+    .topbar .t1 { font-size:18px; font-weight:800; }
+    .topbar .t2 { font-size:12.5px; opacity:.85; margin-top:2px; }
+    .clock { font-size:26px; font-weight:800; letter-spacing:-1px; }
+    .content { flex:1; padding:16px; display:flex; flex-direction:column; gap:14px; }
+    .card { background:#fff; border-radius:16px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .emp-head { display:flex; align-items:center; gap:12px; }
+    .emp-avatar { width:48px; height:48px; border-radius:50%; background:#e0e7ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:17px; }
+    .emp-name { font-size:16px; font-weight:700; }
+    .emp-sub { font-size:12.5px; color:#94a3b8; }
+    .shift-info { display:flex; gap:10px; margin-top:12px; }
+    .shift-box { flex:1; background:#f8fafc; border-radius:10px; padding:10px; text-align:center; }
+    .shift-box .l { font-size:11px; color:#94a3b8; } .shift-box .v { font-size:14px; font-weight:700; margin-top:2px; }
+    #map { height:180px; border-radius:12px; overflow:hidden; }
+    .gps-status { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; padding:10px 12px; border-radius:10px; margin-top:10px; }
+    .gps-ok { background:#dcfce7; color:#16a34a; } .gps-warn { background:#fef3c7; color:#b45309; } .gps-bad { background:#fee2e2; color:#dc2626; }
+    .cam-wrap { position:relative; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:3/4; }
+    video, .snap-preview { width:100%; height:100%; object-fit:cover; display:block; }
+    .cam-overlay { position:absolute; inset:0; border:3px dashed rgba(255,255,255,.4); border-radius:14px; pointer-events:none; }
+    .cam-hint { position:absolute; bottom:10px; left:0; right:0; text-align:center; color:#fff; font-size:12px; text-shadow:0 1px 3px rgba(0,0,0,.6); }
+    .btn-cam { width:100%; padding:12px; border:none; border-radius:12px; background:#e2e8f0; color:#334155; font-size:14px; font-weight:700; cursor:pointer; margin-top:10px; }
+    .btn-primary { width:100%; padding:15px; border:none; border-radius:14px; font-size:16px; font-weight:800; cursor:pointer; color:#fff; }
+    .btn-in { background:linear-gradient(135deg,#16a34a,#15803d); }
+    .btn-out { background:linear-gradient(135deg,#f5365c,#c81e42); }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+    .done-box { text-align:center; padding:30px 16px; }
+    .done-box .ic { font-size:48px; } .done-box .m { font-size:17px; font-weight:700; margin-top:10px; }
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#0f172a; color:#fff; padding:12px 20px; border-radius:10px; font-size:14px; font-weight:600; z-index:9999; display:none; max-width:90%; text-align:center; }
+    .muted { font-size:12px; color:#94a3b8; text-align:center; }
+    .flag-note { font-size:11.5px; color:#b45309; margin-top:6px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="t1">Absensi Online</div>
+      <div class="t2" id="todayDate">–</div>
+    </div>
+    <div class="clock" id="clock">00:00</div>
+  </div>
+
+  <div class="content" id="content">
+    <div class="card"><div class="muted">Memuat data…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Authorization':`Bearer ${TOKEN}` });
+let STATE = null;      // status data dari server
+let stream = null;     // camera stream
+let snapBlob = null;   // selfie blob
+let lastPos = null;    // {lat,lng,accuracy,isMock}
+let map = null, empMarker = null, locCircle = null;
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',3200); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function tick(){ const d=new Date(); document.getElementById('clock').textContent=pad(d.getHours())+':'+pad(d.getMinutes()); }
+setInterval(tick,1000); tick();
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+async function loadStatus(){
+  try {
+    const r = await fetch(API+'/hris/me/status', {headers:authH()});
+    const j = await r.json();
+    if(!j.success){ document.getElementById('content').innerHTML = `<div class="card"><div class="muted">${j.message||'Gagal memuat'}</div></div>`; return; }
+    STATE = j.data; render();
+  } catch(e){ document.getElementById('content').innerHTML = '<div class="card"><div class="muted">Gagal terhubung ke server</div></div>'; }
+}
+
+function render(){
+  const d = STATE;
+  const emp = d.employee;
+  const ini = (emp.name||'?').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+  const shift = d.shift;
+  const loc = d.location;
+
+  if(d.state==='done'){
+    document.getElementById('content').innerHTML = `
+      <div class="card">
+        <div class="emp-head"><div class="emp-avatar">${ini}</div>
+          <div><div class="emp-name">${emp.name}</div><div class="emp-sub">${emp.no}</div></div></div>
+      </div>
+      <div class="card done-box"><div class="ic">✅</div><div class="m">Absensi hari ini selesai</div>
+        <div class="muted" style="margin-top:8px">Masuk: ${fmtT(d.attendance.check_in_at)} · Pulang: ${fmtT(d.attendance.check_out_at)}</div>
+      </div>`;
+    return;
+  }
+
+  const kind = d.state==='checked_in' ? 'out' : 'in';
+  const btnLabel = kind==='in' ? 'CHECK-IN (Masuk)' : 'CHECK-OUT (Pulang)';
+  const btnClass = kind==='in' ? 'btn-in' : 'btn-out';
+
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <div class="emp-head"><div class="emp-avatar">${ini}</div>
+        <div><div class="emp-name">${emp.name}</div><div class="emp-sub">${emp.no} · ${d.day_type}</div></div></div>
+      <div class="shift-info">
+        <div class="shift-box"><div class="l">Shift</div><div class="v">${shift?shift.name:'—'}</div></div>
+        <div class="shift-box"><div class="l">Jam</div><div class="v">${shift?shift.start_time.slice(0,5)+'–'+shift.end_time.slice(0,5):'—'}</div></div>
+        <div class="shift-box"><div class="l">Status</div><div class="v">${d.state==='checked_in'?'Sudah masuk':'Belum absen'}</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px">📍 Lokasi Anda</div>
+      <div id="map"></div>
+      <div id="gpsStatus" class="gps-status gps-warn">Mendeteksi lokasi…</div>
+      <div class="muted" style="margin-top:6px">${loc? 'Lokasi kerja: '+loc.name+(loc.allow_any_location?' (bebas lokasi)':' · radius '+loc.radius_meters+'m') : 'Lokasi kerja belum diset'}</div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:700;font-size:14px;margin-bottom:10px">🤳 Selfie</div>
+      <div class="cam-wrap" id="camWrap">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="cam-overlay"></div>
+        <div class="cam-hint">Posisikan wajah di dalam bingkai</div>
+      </div>
+      <button class="btn-cam" id="snapBtn" onclick="takeSnap()">📷 Ambil Foto</button>
+    </div>
+
+    <button class="btn-primary ${btnClass}" id="submitBtn" onclick="submitPunch('${kind}')" disabled>${btnLabel}</button>
+    <div class="muted" id="readyHint">Aktifkan GPS & ambil selfie untuk melanjutkan</div>
+  `;
+
+  startCamera();
+  initMap(loc);
+  watchGPS(loc);
+}
+
+function fmtT(ts){ return ts ? new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '–'; }
+
+// ── Camera ──
+async function startCamera(){
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'user', width:{ideal:640}, height:{ideal:854} }, audio:false });
+    const v = document.getElementById('video'); if(v){ v.srcObject = stream; }
+  } catch(e){ toast('Tidak bisa mengakses kamera'); }
+}
+function takeSnap(){
+  const v = document.getElementById('video');
+  if(!v || !v.videoWidth){ toast('Kamera belum siap'); return; }
+  const cv = document.createElement('canvas'); cv.width=v.videoWidth; cv.height=v.videoHeight;
+  cv.getContext('2d').drawImage(v,0,0);
+  cv.toBlob(b=>{ snapBlob=b;
+    const wrap=document.getElementById('camWrap');
+    wrap.innerHTML = `<img class="snap-preview" src="${URL.createObjectURL(b)}">`;
+    document.getElementById('snapBtn').textContent = '🔄 Ambil Ulang';
+    document.getElementById('snapBtn').onclick = ()=>{ snapBlob=null; render(); };
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); }
+    refreshReady();
+  }, 'image/jpeg', 0.85);
+}
+
+// ── GPS + anti-fake ──
+function initMap(loc){
+  try {
+    const center = loc ? [loc.latitude, loc.longitude] : [-6.2, 106.8];
+    map = L.map('map',{ zoomControl:false, attributionControl:false }).setView(center, 16);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(map);
+    if(loc && !loc.allow_any_location){
+      locCircle = L.circle([loc.latitude, loc.longitude], { radius:loc.radius_meters, color:'#2563eb', fillColor:'#2563eb', fillOpacity:.12 }).addTo(map);
+      L.marker([loc.latitude, loc.longitude]).addTo(map).bindPopup(loc.name);
+    }
+  } catch(e){ console.error(e); }
+}
+
+// Heuristik deteksi mock: akurasi mencurigakan sempurna (0), atau
+// koordinat tidak berubah sama sekali padahal accuracy sangat kecil.
+function detectMock(pos){
+  const c = pos.coords;
+  // Android Chrome tidak mengekspos isFromMockProvider ke web; kita pakai heuristik.
+  if(c.accuracy === 0) return true;                 // akurasi 0 hampir mustahil di HP asli
+  if(c.speed !== null && c.speed < 0) return true;   // nilai tidak wajar
+  return false;
+}
+
+function watchGPS(loc){
+  if(!navigator.geolocation){ setGps('bad','GPS tidak didukung perangkat'); return; }
+  navigator.geolocation.watchPosition(pos=>{
+    const c = pos.coords;
+    const isMock = detectMock(pos);
+    lastPos = { lat:c.latitude, lng:c.longitude, accuracy:c.accuracy, isMock };
+    // update map marker
+    try {
+      if(map){
+        if(!empMarker){ empMarker = L.circleMarker([c.latitude,c.longitude],{radius:8,color:'#16a34a',fillColor:'#22c55e',fillOpacity:1}).addTo(map); }
+        else empMarker.setLatLng([c.latitude,c.longitude]);
+      }
+    } catch(e){}
+    // hitung jarak & status
+    let msg, cls='ok';
+    if(isMock){ cls='bad'; msg='⚠️ Terdeteksi fake GPS — matikan aplikasi mock location'; }
+    else if(loc && !loc.allow_any_location){
+      const dist = haversine(loc.latitude, loc.longitude, c.latitude, c.longitude);
+      if(dist - c.accuracy <= loc.radius_meters){ cls='ok'; msg=`✓ Dalam radius (±${Math.round(dist)}m, akurasi ${Math.round(c.accuracy)}m)`; }
+      else { cls='warn'; msg=`Di luar radius: ${Math.round(dist)}m dari lokasi (butuh ≤${loc.radius_meters}m)`; }
+    } else { cls='ok'; msg=`✓ Lokasi terdeteksi (akurasi ${Math.round(c.accuracy)}m)`; }
+    setGps(cls, msg);
+    refreshReady(cls==='bad');
+  }, err=>{ setGps('bad','Gagal ambil lokasi: '+err.message); }, { enableHighAccuracy:true, maximumAge:5000, timeout:15000 });
+}
+
+function setGps(cls, msg){
+  const el = document.getElementById('gpsStatus'); if(!el) return;
+  el.className = 'gps-status ' + (cls==='ok'?'gps-ok':cls==='warn'?'gps-warn':'gps-bad');
+  el.textContent = msg;
+}
+
+function haversine(la1,lo1,la2,lo2){
+  const R=6371000, tr=x=>x*Math.PI/180;
+  const dLa=tr(la2-la1), dLo=tr(lo2-lo1);
+  const a=Math.sin(dLa/2)**2+Math.cos(tr(la1))*Math.cos(tr(la2))*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function refreshReady(gpsBad){
+  const btn=document.getElementById('submitBtn'); const hint=document.getElementById('readyHint');
+  if(!btn) return;
+  const ready = snapBlob && lastPos && !lastPos.isMock;
+  btn.disabled = !ready;
+  if(hint) hint.textContent = ready ? 'Siap! Tekan tombol untuk absen' : (!snapBlob?'Ambil selfie dulu':(!lastPos?'Menunggu GPS…':(lastPos.isMock?'Fake GPS terdeteksi — nonaktifkan':'Menunggu…')));
+}
+
+async function submitPunch(kind){
+  if(!snapBlob || !lastPos){ toast('Selfie & GPS wajib'); return; }
+  const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='Memproses…';
+  const fd = new FormData();
+  fd.append('selfie', snapBlob, 'selfie.jpg');
+  fd.append('lat', lastPos.lat); fd.append('lng', lastPos.lng);
+  fd.append('accuracy', lastPos.accuracy); fd.append('is_mock', lastPos.isMock);
+  fd.append('device_id', navigator.userAgent.slice(0,100));
+  try {
+    const r = await fetch(API+'/hris/me/check-'+kind, { method:'POST', headers:authH(), body:fd });
+    const j = await r.json();
+    if(j.success){
+      toast(j.message || 'Berhasil');
+      if(j.data?.geo?.flagged) toast('Absensi tercatat namun ditandai untuk verifikasi');
+      if(stream){ stream.getTracks().forEach(t=>t.stop()); }
+      setTimeout(loadStatus, 900);
+    } else {
+      toast(j.message || 'Gagal');
+      btn.disabled=false; btn.textContent = kind==='in'?'CHECK-IN (Masuk)':'CHECK-OUT (Pulang)';
+    }
+  } catch(e){ toast('Gagal mengirim absensi'); btn.disabled=false; btn.textContent = kind==='in'?'CHECK-IN (Masuk)':'CHECK-OUT (Pulang)'; }
+}
+
+loadStatus();
+</script>
+</body>
+</html>

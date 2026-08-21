@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#2563eb">
+  <title><%= title %> · DIGSnet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --font:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+      --blue:#2563eb;--blue2:#1d4ed8;--blue3:#1e40af;
+      --green:#10b981;--green-bg:#d1fae5;
+      --amber:#f59e0b;--amber-bg:#fef3c7;
+      --red:#ef4444;--red-bg:#fee2e2;
+      --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+      --text:#0f172a;--muted:#64748b;
+    }
+    html,body{height:100%;}
+    body{
+      font-family:var(--font);background:var(--bg);color:var(--text);
+      min-height:100dvh;display:flex;align-items:center;justify-content:center;
+      padding:20px;max-width:480px;margin:0 auto;
+    }
+    .pr-card{
+      background:#fff;border-radius:24px;padding:32px 24px;width:100%;
+      box-shadow:0 20px 48px rgba(15,23,42,.10);text-align:center;
+    }
+    .pr-icon{
+      width:88px;height:88px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 22px;transition:all .35s;
+    }
+    .pr-icon.checking{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:var(--blue);}
+    .pr-icon.success{background:linear-gradient(135deg,#d1fae5,#6ee7b7);color:#047857;}
+    .pr-icon.pending{background:linear-gradient(135deg,#fef3c7,#fcd34d);color:#b45309;}
+    .pr-icon.failed{background:linear-gradient(135deg,#fee2e2,#fca5a5);color:#b91c1c;}
+
+    .pr-icon svg{width:42px;height:42px;}
+    .pr-icon.checking svg{animation:spin 1.4s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    .pr-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;letter-spacing:-.3px;}
+    .pr-subtitle{font-size:14px;color:var(--muted);line-height:1.55;margin-bottom:24px;}
+
+    .pr-detail{
+      background:#f8fafc;border:1px solid var(--border);border-radius:14px;
+      padding:16px;margin-bottom:22px;text-align:left;
+    }
+    .pr-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px;}
+    .pr-row + .pr-row{border-top:1px dashed #e2e8f0;}
+    .pr-row .lbl{color:var(--muted);font-weight:600;}
+    .pr-row .val{color:var(--text);font-weight:700;}
+    .pr-row.total{padding-top:11px;margin-top:4px;border-top:1.5px solid #cbd5e1!important;}
+    .pr-row.total .val{font-size:16px;color:var(--blue3);}
+
+    .badge{
+      display:inline-flex;align-items:center;gap:5px;padding:4px 10px;
+      border-radius:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;
+    }
+    .badge.paid{background:var(--green-bg);color:#047857;}
+    .badge.unpaid{background:var(--amber-bg);color:#b45309;}
+    .badge.overdue{background:var(--red-bg);color:#b91c1c;}
+
+    .pr-btn{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      width:100%;padding:14px;border:none;border-radius:14px;
+      font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+      transition:all .2s;
+    }
+    .pr-btn.primary{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;}
+    .pr-btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(37,99,235,.35);}
+    .pr-btn.secondary{background:#fff;border:1.5px solid var(--border);color:var(--text);margin-top:10px;}
+    .pr-btn.secondary:hover{background:#f8fafc;}
+
+    .pr-hint{
+      font-size:11.5px;color:var(--muted);margin-top:14px;line-height:1.55;
+      display:flex;align-items:flex-start;gap:6px;justify-content:center;
+    }
+    .pr-hint svg{flex-shrink:0;margin-top:1px;}
+
+    .pr-poll-text{
+      font-size:11px;color:var(--muted);margin-top:14px;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .pr-dot{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pulse 1.2s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+  </style>
+</head>
+<body>
+  <div class="pr-card">
+    <!-- Icon area -->
+    <div class="pr-icon checking" id="prIcon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+      </svg>
+    </div>
+
+    <h1 class="pr-title" id="prTitle">Memeriksa Pembayaran...</h1>
+    <p class="pr-subtitle" id="prSubtitle">Mohon tunggu, kami sedang mengkonfirmasi status pembayaran Anda dengan payment gateway.</p>
+
+    <!-- Detail invoice (diisi setelah load) -->
+    <div class="pr-detail" id="prDetail" style="display:none">
+      <div class="pr-row">
+        <span class="lbl">Invoice</span>
+        <span class="val" id="prInvNum">—</span>
+      </div>
+      <div class="pr-row">
+        <span class="lbl">Periode</span>
+        <span class="val" id="prPeriod">—</span>
+      </div>
+      <div class="pr-row">
+        <span class="lbl">Status</span>
+        <span class="val"><span class="badge unpaid" id="prBadge">—</span></span>
+      </div>
+      <div class="pr-row" id="prMethodRow" style="display:none">
+        <span class="lbl">Metode</span>
+        <span class="val" id="prMethod">—</span>
+      </div>
+      <div class="pr-row" id="prPaidRow" style="display:none">
+        <span class="lbl">Tanggal Bayar</span>
+        <span class="val" id="prPaidDate">—</span>
+      </div>
+      <div class="pr-row total">
+        <span class="lbl" style="font-weight:700;color:var(--text);font-size:13px;">Total</span>
+        <span class="val" id="prTotal">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Polling indicator -->
+    <div class="pr-poll-text" id="prPolling" style="display:none">
+      <span class="pr-dot"></span>
+      <span id="prPollText">Mengecek status pembayaran (1/10)...</span>
+    </div>
+
+    <!-- Buttons -->
+    <button class="pr-btn primary" onclick="goDashboard()" id="prBtnPrimary" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Kembali ke Beranda
+    </button>
+    <button class="pr-btn secondary" onclick="window.location.reload()" id="prBtnRetry" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      Cek Ulang Status
+    </button>
+
+    <div class="pr-hint" id="prHint" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="prHintText">Status akan diperbarui otomatis</span>
+    </div>
+  </div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────
+var STATUS    = '<%= status %>';
+var INV_ID    = '<%= invoiceId %>';
+var TOKEN     = localStorage.getItem('portal_token');
+var POLL_MAX  = 10;
+var POLL_DELAY= 3000;
+var pollCount = 0;
+var pollTimer = null;
+
+// ── Helpers ─────────────────────────────────────────────────────
+function fmtRp(n){return 'Rp '+(parseFloat(n)||0).toLocaleString('id-ID');}
+function mn(m){var n=['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];return n[parseInt(m)]||m;}
+function fmtDate(d){if(!d)return'—';var x=new Date(d);return x.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});}
+function pmLabel(m){var L={cash:'Tunai',transfer:'Transfer Bank',field_collection:'Cash Collect',dana:'DANA',ovo:'OVO',gopay:'GoPay',shopeepay:'ShopeePay',qris:'QRIS',va:'Virtual Account',ewallet:'E-Wallet',gateway:'Payment Gateway',other:'Lainnya'};var k=String(m||'').toLowerCase();return L[k]||(k?k.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}):'—');}
+function $(id){return document.getElementById(id);}
+
+function setIcon(state){
+  var ico = $('prIcon');
+  ico.className = 'pr-icon '+state;
+  var svg = '';
+  if(state==='checking') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+  else if(state==='success') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+  else if(state==='pending') svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  else if(state==='failed')  svg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  ico.innerHTML = svg;
+}
+
+function goDashboard(){ window.location.href = '/portal'; }
+
+// ── Render helpers ──────────────────────────────────────────────
+function renderInvoice(inv, payment){
+  $('prDetail').style.display = 'block';
+  $('prInvNum').textContent = inv.invoice_number || ('INV-'+inv.id);
+  $('prPeriod').textContent = mn(inv.period_month) + ' ' + inv.period_year;
+  $('prTotal').textContent  = fmtRp(inv.total);
+
+  var badge = $('prBadge');
+  badge.className = 'badge ' + inv.status;
+  badge.textContent = inv.status === 'paid' ? 'LUNAS' : (inv.status === 'overdue' ? 'TERLAMBAT' : 'BELUM BAYAR');
+
+  if (payment) {
+    $('prMethodRow').style.display = 'flex';
+    $('prMethod').textContent = pmLabel(payment.payment_method);
+    $('prPaidRow').style.display = 'flex';
+    $('prPaidDate').textContent = fmtDate(payment.payment_date);
+  }
+}
+
+function showSuccess(inv, payment){
+  setIcon('success');
+  $('prTitle').textContent    = 'Pembayaran Berhasil!';
+  $('prSubtitle').textContent = 'Tagihan internet Anda sudah lunas. Terima kasih sudah berlangganan.';
+  $('prPolling').style.display = 'none';
+  if (inv) renderInvoice(inv, payment);
+  $('prBtnPrimary').style.display = 'flex';
+  $('prBtnRetry').style.display = 'none';
+}
+
+function showPending(inv){
+  setIcon('pending');
+  $('prTitle').textContent = 'Pembayaran Sedang Diproses';
+  $('prSubtitle').textContent = 'Pembayaran Anda sedang menunggu konfirmasi dari bank/e-wallet. Status akan diperbarui otomatis setelah pembayaran diterima.';
+  $('prPolling').style.display = 'none';
+  if (inv) renderInvoice(inv, null);
+  $('prBtnPrimary').style.display = 'flex';
+  $('prBtnRetry').style.display = 'flex';
+
+  $('prHint').style.display = 'flex';
+  $('prHintText').textContent = 'Halaman ini bisa Anda tutup. Status akan otomatis terupdate di portal.';
+}
+
+function showFailed(msg){
+  setIcon('failed');
+  $('prTitle').textContent = 'Pembayaran Belum Berhasil';
+  $('prSubtitle').textContent = msg || 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi atau hubungi customer service.';
+  $('prPolling').style.display = 'none';
+  $('prBtnPrimary').style.display = 'flex';
+  $('prBtnRetry').style.display = 'none';
+}
+
+function showNoToken(){
+  setIcon('failed');
+  $('prTitle').textContent = 'Sesi Berakhir';
+  $('prSubtitle').textContent = 'Silakan login kembali untuk melihat status pembayaran Anda.';
+  $('prPolling').style.display = 'none';
+  $('prBtnPrimary').textContent = 'Login';
+  $('prBtnPrimary').onclick = function(){ window.location.href = '/portal/login'; };
+  $('prBtnPrimary').innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg> Login';
+  $('prBtnPrimary').style.display = 'flex';
+}
+
+// ── Polling logic ───────────────────────────────────────────────
+async function pollStatus(){
+  pollCount++;
+  $('prPollText').textContent = 'Mengecek status pembayaran ('+pollCount+'/'+POLL_MAX+')...';
+
+  try{
+    var r = await fetch('/portal/api/invoice/'+INV_ID+'/status', {
+      headers: { 'Authorization': 'Bearer '+TOKEN }
+    });
+    var j = await r.json();
+
+    if(!j.success){
+      // Invoice tidak ditemukan / unauthorized
+      if(r.status === 401){ showNoToken(); return; }
+      if(pollCount >= POLL_MAX){ showFailed(j.message); return; }
+      pollTimer = setTimeout(pollStatus, POLL_DELAY);
+      return;
+    }
+
+    var inv = j.data.invoice;
+    var pay = j.data.payment;
+
+    if(inv.status === 'paid'){
+      showSuccess(inv, pay);
+      return;
+    }
+
+    // Belum paid
+    if(pollCount >= POLL_MAX){
+      // Timeout — kalau status=pending atau redirect dari /payment/pending → tampilkan pending
+      // Kalau redirect dari /payment/finish tapi status belum paid → kemungkinan masih diproses
+      showPending(inv);
+      return;
+    }
+
+    pollTimer = setTimeout(pollStatus, POLL_DELAY);
+  }catch(e){
+    if(pollCount >= POLL_MAX){ showFailed('Tidak bisa terhubung ke server. ' + e.message); return; }
+    pollTimer = setTimeout(pollStatus, POLL_DELAY);
+  }
+}
+
+// ── Init ────────────────────────────────────────────────────────
+(function init(){
+  if(!TOKEN){ showNoToken(); return; }
+  if(!INV_ID){ showFailed('ID invoice tidak ditemukan di URL.'); return; }
+
+  // Status='pending' → langsung anggap pending tanpa polling agresif (cuma 3x)
+  if(STATUS === 'pending') POLL_MAX = 3;
+
+  $('prPolling').style.display = 'flex';
+  pollStatus();
+})();
+</script>
+</body>
+</html>

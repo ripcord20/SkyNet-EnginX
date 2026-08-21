@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --et-bg:#eef2f9;--et-card:#fff;--et-border:#e0e7f3;
+      --et-text:#0d1b3e;--et-muted:#6b7fa8;--et-blue:#1f8bff;--et-blue-deep:#1565e0;
+      --tg:#229ED9;--tg-deep:#1a7fb0;
+    }
+    body{background:var(--et-bg);font-family:'DM Sans',sans-serif;}
+    .et-page{padding:0;max-width:none;margin:0;}
+    .et-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+    .et-title{font-size:22px;font-weight:800;color:var(--et-text);letter-spacing:-.01em;display:flex;align-items:center;gap:10px;}
+    .et-title .tg-logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#2AABEE,#229ED9);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .et-sub{font-size:13px;color:var(--et-muted);margin-top:3px;}
+    .et-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .et-btn{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;
+      display:inline-flex;align-items:center;gap:7px;font-family:inherit;transition:all .15s;}
+    .et-btn-primary{background:linear-gradient(135deg,#1f8bff,#1565e0);color:#fff;box-shadow:0 4px 10px -2px rgba(31,122,255,.4);}
+    .et-btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 14px -2px rgba(31,122,255,.5);}
+    .et-btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+    .et-btn-ghost{background:#fff;color:var(--et-text);border:1.5px solid var(--et-border);}
+    .et-btn-ghost:hover{border-color:var(--et-blue);color:var(--et-blue);}
+    .et-btn-tg{background:linear-gradient(135deg,#2AABEE,#229ED9);color:#fff;box-shadow:0 4px 10px -2px rgba(34,158,217,.4);}
+    .et-btn-tg:hover{transform:translateY(-1px);}
+
+    /* Stat strip */
+    .rm-strip{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-radius:16px;
+      border:1px solid var(--et-border);overflow:hidden;margin-bottom:18px;}
+    .rm-sc{padding:16px 18px 14px;border-right:1px solid var(--et-border);position:relative;overflow:hidden;}
+    .rm-sc:last-child{border-right:none;}
+    .rm-sc-lbl{font-size:11.5px;font-weight:600;color:var(--et-muted);margin-bottom:9px;letter-spacing:.1px;white-space:nowrap;}
+    .rm-sc-body{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;}
+    .rm-sc-val{font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-1px;line-height:1;}
+    .rm-sc-meta{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap;}
+    .rm-sc-pill{display:inline-flex;align-items:center;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+    .rm-sc-sub{font-size:11px;color:#94a3b8;}
+    .pill-blue{background:#dbeafe;color:#1d4ed8;}.pill-teal{background:#cffafe;color:#0e7490;}
+    .pill-amber{background:#fef3c7;color:#b45309;}.pill-green{background:#dcfce7;color:#16a34a;}
+    .pill-grey{background:#f1f3f7;color:#64748b;}
+    .rm-status-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
+    @media(max-width:1100px){.rm-strip{grid-template-columns:repeat(3,1fr);}
+      .rm-sc{border-bottom:1px solid var(--et-border);}
+      .rm-sc:nth-child(3n){border-right:none;}}
+    @media(max-width:760px){.rm-strip{grid-template-columns:repeat(2,1fr);}
+      .rm-sc{border-bottom:1px solid var(--et-border);}
+      .rm-sc:nth-child(odd){border-right:1px solid var(--et-border);}.rm-sc:nth-child(even){border-right:none;}
+      .rm-sc:nth-child(3n){border-right:1px solid var(--et-border);}
+      .rm-sc:nth-last-child(-n+2){border-bottom:none;}}
+
+    /* Connection panel */
+    .tg-conn{background:#fff;border:1px solid var(--et-border);border-radius:16px;overflow:hidden;margin-bottom:18px;}
+    .tg-conn-top{display:flex;align-items:center;gap:14px;padding:16px 18px;border-bottom:1px solid var(--et-border);
+      background:linear-gradient(120deg,#f4fbff,#eef6ff);}
+    .tg-conn-ic{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#2AABEE,#229ED9);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px -4px rgba(34,158,217,.5);}
+    .tg-conn-meta{flex:1;min-width:0;}
+    .tg-conn-name{font-size:15px;font-weight:800;color:var(--et-text);}
+    .tg-conn-status{font-size:12px;color:var(--et-muted);margin-top:2px;display:flex;align-items:center;gap:6px;}
+    .tg-master{margin-left:auto;}
+    .tg-conn-body{padding:16px 18px;}
+    .tg-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    @media(max-width:680px){.tg-grid2{grid-template-columns:1fr;}}
+
+    .et-field{margin-bottom:0;}
+    .et-label{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;
+      color:#33415c;margin-bottom:7px;}
+    .et-inp,.et-sel{width:100%;border:1.5px solid var(--et-border);border-radius:11px;padding:10px 13px;
+      font-family:inherit;font-size:13.5px;color:var(--et-text);background:#f9fbfe;outline:none;transition:all .15s;box-sizing:border-box;}
+    .et-inp:focus,.et-sel:focus{border-color:var(--et-blue);background:#fff;box-shadow:0 0 0 3.5px rgba(31,139,255,.1);}
+    .et-hint{font-size:11px;color:var(--et-muted);margin-top:6px;line-height:1.5;}
+    .et-hint code{background:#eef2f9;padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;}
+
+    /* Notif toggles + interval */
+    .tg-sub-h{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--et-muted);
+      margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+    .tg-notif-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    @media(max-width:680px){.tg-notif-grid{grid-template-columns:1fr;}}
+    .tg-notif{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--et-border);
+      border-radius:12px;cursor:pointer;transition:all .14s;background:#fcfdff;}
+    .tg-notif:hover{border-color:#bcd6f5;}
+    .tg-notif.on{border-color:var(--et-blue);background:#f4f9ff;}
+    .tg-notif-ic{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .tg-notif-tx{flex:1;min-width:0;}
+    .tg-notif-t{font-size:13px;font-weight:700;color:var(--et-text);}
+    .tg-notif-d{font-size:11px;color:var(--et-muted);margin-top:2px;line-height:1.4;}
+    .tg-notif-d code{font-family:'DM Mono',monospace;background:#eef2f9;padding:0 4px;border-radius:4px;font-size:10.5px;color:#1a4d6e;}
+
+    /* Toggle switch */
+    .et-switch{position:relative;display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0;}
+    .et-switch input{display:none;}
+    .et-track{width:42px;height:24px;border-radius:13px;background:#cfd8e8;transition:all .18s;position:relative;flex-shrink:0;}
+    .et-track::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;
+      transition:all .18s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .et-switch input:checked + .et-track{background:linear-gradient(135deg,#22c55e,#16a34a);}
+    .et-switch input:checked + .et-track::after{left:20px;}
+    .et-switch.sw-blue input:checked + .et-track{background:linear-gradient(135deg,#2AABEE,#229ED9);}
+
+    /* Layout: template list | editor | preview */
+    .et-grid{display:grid;grid-template-columns:290px 1fr 1fr;gap:18px;align-items:start;}
+    @media (max-width:1280px){.et-grid{grid-template-columns:250px 1fr;}.et-preview-col{grid-column:1 / -1;}}
+    @media (max-width:860px){.et-grid{grid-template-columns:1fr;}}
+
+    .et-card{background:var(--et-card);border:1px solid var(--et-border);border-radius:16px;overflow:hidden;}
+    .et-card-h{padding:13px 16px;border-bottom:1px solid var(--et-border);font-size:12px;font-weight:800;
+      letter-spacing:.04em;text-transform:uppercase;color:var(--et-muted);display:flex;align-items:center;gap:8px;}
+    .et-card-h .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--et-blue-deep);background:#eef5ff;
+      padding:2px 8px;border-radius:20px;letter-spacing:0;}
+
+    /* Template list (left) */
+    .et-list{display:flex;flex-direction:column;padding:8px;}
+    .rm-grp-lbl{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+      padding:11px 10px 5px;display:flex;align-items:center;gap:7px;color:var(--et-muted);}
+    .rm-grp-lbl .dot{width:7px;height:7px;border-radius:50%;}
+    .et-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;cursor:pointer;
+      border:1.5px solid transparent;transition:all .14s;text-align:left;background:none;font-family:inherit;width:100%;}
+    .et-item:hover{background:#f4f8ff;}
+    .et-item.active{background:#eef5ff;border-color:var(--et-blue);}
+    .et-item-ic{width:40px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .et-item-b{flex:1;min-width:0;}
+    .et-item-t{font-size:13px;font-weight:700;color:var(--et-text);line-height:1.25;display:block;}
+    .et-item-d{font-size:11px;color:var(--et-muted);margin-top:3px;line-height:1.35;display:block;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .et-pill{display:inline-block;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:6px;margin-top:5px;letter-spacing:.03em;}
+    .et-pill.custom{background:#e0f2fe;color:#0369a1;}
+    .et-pill.default{background:#f1f3f7;color:#8a95ad;}
+
+    /* Editor (middle) */
+    .et-editor{padding:16px;}
+    .et-ta{width:100%;border:1.5px solid var(--et-border);border-radius:11px;padding:12px 13px;
+      font-family:'DM Mono',monospace;font-size:13px;color:var(--et-text);background:#f9fbfe;outline:none;
+      transition:all .15s;line-height:1.6;resize:vertical;min-height:150px;box-sizing:border-box;}
+    .et-ta:focus{border-color:var(--et-blue);background:#fff;box-shadow:0 0 0 3.5px rgba(31,139,255,.1);}
+    .tg-ph-row{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 14px;}
+    .tg-ph{font-family:'DM Mono',monospace;font-size:11.5px;font-weight:600;padding:4px 9px;border-radius:7px;
+      background:#eef5ff;color:var(--et-blue-deep);border:1px solid #d9e6fb;cursor:pointer;transition:all .12s;user-select:none;}
+    .tg-ph:hover{background:var(--et-blue);color:#fff;border-color:var(--et-blue);}
+    .tg-tag-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+    .tg-tag{font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:6px;background:#fff7ed;
+      color:#c2620c;border:1px solid #fde3c4;cursor:pointer;}
+    .tg-tag:hover{background:#fde3c4;}
+    .et-editor-foot{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+    .et-link-btn{background:none;border:none;color:var(--et-muted);font-family:inherit;font-size:12px;font-weight:700;
+      cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 4px;}
+    .et-link-btn:hover{color:var(--et-blue);}
+
+    /* Preview — Telegram chat bubble */
+    .et-preview-col .et-card{position:sticky;top:14px;}
+    .tg-chat{background:#cfd9e3;background-image:linear-gradient(rgba(207,217,227,.5),rgba(207,217,227,.5)),
+      url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.18'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3C/g%3E%3C/svg%3E");
+      min-height:380px;}
+    .tg-bar{background:linear-gradient(135deg,#2AABEE,#229ED9);padding:11px 16px;display:flex;align-items:center;gap:11px;}
+    .tg-av{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+    .tg-meta{flex:1;min-width:0;}
+    .tg-name{font-size:14px;font-weight:700;color:#fff;line-height:1.2;}
+    .tg-status{font-size:11px;color:rgba(255,255,255,.8);margin-top:1px;}
+    .tg-body{padding:18px 14px 24px;min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;}
+    .tg-bubble{align-self:flex-start;background:#fff;border-radius:12px 12px 12px 4px;padding:9px 12px 7px;max-width:88%;
+      box-shadow:0 1px 2px rgba(0,0,0,.14);position:relative;}
+    .tg-text{font-size:13.5px;line-height:1.55;color:#0d1b2a;white-space:pre-wrap;word-break:break-word;}
+    .tg-text b{font-weight:700;} .tg-text i{font-style:italic;}
+    .tg-text code{font-family:'DM Mono',monospace;background:#eef2f6;padding:1px 5px;border-radius:4px;font-size:12.5px;color:#1a4d6e;}
+    .tg-time{font-size:10.5px;color:#8aa0b0;text-align:right;margin-top:3px;}
+    .tg-empty{align-self:center;margin:auto;color:#54656f;font-size:13px;text-align:center;background:rgba(255,255,255,.7);padding:14px 18px;border-radius:10px;}
+    .tg-cat-tag{padding:9px 16px;border-bottom:1px solid var(--et-border);background:#f9fbfe;display:flex;align-items:center;gap:8px;
+      font-size:11.5px;font-weight:700;color:var(--et-muted);}
+
+    /* Quick send card */
+    .tg-send{margin-top:18px;}
+    .tg-send-body{padding:14px 16px;}
+
+    /* Mobile tabs */
+    .et-mtabs{display:none;gap:6px;margin-bottom:14px;}
+    .et-mtab{flex:1;padding:9px;border-radius:10px;border:1.5px solid var(--et-border);background:#fff;
+      font-size:12.5px;font-weight:700;color:var(--et-muted);font-family:inherit;cursor:pointer;}
+    .et-mtab.active{background:#eef5ff;border-color:var(--et-blue);color:var(--et-blue-deep);}
+    @media (max-width:860px){
+      .et-mtabs{display:flex;}
+      .et-grid.m-edit .et-preview-col{display:none;}
+      .et-grid.m-prev .et-editor-col,.et-grid.m-prev .et-list-col{display:none;}
+      .et-page{padding:12px 12px 90px;}
+    }
+
+    .et-spin-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
+      border-radius:50%;animation:etspin .7s linear infinite;display:inline-block;}
+    @keyframes etspin{to{transform:rotate(360deg)}}
+
+    /* Result modal (sukses/gagal) — identik wa-reminder */
+    .rm-overlay{position:fixed;inset:0;z-index:10001;background:rgba(13,27,62,.5);
+      display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;animation:rmFade .25s ease forwards;}
+    @keyframes rmFade{to{opacity:1;}}
+    .rm-card{background:#fff;border-radius:22px;max-width:380px;width:100%;padding:34px 28px 26px;text-align:center;
+      box-shadow:0 24px 60px rgba(13,27,62,.28);transform:translateY(16px) scale(.94);opacity:0;
+      animation:rmPop .42s cubic-bezier(.21,1.02,.4,1) .06s forwards;}
+    @keyframes rmPop{to{transform:translateY(0) scale(1);opacity:1;}}
+    .rm-icon{width:78px;height:78px;margin:0 auto 18px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+    .rm-icon.ok{background:radial-gradient(circle at 50% 40%,#eafaf0,#d8f5e3);}
+    .rm-icon.err{background:radial-gradient(circle at 50% 40%,#fdeeee,#fad9d9);}
+    .rm-icon svg{width:46px;height:46px;}
+    .rm-icon::after{content:'';position:absolute;width:78px;height:78px;border-radius:50%;animation:rmPulse 1.1s ease-out .25s;}
+    .rm-icon.ok::after{background:rgba(22,163,74,.18);}
+    .rm-icon.err::after{background:rgba(220,38,38,.16);}
+    @keyframes rmPulse{0%{transform:scale(.6);opacity:.7;}100%{transform:scale(1.7);opacity:0;}}
+    .rm-draw{stroke-dasharray:48;stroke-dashoffset:48;animation:rmDraw .5s cubic-bezier(.65,0,.45,1) .32s forwards;}
+    @keyframes rmDraw{to{stroke-dashoffset:0;}}
+    .rm-title{font-size:19px;font-weight:800;color:#0d1b3e;letter-spacing:-.2px;opacity:0;animation:rmUp .4s ease .28s forwards;}
+    .rm-msg{font-size:13px;color:#64748b;line-height:1.55;margin-top:7px;opacity:0;animation:rmUp .4s ease .36s forwards;}
+    .rm-ok{width:100%;justify-content:center;margin-top:22px;height:48px;opacity:0;animation:rmUp .4s ease .44s forwards;}
+    @keyframes rmUp{from{transform:translateY(8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+    /* Test modal */
+    .tm-overlay{position:fixed;inset:0;background:rgba(13,27,62,.5);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+    .tm-card{background:#fff;border-radius:18px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,.18);}
+    .tm-h{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid #e8eaed;}
+    .tm-x{background:#f4f8ff;border:1.5px solid #e0e7f3;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#6b7fa8;font-size:16px;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+    <div class="et-page">
+
+      <!-- Header -->
+      <div class="et-hdr">
+        <div>
+          <div class="et-title">
+            Telegram Center
+          </div>
+          <div class="et-sub">Kelola bot, notifikasi monitoring & template pesan Telegram — dengan preview langsung gaya Telegram</div>
+        </div>
+        <div class="et-actions">
+          <button class="et-btn et-btn-ghost" id="btnRunChecks" onclick="runChecksNow()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Cek Monitoring
+          </button>
+          <button class="et-btn et-btn-tg" id="btnTest" onclick="testConnection()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Tes Koneksi
+          </button>
+          <button class="et-btn et-btn-primary" id="btnSave" onclick="saveAll()">
+            <svg id="btnSaveIcon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span id="btnSaveLabel">Simpan Perubahan</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat strip -->
+      <div class="rm-strip">
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Status Koneksi</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scStatus" style="font-size:19px;">—</div>
+              <div class="rm-sc-meta"><span class="rm-status-dot pill-grey" id="scStatusDot" style="background:#cbd5e1;"></span><span class="rm-sc-sub" id="scStatusSub">memuat…</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Notifikasi Aktif</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scNotif">0</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-green" id="scNotifPill">0/4</span><span class="rm-sc-sub">jenis</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Template Custom</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scTpl">0</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-teal" id="scTplPill">0/8</span><span class="rm-sc-sub">disesuaikan</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Aktivitas Bot</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scBotToday">0</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-blue" id="scBotWeek">0 / 7 hari</span><span class="rm-sc-sub">aksi hari ini</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Tujuan Chat</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scChat">0</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-blue" id="scInterval">cek 3 mnt</span><span class="rm-sc-sub">interval</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection panel -->
+      <div class="tg-conn">
+        <div class="tg-conn-top">
+          <div class="tg-conn-ic">
+            <svg width="22" height="22" fill="#fff" viewBox="0 0 24 24"><path d="M21.5 4.5L2.5 12.5l5.5 2 2 6 3-4 5 4z"/></svg>
+          </div>
+          <div class="tg-conn-meta">
+            <div class="tg-conn-name">Telegram Monitoring</div>
+            <div class="tg-conn-status"><span class="rm-status-dot" id="connDot" style="background:#cbd5e1;"></span><span id="connText">Belum dikonfigurasi</span></div>
+          </div>
+          <label class="et-switch sw-blue tg-master" title="Aktifkan Telegram">
+            <input type="checkbox" id="tg-enabled" onchange="onAnyChange();refreshConnHeader();">
+            <span class="et-track"></span>
+          </label>
+        </div>
+        <div class="tg-conn-body">
+          <div class="tg-grid2">
+            <div class="et-field">
+              <div class="et-label">Bot Token
+                <button type="button" id="tg-token-reveal" class="tg-eye-btn" onclick="TG.toggleToken()" title="Tampilkan / sembunyikan" style="display:none;">
+                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <input type="text" id="tg-bot-token" class="et-inp" placeholder="123456789:ABCdef… (dari @BotFather)" oninput="TG.onTokenInput();onAnyChange()" autocomplete="off">
+              <div class="et-hint" id="tg-token-hint">Buat bot di <b>@BotFather</b> → <code>/newbot</code> → salin token ke sini.</div>
+            </div>
+            <div class="et-field">
+              <div class="et-label">Chat ID</div>
+              <input type="text" id="tg-chat-id" class="et-inp" placeholder="123456789 atau -100xxx (grup), multi pisah koma" oninput="onAnyChange()">
+              <div class="et-hint">Chat ke bot, buka <code>api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code> → ambil <code>chat.id</code>.</div>
+            </div>
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5"/></svg>
+            Jenis Notifikasi
+          </div>
+          <div class="tg-notif-grid">
+            <label class="tg-notif" data-notif="device">
+              <span class="tg-notif-ic" style="background:rgba(239,68,68,.12);"><svg width="18" height="18" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Perangkat Down</div><div class="tg-notif-d">Router / OLT / switch tidak terjangkau</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('device')" title="Kirim contoh notifikasi Perangkat Down">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-device" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="ont">
+              <span class="tg-notif-ic" style="background:rgba(249,115,22,.12);"><svg width="18" height="18" fill="none" stroke="#f97316" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114 0M8.5 16.05a6 6 0 017 0M2 8.82a15 15 0 0120 0M12 20h.01"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">ONT Disconnect</div><div class="tg-notif-d">ONT pelanggan offline</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('ont')" title="Kirim contoh notifikasi ONT Disconnect">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-ont" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="ip">
+              <span class="tg-notif-ic" style="background:rgba(245,158,11,.12);"><svg width="18" height="18" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">IP Timeout</div><div class="tg-notif-d">IP statis pelanggan tak reachable</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('ip')" title="Kirim contoh notifikasi IP Timeout">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-ip" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="pppoe">
+              <span class="tg-notif-ic" style="background:rgba(34,158,217,.12);"><svg width="18" height="18" fill="none" stroke="#229ED9" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12h16M4 6h16M4 18h16"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">PPPoE Disconnect</div><div class="tg-notif-d">Sesi PPPoE pelanggan tak aktif</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('pppoe')" title="Kirim contoh notifikasi PPPoE Disconnect">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-pppoe" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="router">
+              <span class="tg-notif-ic" style="background:rgba(220,38,38,.12);"><svg width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7v6c0 5 4 8 10 9 6-1 10-4 10-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Router Unreachable</div><div class="tg-notif-d">Router inti tak terjangkau / API gagal — paling kritis</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('router')" title="Kirim contoh notifikasi Router Unreachable">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-router" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="resource">
+              <span class="tg-notif-ic" style="background:rgba(234,88,12,.12);"><svg width="18" height="18" fill="none" stroke="#ea580c" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Beban Router Tinggi</div><div class="tg-notif-d">CPU / RAM router melewati ambang</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('resource')" title="Kirim contoh notifikasi Beban Router">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-resource" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="iface">
+              <span class="tg-notif-ic" style="background:rgba(8,145,178,.12);"><svg width="18" height="18" fill="none" stroke="#0891b2" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17a5 5 0 01-5-5V8a5 5 0 0110 0M15 7a5 5 0 015 5v4a5 5 0 01-10 0"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Interface / Uplink Down</div><div class="tg-notif-d">Port uplink/trunk putus padahal router hidup</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('iface')" title="Kirim contoh notifikasi Interface Down">Tes</button><label class="et-switch"><input type="checkbox" id="tg-notif-iface" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+
+          <!-- Ambang beban router (CPU/RAM) & filter interface -->
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M3 12h18M3 18h18"/></svg>
+            Ambang Network Health
+          </div>
+          <div class="tg-notif-grid">
+            <div class="et-field">
+              <label class="et-label">Ambang CPU (%)</label>
+              <input type="number" min="50" max="100" class="et-inp" id="tg-cpu-threshold" placeholder="90" onchange="onAnyChange()">
+              <div class="et-hint">Alert saat CPU router ≥ nilai ini. Default 90.</div>
+            </div>
+            <div class="et-field">
+              <label class="et-label">Ambang RAM (%)</label>
+              <input type="number" min="50" max="100" class="et-inp" id="tg-mem-threshold" placeholder="90" onchange="onAnyChange()">
+              <div class="et-hint">Alert saat RAM terpakai ≥ nilai ini. Default 90.</div>
+            </div>
+            <div class="et-field">
+              <label class="et-label">Kata kunci interface dipantau</label>
+              <input type="text" class="et-inp" id="tg-iface-keywords" placeholder="uplink,trunk,backhaul,wan" onchange="onAnyChange()">
+              <div class="et-hint">Hanya interface yang nama/komentarnya cocok yang dipantau (pisah koma).</div>
+            </div>
+            <label class="tg-notif" data-notif="iface-all" style="align-items:center;">
+              <span class="tg-notif-tx"><div class="tg-notif-t">Pantau semua interface fisik</div><div class="tg-notif-d">Abaikan kata kunci — pantau semua ether/sfp/vlan (bisa ramai)</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-iface-all" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+
+          <!-- Alert agregat: PPPoE offline massal (indikasi gangguan area/POP) -->
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            Alert Gangguan Massal
+          </div>
+          <div class="et-field" style="max-width:560px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div>
+                <div class="et-label" style="margin-bottom:2px;">Alert PPPoE Offline Massal</div>
+                <div class="et-hint" style="margin:0;">Kirim 1 alert bila total PPPoE offline (semua router) melewati ambang — indikasi POP / uplink down. Bukan per-pelanggan.</div>
+              </div>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-alert-offline" onchange="onAnyChange()"><span class="et-track"></span></label>
+            </div>
+            <div class="tg-notif-grid" style="margin-top:12px;">
+              <div class="et-field">
+                <label class="et-label">Ambang Offline (user)</label>
+                <input type="number" min="1" class="et-inp" id="tg-alert-offline-threshold" placeholder="10" onchange="onAnyChange()">
+                <div class="et-hint">Alert saat jumlah offline ≥ nilai ini. Default 10.</div>
+              </div>
+              <div class="et-field">
+                <label class="et-label">Chat ID Alert <span style="font-weight:600;color:#94a3b8;">(opsional)</span></label>
+                <input type="text" class="et-inp" id="tg-chat-alert" placeholder="ikut Chat ID utama" onchange="onAnyChange()">
+                <div class="et-hint">Tujuan alert. Kosongkan = ikut Chat ID utama.</div>
+              </div>
+            </div>
+            <div style="margin-top:10px;">
+              <button type="button" class="et-link-btn" onclick="TG.testNotif('alert_offline')" style="color:#229ED9;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                Tes Kirim Alert
+              </button>
+            </div>
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Interval Pengecekan
+          </div>
+          <div class="et-field" style="max-width:340px;">
+            <select class="et-sel" id="tg-interval" onchange="onAnyChange();refreshIntervalPill()">
+              <option value="1">Setiap 1 menit (paling cepat)</option>
+              <option value="2">Setiap 2 menit</option>
+              <option value="3">Setiap 3 menit (disarankan)</option>
+              <option value="5">Setiap 5 menit</option>
+              <option value="10">Setiap 10 menit (hemat)</option>
+            </select>
+            <div class="et-hint">Semakin singkat, semakin cepat notif — beban router sedikit lebih besar. Diterapkan setelah <b>Simpan</b>.</div>
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Keandalan &amp; Anti-Spam
+          </div>
+          <div class="tg-adv-grid">
+            <div class="et-field">
+              <div class="et-label">Flapping Guard (detik)</div>
+              <input type="number" min="0" max="600" class="et-inp" id="tg-flap-guard" placeholder="0 = nonaktif" oninput="onAnyChange()">
+              <div class="et-hint">Status harus stabil sekian detik sebelum notif dikirim. Cegah spam saat link "kedip". Saran: 60.</div>
+            </div>
+            <div class="et-field">
+              <div class="et-label">Ambang Grouping</div>
+              <input type="number" min="2" max="100" class="et-inp" id="tg-group-threshold" placeholder="5" oninput="onAnyChange()">
+              <div class="et-hint">Bila transisi dalam 1 siklus ≥ angka ini, kirim 1 pesan ringkas (mis. "12 perangkat down").</div>
+            </div>
+          </div>
+          <div class="tg-notif-grid">
+            <label class="tg-notif" data-notif="quiet" style="grid-column:1/-1;">
+              <span class="tg-notif-ic" style="background:rgba(100,116,139,.14);"><svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Jam Tenang (Quiet Hours)</div><div class="tg-notif-d">Tahan notifikasi <b>pulih</b> (recover) di rentang jam ini. Notif <b>down</b> tetap dikirim.</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-quiet-enabled" onchange="onAnyChange();TG.syncQuiet();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+          <div class="tg-adv-grid" id="tg-quiet-times" style="display:none;">
+            <div class="et-field">
+              <div class="et-label">Mulai</div>
+              <input type="time" class="et-inp" id="tg-quiet-start" value="23:00" onchange="onAnyChange()">
+            </div>
+            <div class="et-field">
+              <div class="et-label">Selesai</div>
+              <input type="time" class="et-inp" id="tg-quiet-end" value="06:00" onchange="onAnyChange()">
+            </div>
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 3v-3z"/></svg>
+            Bot 2-Arah (Perintah)
+            <span class="tg-bot-badge" id="tg-bot-badge" style="display:none;">●</span>
+          </div>
+          <div class="et-hint" style="max-width:560px;margin-bottom:10px;">Bot membalas perintah langsung dari Telegram tanpa membuka dashboard. Hanya Chat ID terdaftar yang diizinkan.</div>
+          <div class="tg-notif-grid">
+            <label class="tg-notif" data-notif="bot-enabled">
+              <span class="tg-notif-ic" style="background:rgba(26,110,245,.12);"><svg width="18" height="18" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M12 8V4M8 4h8M9 14h.01M15 14h.01"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Aktifkan Bot Perintah</div><div class="tg-notif-d">Balas <code>/status</code>, <code>/down</code>, <code>/cek</code> dari Telegram</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-bot-enabled" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="bot-control">
+              <span class="tg-notif-ic" style="background:rgba(220,38,38,.12);"><svg width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Izinkan Kontrol via Bot</div><div class="tg-notif-d">Bolehkan <code>/isolir</code> &amp; <code>/restore</code> — eksekutif, hati-hati</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-bot-control" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+          <div class="et-field" style="max-width:560px;margin-top:14px;">
+            <div class="et-label">Chat ID Admin Bot <span style="font-weight:600;color:#94a3b8;">(opsional)</span></div>
+            <input type="text" class="et-inp" id="tg-chat-admin" placeholder="Kosongkan = pakai Chat ID utama. Multi: pisah koma." oninput="onAnyChange()">
+            <div class="et-hint">Hanya chat di sini (atau Chat ID utama) yang boleh menjalankan perintah bot.</div>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="et-btn" id="btnDetectChats" onclick="TG.detectChats()" style="font-size:12px;padding:8px 14px;">Deteksi Chat ID Baru</button>
+              <span class="et-hint" style="margin:0;">Tampilkan chat yang baru kirim pesan ke bot (1 jam terakhir).</span>
+            </div>
+            <div id="detectChatsList" style="margin-top:10px;"></div>
+          </div>
+
+          <div class="et-field" style="max-width:560px;margin-top:14px;padding:14px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div>
+                <div class="et-label" style="margin-bottom:2px;">Ringkasan Harian Otomatis</div>
+                <div class="et-hint" style="margin:0;">Kirim ringkasan operasional (pemasukan, pelanggan baru, tunggakan, tiket, gangguan) ke Chat ID Admin tiap hari.</div>
+              </div>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-summary-enabled" onchange="onAnyChange()"><span class="et-track"></span></label>
+            </div>
+            <div class="et-field" style="margin-top:12px;max-width:200px;">
+              <div class="et-label">Jam Kirim (0–23)</div>
+              <input type="number" min="0" max="23" class="et-inp" id="tg-summary-hour" placeholder="8" onchange="onAnyChange()">
+              <div class="et-hint">Zona waktu Asia/Jakarta. Default jam 8 pagi.</div>
+            </div>
+            <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <button type="button" class="et-btn" id="btnSummaryNow" onclick="TG.summaryNow()" style="font-size:12px;padding:8px 14px;">Kirim Ringkasan Sekarang</button>
+              <span class="et-hint" id="summaryNowMsg" style="margin:0;"></span>
+            </div>
+          </div>
+
+          <div class="tg-sub-h" style="display:flex !important;align-items:center;gap:6px;max-width:780px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3M13 15h3M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+            <span>Perintah Bot</span>
+            <button type="button" style="margin-left:auto;background:#1a6ef5;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;text-transform:none;letter-spacing:0;display:none;" onclick="BotCmd.openCreate()">+ Tambah Perintah</button>
+          </div>
+          <div class="et-hint" style="max-width:620px;margin-bottom:10px;">Kelola perintah yang dibalas bot. Perintah <b>bawaan</b> bisa diatur keyword tambahan (alias), deskripsi, aktif/nonaktif. Perintah <b>custom</b> bisa balasan statis atau mengambil data (mis. cek tagihan).</div>
+          <div id="botcmd-list" class="botcmd-list"><div class="et-hint" style="padding:14px;">Memuat perintah…</div></div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/></svg>
+            Routing Notifikasi per Jenis <span style="font-weight:600;color:#94a3b8;font-size:11px;text-transform:none;letter-spacing:0;">(opsional)</span>
+          </div>
+          <div class="et-hint" style="max-width:560px;margin-bottom:10px;">Kirim tiap jenis ke grup berbeda. Kosongkan = ikut Chat ID utama. Mis. device/IP ke grup NOC, ONT/PPPoE ke grup teknisi.</div>
+          <div class="tg-adv-grid" style="max-width:560px;">
+            <div class="et-field"><div class="et-label">Chat Perangkat</div><input type="text" class="et-inp" id="tg-chat-device" placeholder="default" oninput="onAnyChange()"></div>
+            <div class="et-field"><div class="et-label">Chat ONT</div><input type="text" class="et-inp" id="tg-chat-ont" placeholder="default" oninput="onAnyChange()"></div>
+            <div class="et-field"><div class="et-label">Chat IP</div><input type="text" class="et-inp" id="tg-chat-ip" placeholder="default" oninput="onAnyChange()"></div>
+            <div class="et-field"><div class="et-label">Chat PPPoE</div><input type="text" class="et-inp" id="tg-chat-pppoe" placeholder="default" oninput="onAnyChange()"></div>
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 00-4-5.7V5a2 2 0 10-4 0v.3C7.7 6.2 6 8.4 6 11v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0v1a3 3 0 11-6 0v-1"/></svg>
+            Notifikasi Event Bisnis
+          </div>
+          <div class="et-hint" style="max-width:560px;margin-bottom:10px;">Kirim notif kejadian operasional ke Telegram. Tujuan: Chat Event (di bawah) atau Chat ID utama.</div>
+          <div class="tg-notif-grid">
+            <label class="tg-notif" data-notif="payment">
+              <span class="tg-notif-ic" style="background:rgba(13,148,136,.12);"><svg width="18" height="18" fill="none" stroke="#0d9488" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Pembayaran Masuk</div><div class="tg-notif-d">Saat pelanggan bayar</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-evt-payment" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="newcust">
+              <span class="tg-notif-ic" style="background:rgba(26,110,245,.12);"><svg width="18" height="18" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Pelanggan Baru</div><div class="tg-notif-d">Saat registrasi/aktivasi</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-evt-newcust" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="ticket">
+              <span class="tg-notif-ic" style="background:rgba(13,148,136,.12);"><svg width="18" height="18" fill="none" stroke="#0d9488" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16a2 2 0 012 2v4a2 2 0 000 4v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 000-4V6a2 2 0 012-2z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Tiket Baru</div><div class="tg-notif-d">Saat tiket dibuat</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-evt-ticket" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="voucher">
+              <span class="tg-notif-ic" style="background:rgba(26,110,245,.12);"><svg width="18" height="18" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><path d="M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2z"/><path d="M9 5v14" stroke-dasharray="2 2"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Voucher Terjual</div><div class="tg-notif-d">Saat voucher hotspot laku</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-evt-voucher" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+          <div class="et-field" style="max-width:560px;margin-top:14px;">
+            <div class="et-label">Chat ID Event <span style="font-weight:600;color:#94a3b8;">(opsional)</span></div>
+            <input type="text" class="et-inp" id="tg-chat-event" placeholder="Kosongkan = pakai Chat ID utama. Multi: pisah koma." oninput="onAnyChange()">
+          </div>
+
+          <div class="tg-sub-h">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Feed PPPoE Connect / Disconnect
+          </div>
+          <div class="et-hint" style="max-width:560px;margin-bottom:10px;">Kirim kartu setiap pelanggan PPPoE <b>login</b> &amp; <b>logout</b> — berisi Server, User, Paket, IP, MAC, dan total Active/Offline. Ini feed aktivitas (bukan alarm gangguan).</div>
+          <div class="tg-notif-grid">
+            <label class="tg-notif" data-notif="pppoe-feed">
+              <span class="tg-notif-ic" style="background:rgba(26,110,245,.12);"><svg width="18" height="18" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114 0M8.5 16.05a6 6 0 017 0M2 8.82a15 15 0 0120 0M12 20h.01"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Aktifkan Feed PPPoE</div><div class="tg-notif-d">Master on/off untuk feed connect &amp; disconnect</div></span>
+              <button type="button" class="tg-test-btn" onclick="event.preventDefault();TG.testNotif('pppoe_feed')" title="Kirim contoh kartu PPPoE">Tes</button><label class="et-switch sw-blue"><input type="checkbox" id="tg-pppoe-feed" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="pppoe-connect">
+              <span class="tg-notif-ic" style="background:rgba(13,148,136,.12);"><svg width="18" height="18" fill="none" stroke="#0d9488" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Laporkan CONNECT</div><div class="tg-notif-d">Saat pelanggan PPPoE login</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-pppoe-feed-connect" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+            <label class="tg-notif" data-notif="pppoe-disconnect">
+              <span class="tg-notif-ic" style="background:rgba(100,116,139,.14);"><svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></span>
+              <span class="tg-notif-tx"><div class="tg-notif-t">Laporkan DISCONNECT</div><div class="tg-notif-d">Saat pelanggan PPPoE logout</div></span>
+              <label class="et-switch sw-blue"><input type="checkbox" id="tg-pppoe-feed-logout" onchange="onAnyChange();syncNotifCard(this)"><span class="et-track"></span></label>
+            </label>
+          </div>
+          <div class="tg-notif-grid" style="margin-top:12px;">
+            <div class="et-field">
+              <label class="et-label">Batas kartu / siklus</label>
+              <input type="number" min="1" max="200" class="et-inp" id="tg-pppoe-feed-max" placeholder="25" onchange="onAnyChange()">
+              <div class="et-hint">Cegah banjir saat banyak pelanggan reconnect serempak. Default 25.</div>
+            </div>
+            <div class="et-field">
+              <label class="et-label">Chat ID Feed PPPoE <span style="font-weight:600;color:#94a3b8;">(opsional)</span></label>
+              <input type="text" class="et-inp" id="tg-chat-pppoe-feed" placeholder="Kosongkan = pakai Chat ID utama" oninput="onAnyChange()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile tab switch -->
+      <div class="et-mtabs">
+        <button type="button" class="et-mtab active" data-mtab="edit" onclick="mtab('edit')">Edit Template</button>
+        <button type="button" class="et-mtab" data-mtab="prev" onclick="mtab('prev')">Preview</button>
+      </div>
+
+      <div class="et-grid m-edit" id="etGrid">
+        <!-- TEMPLATE LIST -->
+        <div class="et-list-col">
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Template Pesan
+              <span class="cnt" id="tplCount">8</span>
+            </div>
+            <div class="et-list" id="tplList"></div>
+          </div>
+        </div>
+
+        <!-- EDITOR -->
+        <div class="et-editor-col">
+          <div class="et-card">
+            <div class="et-card-h" id="etEditorTitle">Editor Template</div>
+            <div class="et-editor" id="etEditor">
+              <div style="text-align:center;padding:40px 10px;color:#94a3b8;font-size:13px;">Pilih template di sebelah kiri untuk mengatur.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW + QUICK SEND -->
+        <div class="et-preview-col">
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Langsung
+            </div>
+            <div class="tg-cat-tag" id="tgCatTag">
+              <span class="rm-status-dot" id="tgCatDot" style="background:#229ED9;"></span>
+              <span id="tgCatLabel">Notifikasi Telegram</span>
+            </div>
+            <div class="tg-chat">
+              <div class="tg-bar">
+                <div class="tg-av">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+                </div>
+                <div class="tg-meta">
+                  <div class="tg-name" id="tgBotName">Bot Monitoring</div>
+                  <div class="tg-status">bot</div>
+                </div>
+              </div>
+              <div class="tg-body">
+                <div class="tg-empty" id="tgEmpty">Pilih template untuk melihat preview pesan.</div>
+                <div class="tg-bubble" id="tgBubble" style="display:none;">
+                  <div class="tg-text" id="tgText"></div>
+                  <div class="tg-time" id="tgTime">00.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick send -->
+          <div class="et-card tg-send">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              Kirim Pesan Cepat
+            </div>
+            <div class="tg-send-body">
+              <textarea id="tgQuickText" class="et-ta" style="min-height:90px;" placeholder="Tulis pesan bebas… (mendukung &lt;b&gt;, &lt;i&gt;, &lt;code&gt;)">Tes pesan dari dashboard ISP.</textarea>
+              <div class="et-hint" style="margin-bottom:12px;">Dikirim langsung ke semua Chat ID terdaftar. Cocok untuk pengumuman cepat.</div>
+              <button class="et-btn et-btn-tg" style="width:100%;justify-content:center;" id="btnQuickSend" onclick="sendQuick()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Kirim ke Telegram
+              </button>
+            </div>
+          </div>
+
+          <!-- Riwayat notifikasi -->
+          <div class="et-card tg-hist-card" style="margin-top:18px;">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Riwayat Notifikasi
+              <button onclick="TG.refreshHistory()" title="Muat ulang" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#229ED9;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:4px;"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Refresh</button>
+            </div>
+            <div class="tg-history" id="tg-history">
+              <div class="tg-hist-empty">Memuat riwayat…</div>
+            </div>
+            <div class="tg-hist-foot" id="tg-hist-foot" style="display:none;">
+              <span class="tg-hist-info" id="tg-hist-info"></span>
+              <span class="tg-hist-pager" id="tg-hist-pager"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </main>
+  </div>
+</div>
+
+<!-- Result modal -->
+<div id="resultModal" class="rm-overlay" style="display:none;">
+  <div class="rm-card">
+    <div class="rm-icon" id="rmIcon"></div>
+    <div class="rm-title" id="rmTitle">Berhasil</div>
+    <div class="rm-msg" id="rmMsg"></div>
+    <button class="et-btn et-btn-primary rm-ok" onclick="closeResult()">Selesai</button>
+  </div>
+</div>
+
+<!-- Modal: tambah/edit perintah bot -->
+<style>
+.botcmd-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.botcmd-dialog{background:#fff;border-radius:16px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.28);}
+.botcmd-dlg-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e8edf5;font-size:15px;font-weight:800;color:#1e293b;}
+.botcmd-x{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:#94a3b8;}
+.botcmd-x:hover{color:#dc2626;}
+.botcmd-dlg-body{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:13px;}
+.botcmd-dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid #e8edf5;}
+.botcmd-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:520px){.botcmd-row2{grid-template-columns:1fr;}}
+.botcmd-check{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#1e293b;cursor:pointer;}
+.botcmd-note{font-size:11px;color:#1a4d6e;background:#eef5ff;border:1px solid #cfe0fb;border-radius:8px;padding:9px 11px;line-height:1.45;}
+.botcmd-err{font-size:12px;color:#dc2626;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);border-radius:8px;padding:9px 11px;}
+.bc-ph{cursor:pointer;background:#eef2f9;border-radius:4px;padding:1px 5px;font-size:10.5px;color:#1a4d6e;margin-right:3px;display:inline-block;margin-top:3px;}
+.bc-ph:hover{background:#dbe6f7;}
+.botcmd-dlg-body .et-label{display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:5px;}
+.botcmd-dlg-body .et-inp,.botcmd-dlg-body .et-sel{width:100%;border:1.5px solid #e8edf5;border-radius:11px;padding:10px 13px;font-size:13px;font-family:inherit;box-sizing:border-box;background:#fff;}
+.botcmd-dlg-body textarea.et-inp{resize:vertical;}
+.botcmd-dlg-body .et-hint{font-size:10.5px;color:#94a3b8;margin-top:5px;line-height:1.45;}
+.botcmd-dlg-foot .et-btn{padding:9px 18px;border-radius:10px;border:1.5px solid #e8edf5;background:#fff;font-size:13px;font-weight:700;cursor:pointer;color:#334155;}
+.botcmd-dlg-foot .et-btn-primary{background:#1a6ef5;border-color:#1a6ef5;color:#fff;}
+</style>
+<div class="botcmd-overlay" id="botcmd-modal" style="display:none;">
+  <div class="botcmd-dialog">
+    <div class="botcmd-dlg-h">
+      <span id="botcmd-dlg-title">Tambah Perintah</span>
+      <button class="botcmd-x" onclick="BotCmd.close()">&times;</button>
+    </div>
+    <div class="botcmd-dlg-body">
+      <div id="botcmd-sys-note" class="botcmd-note" style="display:none;">Perintah bawaan: keyword & fungsi tidak dapat diubah, tetapi alias, deskripsi, dan status aktif bisa diatur.</div>
+      <div class="botcmd-row2">
+        <div class="et-field">
+          <label class="et-label">Keyword <span style="color:#94a3b8;font-weight:600;">(tanpa /)</span></label>
+          <input type="text" class="et-inp" id="bc-keyword" placeholder="mis. tagihan" maxlength="40">
+        </div>
+        <div class="et-field">
+          <label class="et-label">Alias <span style="color:#94a3b8;font-weight:600;">(opsional, pisah koma)</span></label>
+          <input type="text" class="et-inp" id="bc-aliases" placeholder="mis. bill,invoice">
+        </div>
+      </div>
+      <div class="et-field" id="bc-type-field">
+        <label class="et-label">Tipe Perintah</label>
+        <select class="et-inp et-sel" id="bc-type" onchange="BotCmd.onTypeChange()">
+          <option value="reply">Balasan Statis (teks tetap)</option>
+          <option value="data">Aksi Data (ambil data lalu balas)</option>
+        </select>
+      </div>
+      <div class="et-field" id="bc-source-field" style="display:none;">
+        <label class="et-label">Sumber Data</label>
+        <select class="et-inp et-sel" id="bc-source" onchange="BotCmd.onSourceChange()"></select>
+        <div class="et-hint" id="bc-source-hint"></div>
+      </div>
+      <div class="et-field">
+        <label class="et-label">Deskripsi</label>
+        <input type="text" class="et-inp" id="bc-desc" placeholder="Penjelasan singkat (tampil di /help)" maxlength="255">
+      </div>
+      <div class="et-field" id="bc-template-field">
+        <label class="et-label">Format Balasan</label>
+        <textarea class="et-inp" id="bc-template" rows="5" placeholder="Tulis balasan… mendukung <b>, <code>, dan placeholder."></textarea>
+        <div class="et-hint" id="bc-placeholders"></div>
+      </div>
+      <div class="botcmd-row2">
+        <label class="botcmd-check"><input type="checkbox" id="bc-control"> Butuh izin kontrol (eksekutif)</label>
+        <label class="botcmd-check"><input type="checkbox" id="bc-enabled" checked> Aktif</label>
+      </div>
+      <div class="botcmd-err" id="bc-err" style="display:none;"></div>
+    </div>
+    <div class="botcmd-dlg-foot">
+      <button class="et-btn" onclick="BotCmd.close()">Batal</button>
+      <button class="et-btn et-btn-primary" id="bc-save" onclick="BotCmd.save()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script>window.__COMPANY = <%- JSON.stringify(appName || 'ISP') %>;</script>
+<script src="/js/app.js"></script>
+<script src="/js/telegram-center.js"></script>
+<script src="/js/bot-commands.js"></script>
+</body>
+</html>

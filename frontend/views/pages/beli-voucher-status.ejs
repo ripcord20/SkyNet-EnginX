@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1668ff">
+  <title><%= title %></title>
+  <% if (brand.favicon) { %><link rel="icon" href="<%= brand.favicon %>"><% } %>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#f4f6fb;--card:#fff;--ink:#0f1b34;--muted:#8a95ad;--line:#e7ecf5;
+      --teal:#1668ff;--teal-deep:#0b4fd6;--green:#16a34a;--amber:#e08a00;--red:#e5484d;
+      --grad:linear-gradient(160deg,#2f7bff 0%,#1668ff 55%,#0b4fd6 100%);
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100dvh;
+      display:flex;align-items:center;justify-content:center;padding:20px;-webkit-font-smoothing:antialiased;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:30px 22px;
+      max-width:420px;width:100%;text-align:center;box-shadow:0 18px 44px rgba(20,40,90,.09);}
+    .ic{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      margin:0 auto 18px;transition:all .3s;}
+    .ic.wait{background:#eaf1ff;color:var(--teal-deep);}
+    .ic.ok{background:#e7f7ef;color:var(--green);}
+    .ic.warn{background:#fef6e0;color:var(--amber);}
+    .ic.err{background:#fdeaea;color:var(--red);}
+    h1{font-size:21px;font-weight:800;letter-spacing:-.4px;}
+    .sub{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+    .spin{width:42px;height:42px;border:3.5px solid #dfe5ef;border-top-color:var(--teal-deep);
+      border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+    .pop{animation:pop .4s cubic-bezier(.2,.8,.3,1.2);}
+
+    /* Voucher reveal */
+    .vch{margin-top:20px;border:1.6px solid var(--line);border-radius:18px;overflow:hidden;text-align:left;
+      position:relative;background:linear-gradient(180deg,#f4f9ff,#fff);}
+    .vch-top{background:var(--grad);color:#fff;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;}
+    .vch-top .vt{font-size:12px;font-weight:700;opacity:.92;}
+    .vch-top .vp{font-size:13px;font-weight:800;}
+    .vch-body{padding:16px 18px;}
+    .vch-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);}
+    .vch-row:last-child{border-bottom:none;}
+    .vch-row .k{font-size:12px;color:var(--muted);font-weight:600;}
+    .vch-row .v{font-size:16px;font-weight:800;font-family:'DM Mono',monospace;color:var(--teal-deep);
+      display:flex;align-items:center;gap:8px;}
+    .copy{border:none;background:#e8f1ff;color:var(--teal-deep);border-radius:7px;padding:3px 8px;
+      font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .ordref{font-size:11px;color:#aab3c6;font-family:'DM Mono',monospace;margin-top:16px;}
+    .delivery{margin-top:14px;font-size:12px;color:var(--green);font-weight:600;background:#f0fbf5;
+      border-radius:10px;padding:9px 12px;line-height:1.4;}
+    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;border:none;
+      border-radius:14px;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:14px;
+      text-decoration:none;}
+    .btn-primary{background:var(--grad);color:#fff;box-shadow:0 10px 24px rgba(31,122,255,.3);}
+    .btn-ghost{background:#f3f5fa;color:#54607a;}
+    .btn:active{transform:scale(.98);}
+    .meta{margin-top:16px;background:#f7faff;border:1px solid var(--line);border-radius:13px;padding:12px 14px;text-align:left;}
+    .meta .mr{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
+    .meta .mr .mk{color:var(--muted);font-weight:500;}
+    .meta .mr .mv{font-weight:700;}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:90;
+      background:#0f1b34;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:600;
+      opacity:0;transition:all .25s;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="ic wait"><div class="spin"></div></div>
+    <h1 id="title">Memeriksa status…</h1>
+    <div class="sub" id="sub">Mohon tunggu, kami sedang memuat pesanan kamu.</div>
+    <div id="content"></div>
+    <div class="ordref" id="ordref"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+  var CODE = <%- JSON.stringify(orderCode) %>;
+  var WA = <%- JSON.stringify(brand.whatsapp || '') %>;
+  var pollCount = 0, timer = null;
+
+  function rp(n){ return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.className='toast show'; clearTimeout(t._t); t._t=setTimeout(function(){t.className='toast';},2200); }
+  function copyTxt(t){ navigator.clipboard.writeText(t).then(function(){toast('Disalin');}).catch(function(){}); }
+
+  function setIcon(cls, svg){ document.querySelector('.ic').className='ic pop '+cls; document.querySelector('.ic').innerHTML=svg; }
+  var ICONS = {
+    ok:'<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    warn:'<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>',
+    err:'<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'
+  };
+
+  async function poll(){
+    pollCount++;
+    try {
+      var r = await fetch('/pub/voucher/'+encodeURIComponent(CODE)+'/status');
+      var j = await r.json();
+      if (!j.success){ return renderError('Order tidak ditemukan', 'Periksa kembali tautan order kamu.'); }
+      var d = j.data;
+      document.getElementById('ordref').textContent = 'No. Order ' + d.order_code;
+      if (d.status === 'delivered'){ stop(); return renderDelivered(d); }
+      if (d.status === 'failed'){ stop(); return renderError('Pesanan gagal diproses', 'Hubungi admin untuk bantuan. Pembayaran akan ditinjau.'); }
+      if (d.status === 'expired'){ stop(); return renderExpired(d); }
+      if (d.status === 'paid'){ return renderProcessing(d); }
+      return renderPending(d);
+    } catch(e){ /* keep polling */ }
+  }
+
+  function stop(){ if (timer){ clearInterval(timer); timer=null; } }
+
+  function renderPending(d){
+    document.getElementById('title').textContent='Menunggu pembayaran';
+    document.getElementById('sub').textContent='Selesaikan pembayaran kamu. Halaman ini akan otomatis diperbarui.';
+    if (!document.getElementById('pendMeta')) document.getElementById('content').innerHTML = metaBox(d, 'pendMeta');
+  }
+  function renderProcessing(d){
+    setIconSpin();
+    document.getElementById('title').textContent='Pembayaran diterima 🎉';
+    document.getElementById('sub').textContent='Sedang membuat voucher kamu. Sebentar ya…';
+  }
+  function setIconSpin(){ document.querySelector('.ic').className='ic wait'; document.querySelector('.ic').innerHTML='<div class="spin"></div>'; }
+
+  function renderDelivered(d){
+    setIcon('ok', ICONS.ok);
+    document.getElementById('title').textContent='Voucher Berhasil Dibuat!';
+    document.getElementById('sub').textContent='Simpan kode di bawah ini untuk login WiFi.';
+    var html = ''
+      + '<div class="vch">'
+      + '  <div class="vch-top"><span class="vt">VOUCHER WIFI</span><span class="vp">'+esc(d.package_name||'')+'</span></div>'
+      + '  <div class="vch-body">'
+      + '    <div class="vch-row"><span class="k">Username</span><span class="v">'+esc(d.voucher.username)+' <button class="copy" onclick="copyTxt(\''+esc(d.voucher.username)+'\')">Salin</button></span></div>'
+      + '    <div class="vch-row"><span class="k">Password</span><span class="v">'+esc(d.voucher.password)+' <button class="copy" onclick="copyTxt(\''+esc(d.voucher.password)+'\')">Salin</button></span></div>'
+      + '  </div>'
+      + '</div>';
+    var ch = [];
+    if (d.delivered_wa) ch.push('WhatsApp');
+    if (d.delivered_email) ch.push('email');
+    if (ch.length) html += '<div class="delivery">✓ Voucher juga sudah dikirim ke '+ch.join(' & ')+' kamu.</div>';
+    html += '<a class="btn btn-primary" href="/beli-voucher">Beli Voucher Lagi</a>';
+    document.getElementById('content').innerHTML = html;
+  }
+
+  function renderExpired(d){
+    setIcon('warn', ICONS.warn);
+    document.getElementById('title').textContent='Pembayaran kedaluwarsa';
+    document.getElementById('sub').textContent='Waktu pembayaran habis. Silakan buat pesanan baru.';
+    document.getElementById('content').innerHTML = '<a class="btn btn-primary" href="/beli-voucher">Pesan Lagi</a>';
+  }
+  function renderError(t,s){
+    setIcon('err', ICONS.err);
+    document.getElementById('title').textContent=t;
+    document.getElementById('sub').textContent=s;
+    var html = '<a class="btn btn-primary" href="/beli-voucher">Kembali</a>';
+    if (WA) html += '<a class="btn btn-ghost" href="https://wa.me/'+WA+'" target="_blank">Hubungi Admin</a>';
+    document.getElementById('content').innerHTML = html;
+  }
+
+  function metaBox(d, id){
+    return '<div class="meta" id="'+id+'">'
+      + '<div class="mr"><span class="mk">Paket</span><span class="mv">'+esc(d.package_name||'')+'</span></div>'
+      + '<div class="mr"><span class="mk">Total</span><span class="mv">'+rp(d.amount)+'</span></div>'
+      + '</div>';
+  }
+
+  poll();
+  timer = setInterval(function(){ if (pollCount>240){ stop(); return; } poll(); }, 4000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden && timer) poll(); });
+</script>
+</body>
+</html>

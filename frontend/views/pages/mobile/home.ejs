@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --bg:#eff8ff; --card:#ffffff; --ink:#1F3849; --muted:#7c93a0; --line:#e2eefb;
+      --blue:#0ea5e9; --blue-deep:#0284c7; --blue-soft:#e0f2fe; --teal:#38bdf8; --teal-soft:#e0f2fe;
+      --green:#38bdf8; --green-soft:#e0f2fe; --amber:#f0a63c; --amber-soft:#fdf0dc; --red:#f27272; --red-soft:#fde4e4;
+      --dark:#1F3849; --dark2:#101C31; --charcoal:#1F3849; --prussian:#101C31; --mint:#38bdf8; --cyan:#0ea5e9;
+      --nav-h:70px;
+    }
+    body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);
+      padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .money{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.3px;}
+    .wrap{max-width:520px;margin:0 auto;}
+
+    /* Header */
+    /* Top bar: hamburger — judul — avatar */
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 18px 6px;gap:12px;}
+    .tb-hamb{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid #eef1f6;display:flex;align-items:center;justify-content:center;color:#25324d;cursor:pointer;flex-shrink:0;}
+    .tb-hamb svg{width:21px;height:21px;stroke-width:2.2;}
+    .tb-hamb:active{background:#f4f6fa;}
+    .tb-title{font-size:16px;font-weight:800;letter-spacing:-.2px;color:#1a2b4a;}
+    .tb-avatar{width:40px;height:40px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#2f6fed,#1e4fd6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;text-decoration:none;cursor:pointer;}
+    /* Beranda: sapaan tak perlu clearance sebesar judul halaman lain.
+       Override aturan global .wrap .head (70px) agar tak terlalu renggang. */
+    .head{padding:14px 20px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .wrap .head{ padding-top:14px !important; }
+    /* Home pakai hamburger di topbar, sembunyikan yang floating dari partial */
+    .mdr-hamb{display:none !important;}
+    .greet{font-size:13px;color:#7a8f88;font-weight:500;}
+    .who{font-size:21px;font-weight:800;letter-spacing:-.4px;margin-top:1px;color:var(--ink);}
+    .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 8px 18px -6px rgba(14,165,233,.5);}
+
+    .content{padding:2px 16px 20px;}
+
+    /* Hero — kartu Total Balance gelap (gaya FlowMint) */
+    .hero{background:linear-gradient(135deg,#0ea5e9,#0284c7);border-radius:26px;padding:22px;color:#fff;box-shadow:0 18px 38px -16px rgba(2,132,199,.6);margin-bottom:16px;position:relative;overflow:hidden;}
+    .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;position:relative;z-index:1;}
+    .hero-lbl{font-size:12.5px;color:rgba(255,255,255,.8);font-weight:500;display:flex;align-items:center;gap:7px;}
+    .eye-btn{background:rgba(255,255,255,.18);border:none;width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;padding:0;flex-shrink:0;}
+    .eye-btn svg{width:14px;height:14px;}
+    .eye-btn:active{background:rgba(255,255,255,.32);}
+    .hero-val{font-size:33px;font-weight:800;letter-spacing:-1.2px;margin-top:6px;color:#fff;}
+    .hero-val .cents{font-size:20px;color:rgba(255,255,255,.6);font-weight:700;}
+    .hero-sub{font-size:12px;color:rgba(255,255,255,.92);margin-top:8px;font-weight:600;display:flex;align-items:center;gap:5px;}
+    .hero-coin{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .hero-coin svg{width:22px;height:22px;color:#fff;}
+    .hero-spark{margin-top:16px;position:relative;z-index:1;}
+    .hero-spark svg{width:100%;height:56px;display:block;}
+    /* Donut lama (collection) dipindah ke kartu terpisah — sembunyikan di hero */
+    .donut{position:relative;width:96px;height:96px;flex-shrink:0;display:none;}
+    .donut svg{transform:rotate(-90deg);}
+    .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .donut-pct{font-size:19px;font-weight:800;line-height:1;}
+    .donut-cap{font-size:8.5px;opacity:.8;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+    .hero-legend{display:none;}
+    .hl-item{flex:1;}
+    .hl-dot{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px;}
+    .hl-lbl{font-size:10.5px;opacity:.8;}
+    .hl-val{font-size:14px;font-weight:800;margin-top:3px;}
+
+    /* Cash flow insight card (gaya FlowMint) */
+    .cf-card{background:#fff;border-radius:22px;padding:18px;margin-bottom:16px;box-shadow:0 10px 26px -18px rgba(15,47,42,.3);border:1px solid #e9f1ee;}
+    .cf-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+    .cf-title{font-size:14px;font-weight:800;}
+    .cf-badge{font-size:11px;font-weight:700;color:var(--muted);background:#f1f6f4;padding:5px 11px;border-radius:100px;}
+    .cf-sel{font-size:11.5px;font-weight:600;color:#5a6b72;background:#f1f5f6;border:1px solid #e2eaea;border-radius:100px;padding:6px 30px 6px 13px;font-family:inherit;cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='12'%20height='12'%20viewBox='0%200%2012%2012'%3E%3Cpath%20d='M2.5%204.5L6%208l3.5-3.5'%20fill='none'%20stroke='%237c8a90'%20stroke-width='1.6'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;}
+    .cf-stats{display:flex;gap:8px;margin-bottom:6px;}
+    .cf-stat{flex:1;}
+    .cf-stat .k{font-size:10.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:5px;}
+    .cf-stat .k i{width:7px;height:7px;border-radius:50%;}
+    .cf-stat .v{font-size:16px;font-weight:800;margin-top:4px;letter-spacing:-.4px;}
+    .cf-chart{width:100%;height:96px;margin-top:8px;}
+    .cf-xlabels{display:flex;justify-content:space-between;margin-top:6px;font-size:9.5px;color:var(--muted);}
+
+    /* AI insight strip */
+    .ai-strip{display:flex;align-items:center;gap:12px;background:linear-gradient(100deg,#e0f2fe,#eff8ff);border-radius:18px;padding:14px 16px;margin-bottom:18px;}
+    .ai-slider{margin-bottom:18px;}
+    .ai-slider .ai-strip{margin-bottom:9px;min-height:58px;}
+    .ai-txt{transition:opacity .3s ease;}
+    .ai-txt.fading{opacity:0;}
+    .ai-dots{display:flex;justify-content:center;gap:6px;}
+    .ai-dots .dot{width:6px;height:6px;border-radius:50%;background:#c3d6d1;transition:all .25s;cursor:pointer;}
+    .ai-dots .dot.on{width:18px;border-radius:100px;background:var(--cyan,#0ea5e9);}
+    .ai-ic{width:34px;height:34px;border-radius:11px;background:#38bdf8;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px -5px rgba(14,165,233,.6);}
+    .ai-ic svg{width:18px;height:18px;color:#fff;}
+    .ai-txt{flex:1;font-size:12.5px;color:#0284c7;line-height:1.45;font-weight:500;}
+    .ai-txt b{font-weight:800;}
+
+    /* Section title */
+    .sec{display:flex;align-items:center;justify-content:space-between;margin:6px 2px 12px;}
+    .sec h3{font-size:14px;font-weight:800;letter-spacing:-.2px;}
+    .sec a{font-size:12px;color:var(--blue);font-weight:700;text-decoration:none;}
+
+    /* Card putih membungkus section menu (gaya referensi) */
+    .menu-card{background:#fff;border:1px solid #eef1f6;border-radius:20px;padding:16px 14px 18px;margin-bottom:16px;box-shadow:0 8px 20px -14px rgba(30,60,120,.16);}
+    .menu-head{margin:2px 4px 14px;display:flex;align-items:center;justify-content:space-between;}
+    .menu-head h3{font-size:14px;font-weight:800;letter-spacing:-.2px;}
+    .menu-toggle{display:flex;align-items:center;gap:3px;background:none;border:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--blue);cursor:pointer;padding:4px 2px;}
+    .menu-toggle svg{width:15px;height:15px;transition:transform .25s;}
+    .menu-toggle.open svg{transform:rotate(180deg);}
+    /* Services grid — ikon kotak outline (gaya referensi) */
+    .services{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 10px;margin-bottom:0;}
+    /* Tampilkan hanya 8 menu; sisanya disembunyikan sampai tombol "Semua" ditekan. */
+    .services .svc-more{display:none;}
+    .services.expanded .svc-more{display:flex;}
+    .svc{background:transparent;display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--ink);transition:transform .12s;cursor:pointer;}
+    .svc:active{transform:scale(.94);}
+    .svc-ic{width:100%;aspect-ratio:1;max-width:60px;border-radius:15px;border:1.5px solid #e9edf4;background:#fbfcfe;display:flex;align-items:center;justify-content:center;color:#3a4a68;transition:all .15s;}
+    .svc-ic svg{width:23px;height:23px;stroke-width:1.7;}
+    .svc:active .svc-ic{border-color:var(--blue);color:var(--blue);background:#f2f6ff;}
+    .svc-lbl{font-size:11px;font-weight:600;color:#5a6885;text-align:center;line-height:1.15;min-height:2.3em;display:flex;align-items:flex-start;justify-content:center;}
+
+    /* Stat mini cards */
+    .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+    .stat{background:#fff;border-radius:18px;padding:15px 16px;box-shadow:0 6px 16px -8px rgba(30,60,120,.12);}
+    .stat-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:#f5f7fb;color:#3a4a68;}
+    .stat-ic svg{width:19px;height:19px;stroke-width:1.8;}
+    .stat-val{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+    .stat-lbl{font-size:11.5px;color:var(--muted);margin-top:5px;font-weight:500;}
+
+    /* Pertumbuhan Pelanggan */
+    .grow-card{background:#fff;border-radius:22px;padding:18px 18px 16px;margin-bottom:22px;box-shadow:0 10px 26px -18px rgba(15,47,42,.3);border:1px solid #e9f1ee;}
+    .grow-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+    .grow-title{font-size:15px;font-weight:800;color:#1f3849;letter-spacing:-.3px;margin:0;}
+    .grow-sub{font-size:11.5px;color:var(--muted);margin-top:2px;font-weight:500;}
+    .grow-badge{flex-shrink:0;font-size:12.5px;font-weight:800;color:#0284c7;background:#e0f2fe;padding:6px 12px;border-radius:100px;white-space:nowrap;}
+    .grow-chart{width:100%;height:110px;display:block;}
+    .grow-xlabels{display:flex;justify-content:space-between;margin-top:6px;padding:0 2px;}
+    .grow-xlabels span{font-size:9.5px;color:#aab6c4;font-weight:600;flex:1;text-align:center;}
+    .grow-stats{display:flex;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid #eef3f7;}
+    .grow-stat{flex:1;text-align:center;}
+    .grow-stat .gs-val{font-size:17px;font-weight:800;color:#1f3849;letter-spacing:-.4px;line-height:1;}
+    .grow-stat .gs-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;}
+    .grow-list-head{display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px;padding-top:14px;border-top:1px solid #eef3f7;}
+    .grow-list-head span{font-size:12.5px;font-weight:800;color:#1f3849;}
+    .grow-list-toggle{border:none;background:none;color:#0ea5e9;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 4px;}
+    .grow-list{display:flex;flex-direction:column;gap:8px;}
+    .grow-list.collapsed{display:none;}
+    .gl-item{display:flex;align-items:center;gap:11px;padding:10px 11px;background:#f7fafd;border-radius:13px;border:1px solid #eef3f7;}
+    .gl-av{width:34px;height:34px;border-radius:10px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+    .gl-body{flex:1;min-width:0;}
+    .gl-name{font-size:13px;font-weight:700;color:#1f3849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .gl-meta{font-size:10.5px;color:#8296a8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .gl-pkg{display:inline-block;font-size:10px;font-weight:700;color:#0284c7;background:#e0f2fe;padding:2px 8px;border-radius:100px;margin-top:4px;}
+    .gl-date{font-size:10px;color:#aab6c4;flex-shrink:0;text-align:right;font-weight:600;line-height:1.35;}
+    .gl-empty{font-size:12px;color:#8296a8;text-align:center;padding:16px 8px;}
+    .gl-loading{font-size:12px;color:#aab6c4;text-align:center;padding:14px 8px;}
+
+    /* Transaction list */
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .tx{display:flex;align-items:center;gap:13px;background:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 5px 14px -8px rgba(30,60,120,.12);}
+    .tx-ic{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+    .tx-body{flex:1;min-width:0;}
+    .tx-t{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tx-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .tx-amt{font-size:14.5px;font-weight:800;letter-spacing:-.3px;flex-shrink:0;}
+
+    .empty{padding:36px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    /* Need Attention */
+    .na-filter{display:flex;gap:7px;margin-bottom:10px;}
+    .na-chip{padding:6px 14px;border:1px solid #eef1f6;background:#fff;border-radius:100px;font-family:inherit;font-size:12px;font-weight:700;color:#6b7a97;cursor:pointer;transition:all .12s;}
+    .na-chip.sel{background:var(--blue);color:#fff;border-color:var(--blue);}
+    .na-count{background:#fde5e6;color:#d13b42;font-size:11px;font-weight:800;padding:3px 10px;border-radius:100px;}
+    .na{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:12px 14px;}
+    .na-ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .na-ic svg{width:18px;height:18px;stroke-width:1.9;}
+    .na-danger{background:#fde5e6;color:#d13b42;} .na-warning{background:#fef1db;color:#c67d0a;} .na-info{background:#e8f0ff;color:#2f6fed;} .na-success{background:#dcf7ec;color:#0f9d63;}
+    .na-body{flex:1;min-width:0;}
+    .na-t{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .na-s{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .na-time{font-size:10.5px;color:#b3bdd0;flex-shrink:0;font-weight:600;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+    /* FAB */
+    .fab{position:fixed;right:calc(50% - 260px + 20px);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 18px);z-index:350;background:linear-gradient(135deg,#38bdf8,#0369a1);color:#fff;border:none;border-radius:100px;padding:14px 20px;font-family:inherit;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 12px 26px -8px rgba(56,189,248,.6);cursor:pointer;}
+    .fab svg{width:18px;height:18px;}
+    @media(max-width:560px){.fab{right:20px;}}
+
+    /* Bottom nav */
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(31,56,73,.08);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);align-items:stretch;}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;transition:color .12s;cursor:pointer;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;}
+    .bn-item.active{color:var(--cyan,#0ea5e9);}
+    /* Tombol tengah menonjol (gaya FlowMint) */
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1a2b4a;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;max-width:90vw;text-align:center;pointer-events:none;}
+    .toast.show{opacity:1;}
+
+    /* Animasi masuk (ease) saat halaman diload */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    .anim{opacity:0;animation:fadeUp .55s cubic-bezier(.22,.61,.36,1) forwards;}
+    .anim.d1{animation-delay:.05s;} .anim.d2{animation-delay:.13s;}
+    .anim.d3{animation-delay:.21s;} .anim.d4{animation-delay:.29s;}
+    /* Stagger untuk item menu */
+    .services .svc{opacity:0;animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) forwards;}
+    .services .svc:nth-child(1){animation-delay:.14s;} .services .svc:nth-child(2){animation-delay:.18s;}
+    .services .svc:nth-child(3){animation-delay:.22s;} .services .svc:nth-child(4){animation-delay:.26s;}
+    .services .svc:nth-child(5){animation-delay:.30s;} .services .svc:nth-child(6){animation-delay:.34s;}
+    .services .svc:nth-child(7){animation-delay:.38s;} .services .svc:nth-child(8){animation-delay:.42s;}
+    .services .svc:nth-child(9){animation-delay:.46s;} .services .svc:nth-child(10){animation-delay:.50s;}
+    .services .svc:nth-child(11){animation-delay:.54s;} .services .svc:nth-child(12){animation-delay:.58s;}
+    .services .svc:nth-child(13){animation-delay:.62s;} .services .svc:nth-child(14){animation-delay:.66s;}
+    /* Jaring pengaman: tile ke-15+ (kalau menu ditambah lagi) tetap tampil. */
+    .services .svc:nth-child(n+15){animation-delay:.70s;}
+    @media(prefers-reduced-motion:reduce){.anim,.services .svc{animation:none;opacity:1;}}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="topbar">
+      <button class="tb-hamb" onclick="mdrOpen()" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div style="flex:1;"></div>
+      <a class="tb-avatar" id="avatarInit" href="/mobile/profile" aria-label="Profil">O</a>
+    </div>
+    <div class="head">
+      <div>
+        <div class="who" id="whoName">Owner</div>
+        <div class="greet" id="greetTime">Kelola keuangan ISP lebih mudah</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Hero: Total Balance (gaya FlowMint) -->
+      <div class="hero anim d1">
+        <div class="hero-top">
+          <div>
+            <div class="hero-lbl">Penerimaan Bulan Ini <button class="eye-btn" id="eyeBtn" onclick="toggleHide()" aria-label="Sembunyikan nominal"><svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+            <div class="hero-val money" id="heroRevenue"><span class="skel" style="display:inline-block;width:140px;height:30px;background:rgba(255,255,255,.2);"></span></div>
+            <div class="hero-sub" id="heroSub">Memuat…</div>
+          </div>
+          <div class="hero-coin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.8 9A2.5 2.5 0 0 0 12 7.5c-1.4 0-2.5.9-2.5 2s1.1 1.8 2.5 1.8 2.5.8 2.5 1.9-1.1 2-2.5 2A2.5 2.5 0 0 1 9.2 15"/><path d="M12 6v1.5M12 16.5V18"/></svg></div>
+          <!-- Donut collection (dipertahankan utk data, disembunyikan) -->
+          <div class="donut">
+            <svg width="96" height="96" viewBox="0 0 96 96">
+              <circle cx="48" cy="48" r="40" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="11"/>
+              <circle id="donutArc" cx="48" cy="48" r="40" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="251.3" style="transition:stroke-dashoffset .8s ease;"/>
+            </svg>
+            <div class="donut-center"><div class="donut-pct" id="donutPct">0%</div><div class="donut-cap">Tertagih</div></div>
+          </div>
+        </div>
+        <div class="hero-spark"><svg id="heroSpark" viewBox="0 0 320 56" preserveAspectRatio="none"></svg></div>
+        <div class="hero-legend">
+          <div class="hl-item"><div class="hl-lbl"><span class="hl-dot" style="background:#fff;"></span>Sudah bayar</div><div class="hl-val money" id="hlPaid">–</div></div>
+          <div class="hl-item"><div class="hl-lbl"><span class="hl-dot" style="background:rgba(255,255,255,.45);"></span>Belum bayar</div><div class="hl-val money" id="hlUnpaid">–</div></div>
+        </div>
+      </div>
+
+      <!-- Cash flow insight (pemasukan vs pengeluaran) -->
+      <div class="cf-card anim d2">
+        <div class="cf-head">
+          <div class="cf-title">Arus Kas</div>
+          <select class="cf-sel" id="cfPeriod" onchange="onCfPeriod()">
+            <option value="1" selected>Bulan ini</option>
+            <option value="3">3 bulan</option>
+            <option value="6">6 bulan</option>
+            <option value="12">1 tahun</option>
+          </select>
+        </div>
+        <div class="cf-stats">
+          <div class="cf-stat"><div class="k"><i style="background:#38bdf8;"></i>Pemasukan</div><div class="v money" id="cfIncome" style="color:#0ea5e9;">–</div></div>
+          <div class="cf-stat"><div class="k"><i style="background:#f27272;"></i>Pengeluaran</div><div class="v money" id="cfExpense" style="color:#e2585f;">–</div></div>
+          <div class="cf-stat"><div class="k"><i style="background:#8296a0;"></i>Arus bersih</div><div class="v money" id="cfNet">–</div></div>
+        </div>
+        <svg class="cf-chart" id="cfChart" viewBox="0 0 320 96" preserveAspectRatio="none"></svg>
+        <div class="cf-xlabels" id="cfLabels"></div>
+      </div>
+
+      <!-- AI insight slider -->
+      <div class="ai-slider anim d3">
+        <div class="ai-strip">
+          <div class="ai-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.6L18.5 9l-4.6 1.9L12 15.5 10.1 10.9 5.5 9l4.6-1.4z"/><path d="M18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9z"/></svg></div>
+          <div class="ai-txt" id="aiInsight">Menganalisis data kamu…</div>
+        </div>
+        <div class="ai-dots" id="aiDots"></div>
+      </div>
+
+      <!-- Services (dalam card putih seperti referensi) -->
+      <div class="menu-card anim d2">
+        <div class="menu-head"><h3>Menu</h3><button class="menu-toggle" id="menuToggle" onclick="toggleMenu()"><span id="menuToggleLbl">Semua</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
+        <div class="services">
+        <a class="svc" href="/mobile/customers">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <span class="svc-lbl">Pelanggan</span>
+        </a>
+        <a class="svc" href="/mobile/payments">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
+          <span class="svc-lbl">Pembayaran</span>
+        </a>
+        <a class="svc" href="/mobile/keuangan">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="17" cy="14.5" r="1.4" fill="currentColor" stroke="none"/></svg></span>
+          <span class="svc-lbl">Keuangan</span>
+        </a>
+        <a class="svc" href="/mobile/invoice">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+          <span class="svc-lbl">Invoice</span>
+        </a>
+        <a class="svc" href="/mobile/reminder">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+          <span class="svc-lbl">Reminder</span>
+        </a>
+        <a class="svc" href="/mobile/finance">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span>
+          <span class="svc-lbl">Laporan</span>
+        </a>
+        <a class="svc" href="/mobile/monitoring">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span>
+          <span class="svc-lbl">Monitoring</span>
+        </a>
+        <a class="svc" href="/mobile/queue">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></span>
+          <span class="svc-lbl">Queue</span>
+        </a>
+        <a class="svc" href="/mobile/isolir">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></span>
+          <span class="svc-lbl">Isolir</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/hotspot">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span>
+          <span class="svc-lbl">Hotspot</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/voucher">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2z"/></svg></span>
+          <span class="svc-lbl">Voucher</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/noc">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+          <span class="svc-lbl">NOC</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/hotspot-binding">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3l-4 4-4-4"/></svg></span>
+          <span class="svc-lbl">Binding</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/host">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+          <span class="svc-lbl">Host</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/infrastructure">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg></span>
+          <span class="svc-lbl">Infrastruktur</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/wa">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
+          <span class="svc-lbl">WhatsApp</span>
+        </a>
+        <a class="svc svc-more" href="/mobile/ticket">
+          <span class="svc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-4V7a2 2 0 0 0-2-2z"/></svg></span>
+          <span class="svc-lbl">Tiket</span>
+        </a>
+        </div>
+      </div>
+
+      <!-- Stat mini -->
+      <div class="stat-row anim d3">
+        <div class="stat">
+          <div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="stat-val" id="stCustomers">–</div>
+          <div class="stat-lbl">Pelanggan aktif</div>
+        </div>
+        <div class="stat">
+          <div class="stat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+          <div class="stat-val" id="stUnpaid">–</div>
+          <div class="stat-lbl">Invoice belum bayar</div>
+        </div>
+      </div>
+
+      <!-- Pertumbuhan Pelanggan -->
+      <div class="grow-card anim d3" id="growCard">
+        <div class="grow-head">
+          <div>
+            <h3 class="grow-title">Pertumbuhan Pelanggan</h3>
+            <div class="grow-sub" id="growSub">Pelanggan baru per bulan</div>
+          </div>
+          <div class="grow-badge" id="growBadge">–</div>
+        </div>
+        <svg class="grow-chart" id="growChart" viewBox="0 0 320 110" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="grow-xlabels" id="growLabels"></div>
+        <div class="grow-stats">
+          <div class="grow-stat"><div class="gs-val" id="gsTotal">–</div><div class="gs-lbl">Total pelanggan</div></div>
+          <div class="grow-stat"><div class="gs-val" id="gsAvg">–</div><div class="gs-lbl">Rata-rata/bln</div></div>
+          <div class="grow-stat"><div class="gs-val" id="gsRate">–</div><div class="gs-lbl">Pertumbuhan</div></div>
+        </div>
+        <div class="grow-list-head">
+          <span id="growListTitle">Pelanggan baru bulan ini</span>
+          <button class="grow-list-toggle" id="growListToggle" onclick="toggleGrowList()">Sembunyikan</button>
+        </div>
+        <div class="grow-list" id="growList"></div>
+      </div>
+
+      <!-- Need Attention -->
+      <div class="sec anim d4"><h3>Perlu Perhatian</h3><span id="naCount" class="na-count" style="display:none;"></span></div>
+      <div class="na-filter anim d4" id="naFilter" style="display:none;">
+        <button class="na-chip sel" data-f="all" onclick="naSetFilter('all',this)">Semua</button>
+        <button class="na-chip" data-f="isolir" onclick="naSetFilter('isolir',this)">Isolir</button>
+        <button class="na-chip" data-f="tiket" onclick="naSetFilter('tiket',this)">Tiket</button>
+      </div>
+      <div class="list anim d4" id="needAttention">
+        <div class="na"><div class="skel" style="width:38px;height:38px;border-radius:11px;"></div><div class="na-body"><div class="skel" style="width:130px;height:12px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+
+      <!-- Recent tx -->
+      <div class="sec anim d4"><h3>Pembayaran Terbaru</h3><a href="/mobile/payments">Semua</a></div>
+      <div class="list anim d4" id="recentPayments">
+        <div class="tx"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="tx-body"><div class="skel" style="width:120px;height:13px;"></div><div class="skel" style="width:80px;height:10px;margin-top:6px;"></div></div></div>
+        <div class="tx"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="tx-body"><div class="skel" style="width:120px;height:13px;"></div><div class="skel" style="width:80px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+
+
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function toggleMenu(){
+      const grid=document.querySelector('.services');
+      const btn=document.getElementById('menuToggle');
+      const open=grid.classList.toggle('expanded');
+      btn.classList.toggle('open', open);
+      document.getElementById('menuToggleLbl').textContent = open ? 'Sedikitkan' : 'Semua';
+    }
+
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url, opts={}){
+      const t=getToken();
+      const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}, opts.headers||{});
+      try{ const r=await fetch(url,{credentials:'include',headers,...opts});
+        if(r.status===401){ location.href='/login'; return null; }
+        const txt=await r.text(); let data=null; try{ data=txt?JSON.parse(txt):null; }catch(_){}
+        return data;
+      }catch(e){ return null; }
+    }
+    function fmtRp(n){ n=Number(n)||0; return 'Rp '+n.toLocaleString('id-ID'); }
+    function fmtRpShort(n){ n=Number(n)||0; if(n>=1000000)return 'Rp '+(n/1000000).toFixed(1).replace('.0','')+'jt'; if(n>=1000)return 'Rp '+Math.round(n/1000)+'rb'; return 'Rp '+n.toLocaleString('id-ID'); }
+    function fmtDate(s){ if(!s)return''; const d=new Date(s); if(isNaN(d))return String(s).slice(0,10); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+
+    (function(){
+      const h=new Date().getHours();
+      const g=h<11?'Selamat pagi':h<15?'Selamat siang':h<19?'Selamat sore':'Selamat malam';
+      const nm='<%= (user && user.name) ? user.name : "Owner" %>';
+      document.getElementById('whoName').textContent=g+', '+nm;
+      document.getElementById('greetTime').textContent='Ringkasan keuangan hari ini';
+      const _avatarUrl='<%= (user && user.avatar) ? user.avatar : "" %>';
+      const avEl=document.getElementById('avatarInit');
+      if(_avatarUrl){ avEl.innerHTML='<img src="'+_avatarUrl+'" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">'; }
+      else { avEl.textContent=(nm[0]||'O').toUpperCase(); }
+    })();
+
+    // Sparkline putih di kartu hero.
+    function drawSpark(pts){
+      const svg=document.getElementById('heroSpark'); if(!svg||!pts||pts.length<2){ if(svg)svg.innerHTML=''; return; }
+      const W=320,H=56,pad=3,n=pts.length;
+      const max=Math.max.apply(null,pts)||1,min=Math.min.apply(null,pts),rng=(max-min)||1;
+      const xs=i=>pad+(i*(W-2*pad)/(n-1)), ys=v=>H-pad-((v-min)/rng)*(H-2*pad-6);
+      let d='M '+xs(0)+' '+ys(pts[0]);
+      for(let i=1;i<n;i++){const x0=xs(i-1),y0=ys(pts[i-1]),x1=xs(i),y1=ys(pts[i]),cx=(x0+x1)/2;d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1;}
+      const area=d+' L '+xs(n-1)+' '+H+' L '+xs(0)+' '+H+' Z';
+      svg.innerHTML='<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff" stop-opacity=".4"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></linearGradient></defs>'
+        +'<path d="'+area+'" fill="url(#sg)"/>'
+        +'<path d="'+d+'" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<circle cx="'+xs(n-1)+'" cy="'+ys(pts[n-1])+'" r="3.5" fill="#fff"/>';
+    }
+    // Cash flow: dua garis income (hijau) vs expense (merah) di kartu putih.
+    function drawCashflow(inc, exp){
+      const svg=document.getElementById('cfChart'); const n=inc.length;
+      if(!svg) return;
+      if(n<2){
+        // Satu titik (mis. "Bulan ini"): tampilkan titik pemasukan + garis dasar
+        // supaya kartu tidak kosong.
+        const yIn=inc[0]>=exp[0]?28:60, yEx=inc[0]>=exp[0]?60:28;
+        svg.innerHTML='<line x1="0" y1="88" x2="320" y2="88" stroke="#e2eefb" stroke-width="1"/>'
+          +'<circle cx="160" cy="'+yEx+'" r="4" fill="#f0a63c"/>'
+          +'<circle cx="160" cy="'+yIn+'" r="5" fill="#38bdf8" stroke="#fff" stroke-width="2"/>';
+        return;
+      }
+      const W=320,H=96,pad=5;
+      const all=inc.concat(exp), max=Math.max.apply(null,all)||1, min=Math.min(0,Math.min.apply(null,all)), rng=(max-min)||1;
+      const xs=i=>pad+(i*(W-2*pad)/(n-1)), ys=v=>H-pad-((v-min)/rng)*(H-2*pad-8);
+      function P(arr){let d='M '+xs(0)+' '+ys(arr[0]);for(let i=1;i<n;i++){const x0=xs(i-1),y0=ys(arr[i-1]),x1=xs(i),y1=ys(arr[i]),cx=(x0+x1)/2;d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1;}return d;}
+      const dIn=P(inc),dEx=P(exp),areaIn=dIn+' L '+xs(n-1)+' '+H+' L '+xs(0)+' '+H+' Z';
+      svg.innerHTML='<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".22"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/></linearGradient></defs>'
+        +'<path d="'+areaIn+'" fill="url(#cg)"/>'
+        +'<path d="'+dEx+'" fill="none" stroke="#f0a63c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<path d="'+dIn+'" fill="none" stroke="#38bdf8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
+        +'<circle cx="'+xs(n-1)+'" cy="'+ys(inc[n-1])+'" r="4" fill="#38bdf8" stroke="#fff" stroke-width="2"/>';
+    }
+
+    // Muat arus kas untuk N bulan terakhir. Angka (pemasukan/pengeluaran/net)
+    // mengikuti periode terpilih; grafik tetap menampilkan tren 6 bulan sebagai
+    // konteks (agar kurva tetap terbaca meski periode = 1 bulan).
+    // ── Insight slider ──
+    var _insights=[];      // {key, html}
+    var _aiIdx=0, _aiTimer=null;
+    function pushInsight(key, html){
+      const i=_insights.findIndex(x=>x.key===key);
+      if(i>=0) _insights[i].html=html; else _insights.push({key,html});
+      renderInsights();
+    }
+    function renderInsights(){
+      const dots=document.getElementById('aiDots');
+      if(!_insights.length) return;
+      if(_aiIdx>=_insights.length) _aiIdx=0;
+      const ai=document.getElementById('aiInsight');
+      ai.classList.add('fading');
+      setTimeout(()=>{ ai.innerHTML=_insights[_aiIdx].html; ai.classList.remove('fading'); }, 180);
+      dots.innerHTML=_insights.map((_,i)=>'<span class="dot'+(i===_aiIdx?' on':'')+'" onclick="goInsight('+i+')"></span>').join('');
+      if(_aiTimer) clearTimeout(_aiTimer);
+      if(_insights.length>1){ _aiTimer=setTimeout(()=>{ _aiIdx=(_aiIdx+1)%_insights.length; renderInsights(); }, 5000); }
+    }
+    function goInsight(i){ _aiIdx=i; renderInsights(); }
+
+    // Insight: kategori pengeluaran terbanyak (dari cashflow bulan ini).
+    async function loadTopExpense(){
+      const cf=await api('/api/finance/cashflow?months=1');
+      const cats=(cf&&cf.success&&cf.data&&Array.isArray(cf.data.outflow_by_category))?cf.data.outflow_by_category:[];
+      if(cats.length){
+        const top=cats.slice().sort((a,b)=>(b.amount||0)-(a.amount||0))[0];
+        if(top&&top.amount>0){
+          const nm=(top.category||'lainnya');
+          pushInsight('topexp','Pengeluaran terbanyak bulan ini: <b>'+nm+'</b> ('+fmtRpShort(top.amount)+'). Pantau agar tetap efisien.');
+        }
+      }
+    }
+
+    async function loadCashflow(months){
+      // Angka periode terpilih.
+      const ms=await api('/api/finance/monthly-series?months='+months);
+      if(ms&&ms.success&&Array.isArray(ms.data)&&ms.data.length){
+        const inc=ms.data.map(d=>d.income||0), exp=ms.data.map(d=>d.expense||0);
+        const totIn=inc.reduce((a,b)=>a+b,0), totEx=exp.reduce((a,b)=>a+b,0), net=totIn-totEx;
+        _vals.cfIn=fmtRpShort(totIn); _vals.cfOut=fmtRpShort(totEx); _vals.cfNet=fmtRpShort(net);
+        const netEl=document.getElementById('cfNet'); netEl.style.color=net>=0?'#0ea5e9':'#e2585f';
+        applyHide();  // tampilkan nilai (atau sensor bila toggle aktif)
+        const lastIn=inc[inc.length-1]||0, prevIn=inc.length>1?(inc[inc.length-2]||0):0;
+        let cfMsg;
+        if(prevIn>0){
+          const diff=Math.round((lastIn-prevIn)/prevIn*100);
+          if(diff>=0) cfMsg='Pemasukan bulan ini <b>naik '+diff+'%</b> dibanding bulan lalu. Pertahankan!';
+          else cfMsg='Pemasukan bulan ini <b>turun '+Math.abs(diff)+'%</b>. Cek tagihan yang belum tertagih.';
+        } else if(net>=0){ cfMsg='Arus kas periode ini <b>positif</b> — pemasukan melampaui pengeluaran.'; }
+        else { cfMsg='Pengeluaran melebihi pemasukan periode ini. Perlu perhatian.'; }
+        // Cari kategori pengeluaran terbanyak dari cashflow bulan ini.
+        pushInsight('cashflow', cfMsg);
+        loadTopExpense();
+      }
+      // Grafik: selalu tren 6 bulan (min. 3) untuk kurva yang terbaca.
+      const chartMonths=Math.max(months,6);
+      const cs=await api('/api/finance/monthly-series?months='+chartMonths);
+      if(cs&&cs.success&&Array.isArray(cs.data)&&cs.data.length){
+        drawCashflow(cs.data.map(d=>d.income||0), cs.data.map(d=>d.expense||0));
+        document.getElementById('cfLabels').innerHTML=cs.data.map(d=>'<span>'+(d.label||'')+'</span>').join('');
+      }
+    }
+    function onCfPeriod(){ loadCashflow(parseInt(document.getElementById('cfPeriod').value)||1); }
+
+    async function loadHome(){
+      // Sparkline hero: tren 6 bulan (independen dari pilihan periode kartu).
+      const sp=await api('/api/finance/monthly-series?months=6');
+      if(sp&&sp.success&&Array.isArray(sp.data)&&sp.data.length){
+        drawSpark(sp.data.map(d=>d.income||0));
+      }
+      // Kartu Arus Kas: default "Bulan ini" (1 bulan) sesuai pilihan dropdown.
+      await loadCashflow(parseInt(document.getElementById('cfPeriod').value)||1);
+
+      const bs=await api('/api/billing/stats');
+      if(bs&&bs.success){
+        const s=bs.data;
+        _vals.rev=fmtRp(s.revenueThisMonth||0);
+        document.getElementById('heroSub').innerHTML='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><polyline points="18 15 12 9 6 15"/></svg> '+(s.paidThisMonth||0)+' invoice lunas bulan ini';
+        document.getElementById('stUnpaid').textContent=s.unpaid||0;
+        if((s.unpaid||0)>0){
+          pushInsight('unpaid','<b>'+s.unpaid+' pelanggan</b> menunggak pembayaran ('+fmtRpShort(s.outstandingInvoiceValue||0)+'). Kirim reminder untuk menagih.');
+        }
+        const paidVal=s.paidInvoiceValue||0, totalVal=s.totalInvoiceValue||0, outVal=s.outstandingInvoiceValue||0;
+        _vals.paid=fmtRpShort(paidVal); _vals.unpaid=fmtRpShort(outVal);
+        const pct=totalVal>0?Math.round(paidVal/totalVal*100):0;
+        document.getElementById('donutPct').textContent=pct+'%';
+        const circ=251.3;
+        document.getElementById('donutArc').style.strokeDashoffset=circ-(circ*Math.min(100,pct)/100);
+        applyHide();
+      }
+      const cs=await api('/api/customers/stats');
+      if(cs&&cs.success){ const c=cs.data||cs; document.getElementById('stCustomers').textContent=(c.active!=null?c.active:(c.total_active!=null?c.total_active:'–')); }
+
+      const pr=await api('/api/payments/list?limit=5');
+      const wrap=document.getElementById('recentPayments');
+      const rows=(pr&&pr.success)?(Array.isArray(pr.data)?pr.data:(pr.data&&pr.data.rows?pr.data.rows:[])):[];
+      if(rows.length){
+        wrap.innerHTML=rows.slice(0,5).map(function(p){
+          const nm=p.cust_name||p.customer_name||(p.customer&&p.customer.name)||p.name||'Pelanggan';
+          const amt=p.amount||p.total||0; const when=p.payment_date||p.created_at||'';
+          const init=(nm[0]||'?').toUpperCase();
+          return '<div class="tx">'+
+            '<div class="tx-ic" style="background:var(--green-soft);color:var(--green);">'+init+'</div>'+
+            '<div class="tx-body"><div class="tx-t">'+nm+'</div><div class="tx-s">'+fmtDate(when)+(p.method_label?(' · '+p.method_label):'')+'</div></div>'+
+            '<div class="tx-amt" style="color:var(--green);">+'+fmtRpShort(amt)+'</div>'+
+          '</div>';
+        }).join('');
+      } else { wrap.innerHTML='<div class="empty">Belum ada pembayaran terbaru</div>'; }
+    }
+
+    let _naItems=[], _naFilter='all';
+    function naSetFilter(f,btn){ _naFilter=f; document.querySelectorAll('.na-chip').forEach(x=>x.classList.remove('sel')); btn.classList.add('sel'); renderNeedAttention(); }
+    function renderNeedAttention(){
+      const wrap=document.getElementById('needAttention');
+      let items=_naItems;
+      if(_naFilter!=='all') items=items.filter(x=>x.kind===_naFilter);
+      if(items.length){
+        wrap.innerHTML=items.slice(0,10).map(function(a){
+          const icls=a.kind==='tiket'?(a.crit?'na-danger':'na-info'):'na-warning';
+          const ic=a.kind==='tiket'
+            ?'<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>'
+            :'<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>';
+          return '<div class="na"><div class="na-ic '+icls+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></div>'+
+            '<div class="na-body"><div class="na-t">'+esc(a.title)+'</div><div class="na-s">'+esc(a.sub)+'</div></div>'+
+            (a.time?('<div class="na-time">'+timeAgo(a.time)+'</div>'):'')+'</div>';
+        }).join('');
+      } else {
+        wrap.innerHTML='<div class="na"><div class="na-ic na-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div><div class="na-body"><div class="na-t">Semua normal</div><div class="na-s">Tidak ada '+(_naFilter==='all'?'gangguan':(_naFilter==='isolir'?'pelanggan terisolir':'tiket terbuka'))+' saat ini</div></div></div>';
+      }
+    }
+    function timeAgo(s){ if(!s)return''; const d=new Date(s); if(isNaN(d))return''; const diff=(Date.now()-d.getTime())/1000; if(diff<60)return 'baru saja'; if(diff<3600)return Math.floor(diff/60)+'m lalu'; if(diff<86400)return Math.floor(diff/3600)+'j lalu'; return Math.floor(diff/86400)+'h lalu'; }
+    async function loadNeedAttention(){
+      const badge=document.getElementById('naCount');
+      const [tj,ij]=await Promise.all([ api('/api/tickets?status=open&limit=20'), api('/api/isolir/isolated') ]);
+      const items=[];
+      const tickets=(tj&&tj.success)?(tj.data&&tj.data.rows?tj.data.rows:(Array.isArray(tj.data)?tj.data:[])):[];
+      tickets.forEach(t=>{ const crit=(t.priority==='critical'||t.priority==='high'); items.push({ kind:'tiket', crit:crit, title:t.title||('Tiket '+(t.ticket_number||'')), sub:'Tiket '+(t.priority||'')+' · '+(t.status||'open'), time:t.created_at }); });
+      const iso=(ij&&ij.success)?(Array.isArray(ij.data)?ij.data:(ij.data&&ij.data.rows?ij.data.rows:[])):[];
+      iso.forEach(c=>{ items.push({ kind:'isolir', crit:false, title:c.name||'Pelanggan', sub:'Pelanggan terisolir · '+(c.customer_id||''), time:c.isolir_at }); });
+      if(iso.length){ pushInsight('isolir','<b>'+iso.length+' pelanggan</b> sedang terisolir. Aktifkan kembali setelah pembayaran diterima.'); }
+      _naItems=items;
+      const critCount=items.filter(x=>x.crit).length;
+      if(items.length){ badge.style.display='inline-block'; badge.textContent=items.length+(critCount?(' · '+critCount+' kritis'):''); document.getElementById('naFilter').style.display='flex'; }
+      else { badge.style.display='none'; document.getElementById('naFilter').style.display='none'; }
+      renderNeedAttention();
+    }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // Toggle sensor nominal
+    let _hidden=false, _vals={rev:'',paid:'',unpaid:'',cfIn:'',cfOut:'',cfNet:''};
+    function applyHide(){
+      const mask='••••••';
+      document.getElementById('heroRevenue').textContent=_hidden?('Rp '+mask):_vals.rev;
+      document.getElementById('hlPaid').textContent=_hidden?mask:_vals.paid;
+      document.getElementById('hlUnpaid').textContent=_hidden?mask:_vals.unpaid;
+      // Arus Kas ikut tersensor bila ada nilainya.
+      const ci=document.getElementById('cfIncome'), ce=document.getElementById('cfExpense'), cn=document.getElementById('cfNet');
+      if(ci&&_vals.cfIn) ci.textContent=_hidden?mask:_vals.cfIn;
+      if(ce&&_vals.cfOut) ce.textContent=_hidden?mask:_vals.cfOut;
+      if(cn&&_vals.cfNet) cn.textContent=_hidden?mask:_vals.cfNet;
+      document.getElementById('eyeIcon').innerHTML=_hidden
+        ?'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        :'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>';
+    }
+    function toggleHide(){ _hidden=!_hidden; try{localStorage.setItem('flaynet_hide_amount',_hidden?'1':'0');}catch(e){} applyHide(); }
+    (function(){ try{ _hidden=localStorage.getItem('flaynet_hide_amount')==='1'; }catch(e){} })();
+
+    // ── Pertumbuhan Pelanggan (grafik batang pelanggan baru per bulan) ──
+    var _growMonths=[], _growVals=[], _growLabels=[], _growSelIdx=-1, _growListShown=true;
+    const _GMN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const _GMN_FULL=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+    async function loadGrowth(){
+      const card=document.getElementById('growCard');
+      const g=await api('/api/dashboard/customer-growth?months=6');
+      if(!g||!g.success||!g.data){ if(card) card.style.display='none'; return; }
+      const sm=g.data.summary||{}, rows=Array.isArray(g.data.monthly_data)?g.data.monthly_data:[];
+
+      const newThis=sm.current_month_new||0;
+      document.getElementById('growBadge').textContent = (newThis>=0?'+':'')+newThis+' bulan ini';
+      document.getElementById('gsTotal').textContent = sm.total_customers!=null?sm.total_customers:'–';
+      const totalNew=rows.reduce((a,r)=>a+(parseInt(r.new_customers)||0),0);
+      const avg=rows.length?Math.round(totalNew/rows.length):0;
+      document.getElementById('gsAvg').textContent = avg;
+      const rate=sm.growth_rate;
+      const gsRate=document.getElementById('gsRate');
+      gsRate.textContent = (rate!=null?((rate>0?'+':'')+rate+'%'):'–');
+      gsRate.style.color = (rate>0?'#0284c7':(rate<0?'#e2585f':'#1f3849'));
+
+      try{ if(typeof pushInsight==='function' && newThis>0){ pushInsight('growth','<b>+'+newThis+' pelanggan baru</b> bulan ini. Total kini <b>'+(sm.total_customers||0)+'</b> pelanggan.'); } }catch(_){}
+
+      _growMonths=rows.map(r=>r.month||'');
+      _growVals=rows.map(r=>parseInt(r.new_customers)||0);
+      _growLabels=rows.map(r=>{ const p=(r.month||'').split('-'); return p[1]?_GMN[parseInt(p[1])-1]:''; });
+      if(!_growVals.length){ if(card) card.style.display='none'; return; }
+
+      _growSelIdx=_growVals.length-1;   // default: bulan terakhir (bulan ini)
+      _renderGrowBars();
+      // Muat daftar pelanggan bulan terpilih.
+      selectGrowMonth(_growSelIdx, true);
+    }
+
+    function _renderGrowBars(){
+      const svg=document.getElementById('growChart');
+      const lblWrap=document.getElementById('growLabels');
+      const W=320,H=110,pad=6,gapR=0.34;
+      const n=_growVals.length, max=Math.max.apply(null,_growVals)||1;
+      const slot=(W-2*pad)/n, bw=slot*(1-gapR);
+      let bars='';
+      for(let i=0;i<n;i++){
+        const h=Math.max(3,(_growVals[i]/max)*(H-24));
+        const x=pad+i*slot+(slot-bw)/2, y=H-14-h;
+        const sel=i===_growSelIdx;
+        const fill=sel?'url(#gbar)':'#dbeafe';
+        // Area klik penuh tinggi (transparan) supaya batang pendek tetap mudah di-tap.
+        bars+='<rect x="'+(pad+i*slot).toFixed(1)+'" y="0" width="'+slot.toFixed(1)+'" height="'+H+'" fill="transparent" style="cursor:pointer" onclick="selectGrowMonth('+i+')"/>';
+        bars+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="4" fill="'+fill+'" style="pointer-events:none"/>';
+        bars+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" font-size="10" font-weight="800" fill="'+(sel?'#0284c7':'#8296a8')+'" font-family="inherit" style="pointer-events:none">'+_growVals[i]+'</text>';
+      }
+      svg.innerHTML='<defs><linearGradient id="gbar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs>'+bars;
+      lblWrap.innerHTML=_growLabels.map((l,i)=>'<span style="'+(i===_growSelIdx?'color:#0284c7;font-weight:800;':'')+'">'+l+'</span>').join('');
+    }
+
+    function _monthLabelFull(ym){
+      const p=(ym||'').split('-'); if(p.length<2) return '';
+      const now=new Date(), cy=now.getFullYear(), cm=now.getMonth()+1;
+      const y=parseInt(p[0]), mo=parseInt(p[1]);
+      let s=_GMN_FULL[mo-1]+(y!==cy?(' '+y):'');
+      if(y===cy&&mo===cm) s='bulan ini';
+      else { const lm=cm===1?12:cm-1, ly=cm===1?cy-1:cy; if(y===ly&&mo===lm) s='bulan lalu'; }
+      return s;
+    }
+
+    async function selectGrowMonth(idx, silent){
+      if(idx<0||idx>=_growMonths.length) return;
+      _growSelIdx=idx;
+      _renderGrowBars();
+      const ym=_growMonths[idx];
+      const lbl=_monthLabelFull(ym);
+      const isRel=(lbl==='bulan ini'||lbl==='bulan lalu');
+      document.getElementById('growListTitle').textContent = 'Pelanggan baru '+(isRel?lbl:('bulan '+lbl));
+      await loadGrowthList(ym);
+    }
+
+    async function loadGrowthList(ym){
+      const box=document.getElementById('growList');
+      if(!_growListShown){ return; }
+      box.innerHTML='<div class="gl-loading">Memuat daftar…</div>';
+      const r=await api('/api/dashboard/customer-growth-list?month='+encodeURIComponent(ym)+'&limit=100');
+      const list=(r&&r.success&&Array.isArray(r.data))?r.data:[];
+      if(!list.length){ box.innerHTML='<div class="gl-empty">Tidak ada pelanggan baru di bulan ini.</div>'; return; }
+      box.innerHTML=list.map(function(c){
+        const nm=c.name||'Pelanggan';
+        const init=(nm[0]||'?').toUpperCase();
+        const pkg=c.package_name?('<span class="gl-pkg">'+esc(c.package_name)+(c.package_speed?(' · '+c.package_speed+'M'):'')+'</span>'):'<span class="gl-pkg" style="background:#eef1f6;color:#8296a8;">Tanpa paket</span>';
+        const cid=c.customer_id?esc(c.customer_id):'';
+        const dt=c.activation_date?_fmtActDate(c.activation_date):'';
+        return '<div class="gl-item">'
+          +'<div class="gl-av">'+esc(init)+'</div>'
+          +'<div class="gl-body"><div class="gl-name">'+esc(nm)+'</div>'
+          +'<div class="gl-meta">'+cid+'</div>'+pkg+'</div>'
+          +'<div class="gl-date">Aktivasi<br>'+dt+'</div>'
+        +'</div>';
+      }).join('');
+    }
+
+    function _fmtActDate(s){
+      const d=new Date(s); if(isNaN(d)) return esc(s);
+      return d.getDate()+' '+_GMN[d.getMonth()]+' '+String(d.getFullYear()).slice(2);
+    }
+
+    function toggleGrowList(){
+      _growListShown=!_growListShown;
+      const box=document.getElementById('growList');
+      const btn=document.getElementById('growListToggle');
+      box.classList.toggle('collapsed', !_growListShown);
+      btn.textContent = _growListShown?'Sembunyikan':'Tampilkan';
+      if(_growListShown && _growSelIdx>=0) loadGrowthList(_growMonths[_growSelIdx]);
+    }
+
+    loadHome();
+    loadNeedAttention();
+    loadGrowth();
+  </script>
+</body>
+</html>

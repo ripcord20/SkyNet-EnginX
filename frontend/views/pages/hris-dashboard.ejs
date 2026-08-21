@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .hris-page { font-family:'DM Sans',sans-serif; background:#eef2f9 !important; }
+    .hris-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:20px; }
+    @media(max-width:1100px){ .hris-stat-grid{ grid-template-columns:repeat(2,1fr);} }
+    .hs-card { background:#fff; border:1px solid #e8eaed; border-radius:16px; padding:20px 22px; }
+    .hs-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .hs-val { font-size:32px; font-weight:800; color:#0f172a; letter-spacing:-1px; line-height:1; }
+    .hs-sub { font-size:12px; color:#94a3b8; margin-top:8px; }
+    .hs-ico { width:34px; height:34px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; }
+    .hris-row { display:grid; grid-template-columns:1.6fr 1fr; gap:16px; }
+    @media(max-width:1000px){ .hris-row{ grid-template-columns:1fr;} }
+    .hris-panel { background:#fff; border:1px solid #e8eaed; border-radius:16px; padding:20px 22px; }
+    .hris-panel h3 { font-size:15px; font-weight:700; color:#0f172a; margin:0 0 16px; }
+    .hs-list { display:flex; flex-direction:column; gap:2px; }
+    .hs-li { display:flex; align-items:center; gap:12px; padding:10px 6px; border-bottom:1px solid #f1f5f9; }
+    .hs-li:last-child { border-bottom:none; }
+    .hs-avatar { width:36px; height:36px; border-radius:50%; background:#e0e7ff; color:#4338ca; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+    .hs-pill { padding:2px 9px; border-radius:100px; font-size:11px; font-weight:700; }
+    .p-green{ background:#dcfce7;color:#16a34a;} .p-red{ background:#fee2e2;color:#dc2626;}
+    .p-amber{ background:#fef3c7;color:#b45309;} .p-blue{ background:#dbeafe;color:#1d4ed8;}
+    .p-gray{ background:#f1f5f9;color:#64748b;}
+  </style>
+</head>
+<body>
+<div class="app-layout hris-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#0d1b3e">Dashboard HRIS</div>
+          <div style="font-size:13px;color:#6b7fa8;margin-top:2px">Ringkasan karyawan, kehadiran, dan penggajian</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <a href="/hris/employees" class="btn-blue" style="text-decoration:none">+ Kelola Karyawan</a>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="hris-stat-grid">
+        <div class="hs-card">
+          <div class="hs-lbl"><span class="hs-ico" style="background:#e0e7ff;color:#4338ca">👥</span> Total Karyawan</div>
+          <div class="hs-val" id="stEmp">–</div>
+          <div class="hs-sub" id="stEmpSub">– aktif</div>
+        </div>
+        <div class="hs-card">
+          <div class="hs-lbl"><span class="hs-ico" style="background:#dcfce7;color:#16a34a">✅</span> Hadir Hari Ini</div>
+          <div class="hs-val" id="stPresent">–</div>
+          <div class="hs-sub" id="stPresentSub">– terlambat</div>
+        </div>
+        <div class="hs-card">
+          <div class="hs-lbl"><span class="hs-ico" style="background:#fef3c7;color:#b45309">🌴</span> Izin / Cuti</div>
+          <div class="hs-val" id="stLeave">–</div>
+          <div class="hs-sub" id="stLeaveSub">– pengajuan pending</div>
+        </div>
+        <div class="hs-card">
+          <div class="hs-lbl"><span class="hs-ico" style="background:#fee2e2;color:#dc2626">⚠️</span> Belum Absen</div>
+          <div class="hs-val" id="stNotYet">–</div>
+          <div class="hs-sub" id="stFlagged">– absensi ditandai</div>
+        </div>
+      </div>
+
+      <div class="hris-row">
+        <div class="hris-panel">
+          <h3>Tren Kehadiran (7 Hari)</h3>
+          <canvas id="trendChart" height="110"></canvas>
+        </div>
+        <div class="hris-panel">
+          <h3>Absensi Terbaru Hari Ini</h3>
+          <div class="hs-list" id="recentList">
+            <div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Memuat…</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}` });
+let trendChart = null;
+
+async function loadStats() {
+  try {
+    const r = await fetch(API + '/hris/stats', { headers: authH() });
+    const j = await r.json();
+    if (!j.success) return;
+    const d = j.data;
+    document.getElementById('stEmp').textContent = d.employees.total;
+    document.getElementById('stEmpSub').textContent = d.employees.active + ' aktif';
+    document.getElementById('stPresent').textContent = d.today.present;
+    document.getElementById('stPresentSub').textContent = d.today.late + ' terlambat';
+    document.getElementById('stLeave').textContent = d.today.leave;
+    document.getElementById('stLeaveSub').textContent = d.pending_leave + ' pengajuan pending';
+    document.getElementById('stNotYet').textContent = d.today.not_checked_in;
+    document.getElementById('stFlagged').textContent = d.today.flagged + ' absensi ditandai';
+    renderTrend(d.trend);
+  } catch (e) { console.error(e); }
+}
+
+function renderTrend(trend) {
+  const labels = trend.map(t => t.date.slice(5));
+  const present = trend.map(t => t.present);
+  const late = trend.map(t => t.late);
+  const ctx = document.getElementById('trendChart');
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label:'Hadir', data:present, backgroundColor:'#2563eb', borderRadius:6 },
+      { label:'Terlambat', data:late, backgroundColor:'#f59e0b', borderRadius:6 }
+    ]},
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+  });
+}
+
+async function loadRecent() {
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    const r = await fetch(API + '/hris/attendance?date=' + today, { headers: authH() });
+    const j = await r.json();
+    const box = document.getElementById('recentList');
+    if (!j.success || !j.data.length) { box.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">Belum ada absensi hari ini</div>'; return; }
+    const statusPill = s => {
+      const map = { hadir:'p-green', terlambat:'p-amber', pulang_cepat:'p-blue', alfa:'p-red', izin:'p-gray', sakit:'p-gray', cuti:'p-gray' };
+      return `<span class="hs-pill ${map[s]||'p-gray'}">${s}</span>`;
+    };
+    box.innerHTML = j.data.slice(0,10).map(a => {
+      const nm = (a.employee?.full_name || '?');
+      const ini = nm.split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+      const t = a.check_in_at ? new Date(a.check_in_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '–';
+      return `<div class="hs-li">
+        <div class="hs-avatar">${ini}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:13.5px;color:#0f172a">${nm}</div>
+          <div style="font-size:11.5px;color:#94a3b8">${a.employee?.department||'-'} · masuk ${t}${a.is_valid?'':' · <span style=color:#dc2626>⚑ ditandai</span>'}</div>
+        </div>
+        ${statusPill(a.status)}
+      </div>`;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+loadStats();
+loadRecent();
+if (window.io) { try { const s = io(); s.on('hris:attendance', ()=>{ loadStats(); loadRecent(); }); } catch(e){} }
+</script>
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;
+      --d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;
+    }
+    body{background:var(--d-bg);font-family:'DM Sans',sans-serif;}
+    .vt-page{padding:0;}
+    .vt-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+    .vt-title{font-size:22px;font-weight:800;color:var(--d-text);}
+    .vt-sub{font-size:13px;color:var(--d-muted);margin-top:3px;}
+    .vt-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .vt-btn{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;
+      display:inline-flex;align-items:center;gap:7px;font-family:inherit;transition:all .15s;}
+    .vt-btn-primary{background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;}
+    .vt-btn-primary:hover{transform:translateY(-1px);}
+    .vt-btn-ghost{background:#fff;color:var(--d-text);border:1.5px solid var(--d-border);}
+    .vt-btn-ghost:hover{border-color:var(--d-blue1);color:var(--d-blue1);}
+    .vt-btn-danger{background:#fff;color:#dc2626;border:1.5px solid #fecaca;}
+
+    /* Split layout */
+    .vt-split{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
+    @media (max-width:1100px){.vt-split{grid-template-columns:1fr;}}
+
+    /* Form panel */
+    .vt-form{background:#fff;border:1px solid var(--d-border);border-radius:14px;overflow:hidden;
+      position:sticky;top:14px;max-height:calc(100vh - 40px);overflow-y:auto;}
+    .vt-sec{border-bottom:1px solid var(--d-border);}
+    .vt-sec:last-child{border-bottom:none;}
+    .vt-sec-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;background:#f8faff;cursor:pointer;
+      user-select:none;}
+    .vt-sec-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+      background:#e0eaff;color:var(--d-blue1);}
+    .vt-sec-title{font-size:13px;font-weight:700;color:var(--d-text);flex:1;}
+    .vt-sec-body{padding:14px 16px 18px;}
+    .vt-field{margin-bottom:13px;}
+    .vt-field:last-child{margin-bottom:0;}
+    .vt-label{font-size:11.5px;font-weight:600;color:var(--d-muted);text-transform:uppercase;letter-spacing:.4px;
+      display:block;margin-bottom:5px;}
+    .vt-input,.vt-textarea,.vt-select{
+      width:100%;padding:9px 11px;border:1.5px solid var(--d-border);border-radius:8px;
+      font-size:13px;font-family:inherit;color:var(--d-text);background:#fff;}
+    .vt-input:focus,.vt-textarea:focus,.vt-select:focus{outline:none;border-color:var(--d-blue1);}
+    .vt-textarea{resize:vertical;min-height:60px;}
+
+    /* Color picker row */
+    .vt-color-row{display:flex;align-items:center;gap:10px;}
+    .vt-color-row input[type=color]{width:48px;height:38px;border:1.5px solid var(--d-border);border-radius:8px;
+      padding:2px;background:#fff;cursor:pointer;}
+    .vt-color-row .vt-input{flex:1;font-family:'DM Mono',monospace;text-transform:uppercase;font-size:12px;}
+
+    /* Toggle */
+    .vt-toggle-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;
+      border-bottom:1px solid #f1f5f9;}
+    .vt-toggle-row:last-child{border-bottom:none;}
+    .vt-toggle-row .lbl{font-size:13px;color:var(--d-text);font-weight:500;}
+    .vt-toggle{position:relative;width:38px;height:22px;background:#cbd5e1;border-radius:99px;cursor:pointer;
+      transition:background .15s;flex-shrink:0;}
+    .vt-toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;
+      border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .vt-toggle.on{background:var(--d-blue1);}
+    .vt-toggle.on::after{transform:translateX(16px);}
+
+    /* Preview panel */
+    .vt-preview-wrap{background:#fff;border:1px solid var(--d-border);border-radius:14px;padding:24px;}
+    .vt-preview-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
+      padding-bottom:14px;border-bottom:1px solid var(--d-border);}
+    .vt-preview-bar h3{font-size:14px;font-weight:700;color:var(--d-text);margin:0;}
+    .vt-preview-bar .hint{font-size:11.5px;color:var(--d-muted);}
+    .vt-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+
+    /* Voucher card preview — sync with print style */
+    .vp-card{border-radius:8px;overflow:hidden;border:1px solid #dde3ef;background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.04);}
+    .vp-head{padding:9px 11px 8px;position:relative;overflow:hidden;}
+    .vp-head::after{content:'';position:absolute;bottom:-12px;right:-12px;width:50px;height:50px;
+      border-radius:50%;background:rgba(255,255,255,.1);}
+    .vp-row{display:flex;align-items:center;gap:7px;position:relative;z-index:1;}
+    .vp-av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);
+      border:1px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:800;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0;}
+    .vp-info{flex:1;min-width:0;}
+    .vp-brand{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+      color:rgba(255,255,255,.7);}
+    .vp-user{font-size:11px;font-weight:800;color:#fff;}
+    .vp-prof{font-size:8px;color:rgba(255,255,255,.7);margin-top:2px;}
+    .vp-wifi{position:absolute;top:8px;right:9px;opacity:.3;}
+    .vp-wifi svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;}
+    .vp-body{}
+    .vp-line{display:flex;align-items:center;justify-content:space-between;padding:5px 11px;
+      border-bottom:1px solid #f1f5f9;font-size:10px;}
+    .vp-line:last-child{border-bottom:none;}
+    .vp-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:#9aa3b5;}
+    .vp-val{font-weight:700;font-size:11px;}
+    .vp-val.pw{font-family:'DM Mono',monospace;font-weight:900;font-size:13px;letter-spacing:1px;}
+    .vp-footer{padding:6px 11px;background:#f8fafc;border-top:1px solid #f1f5f9;
+      font-size:8px;text-align:center;color:#94a3b8;font-style:italic;}
+
+    /* Reset/Save toolbar */
+    .vt-save-bar{position:sticky;bottom:14px;background:#fff;border:1px solid var(--d-border);
+      border-radius:12px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;
+      box-shadow:0 4px 14px rgba(13,27,62,.08);margin-top:16px;}
+    .vt-save-bar .status{font-size:12px;color:var(--d-muted);}
+    .vt-save-bar.dirty .status{color:#a16207;font-weight:600;}
+
+    /* Mobile tab */
+    .vt-mobile-tabs{display:none;}
+    @media (max-width:767px){
+      .vt-page{padding-bottom:100px;}
+      .vt-mobile-tabs{display:flex;background:#fff;border:1px solid var(--d-border);
+        border-radius:10px;padding:4px;gap:4px;margin-bottom:14px;}
+      .vt-mobile-tab{flex:1;padding:9px 12px;border:none;background:transparent;border-radius:7px;
+        font-size:12.5px;font-weight:700;color:var(--d-muted);cursor:pointer;font-family:inherit;}
+      .vt-mobile-tab.active{background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;}
+      .vt-split.tab-mode-form .vt-preview-wrap{display:none;}
+      .vt-split.tab-mode-preview .vt-form{display:none;}
+      .vt-form{position:static;max-height:none;}
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+      <div class="vt-page">
+        <div class="vt-hdr">
+          <div>
+            <div class="vt-title">Template Voucher Hotspot</div>
+            <div class="vt-sub">Sesuaikan tampilan voucher saat di-print — warna, brand, label, footer</div>
+          </div>
+          <div class="vt-actions">
+            <button class="vt-btn vt-btn-danger" onclick="resetTemplate()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Reset Default
+            </button>
+            <button class="vt-btn vt-btn-ghost" onclick="previewPrint()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Preview Print
+            </button>
+            <button class="vt-btn vt-btn-primary" onclick="saveTemplate()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Simpan Template
+            </button>
+          </div>
+        </div>
+
+        <div class="vt-mobile-tabs">
+          <button class="vt-mobile-tab active" onclick="setMobileTab('form')">Edit</button>
+          <button class="vt-mobile-tab" onclick="setMobileTab('preview')">Preview</button>
+        </div>
+
+        <div class="vt-split tab-mode-form" id="vtSplit">
+
+          <!-- ── FORM PANEL ── -->
+          <div class="vt-form">
+
+            <!-- Warna -->
+            <div class="vt-sec">
+              <div class="vt-sec-hdr">
+                <div class="vt-sec-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg></div>
+                <div class="vt-sec-title">Warna</div>
+              </div>
+              <div class="vt-sec-body">
+                <div class="vt-field">
+                  <label class="vt-label">Primary (Header)</label>
+                  <div class="vt-color-row">
+                    <input type="color" id="primary_color" value="#1565C0">
+                    <input type="text" class="vt-input" id="primary_color_hex" value="#1565C0">
+                  </div>
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Primary Dark (Password text)</label>
+                  <div class="vt-color-row">
+                    <input type="color" id="primary_dark" value="#0D47A1">
+                    <input type="text" class="vt-input" id="primary_dark_hex" value="#0D47A1">
+                  </div>
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Accent (Aktif badge)</label>
+                  <div class="vt-color-row">
+                    <input type="color" id="accent_color" value="#2E7D32">
+                    <input type="text" class="vt-input" id="accent_color_hex" value="#2E7D32">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Brand -->
+            <div class="vt-sec">
+              <div class="vt-sec-hdr">
+                <div class="vt-sec-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg></div>
+                <div class="vt-sec-title">Brand / Identitas</div>
+              </div>
+              <div class="vt-sec-body">
+                <div class="vt-field">
+                  <label class="vt-label">Nama Brand</label>
+                  <input type="text" class="vt-input" id="company_name" placeholder="FLAYNET">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Tagline</label>
+                  <input type="text" class="vt-input" id="tagline" placeholder="Voucher Hotspot">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Logo URL (opsional)</label>
+                  <input type="text" class="vt-input" id="logo_url" placeholder="https://...">
+                </div>
+              </div>
+            </div>
+
+            <!-- Label voucher -->
+            <div class="vt-sec">
+              <div class="vt-sec-hdr">
+                <div class="vt-sec-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20.59 13.41L13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+                <div class="vt-sec-title">Label Voucher</div>
+              </div>
+              <div class="vt-sec-body">
+                <div class="vt-field">
+                  <label class="vt-label">Label "Username"</label>
+                  <input type="text" class="vt-input" id="label_username" placeholder="USERNAME">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Label "Password"</label>
+                  <input type="text" class="vt-input" id="label_password" placeholder="PASSWORD">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Label "Paket"</label>
+                  <input type="text" class="vt-input" id="label_profile" placeholder="PAKET">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Label "Durasi"</label>
+                  <input type="text" class="vt-input" id="label_duration" placeholder="DURASI">
+                </div>
+                <div class="vt-field">
+                  <label class="vt-label">Label "Harga"</label>
+                  <input type="text" class="vt-input" id="label_price" placeholder="HARGA">
+                </div>
+              </div>
+            </div>
+
+            <!-- Tampilan -->
+            <div class="vt-sec">
+              <div class="vt-sec-hdr">
+                <div class="vt-sec-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M3.54 17.46l4.24-4.24m0-7.07L3.54 6.54M17.46 17.46l4.24-4.24"/></svg></div>
+                <div class="vt-sec-title">Tampilan</div>
+              </div>
+              <div class="vt-sec-body">
+                <div class="vt-toggle-row">
+                  <span class="lbl">Tampilkan ikon WiFi</span>
+                  <div class="vt-toggle on" id="show_wifi" data-toggle></div>
+                </div>
+                <div class="vt-toggle-row">
+                  <span class="lbl">Tampilkan harga</span>
+                  <div class="vt-toggle on" id="show_price" data-toggle></div>
+                </div>
+                <div class="vt-toggle-row">
+                  <span class="lbl">Tampilkan durasi</span>
+                  <div class="vt-toggle on" id="show_duration" data-toggle></div>
+                </div>
+                <div class="vt-toggle-row">
+                  <span class="lbl">Tampilkan profile/paket</span>
+                  <div class="vt-toggle on" id="show_profile" data-toggle></div>
+                </div>
+                <div class="vt-toggle-row">
+                  <span class="lbl">Tampilkan footer</span>
+                  <div class="vt-toggle on" id="show_footer" data-toggle></div>
+                </div>
+                <div class="vt-field" style="margin-top:10px;">
+                  <label class="vt-label">Kolom per baris</label>
+                  <select class="vt-select" id="columns">
+                    <option value="3">3 kolom</option>
+                    <option value="4">4 kolom</option>
+                    <option value="5" selected>5 kolom</option>
+                    <option value="6">6 kolom</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="vt-sec">
+              <div class="vt-sec-hdr">
+                <div class="vt-sec-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+                <div class="vt-sec-title">Footer Text</div>
+              </div>
+              <div class="vt-sec-body">
+                <div class="vt-field">
+                  <label class="vt-label">Pesan footer (di tiap kartu)</label>
+                  <textarea class="vt-textarea" id="footer_text" rows="2" placeholder="Hubungi WA 0812-xxxx jika butuh bantuan"></textarea>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── PREVIEW PANEL ── -->
+          <div class="vt-preview-wrap">
+            <div class="vt-preview-bar">
+              <h3>Live Preview</h3>
+              <span class="hint">Update otomatis saat edit</span>
+            </div>
+            <div class="vt-preview-grid" id="previewGrid"></div>
+
+            <div class="vt-save-bar" id="saveBar">
+              <span class="status" id="saveStatus">Belum ada perubahan</span>
+              <button class="vt-btn vt-btn-primary" onclick="saveTemplate()" id="saveBtn" style="padding:7px 14px;font-size:12px;">
+                Simpan
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Default values — sinkron dengan hardcoded original di printVoucherCards
+    const DEFAULTS = {
+      primary_color:  '#1565C0',
+      primary_dark:   '#0D47A1',
+      accent_color:   '#2E7D32',
+      company_name:   'FLAYNET',
+      tagline:        'Voucher Hotspot',
+      logo_url:       '',
+      label_username: 'USERNAME',
+      label_password: 'PASSWORD',
+      label_profile:  'PAKET',
+      label_duration: 'DURASI',
+      label_price:    'HARGA',
+      show_wifi:      '1',
+      show_price:     '1',
+      show_duration:  '1',
+      show_profile:   '1',
+      show_footer:    '1',
+      columns:        '5',
+      footer_text:    ''
+    };
+
+    // Existing settings dari server (key = "vtpl_field")
+    const SERVER = <%- JSON.stringify(tplSettings || {}) %>;
+
+    // Load values into form (server value → fallback ke DEFAULTS)
+    function loadIntoForm() {
+      Object.keys(DEFAULTS).forEach(k => {
+        const val = SERVER['vtpl_' + k] != null ? SERVER['vtpl_' + k] : DEFAULTS[k];
+        const el  = document.getElementById(k);
+        if (!el) return;
+        if (el.hasAttribute('data-toggle')) {
+          el.classList.toggle('on', val === '1' || val === 1 || val === true);
+        } else if (el.tagName === 'INPUT' && el.type === 'color') {
+          el.value = val;
+          const hex = document.getElementById(k + '_hex');
+          if (hex) hex.value = val;
+        } else {
+          el.value = val;
+        }
+      });
+    }
+    loadIntoForm();
+
+    // Toggles
+    document.querySelectorAll('[data-toggle]').forEach(t => {
+      t.addEventListener('click', () => {
+        t.classList.toggle('on');
+        markDirty();
+        renderPreview();
+      });
+    });
+
+    // Color inputs sync ke hex text
+    ['primary_color','primary_dark','accent_color'].forEach(id => {
+      const color = document.getElementById(id);
+      const hex   = document.getElementById(id + '_hex');
+      color.addEventListener('input', () => {
+        hex.value = color.value.toUpperCase();
+        markDirty(); renderPreview();
+      });
+      hex.addEventListener('input', () => {
+        const v = hex.value.trim();
+        if (/^#[0-9a-fA-F]{6}$/.test(v)) { color.value = v; markDirty(); renderPreview(); }
+      });
+    });
+
+    // Other inputs
+    document.querySelectorAll('.vt-input,.vt-textarea,.vt-select').forEach(el => {
+      if (el.type === 'color' || el.id.endsWith('_hex')) return;
+      el.addEventListener('input', () => { markDirty(); renderPreview(); });
+    });
+
+    function getFormValues() {
+      const v = {};
+      Object.keys(DEFAULTS).forEach(k => {
+        const el = document.getElementById(k);
+        if (!el) return;
+        if (el.hasAttribute('data-toggle')) {
+          v[k] = el.classList.contains('on') ? '1' : '0';
+        } else {
+          v[k] = el.value;
+        }
+      });
+      return v;
+    }
+
+    function markDirty() {
+      const bar = document.getElementById('saveBar');
+      const st  = document.getElementById('saveStatus');
+      bar.classList.add('dirty');
+      st.textContent = '● Ada perubahan yang belum disimpan';
+    }
+    function markClean(msg) {
+      const bar = document.getElementById('saveBar');
+      const st  = document.getElementById('saveStatus');
+      bar.classList.remove('dirty');
+      st.textContent = msg || 'Tersimpan';
+    }
+
+    // ── Live Preview ───────────────────────────────────────
+    function renderPreview() {
+      const v = getFormValues();
+      const grid = document.getElementById('previewGrid');
+      const cols = parseInt(v.columns) || 5;
+      grid.style.gridTemplateColumns = `repeat(${Math.min(cols, 4)}, 1fr)`; // di preview cap di 4 utk readability
+
+      // Generate 4 sample vouchers
+      const samples = [
+        { username:'vc12abc', password:'1234',     profile:'1-Hari',  duration:'24h', price:'Rp 5.000',  active:true  },
+        { username:'vc34xyz', password:'5g8q',     profile:'7-Hari',  duration:'7d',  price:'Rp 25.000', active:true  },
+        { username:'vc56def', password:'pwd1',     profile:'1-Bulan', duration:'30d', price:'Rp 80.000', active:false },
+        { username:'vc78ghi', password:'a7k3',     profile:'1-Hari',  duration:'24h', price:'Rp 5.000',  active:true  },
+      ];
+
+      grid.innerHTML = samples.map(s => renderVoucherCard(s, v)).join('');
+    }
+
+    function renderVoucherCard(s, v) {
+      const wifi = v.show_wifi === '1' ? `<div class="vp-wifi"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="#fff" stroke="none"/></svg></div>` : '';
+      const profile  = v.show_profile  === '1' ? `<div class="vp-prof">${esc(s.profile)}</div>` : '';
+      const duration = v.show_duration === '1' ? `<div class="vp-line"><span class="vp-lbl">${esc(v.label_duration)}</span><span class="vp-val">${esc(s.duration)}</span></div>` : '';
+      const price    = v.show_price    === '1' ? `<div class="vp-line"><span class="vp-lbl">${esc(v.label_price)}</span><span class="vp-val" style="color:${v.accent_color};">${esc(s.price)}</span></div>` : '';
+      const footer   = v.show_footer   === '1' && v.footer_text ? `<div class="vp-footer">${esc(v.footer_text)}</div>` : '';
+      const initials = s.username.substring(0,2).toUpperCase();
+      return `
+        <div class="vp-card">
+          <div class="vp-head" style="background:${v.primary_color};">
+            <div class="vp-row">
+              <div class="vp-av">${initials}</div>
+              <div class="vp-info">
+                <div class="vp-brand">${esc(v.company_name)}</div>
+                <div class="vp-user">${esc(s.username)}</div>
+                ${profile}
+              </div>
+            </div>
+            ${wifi}
+          </div>
+          <div class="vp-body">
+            <div class="vp-line"><span class="vp-lbl">${esc(v.label_password)}</span><span class="vp-val pw" style="color:${v.primary_dark};">${esc(s.password)}</span></div>
+            ${duration}
+            ${price}
+            <div class="vp-line"><span class="vp-lbl">STATUS</span><span class="vp-val" style="color:${s.active ? v.accent_color : '#C62828'};">${s.active ? 'AKTIF' : 'NON-AKTIF'}</span></div>
+          </div>
+          ${footer}
+        </div>`;
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    renderPreview();
+
+    // ── Save ───────────────────────────────────────────────
+    async function saveTemplate() {
+      const v = getFormValues();
+      const payload = {};
+      Object.keys(v).forEach(k => { payload['vtpl_' + k] = v[k]; });
+      try {
+        const r = await App.api('/app-settings', {
+          method:'POST',
+          body: JSON.stringify(payload)
+        });
+        if (r?.success) { markClean('✓ Template tersimpan'); }
+        else throw new Error(r?.message || 'Gagal simpan');
+      } catch(e) {
+        markClean('✗ ' + e.message);
+      }
+    }
+
+    function resetTemplate() {
+      if (!confirm('Reset template ke nilai default? Perubahan yang belum tersimpan akan hilang.')) return;
+      Object.keys(DEFAULTS).forEach(k => SERVER['vtpl_' + k] = DEFAULTS[k]);
+      loadIntoForm();
+      markDirty();
+      renderPreview();
+    }
+
+    function previewPrint() {
+      // Buka tab baru ke endpoint preview yang generate voucher dummy pakai settings
+      window.open('/voucher-template/preview-print', '_blank');
+    }
+
+    // ── Mobile tab switch ──────────────────────────────────
+    function setMobileTab(mode) {
+      const split = document.getElementById('vtSplit');
+      split.classList.remove('tab-mode-form','tab-mode-preview');
+      split.classList.add('tab-mode-' + mode);
+      document.querySelectorAll('.vt-mobile-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>
