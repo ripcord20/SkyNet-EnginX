@@ -1,0 +1,244 @@
+/* ==========================================================================
+   SkyNet Mobile — Shared shell overrides
+   Dimuat SETELAH <style> tiap halaman agar bisa menimpa look global:
+   - font Plus Jakarta Sans (konsisten semua perangkat termasuk Windows)
+   - container selebar mobile saat dibuka di desktop
+   - background utama putih penuh
+   - kartu menu tanpa kotak putih (menyatu dengan background)
+   - hilangkan semua border-left aksen
+   - hamburger rapih & clean
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#ffffff;
+  --shell-max:480px;
+}
+
+/* Font global: Plus Jakarta Sans di semua perangkat */
+body, .money, input, select, textarea, button{
+  font-family:'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+.money{ font-variant-numeric:tabular-nums; }
+
+/* Background utama putih penuh; area luar (desktop) abu lembut */
+html{
+  background:#e9edf4;
+  height:100%;
+  /* cegah bounce/overscroll di root */
+  overflow:hidden;
+}
+/* ==========================================================================
+   SHELL SCROLL FIX
+   Body dipatok setinggi viewport & TIDAK ikut scroll. Yang men-scroll adalah
+   .wrap (kontainer konten). Dengan begini semua elemen position:fixed
+   (hamburger, bottom-nav, FAB, toast) benar-benar diam saat konten discroll —
+   termasuk di Android WebView / Capacitor APK yang biasanya membuat fixed
+   ikut "drift" saat momentum scroll.
+   ========================================================================== */
+body{
+  background:#ffffff !important;
+  max-width:var(--shell-max);
+  margin:0 auto !important;
+  box-shadow:0 0 60px rgba(23,43,84,.10);
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  overflow:hidden;
+  /* height 100% via inset di atas; fallback: */
+  height:100%;
+}
+
+/* .wrap = satu-satunya area yang men-scroll */
+.wrap{
+  max-width:var(--shell-max) !important;
+  position:absolute;
+  inset:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;   /* momentum scroll halus di iOS/WebView */
+  overscroll-behavior:contain;         /* cegah scroll menembus ke body/nav */
+  scrollbar-width:none;                /* Firefox */
+}
+.wrap::-webkit-scrollbar{display:none;} /* WebKit: sembunyikan scrollbar */
+
+/* Karena body tak lagi scroll, ruang bawah untuk bottom-nav dipindah ke .wrap.
+   (Tiap halaman set padding-bottom di body; kini kita netralkan & pasang di .wrap.) */
+body{padding-bottom:0 !important;}
+.wrap{
+  padding-bottom:calc(var(--nav-h,66px) + env(safe-area-inset-bottom) + 12px) !important;
+}
+
+/* Elemen fixed dipatok ke viewport (bukan ke body) — pastikan tetap diam.
+   Body kini position:fixed, jadi fixed-children tetap anchor ke ICB/viewport. */
+.mdr-hamb, .bottomnav, .fab{ position:fixed !important; }
+
+/* ── Top nav sticky global (.mtop) menyediakan ruang atas + akses menu.
+   .mtop dirender DI LUAR .wrap, sedangkan .wrap (scroller) memakai
+   position:absolute; inset:0 — sehingga .wrap menutupi area di bawah .mtop
+   mulai dari top:0. Akibatnya baris pertama konten (.head / judul halaman)
+   tersembunyi di belakang top bar dan terlihat terpotong.
+   .mtop tingginya = 10px + safe-area (atas) + 40px isi + 10px (bawah) = 60px +
+   safe-area. Beri .head clearance setinggi itu supaya judul tidak tertutup.
+   (Halaman seperti payment-new/profile yang TIDAK memuat .mtop pakai .topbar
+   sendiri — tidak terpengaruh karena aturan ini menarget .wrap .head.) */
+.wrap .head{ padding-top:calc(70px + env(safe-area-inset-top)) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   POSISI ELEMEN FIXED → DIPATOK KE SHELL  (SATU SUMBER KEBENARAN)
+   body = position:fixed + max-width (shell HP di tengah). Elemen position:fixed
+   anchor ke VIEWPORT, bukan ke shell. Jadi semua overlay/sheet/nav/drawer harus
+   dipusatkan manual ke lebar shell. Semua diatur DI SINI saja — jangan duplikat
+   aturan posisi di CSS per-halaman, karena aturan bertumpuk saling menimpa
+   transform dan bikin elemen meleset/terpotong.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1) Elemen full-width yang dipusatkan (nav, overlay gelap) */
+.bottomnav,
+.mdr-overlay, .dm-overlay, .add-overlay, .sh-overlay, .del-overlay,
+.pd-overlay, .cf-overlay, .pn-overlay, .es-overlay{
+  left:50% !important;
+  right:auto !important;
+  width:100% !important;
+  max-width:var(--shell-max) !important;
+  margin-left:0 !important;
+  transform:translateX(-50%) !important;
+}
+.bn-wrap{max-width:var(--shell-max) !important;}
+.toast{max-width:calc(var(--shell-max) - 40px) !important;}
+
+/* 2) Bottom sheet: dipusatkan + animasi naik/turun (transform digabung) */
+.dm-sheet, .sheet, .pn-sheet, .add-sheet, .pd-sheet{
+  left:50% !important;
+  right:auto !important;
+  width:100% !important;
+  max-width:var(--shell-max) !important;
+  margin:0 !important;
+  transform:translateX(-50%) translateY(100%) !important;
+}
+.dm-sheet.open, .sheet.open, .pn-sheet.open, .add-sheet.open, .pd-sheet.open{
+  transform:translateX(-50%) translateY(0) !important;
+}
+
+/* Batas tinggi aman: `vh` di Safari iOS MENGABAIKAN address bar, sehingga sheet
+   setinggi ~90vh dengan bottom:0 akan terdorong ke atas — bagian atasnya (handle
+   + JUDUL) masuk ke belakang address bar dan terlihat terpotong.
+   `svh` = small viewport height (saat address bar TAMPIL) → selalu muat. */
+@supports (height: 100svh){
+  .dm-sheet, .sheet, .pn-sheet, .add-sheet, .pd-sheet{
+    max-height:calc(100svh - 10px) !important;
+  }
+}
+
+/* 3) Drawer: menempel di tepi KIRI shell, geser masuk dari kiri.
+   CATATAN: keadaan tersembunyi/terbuka (transform + visibility) juga
+   didefinisikan di mobile-drawer.ejs agar drawer tetap tertutup meski file
+   ini gagal dimuat/cache basi. Di sini kita HANYA menggeser posisi kiri-nya
+   agar sejajar tepi shell, sambil mempertahankan transform sembunyi/terbuka. */
+.mdr{
+  left:calc(50% - (var(--shell-max) / 2)) !important;
+  right:auto !important;
+  margin-left:0 !important;
+  transform:translateX(-100%) !important;   /* tersembunyi */
+  visibility:hidden !important;
+}
+.mdr.open{
+  transform:translateX(0) !important;       /* terbuka */
+  visibility:visible !important;
+}
+/* Di layar sempit (HP), shell = lebar layar → drawer mulai dari tepi kiri layar. */
+@media (max-width:519.98px){
+  .mdr{ left:0 !important; }
+}
+
+/* ---- Kartu menu (services): ikon kotak outline dalam card putih ---- */
+.services .svc{
+  background:transparent !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+.services .svc .svc-ic{
+  background:#fbfcfe !important;
+  border:1.5px solid #e9edf4 !important;
+  box-shadow:none !important;
+}
+/* Card pembungkus menu tidak double-border dari aturan umum */
+.menu-card{box-shadow:0 8px 20px -14px rgba(30,60,120,.16) !important;}
+
+/* ---- Stat mini cards: beri outline halus, bukan bayangan berat ---- */
+.stat, .mini, .kpi{
+  box-shadow:none !important;
+  border:1px solid #eef1f6 !important;
+}
+
+/* ---- Hilangkan SEMUA aksen border-left ---- */
+.kpi::before{display:none !important;}
+.kpi{padding-left:15px !important;}
+
+/* ---- Hamburger rapih & clean ---- */
+.mdr-hamb{
+  position:fixed !important;
+  top:calc(18px + env(safe-area-inset-top)) !important;
+  z-index:250 !important;
+  background:#ffffff !important;
+  border:1px solid #eef1f6 !important;
+  box-shadow:0 4px 14px -8px rgba(23,43,84,.22) !important;
+  border-radius:12px !important;
+  width:40px !important;height:40px !important;
+}
+/* Anchor hamburger ke tepi kiri shell (bukan tepi viewport) di desktop */
+@media (min-width: 520px){
+  .mdr-hamb{ left:calc(50% - (var(--shell-max) / 2) + 16px) !important; }
+}
+@media (max-width: 519.98px){
+  .mdr-hamb{ left:16px !important; }
+}
+.mdr-hamb svg{width:20px !important;height:20px !important;stroke-width:2.2 !important;color:#25324d !important;}
+.mdr-hamb:active{background:#f4f6fa !important;}
+
+/* Kartu-kartu umum: outline lembut agar terlihat rapi di atas background putih */
+.tx, .cust, .hs, .rs, .iso, .rm, .bd, .status-row, .rev-card, .cr-card, .mb-card, .period-info, .dm-card, .search-wrap input, .dev-sel, .seg, .bcast{
+  box-shadow:none !important;
+  border:1px solid #eef1f6 !important;
+}
+
+/* Hero tetap punya bayangan biar menonjol */
+.hero{border:none !important;}
+
+/* ==========================================================================
+   Animasi entrance halus (global) — dijalankan saat halaman/section load
+   ========================================================================== */
+@keyframes flynFadeUp{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+@keyframes flynFadeIn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+/* Judul halaman fade-in dari atas */
+.head{ animation:flynFadeUp .5s cubic-bezier(.22,.61,.36,1) both; }
+
+/* Isi konten: tiap anak langsung .content muncul berurutan (stagger) */
+.content > *{ animation:flynFadeUp .55s cubic-bezier(.22,.61,.36,1) both; }
+.content > *:nth-child(1){ animation-delay:.04s; }
+.content > *:nth-child(2){ animation-delay:.10s; }
+.content > *:nth-child(3){ animation-delay:.16s; }
+.content > *:nth-child(4){ animation-delay:.22s; }
+.content > *:nth-child(5){ animation-delay:.28s; }
+.content > *:nth-child(6){ animation-delay:.34s; }
+.content > *:nth-child(7){ animation-delay:.40s; }
+.content > *:nth-child(n+8){ animation-delay:.46s; }
+
+/* Kartu daftar yang di-render dinamis (JS) fade-in lembut */
+.tx, .cust, .hs, .rs, .iso, .rm, .bd, .ht, .ip, .na, .iface-row, .status-row{
+  animation:flynFadeIn .4s ease both;
+}
+
+/* Hormati preferensi reduce-motion */
+@media (prefers-reduced-motion: reduce){
+  .head, .content > *, .tx, .cust, .hs, .rs, .iso, .rm, .bd, .ht, .ip, .na, .iface-row, .status-row{
+    animation:none !important;
+  }
+}
+

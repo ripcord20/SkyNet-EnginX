@@ -1,0 +1,856 @@
+<!-- White-label theme override (dari Settings > Tema Warna) -->
+<% if (locals.themePrimary) { %>
+<%
+  const _p = locals.themePrimary;
+  const _a = locals.themeAccent || locals.themePrimary;
+%>
+<style id="wl-theme">
+  :root {
+    --primary: <%= _p %> !important;
+    --primary-dark: <%= _p %> !important;
+    --primary-light: <%= _a %> !important;
+    --accent: <%= _a %> !important;
+    --d-blue1: <%= _p %> !important; --d-blue2: <%= _p %> !important; --d-blue3: <%= _a %> !important;
+    --s-blue: <%= _p %> !important; --s-blue-d: <%= _p %> !important; --s-blue3: <%= _a %> !important;
+    --wl-p: <%= _p %>; --wl-a: <%= _a %>;
+  }
+  /* Override warna brand hardcoded (#1a6ef5 dsb) di sidebar & komponen umum */
+  .nav-sub:hover, .nav-sub.active { color: var(--wl-p) !important; }
+  .nav-sub.active .nav-sub-dot { background: var(--wl-p) !important; }
+  .nav-item.active, .nav-item.active .nav-icon { color: var(--wl-p) !important; }
+  .nav-item.active { background: rgba(0,0,0,.04) !important; }
+  .profile-avatar { background: linear-gradient(135deg, var(--wl-p), var(--wl-a)) !important; box-shadow: 0 0 0 2.5px var(--wl-p), 0 3px 10px rgba(0,0,0,.25) !important; }
+  .btn-primary, .btn-blue { background: var(--wl-p) !important; }
+  .btn-primary:hover, .btn-blue:hover { background: var(--wl-a) !important; }
+  /* Elemen umum yang sering pakai brand color */
+  a:not(.btn):not(.nav-item):not(.st-nav-item) { color: var(--wl-p); }
+</style>
+<% } %>
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar">
+<% const isDemoUser    = user && user.role && (user.role.name === 'demo'); %>
+<% const isFinanceUser = user && user.role && (user.role.name === 'finance'); %>
+<% const isNocUser     = user && user.role && (user.role.name === 'noc'); %>
+<% const isSalesUser   = user && user.role && (user.role.name === 'sales'); %>
+<% function demoHide(flag) { return flag ? 'style="display:none;"' : ''; } %>
+<% function financeHide(flag) { return flag ? 'style="display:none;"' : ''; } %>
+  <div class="sidebar-header">
+    <div class="sidebar-logo" id="sidebarBrand">
+      <%
+        // Ambil brand settings dari app (fallback ke default)
+        const brandMode   = locals.brandMode   || locals.appSettings?.brand_mode   || 'name_tagline';
+        const appName     = locals.appName     || locals.appSettings?.app_name     || 'DIGSnet';
+        const appTagline  = locals.appTagline  || locals.appSettings?.app_tagline  || 'ISP Management';
+        const logoUrl     = locals.logoUrl     || locals.appSettings?.logo_url     || '';
+      %>
+      <% if (brandMode === 'logo_only' && logoUrl) { %>
+        <img src="<%= logoUrl %>" alt="<%= appName %>" style="height:36px;object-fit:contain;">
+      <% } else if (brandMode === 'name_logo' && logoUrl) { %>
+        <img src="<%= logoUrl %>" alt="logo" style="height:32px;object-fit:contain;flex-shrink:0;">
+        <span class="logo-text"><%= appName %></span>
+      <% } else { %>
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div style="display:flex;flex-direction:column;line-height:1.2;">
+          <span class="logo-text" style="font-size:15px;font-weight:800;"><%= appName %></span>
+          <% if (brandMode === 'name_tagline' && appTagline) { %>
+          <span style="font-size:9.5px;color:#94a3b8;font-weight:500;letter-spacing:.03em;"><%= appTagline %></span>
+          <% } %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+
+  <% if (isNocUser) { %>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR KHUSUS ROLE: NOC (Network Operations Center)         -->
+    <!-- Fokus monitoring jaringan, devices, infrastructure.          -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="nav-section">
+      <span class="nav-section-title">OVERVIEW</span>
+      <a href="/noc" class="nav-item <%= active === 'noc-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="6" y1="9" x2="6.01" y2="9"/><line x1="10" y1="9" x2="14" y2="9"/></svg>
+        <span>NOC Dashboard</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">MONITORING</span>
+      <a href="/nms" class="nav-item <%= active === 'nms' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>NMS Interface</span>
+      </a>
+      <a href="/monitoring/traffic" class="nav-item <%= active === 'traffic' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <span>Traffic Interface</span>
+      </a>
+      <a href="/monitoring/pppoe" class="nav-item <%= active === 'pppoe' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>PPPoE Sessions</span>
+        <span class="nav-badge blue" id="pppoe-count" style="display:none">0</span>
+      </a>
+      <a href="/monitoring/queue" class="nav-item <%= active === 'queue' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        <span>Simple Queue</span>
+      </a>
+      <a href="/monitoring/ippool" class="nav-item <%= active === 'ippool' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        <span>IP Pool</span>
+      </a>
+      <a href="/monitoring/radius" class="nav-item <%= active === 'radius' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="5"/><path d="M11.5 11.5L21 21m-5 0v-4m4 4h-4"/></svg>
+        <span>RADIUS</span>
+      </a>
+      <a href="/monitoring/wireguard" class="nav-item <%= active === 'wireguard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        <span>WireGuard VPN</span>
+      </a>
+      <a href="/monitoring/port-forwarding" class="nav-item <%= active === 'port-forwarding' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+        <span>Port Forwarding</span>
+      </a>
+      <a href="/monitoring/firewall" class="nav-item <%= active === 'firewall' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Firewall</span>
+      </a>
+      <a href="/monitoring/olt-management" class="nav-item <%= active === 'olt-management' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/><path d="M16 6.5h2M16 17.5h2"/></svg>
+        <span>OLT Management</span>
+      </a>
+      <a href="/genieacs" class="nav-item <%= active === 'genieacs' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6.01" y2="10"/><line x1="10" y1="10" x2="18" y2="10"/></svg>
+        <span>ONT Management</span>
+      </a>
+      <a href="/monitoring/ping" class="nav-item <%= active === 'ping' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+        <span>Host Monitor</span>
+      </a>
+      <a href="/devices" class="nav-item <%= active === 'devices' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="8" y1="20" x2="16" y2="20"/></svg>
+        <span>Device Management</span>
+      </a>
+      <a href="/monitoring/device-monitor" class="nav-item <%= active === 'device-monitor' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <span>Device Monitor</span>
+      </a>
+      <a href="/monitoring/hotspot" class="nav-item <%= active === 'hotspot' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span>Hotspot</span>
+      </a>
+      <a href="/reseller-voucher" class="nav-item <%= active === 'reseller-voucher' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="10" rx="2"/><path d="M2 12h20M7 12v3M17 9v3"/></svg>
+        <span>Reseller Voucher</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">INFRASTRUKTUR</span>
+      <a href="/infrastructure" class="nav-item <%= active === 'infrastructure' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Infrastructure Map</span>
+      </a>
+      <a href="/assets" class="nav-item <%= active === 'assets' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
+        <span>Aset Jaringan</span>
+      </a>
+      <a href="/system/topology" class="nav-item <%= active === 'topology' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4M10 13l-3 4M14 13l3 4"/></svg>
+        <span>Topology</span>
+      </a>
+      <a href="/system/resources" class="nav-item <%= active === 'resources' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="6" rx="1"/><rect x="4" y="14" width="16" height="6" rx="1"/><line x1="8" y1="7" x2="8.01" y2="7"/><line x1="8" y1="17" x2="8.01" y2="17"/></svg>
+        <span>Server Resources</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">OPERASIONAL</span>
+      <a href="/sales" class="nav-item <%= active === 'sales-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        <span>Sales</span>
+      </a>
+      <a href="/tickets" class="nav-item <%= active === 'tickets' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        <span>Tickets</span>
+      </a>
+      <a href="/work-orders" class="nav-item <%= active === 'work-orders' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span>Work Orders</span>
+      </a>
+      <a href="/todos" class="nav-item <%= active === 'todos' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>To Do List</span>
+      </a>
+      <a href="/isolir" class="nav-item <%= active === 'isolir' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <span>Isolir</span>
+      </a>
+      <a href="/collect" class="nav-item <%= active === 'collect' ? 'active' : '' %>" <%- financeHide(isFinanceUser) %>>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg>
+        <span>Collect Billing</span>
+      </a>
+      <a href="/gps-tracking" class="nav-item <%= active === 'gps-tracking' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M1 12h6M17 12h6"/></svg>
+        <span>GPS Tracking</span>
+      </a>
+      <a href="/logs" class="nav-item <%= active === 'logs' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        <span>System Logs</span>
+      </a>
+    </div>
+
+  <% } else if (isSalesUser) { %>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR KHUSUS ROLE: SALES                                    -->
+    <!-- Fokus akuisisi pelanggan: registrasi, coverage, komisi.       -->
+    <!-- Item menu menavigasi section di dalam halaman /sales.         -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="nav-section">
+      <span class="nav-section-title">OVERVIEW</span>
+      <a href="/sales#overview" class="nav-item sales-nav active" data-sales-nav="overview">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span>Dashboard</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">SALES CRM</span>
+      <a href="/sales#pipeline" class="nav-item sales-nav" data-sales-nav="pipeline">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        <span>Pipeline Registrasi</span>
+      </a>
+      <a href="/sales#customers" class="nav-item sales-nav" data-sales-nav="customers">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Daftar Customer</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">COVERAGE</span>
+      <a href="/sales#coverage" class="nav-item sales-nav" data-sales-nav="coverage">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>Coverage Checker</span>
+      </a>
+      <a href="/sales#potential" class="nav-item sales-nav" data-sales-nav="potential">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/><path d="M9 9h6M12 6v6"/></svg>
+        <span>Area Potensi</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">MARKETING</span>
+      <a href="/sales#referral" class="nav-item sales-nav" data-sales-nav="referral">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+        <span>Referral</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">PERFORMANCE</span>
+      <a href="/sales#kpi" class="nav-item sales-nav" data-sales-nav="kpi">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12l4-2"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+        <span>Target & KPI</span>
+      </a>
+      <a href="/sales#commission" class="nav-item sales-nav" data-sales-nav="commission">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Komisi</span>
+      </a>
+      <a href="/sales#leaderboard" class="nav-item sales-nav" data-sales-nav="leaderboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0z"/><path d="M17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></svg>
+        <span>Leaderboard</span>
+      </a>
+      <a href="/sales#analytics" class="nav-item sales-nav" data-sales-nav="analytics">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6"/><rect x="12" y="7" width="3" height="10"/><rect x="17" y="13" width="3" height="4"/></svg>
+        <span>Analytics</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">TICKETING</span>
+      <a href="/tickets" class="nav-item <%= active === 'tickets' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 012-2h14a2 2 0 012 2v1a2 2 0 000 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1a2 2 0 000-4z"/><line x1="13" y1="7" x2="13" y2="17" stroke-dasharray="2 2"/></svg>
+        <span>Tickets</span>
+      </a>
+      <a href="/todos" class="nav-item <%= active === 'todos' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>To Do List</span>
+        <span class="nav-badge blue" id="todo-count" style="display:none">0</span>
+      </a>
+      <a href="/work-orders" class="nav-item <%= active === 'work-orders' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+        <span>Work Order</span>
+      </a>
+    </div>
+
+  <% } else if (isFinanceUser) { %>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SIDEBAR KHUSUS ROLE: FINANCE                                  -->
+    <!-- Hanya menu billing, customers, payments, packages, keuangan,  -->
+    <!-- laporan, invoice-template.                                    -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <div class="nav-section">
+      <span class="nav-section-title">OVERVIEW</span>
+      <a href="/finance" class="nav-item <%= active === 'finance-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <span>Dashboard</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">PELANGGAN</span>
+      <a href="/customers" class="nav-item <%= active === 'customers' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Customers</span>
+      </a>
+      <a href="/packages" class="nav-item <%= active === 'packages' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <span>Paket Layanan</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">BILLING</span>
+      <% const _fBilling = ['billing','invoice-template'].includes(active); %>
+      <div class="nav-group <%= _fBilling ? 'open' : '' %>" data-nav-group="billing">
+        <button type="button" class="nav-item nav-group-toggle <%= active === 'billing' ? 'active' : '' %>" onclick="toggleNavGroup(this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <span>Billing & Invoice</span>
+          <svg class="nav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-group-children">
+          <a href="/billing" class="nav-sub <%= active === 'billing' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span><span>Daftar Tagihan</span>
+          </a>
+          <a href="/invoice-template" class="nav-sub <%= active === 'invoice-template' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span><span>Template Invoice</span>
+          </a>
+        </div>
+      </div>
+      <a href="/payments" class="nav-item <%= active === 'payments' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span>Pembayaran</span>
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <span class="nav-section-title">KEUANGAN</span>
+      <a href="/keuangan" class="nav-item <%= active === 'keuangan' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Keuangan</span>
+      </a>
+      <a href="/laporan" class="nav-item <%= active === 'laporan' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Lap. Keuangan</span>
+      </a>
+    </div>
+
+    <!-- EMAIL (finance) -->
+    <div class="nav-section">
+      <span class="nav-section-title">EMAIL</span>
+      <a href="/email-broadcast" class="nav-item <%= active === 'email-broadcast' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span>Broadcast Email</span>
+      </a>
+      <a href="/email-template" class="nav-item <%= active === 'email-template' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Email Template</span>
+      </a>
+      <a href="/email-log" class="nav-item <%= active === 'email-log' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Riwayat Email</span>
+      </a>
+      <a href="/email-statistic" class="nav-item <%= active === 'email-statistic' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Email Statistic</span>
+      </a>
+      <a href="/email-schedule" class="nav-item <%= active === 'email-schedule' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>Email Schedule</span>
+      </a>
+    </div>
+
+  <% } else { %>
+
+    <!-- OVERVIEW -->
+    <div class="nav-section">
+      <span class="nav-section-title">OVERVIEW</span>
+      <a href="/dashboard" class="nav-item <%= active === 'dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <% if (user && user.role && (user.role.name === 'superadmin' || user.role.name === 'admin')) { %>
+      <a href="/finance" class="nav-item <%= active === 'finance-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Financial Dashboard</span>
+      </a>
+      <a href="/noc" class="nav-item <%= active === 'noc-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="6" y1="9" x2="6.01" y2="9"/><line x1="10" y1="9" x2="14" y2="9"/></svg>
+        <span>NOC Dashboard</span>
+      </a>
+      <a href="/sales" class="nav-item <%= active === 'sales-dashboard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Sales Dashboard</span>
+      </a>
+      <% } %>
+    </div>
+
+    <!-- MONITORING -->
+    <div class="nav-section">
+      <span class="nav-section-title">MONITORING</span>
+      <a href="/nms" class="nav-item <%= active === 'nms' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>NMS Interface</span>
+      </a>
+      <a href="/monitoring/traffic" class="nav-item <%= active === 'traffic' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        <span>Traffic Interface</span>
+      </a>
+      <a href="/monitoring/pppoe" class="nav-item <%= active === 'pppoe' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>PPPoE Sessions</span>
+        <span class="nav-badge blue" id="pppoe-count" style="display:none">0</span>
+      </a>
+      <a href="/monitoring/queue" class="nav-item <%= active === 'queue' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        <span>Simple Queue</span>
+      </a>
+      <a href="/monitoring/ippool" class="nav-item <%= active === 'ippool' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        <span>IP Pool</span>
+      </a>
+      <a href="/monitoring/radius" class="nav-item <%= active === 'radius' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="5"/><path d="M11.5 11.5L21 21m-5 0v-4m4 4h-4"/></svg>
+        <span>RADIUS</span>
+      </a>
+      <a href="/monitoring/wireguard" class="nav-item <%= active === 'wireguard' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+        <span>WireGuard VPN</span>
+      </a>
+      <a href="/monitoring/port-forwarding" class="nav-item <%= active === 'port-forwarding' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5"/><path d="M8 21H3v-5"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+        <span>Port Forwarding</span>
+      </a>
+      <a href="/monitoring/firewall" class="nav-item <%= active === 'firewall' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Firewall</span>
+      </a>
+      <a href="/monitoring/olt-management" class="nav-item <%= active === 'olt-management' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="7" rx="2"/><rect x="2" y="14" width="20" height="7" rx="2"/><line x1="6" y1="6.5" x2="6.01" y2="6.5"/><line x1="6" y1="17.5" x2="6.01" y2="17.5"/><path d="M16 6.5h2M16 17.5h2"/></svg>
+        <span>OLT Management</span>
+      </a>
+      <a href="/genieacs" class="nav-item <%= active === 'genieacs' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8M10 14h5"/></svg>
+        <span>ONT Management</span>
+        <span class="nav-badge green" id="genieacs-online-badge" style="display:none">0</span>
+      </a>
+      <a href="/monitoring/ping" class="nav-item <%= active === 'ping-monitor' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3M12 2v3m0 14v3M5.64 5.64l2.12 2.12m8.48 8.48l2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48l2.12-2.12"/></svg>
+        <span>Host Monitor</span>
+        <span class="nav-badge red" id="ping-down-badge" style="display:none">0</span>
+      </a>
+      <a href="/devices" class="nav-item <%= active === 'devices' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/><line x1="10" y1="6" x2="18" y2="6"/><line x1="10" y1="18" x2="18" y2="18"/></svg>
+        <span>Device Management</span>
+      </a>
+      <a href="/monitoring/device-monitor" class="nav-item <%= active === 'device-monitor' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 8h.01M10 8h4"/></svg>
+        <span>Device Monitor</span>
+      </a>
+      <%# Hotspot dropdown — auto-expanded if on hotspot or voucher-template page %>
+      <% const _hotspotActive = ['hotspot','voucher-template'].includes(active); %>
+      <div class="nav-group <%= _hotspotActive ? 'open' : '' %>" data-nav-group="hotspot">
+        <button type="button" class="nav-item nav-group-toggle <%= active === 'hotspot' ? 'active' : '' %>" onclick="toggleNavGroup(this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0114.08 0"/>
+            <path d="M1.42 9a16 16 0 0121.16 0"/>
+            <path d="M8.53 16.11a6 6 0 016.95 0"/>
+            <circle cx="12" cy="20" r="1"/>
+          </svg>
+          <span>Hotspot</span>
+          <svg class="nav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-group-children">
+          <a href="/monitoring/hotspot" class="nav-sub <%= active === 'hotspot' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span>
+            <span>Manajemen</span>
+          </a>
+          <a href="/voucher-template" class="nav-sub <%= active === 'voucher-template' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span>
+            <span>Template Voucher</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKETING -->
+    <div class="nav-section">
+      <span class="nav-section-title">TICKETING</span>
+      <a href="/tickets" class="nav-item <%= active === 'tickets' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2M15 11v2M15 17v2M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7a2 2 0 0 1 2-2z"/></svg>
+        <span>Tickets</span>
+        <span class="nav-badge red" id="ticket-open-badge" style="display:none">0</span>
+      </a>
+      <a href="/todos" class="nav-item <%= active === 'todos' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 9h6M9 13h4"/><path d="M3 9h18" opacity=".3"/></svg>
+        <span>To Do List</span>
+        <span class="nav-badge blue" id="todo-count" style="display:none">0</span>
+      </a>
+      <a href="/work-orders" class="nav-item <%= active === 'work-orders' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <span>Work Order</span>
+        <span class="nav-badge blue" id="wo-pending-badge" style="display:none">0</span>
+      </a>
+    </div>
+
+    <!-- WA GATEWAY -->
+    <div class="nav-section">
+      <span class="nav-section-title">WA GATEWAY</span>
+      <a href="/whatsapp" class="nav-item <%= active === 'whatsapp' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <span>WA Gateway</span>
+        <span class="nav-badge green" id="wa-connected-badge" style="display:none">0</span>
+      </a>
+      <a href="/message-logs" class="nav-item <%= active === 'message-logs' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <span>Message Logs</span>
+      </a>
+      <a href="/broadcast" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'broadcast' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        <span>Broadcast</span>
+      </a>
+      <a href="/wa/templates" class="nav-item <%= active === 'wa-templates' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Templates</span>
+      </a>
+      <a href="/wa/reminder" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'wa-reminder' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span>Auto Reminder</span>
+      </a>
+      <a href="/wa/report" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'wa-report' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Auto Report</span>
+      </a>
+    </div>
+
+    <!-- TELEGRAM -->
+    <div class="nav-section">
+      <span class="nav-section-title">TELEGRAM</span>
+      <a href="/telegram" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'telegram' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.5 4.5L2.5 12.5l5.5 2 2 6 3-4 5 4z"/></svg>
+        <span>Telegram Center</span>
+      </a>
+      <a href="/telegram/report" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'telegram-report' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Telegram Report</span>
+      </a>
+      <a href="/telegram/backup" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'telegram-backup' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        <span>Telegram Backup</span>
+      </a>
+    </div>
+
+    <!-- EMAIL -->
+    <div class="nav-section">
+      <span class="nav-section-title">EMAIL</span>
+      <a href="/email-broadcast" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'email-broadcast' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        <span>Broadcast Email</span>
+      </a>
+      <a href="/email-template" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'email-template' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M22 6l-10 7L2 6"/></svg>
+        <span>Email Template</span>
+      </a>
+      <a href="/email-log" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'email-log' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <span>Riwayat Email</span>
+      </a>
+      <a href="/email-statistic" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'email-statistic' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6m4 6V5m4 14v-9M3 21h18"/></svg>
+        <span>Email Statistic</span>
+      </a>
+      <a href="/email-schedule" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'email-schedule' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18M12 14l1.5 1.5L17 12"/></svg>
+        <span>Email Schedule</span>
+      </a>
+      <a href="/invoice-broadcast" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'invoice-broadcast' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Broadcast Invoice</span>
+      </a>
+      <a href="/mikrotik-backup" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'mikrotik-backup' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        <span>Backup MikroTik</span>
+      </a>
+    </div>
+
+    <!-- MANAGEMENT -->
+    <div class="nav-section">
+      <span class="nav-section-title">MANAGEMENT</span>
+      <a href="/isolir" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'isolir' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        <span>Isolir</span>
+      </a>
+      <a href="/hotspot-binding" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'hotspot-binding' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+        <span>Hotspot Binding</span>
+        <span class="nav-badge red" id="tools-mismatch-badge" style="display:none">0</span>
+      </a>
+      <a href="/ip-addressing" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'ip-addressing' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="6" rx="1.5"/><rect x="2" y="15" width="20" height="6" rx="1.5"/><path stroke-linecap="round" d="M6 6h.01M6 18h.01M12 9v6"/></svg>
+        <span>IP Addressing</span>
+      </a>
+      <a href="/customers" class="nav-item <%= active === 'customers' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Customers</span>
+      </a>
+
+      <%# Billing dropdown — auto-expanded if user is on a billing-related page %>
+      <% const _billingActive = ['billing','invoice-template'].includes(active); %>
+      <div class="nav-group <%= _billingActive ? 'open' : '' %>" data-nav-group="billing">
+        <button type="button" class="nav-item nav-group-toggle <%= active === 'billing' ? 'active' : '' %>" onclick="toggleNavGroup(this)">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <span>Billing & Invoice</span>
+          <svg class="nav-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="nav-group-children">
+          <a href="/billing" class="nav-sub <%= active === 'billing' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span>
+            <span>Daftar Tagihan</span>
+          </a>
+          <a href="/invoice-template" class="nav-sub <%= active === 'invoice-template' ? 'active' : '' %>">
+            <span class="nav-sub-dot"></span>
+            <span>Template Invoice</span>
+          </a>
+        </div>
+      </div>
+
+      <a href="/packages" class="nav-item <%= active === 'packages' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/><circle cx="12" cy="12" r="0" fill="currentColor"/></svg>
+        <span>Paket Layanan</span>
+      </a>
+      <a href="/payments" class="nav-item <%= active === 'payments' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span>Pembayaran</span>
+      </a>
+
+      <a href="/keuangan" class="nav-item <%= active === 'keuangan' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>Keuangan</span>
+      </a>
+      <a href="/laporan" class="nav-item <%= active === 'laporan' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        <span>Lap. Keuangan</span>
+      </a>
+      <a href="/infrastructure" class="nav-item <%= active === 'infrastructure' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        <span>Infrastructure</span>
+      </a>
+      <a href="/gps-tracking" class="nav-item <%= active === 'gps-tracking' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>GPS Tracking</span>
+      </a>
+      <a href="/assets" class="nav-item <%= active === 'assets' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        <span>Asset Management</span>
+        <span class="nav-badge blue" id="asset-active-badge" style="display:none">0</span>
+      </a>
+    </div>
+
+    <!-- SISTEM -->
+    <div class="nav-section">
+      <span class="nav-section-title">SISTEM</span>
+      <a href="/system/resources" class="nav-item <%= active === 'resources' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        <span>System Resource</span>
+      </a>
+      <a href="/system/topology" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'topology' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <span>Topology</span>
+      </a>
+      <a href="/logs" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'logs' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+        <span>Activity Logs</span>
+      </a>
+      <a href="/settings" <%- demoHide(isDemoUser) %> class="nav-item <%= active === 'settings' ? 'active' : '' %>">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <span>Settings</span>
+      </a>
+    </div>
+
+  <% } %>
+
+  </nav>
+
+  <!-- Profile footer -->
+  <div class="sidebar-footer">
+    <div class="sidebar-profile">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="sidebarAvatar" data-avatar="<%= (user && user.avatar) ? user.avatar : '' %>">
+          <% if (user && user.avatar) { %>
+            <img src="<%= user.avatar %>" alt="Avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          <% } else { %>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <% } %>
+        </div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="sidebarName"><%= user?.name || user?.username || 'Admin' %></div>
+        <div class="profile-role" id="sidebarRole"><%=
+          (user?.role && typeof user.role === 'object' ? (user.role.name || user.role.label || '') : '') ||
+          (typeof user?.role === 'string' ? user.role : '') ||
+          'Administrator'
+        %></div>
+      </div>
+      <a href="#" id="logoutBtnProfile" title="Logout" class="profile-logout-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </a>
+    </div>
+  </div>
+
+<% if (isDemoUser) { %>
+<script>
+  // Auto-hide menu tidak relevan untuk user demo
+  (function() {
+    const hideSelectors = [
+      'a[href="/broadcast"]',
+      'a[href="/wa/reminder"]',
+      'a[href="/wa/report"]',
+      'a[href="/isolir"]',
+      'a[href="/settings"]',
+      'a[href="/settings/users"]',
+      'a[href="/system/topology"]',
+      'a[href="/whatsapp"]',
+    ];
+    document.addEventListener('DOMContentLoaded', () => {
+      hideSelectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+      });
+    });
+  })();
+</script>
+<% } %>
+
+</aside>
+
+<style>
+.sidebar-footer{padding:0;border-top:1px solid #f0f4ff;background:#fff;}
+.sidebar-profile{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;}
+.profile-avatar-wrap{position:relative;flex-shrink:0;}
+.profile-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1a6ef5,#0047cc);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;letter-spacing:-.5px;border:2.5px solid rgba(255,255,255,.15);box-shadow:0 0 0 2.5px #1a6ef5,0 3px 10px rgba(26,110,245,.45);transition:box-shadow .2s;}
+.profile-avatar:hover{box-shadow:0 0 0 2.5px #1a6ef5,0 4px 16px rgba(26,110,245,.6);}
+.profile-avatar-wrap::after{content:'';position:absolute;bottom:1px;right:1px;width:9px;height:9px;border-radius:50%;background:#22c55e;border:2px solid #fff;}
+.profile-info{flex:1;min-width:0;}
+.profile-name{font-size:12.5px;font-weight:700;color:#0d1b3e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+.profile-role{font-size:10.5px;color:#94a3b8;text-transform:capitalize;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-logout-btn{margin-left:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#94a3b8;transition:all .15s;flex-shrink:0;text-decoration:none;}
+.profile-logout-btn:hover{background:rgba(245,54,92,.12);color:#f5365c;}
+
+/* ── Nav dropdown group ── */
+.nav-group{margin:0;}
+.nav-group-toggle{
+  width:100%;background:transparent;border:none;text-align:left;
+  font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;
+}
+.nav-group-toggle .nav-chev{
+  width:14px;height:14px;margin-left:auto;flex-shrink:0;
+  transition:transform .2s ease;color:currentColor;opacity:.55;
+}
+.nav-group.open .nav-group-toggle .nav-chev{transform:rotate(180deg);opacity:.85;}
+.nav-group-children{
+  max-height:0;overflow:hidden;
+  transition:max-height .25s ease;
+}
+.nav-group.open .nav-group-children{max-height:240px;}
+.nav-sub{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 18px 8px 44px;
+  font-size:12.5px;font-weight:500;color:#64748b;
+  text-decoration:none;border-radius:0;
+  position:relative;transition:background .15s,color .15s;
+}
+.nav-sub:hover{color:#1a6ef5;background:rgba(26,110,245,.05);}
+.nav-sub.active{color:#1a6ef5;font-weight:700;background:rgba(26,110,245,.08);}
+.nav-sub.active .nav-sub-dot{background:#1a6ef5;transform:scale(1.4);}
+.nav-sub-dot{
+  width:5px;height:5px;border-radius:50%;background:#cbd5e1;
+  flex-shrink:0;transition:background .15s,transform .15s;
+}
+</style>
+
+<script>
+(function(){
+  const nameEl = document.getElementById('sidebarName');
+  const av = document.getElementById('sidebarAvatar');
+  if(nameEl && av){
+    const hasAvatar = av.getAttribute('data-avatar') || av.querySelector('img');
+    if(!hasAvatar){
+      const name = nameEl.textContent.trim();
+      const initials = name.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase() || 'A';
+      av.textContent = initials;
+    }
+  }
+  // GenieACS online badge
+  (async () => {
+    try {
+      const r = await fetch('/api/genieacs/stats');
+      const j = await r.json();
+      if (j.success && j.data?.online > 0) {
+        const badge = document.getElementById('genieacs-online-badge');
+        if (badge) { badge.textContent = j.data.online; badge.style.display = 'inline-flex'; }
+      }
+    } catch(e) {}
+  })();
+
+  const logoutBtn = document.getElementById('logoutBtnProfile') || document.getElementById('logoutBtn');
+  if(logoutBtn){
+    logoutBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      // Defensive logout flow — pastikan SELALU berhasil meski API gagal.
+      // PENTING beberapa hal yang sering jadi bug:
+      //   1. Clear localStorage DULU — biar state client pasti bersih.
+      //   2. fetch HARUS pakai `credentials: 'include'` supaya cookie token
+      //      dikirim ke server (kalau tidak, server `authenticate` middleware
+      //      return 401 → endpoint logout tidak pernah jalan → cookie tidak
+      //      ter-clear → user balik ke dashboard karena auto-redirect di /login).
+      //   3. Pakai Bearer header juga sebagai backup auth.
+      //   4. Timeout 3 detik supaya tombol tidak gantung kalau server lambat.
+      //   5. window.location.replace (bukan href) — tombol Back tidak balik
+      //      ke dashboard yang sudah logged-out.
+      let bearerToken = null;
+      try {
+        bearerToken = localStorage.getItem('token');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      } catch(_) { /* localStorage disabled — ignore */ }
+
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 3000);
+      try {
+        const hdr = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (bearerToken && bearerToken !== 'null') hdr['Authorization'] = 'Bearer ' + bearerToken;
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: hdr,
+          signal: ctrl.signal
+        });
+      } catch(_) { /* timeout/network — abaikan */ }
+      clearTimeout(t);
+
+      window.location.replace('/login');
+    });
+  }
+})();
+
+// Nav dropdown group toggle (Billing & Invoice, etc.)
+function toggleNavGroup(btn){
+  const group = btn.closest('.nav-group');
+  if (group) group.classList.toggle('open');
+}
+</script>

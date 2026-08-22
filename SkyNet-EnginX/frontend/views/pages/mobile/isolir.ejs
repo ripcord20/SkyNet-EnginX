@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;box-shadow:0 5px 14px -8px rgba(30,60,120,.2);}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:4px 16px 20px;}
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .iso-chart{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 16px;margin-bottom:16px;box-shadow:0 8px 20px -15px rgba(30,60,120,.26);display:flex;align-items:center;gap:17px;}
+    .isoc-donut{position:relative;width:100px;height:100px;flex-shrink:0;}
+    .isoc-donut svg{width:100px;height:100px;transform:rotate(-90deg);}
+    .isoc-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .isoc-center b{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+    .isoc-center span{font-size:8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+    .isoc-info{flex:1;min-width:0;}
+    .isoc-info .ici-t{font-size:12.5px;font-weight:800;color:#3a4a68;margin-bottom:9px;}
+    .ici-row{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:7px;}
+    .ici-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+    .ici-name{color:#5a6885;font-weight:600;}
+    .ici-val{margin-left:auto;font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+    .kpi{background:#fff;border-radius:16px;padding:14px 15px 14px 16px;position:relative;overflow:hidden;box-shadow:0 6px 16px -10px rgba(30,60,120,.16);}
+    .kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
+    .kpi.red::before{background:var(--red);}.kpi.blue::before{background:var(--blue);}.kpi.teal::before{background:var(--teal);}.kpi.amber::before{background:var(--amber);}
+    .kpi-ic{width:32px;height:32px;border-radius:10px;background:#f5f7fb;color:#3a4a68;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+    .kpi-ic svg{width:17px;height:17px;stroke-width:1.8;}
+    .kpi-val{font-size:20px;font-weight:800;letter-spacing:-.5px;}
+    .kpi-lbl{font-size:11px;color:var(--muted);margin-top:3px;font-weight:500;}
+    /* Tabs */
+    .tabs{display:flex;background:#fff;border-radius:14px;padding:5px;gap:4px;margin-bottom:14px;box-shadow:0 5px 14px -10px rgba(30,60,120,.16);}
+    .tab{flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s;}
+    .tab.active{background:var(--blue);color:#fff;box-shadow:0 4px 10px -4px rgba(47,111,237,.5);}
+    .tab .cnt{display:inline-block;min-width:18px;margin-left:4px;font-size:10.5px;background:rgba(148,160,184,.18);color:inherit;padding:1px 6px;border-radius:100px;font-weight:800;}
+    .tab.active .cnt{background:rgba(255,255,255,.25);}
+    /* Search */
+    .search{position:relative;margin-bottom:14px;}
+    .search input{width:100%;border:none;background:#fff;border-radius:13px;padding:13px 14px 13px 42px;font-size:13.5px;font-family:inherit;color:var(--ink);box-shadow:0 5px 14px -10px rgba(30,60,120,.16);outline:none;}
+    .search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:17px;height:17px;color:var(--muted);}
+    .sec{font-size:14px;font-weight:800;margin:4px 2px 12px;letter-spacing:-.2px;}
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .iso{display:flex;align-items:center;gap:12px;background:#fff;border-radius:15px;padding:13px 15px;box-shadow:0 5px 14px -9px rgba(30,60,120,.14);}
+    .iso-av{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+    .iso-av.on{background:#fde5e6;color:#d13b42;}
+    .iso-av.off{background:#e2f0ff;color:var(--blue);}
+    .iso-body{flex:1;min-width:0;} .iso-t{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .iso-s{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .iso-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+    .tag{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:#f0f3f9;color:#5a6885;}
+    .tag.m{background:#e6f7f4;color:#0284c7;}
+    .tag.due-ok{background:#e2eefb;color:#5a6885;}
+    .tag.due-soon{background:#fdf1dc;color:#b9781a;}
+    .tag.due-late{background:#fde5e6;color:#d13b42;}
+    .iso-act{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+    .btn-act{font-size:11px;font-weight:800;padding:8px 14px;border-radius:10px;border:none;font-family:inherit;cursor:pointer;white-space:nowrap;}
+    .btn-iso{background:linear-gradient(135deg,#f2545b,#d13b42);color:#fff;}
+    .btn-res{background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;}
+    .btn-act:disabled{opacity:.45;cursor:not-allowed;}
+    .st-badge{font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:100px;}
+    .st-iso{background:#fde5e6;color:#d13b42;} .st-act{background:#e6f7ee;color:#12915f;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{width:44px;height:44px;color:#c7d0e0;margin-bottom:12px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    /* Confirm modal */
+    .cf-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,27,74,.55);opacity:0;visibility:hidden;transition:opacity .2s;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .cf-overlay.open{opacity:1;visibility:visible;}
+    .cf-box{background:#fff;border-radius:20px;max-width:340px;width:100%;padding:22px 20px;text-align:center;transform:scale(.92);transition:transform .2s;}
+    .cf-overlay.open .cf-box{transform:scale(1);}
+    .cf-ic{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+    .cf-ic.iso{background:#fde5e6;color:#d13b42;} .cf-ic.res{background:#e6f7f4;color:#0284c7;}
+    .cf-ic svg{width:26px;height:26px;}
+    .cf-title{font-size:16.5px;font-weight:800;}
+    .cf-msg{font-size:13px;color:#6b7a97;line-height:1.55;margin-top:8px;}
+    .cf-actions{display:flex;gap:10px;margin-top:20px;}
+    .cf-actions button{flex:1;padding:13px;border-radius:12px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+    .cf-cancel{background:#f0f3f9;color:#5a6885;}
+    .cf-ok{color:#fff;}
+    .cf-ok.iso{background:linear-gradient(135deg,#f2545b,#d13b42);}
+    .cf-ok.res{background:linear-gradient(135deg,#38bdf8,#0284c7);}
+    .cf-ok:disabled{opacity:.6;}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:800;opacity:0;transition:opacity .25s;pointer-events:none;max-width:88%;text-align:center;}
+    .toast.show{opacity:1;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="htitle">Isolir</div><div class="hsub" id="isoUpdated">Memuat…</div></div>
+      <div class="refresh" id="refreshBtn" onclick="loadAll(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+    <div class="content">
+      <div class="kpi-grid">
+        <div class="kpi red"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div><div class="kpi-val" id="isoCount" style="color:var(--red);">–</div><div class="kpi-lbl">Terisolir saat ini</div></div>
+        <div class="kpi teal"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div><div class="kpi-val" id="isoEligible">–</div><div class="kpi-lbl">Bisa diisolir</div></div>
+        <div class="kpi blue"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/></svg></div><div class="kpi-val" id="isoDevices">–</div><div class="kpi-lbl">Router terhubung</div></div>
+        <div class="kpi amber"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="kpi-val" id="isoLog" style="color:var(--amber);">–</div><div class="kpi-lbl">Aktivitas 24 jam</div></div>
+      </div>
+
+      <div class="iso-chart">
+        <div class="isoc-donut" id="isoDonut"></div>
+        <div class="isoc-info">
+          <div class="ici-t">Rasio Isolir</div>
+          <div class="ici-row"><span class="ici-dot" style="background:#f2545b;"></span><span class="ici-name">Terisolir</span><span class="ici-val" id="icoIso">–</span></div>
+          <div class="ici-row"><span class="ici-dot" style="background:#0f9d63;"></span><span class="ici-name">Aktif normal</span><span class="ici-val" id="icoActive">–</span></div>
+          <div class="ici-row"><span class="ici-dot" style="background:#e2eefb;"></span><span class="ici-name">Router online</span><span class="ici-val" id="icoDev">–</span></div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" id="tabIso" onclick="switchTab('isolated')">Terisolir<span class="cnt" id="cntIso">0</span></div>
+        <div class="tab" id="tabAll" onclick="switchTab('all')">Semua Pelanggan<span class="cnt" id="cntAll">0</span></div>
+      </div>
+
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Cari nama, ID, IP, atau username…" oninput="renderList()">
+      </div>
+
+      <div class="sec" id="listTitle">Daftar Pelanggan Terisolir</div>
+      <div class="list" id="isoList">
+        <div class="iso"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="iso-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+        <div class="iso"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="iso-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+
+  <!-- Confirm modal -->
+  <div class="cf-overlay" id="cfOverlay">
+    <div class="cf-box">
+      <div class="cf-ic iso" id="cfIcon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+      </div>
+      <div class="cf-title" id="cfTitle">Konfirmasi</div>
+      <div class="cf-msg" id="cfMsg">—</div>
+      <div class="cf-actions">
+        <button class="cf-cancel" onclick="closeConfirm()">Batal</button>
+        <button class="cf-ok iso" id="cfOk" onclick="doAction()">Ya, Lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,method,body){
+      const t=getToken();
+      const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{});
+      try{
+        const opt={credentials:'include',headers,method:method||'GET'};
+        if(body) opt.body=JSON.stringify(body);
+        const r=await fetch(url,opt);
+        if(r.status===401){location.href='/login';return null;}
+        const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;}
+      }catch(e){return null;}
+    }
+    function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // ── State ──
+    var STATE = { tab:'isolated', all:[], isolated:[], busyId:null };
+
+    // Donut rasio isolir: terisolir vs aktif normal (basis = eligible + isolir).
+    function renderIsoDonut(d){
+      const iso=Number(d.isolated)||0;
+      const elig=Number(d.with_ip)||0; // aktif yang bisa diisolir (belum terisolir)
+      const base=iso+elig;
+      const pct=base>0?Math.round(iso/base*100):0;
+      const col=pct>=25?'#f2545b':(pct>=10?'#f5a623':'#0f9d63');
+      const el=document.getElementById('isoDonut'); if(el){
+        const R=42, C=2*Math.PI*R, off=C-(C*pct/100);
+        el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="'+R+'" fill="none" stroke="#eef2f7" stroke-width="11"/>'+
+          '<circle cx="50" cy="50" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" style="transition:stroke-dashoffset .9s cubic-bezier(.22,.61,.36,1);"/></svg>'+
+          '<div class="isoc-center"><b style="color:'+col+';">'+pct+'%</b><span>Terisolir</span></div>';
+        requestAnimationFrame(()=>{ const a=el.querySelector('circle:last-child'); if(a)a.style.strokeDashoffset=off; });
+      }
+      const ico=document.getElementById('icoIso'); if(ico)ico.textContent=iso;
+      const ica=document.getElementById('icoActive'); if(ica)ica.textContent=elig;
+      const icd=document.getElementById('icoDev'); if(icd)icd.textContent=(d.devices&&d.devices.online!=null?d.devices.online:0)+'/'+(d.devices&&d.devices.total!=null?d.devices.total:0);
+    }
+    var PENDING = null; // {id, name, action}
+
+    var METHOD_LABEL = { hotspot_binding:'Hotspot', static:'Static IP', pppoe:'PPPoE', unknown:'—' };
+
+    function methodOf(c){
+      if(c.isolir_method) return c.isolir_method;
+      if(c.connection_type==='hotspot' && c.mac_address) return 'hotspot_binding';
+      if(c.pppoe_username) return 'pppoe';
+      if(c.static_ip) return 'static';
+      return 'unknown';
+    }
+    function canIsolir(c){ return methodOf(c)!=='unknown' && !!c.mikrotik_id; }
+
+    // Format tanggal jatuh tempo + status warna berdasarkan selisih hari
+    function dueInfo(c){
+      const raw = c.last_due;
+      if(!raw) return null;
+      const d = new Date(raw);
+      if(isNaN(d.getTime())) return null;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const due = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diff = Math.round((due - today) / 86400000); // >0 = akan datang, <0 = lewat
+      const label = due.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+      let cls='due-ok', note='';
+      if(diff < 0){ cls='due-late'; note=' · lewat '+Math.abs(diff)+'h'; }
+      else if(diff === 0){ cls='due-late'; note=' · hari ini'; }
+      else if(diff <= 3){ cls='due-soon'; note=' · '+diff+'h lagi'; }
+      return { cls:cls, text:'JT '+label+note };
+    }
+
+    function custCard(c){
+      const nm=c.name||'Pelanggan';
+      const cid=c.customer_id||'';
+      const conn=c.static_ip||c.pppoe_username||c.mac_address||'';
+      const init=(nm[0]||'?').toUpperCase();
+      const isolated = c.isolir_status==='isolated' || c.isolir_status==='restoring';
+      const meta=[cid,conn].filter(Boolean).join(' · ');
+      const method=methodOf(c);
+      const eligible=canIsolir(c);
+      const busy = STATE.busyId===c.id;
+
+      const due = dueInfo(c);
+      const tags = '<span class="tag m">'+esc(METHOD_LABEL[method]||'—')+'</span>'
+                 + (c.package_name?'<span class="tag">'+esc(c.package_name)+'</span>':'')
+                 + (due?'<span class="tag '+due.cls+'">'+esc(due.text)+'</span>':'');
+
+      var actionHtml;
+      if(isolated){
+        actionHtml = '<span class="st-badge st-iso">Terisolir</span>'
+                   + '<button class="btn-act btn-res" '+(busy?'disabled':'')+' onclick="askAction('+c.id+',&quot;restore&quot;,&quot;'+esc(nm).replace(/"/g,'&quot;')+'&quot;)">'+(busy?'…':'Restore')+'</button>';
+      } else {
+        actionHtml = '<span class="st-badge st-act">Aktif</span>'
+                   + '<button class="btn-act btn-iso" '+((eligible&&!busy)?'':'disabled')+' onclick="askAction('+c.id+',&quot;isolir&quot;,&quot;'+esc(nm).replace(/"/g,'&quot;')+'&quot;)">'+(busy?'…':'Isolir')+'</button>';
+      }
+
+      return '<div class="iso">'
+           + '<div class="iso-av '+(isolated?'on':'off')+'">'+esc(init)+'</div>'
+           + '<div class="iso-body"><div class="iso-t">'+esc(nm)+'</div><div class="iso-s">'+esc(meta||'—')+'</div><div class="iso-tags">'+tags+'</div></div>'
+           + '<div class="iso-act">'+actionHtml+'</div>'
+           + '</div>';
+    }
+
+    function renderList(){
+      const q=(document.getElementById('searchInput').value||'').trim().toLowerCase();
+      let rows = STATE.tab==='isolated' ? STATE.isolated : STATE.all;
+      if(q){
+        rows = rows.filter(c=>{
+          return [(c.name||''),(c.customer_id||''),(c.static_ip||''),(c.pppoe_username||''),(c.mac_address||''),(c.package_name||'')]
+                 .join(' ').toLowerCase().indexOf(q)>=0;
+        });
+      }
+      const list=document.getElementById('isoList');
+      if(rows.length){ list.innerHTML=rows.map(custCard).join(''); }
+      else{
+        const msg = STATE.tab==='isolated' ? 'Tidak ada pelanggan terisolir' : (q?'Tidak ada hasil pencarian':'Belum ada data pelanggan');
+        list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><div>'+esc(msg)+'</div></div>';
+      }
+    }
+
+    function switchTab(t){
+      STATE.tab=t;
+      document.getElementById('tabIso').classList.toggle('active',t==='isolated');
+      document.getElementById('tabAll').classList.toggle('active',t==='all');
+      document.getElementById('listTitle').textContent = t==='isolated' ? 'Daftar Pelanggan Terisolir' : 'Semua Pelanggan';
+      renderList();
+    }
+
+    // ── Confirm flow ──
+    function askAction(id,action,name){
+      PENDING={id:id,action:action,name:name};
+      const isIso=action==='isolir';
+      document.getElementById('cfIcon').className='cf-ic '+(isIso?'iso':'res');
+      document.getElementById('cfIcon').innerHTML = isIso
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>';
+      document.getElementById('cfTitle').textContent = isIso?'Isolir Pelanggan?':'Restore Pelanggan?';
+      document.getElementById('cfMsg').innerHTML = isIso
+        ? 'Koneksi internet <b>'+esc(name)+'</b> akan diputus sampai dilakukan restore.'
+        : 'Koneksi internet <b>'+esc(name)+'</b> akan diaktifkan kembali.';
+      const ok=document.getElementById('cfOk');
+      ok.className='cf-ok '+(isIso?'iso':'res');
+      ok.textContent = isIso?'Ya, Isolir':'Ya, Restore';
+      ok.disabled=false;
+      document.getElementById('cfOverlay').classList.add('open');
+    }
+    function closeConfirm(){ document.getElementById('cfOverlay').classList.remove('open'); PENDING=null; }
+
+    async function doAction(){
+      if(!PENDING) return;
+      const {id,action,name}=PENDING;
+      const ok=document.getElementById('cfOk'); ok.disabled=true; ok.textContent='Memproses…';
+      const url='/api/isolir/customers/'+id+'/'+(action==='isolir'?'isolir':'restore');
+      const res=await api(url,'POST',{});
+      document.getElementById('cfOverlay').classList.remove('open');
+      PENDING=null;
+      if(res&&res.success){
+        toast((action==='isolir'?'Berhasil isolir ':'Berhasil restore ')+name);
+        await loadAll(false);
+      } else {
+        toast((res&&res.message)?res.message:'Gagal memproses aksi');
+      }
+    }
+
+    // ── Load ──
+    async function loadAll(manual){
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+
+      const st=await api('/api/isolir/stats');
+      if(st&&st.success){ const d=st.data;
+        document.getElementById('isoCount').textContent=d.isolated!=null?d.isolated:'–';
+        document.getElementById('isoEligible').textContent=d.with_ip!=null?d.with_ip:'–';
+        document.getElementById('isoDevices').textContent=(d.devices&&d.devices.online!=null?d.devices.online:'–')+(d.devices&&d.devices.total!=null?('/'+d.devices.total):'');
+        document.getElementById('isoLog').textContent=d.log_24h!=null?d.log_24h:'–';
+        renderIsoDonut(d);
+      }
+
+      const [allRes, isoRes] = await Promise.all([
+        api('/api/isolir/eligible'),
+        api('/api/isolir/isolated')
+      ]);
+
+      STATE.all = (allRes&&allRes.success)?(Array.isArray(allRes.data)?allRes.data:(allRes.data&&allRes.data.rows?allRes.data.rows:[])):[];
+      STATE.isolated = (isoRes&&isoRes.success)?(Array.isArray(isoRes.data)?isoRes.data:(isoRes.data&&isoRes.data.rows?isoRes.data.rows:[])):[];
+
+      document.getElementById('cntAll').textContent=STATE.all.length;
+      document.getElementById('cntIso').textContent=STATE.isolated.length;
+
+      renderList();
+      document.getElementById('isoUpdated').textContent='Diperbarui '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      if(manual){ setTimeout(()=>btn.classList.remove('spin'),600); toast('Data diperbarui'); }
+    }
+
+    (function(){ const cf=document.getElementById('cfOverlay'); if(cf){ cf.addEventListener('click',function(e){ if(e.target===this)closeConfirm(); }); } })();
+    loadAll(false);
+  </script>
+</body>
+</html>

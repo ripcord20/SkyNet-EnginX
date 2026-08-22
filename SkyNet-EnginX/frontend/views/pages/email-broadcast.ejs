@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{--d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;--d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;}
+    .eb-page{font-family:'DM Sans',sans-serif;}
+
+    /* ── Stat cards strip (clickable, blue-active) ── */
+    .eb-grid{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:16px;border:1px solid #e8eaed;overflow:hidden;margin-bottom:20px;}
+    .eb-card{padding:20px 22px 18px;border-right:1px solid #e8eaed;display:flex;flex-direction:column;cursor:pointer;position:relative;overflow:hidden;transition:background .15s;}
+    .eb-card::before,.eb-card::after{display:none!important;content:none!important;}
+    .eb-card:last-child{border-right:none;}
+    .eb-card:hover{background:#fafbff;}
+    .eb-card.xc-active{background:#2563eb;border-color:#2563eb;}
+    .eb-card.xc-active:hover{background:#1d4ed8;}
+    .eb-card.xc-active .eb-lbl{color:rgba(255,255,255,.70);}
+    .eb-card.xc-active .eb-val{color:#fff;}
+    .eb-card.xc-active .eb-sub{color:rgba(255,255,255,.60);}
+    .eb-card.xc-active .eb-pill{background:rgba(255,255,255,.20)!important;color:rgba(255,255,255,.92)!important;}
+    .eb-lbl{font-size:12px;font-weight:500;color:#64748b;margin-bottom:9px;letter-spacing:.1px;transition:color .15s;}
+    .eb-val{font-size:28px;font-weight:800;color:#0f172a;letter-spacing:-1.1px;line-height:1;transition:color .15s;}
+    @media(max-width:1400px){.eb-val{font-size:24px;}}
+    .eb-meta{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap;}
+    .eb-pill{display:inline-flex;align-items:center;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;white-space:nowrap;transition:all .15s;}
+    .eb-pill.blue{background:#dbeafe;color:#1d4ed8;}
+    .eb-pill.green{background:#dcfce7;color:#16a34a;}
+    .eb-pill.red{background:#fee2e2;color:#dc2626;}
+    .eb-pill.teal{background:#cffafe;color:#0e7490;}
+    .eb-sub{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s;}
+    @media(max-width:700px){
+      .eb-grid{grid-template-columns:repeat(2,1fr);}
+      .eb-card{border-right:none;border-bottom:1px solid #e8eaed;}
+      .eb-card:nth-child(odd){border-right:1px solid #e8eaed;}
+      .eb-card:nth-last-child(-n+2){border-bottom:none;}
+    }
+    @media(max-width:400px){
+      .eb-grid{grid-template-columns:1fr;}
+      .eb-card{border-right:none!important;border-bottom:1px solid #e8eaed;}
+      .eb-card:last-child{border-bottom:none;}
+    }
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .35s ease both}.a2{animation:fadeUp .35s .07s ease both}
+    .a3{animation:fadeUp .35s .14s ease both}.a5{animation:fadeUp .35s .28s ease both}
+
+    /* ── Layout ── */
+    .eb-layout{display:grid;grid-template-columns:330px 1fr;gap:16px;align-items:start;}
+    @media(max-width:1020px){.eb-layout{grid-template-columns:1fr;}}
+
+    /* ── Form panel ── */
+    .form-panel{background:#fff;border:1px solid var(--d-border);border-radius:20px;overflow:hidden;position:sticky;top:78px;}
+    @media(max-width:1020px){.form-panel{position:static;}}
+    .form-panel-hdr{padding:16px 18px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f8faff,#f0f4ff);}
+    .form-panel-body{padding:18px;}
+
+    .pf-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:5px;}
+    .pf-input,.pf-select{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--d-text);transition:all .15s;}
+    .pf-input:focus,.pf-select:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-textarea{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:12.5px;box-sizing:border-box;font-family:'DM Sans',sans-serif;resize:vertical;min-height:120px;outline:none;line-height:1.7;transition:all .15s;}
+    .pf-textarea:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-field{margin-bottom:12px;}
+
+    /* Kategori chips */
+    .cat-chips{display:flex;gap:5px;flex-wrap:wrap;}
+    .cat-chip{padding:6px 11px;border-radius:9px;border:1.5px solid var(--d-border);background:#fff;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;color:#64748b;font-family:inherit;}
+    .cat-chip .dot{width:7px;height:7px;border-radius:50%;}
+    .cat-chip[data-cat="gangguan"] .dot{background:#dc2626;}
+    .cat-chip[data-cat="maintenance"] .dot{background:#b45309;}
+    .cat-chip[data-cat="promo"] .dot{background:#16a34a;}
+    .cat-chip[data-cat="billing"] .dot{background:#1d4ed8;}
+    .cat-chip[data-cat="info"] .dot{background:#1e3a8a;}
+    .cat-chip.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff;}
+    .cat-chip.active .dot{background:#fff;}
+    .cat-chip:hover:not(.active){border-color:#1e3a8a;color:#1e3a8a;}
+
+    /* Placeholder chips */
+    .var-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+    .var-chip{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;padding:2px 7px;border-radius:6px;cursor:pointer;transition:all .12s;}
+    .var-chip:hover{background:#1e3a8a;border-color:#1e3a8a;color:#fff;}
+
+    /* Target tabs */
+    .target-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+    .ttab{padding:5px 11px;border-radius:20px;border:1.5px solid var(--d-border);background:#fff;color:var(--d-muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit;}
+    .ttab.active{background:var(--d-blue1);border-color:var(--d-blue1);color:#fff;}
+    .ttab:hover:not(.active){border-color:var(--d-blue1);color:var(--d-blue1);}
+
+    .target-count-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#1a6ef5;background:#eff6ff;border:1px solid #bfdbfe;padding:4px 10px;border-radius:8px;margin-top:6px;}
+
+    /* SMTP status box */
+    .smtp-box{border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;border:1.5px solid;}
+    .smtp-box.ok{background:#f0fdf4;border-color:#bbf7d0;}
+    .smtp-box.warn{background:#fffbeb;border-color:#fde68a;}
+
+    .eb-btn{width:100%;padding:10px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;}
+    .eb-btn:hover{opacity:.9;transform:translateY(-1px);}
+    .eb-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .eb-btn-green{background:linear-gradient(135deg,#00c896,#00a07a);color:#fff;}
+    .eb-btn-blue{background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;}
+    .eb-btn-ghost{background:#f4f8ff;border:1.5px solid var(--d-border);color:var(--d-blue1);}
+
+    /* ── List panel ── */
+    .list-panel{background:#fff;border:1px solid var(--d-border);border-radius:20px;overflow:hidden;}
+    .list-panel-hdr{padding:14px 18px;border-bottom:1px solid #f0f4ff;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .list-filter{padding:7px 11px;border:1.5px solid var(--d-border);border-radius:9px;font-size:12px;outline:none;background:#f8faff;font-family:inherit;color:var(--d-text);}
+
+    .eb-table{width:100%;border-collapse:collapse;}
+    .eb-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);border-bottom:1px solid #f0f4ff;background:#fafbff;}
+    .eb-table td{padding:11px 14px;font-size:12.5px;border-bottom:1px solid #f5f8ff;color:var(--d-text);vertical-align:middle;}
+    .eb-table tr:hover td{background:#fafbff;}
+
+    .st-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;}
+    .st-draft{background:#f1f5f9;color:#64748b;}
+    .st-scheduled{background:#fef3c7;color:#b45309;}
+    .st-running{background:#dbeafe;color:#1d4ed8;}
+    .st-completed{background:#dcfce7;color:#16a34a;}
+    .st-cancelled{background:#f1f5f9;color:#94a3b8;}
+    .st-failed{background:#fee2e2;color:#dc2626;}
+
+    .cat-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+    .cat-gangguan{background:#fef2f2;color:#dc2626;}
+    .cat-maintenance{background:#fffbeb;color:#b45309;}
+    .cat-promo{background:#f0fdf4;color:#16a34a;}
+    .cat-billing{background:#eff6ff;color:#1d4ed8;}
+    .cat-info{background:#f8fafc;color:#1e3a8a;}
+
+    .prog-wrap{width:100%;max-width:120px;}
+    .prog-bar{height:5px;border-radius:99px;background:#eef2f9;overflow:hidden;}
+    .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1a6ef5,#00c896);transition:width .5s;}
+    .prog-txt{font-size:10.5px;color:var(--d-muted);margin-top:3px;}
+
+    .act-btn{width:27px;height:27px;border-radius:7px;border:1.5px solid var(--d-border);background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;margin-left:3px;}
+    .act-btn:hover{border-color:var(--d-blue1);background:#eff6ff;}
+    .act-btn.danger:hover{border-color:#dc2626;background:#fef2f2;}
+
+    .tbl-empty{padding:42px 16px;text-align:center;color:var(--d-muted);font-size:12.5px;}
+    .tbl-empty svg{width:36px;height:36px;margin-bottom:8px;opacity:.35;}
+
+    /* Mobile cards */
+    .eb-cards{display:none;}
+    @media(max-width:760px){
+      .eb-table-wrap{display:none;}
+      .eb-cards{display:flex;flex-direction:column;gap:0;}
+      .ebc-item{padding:13px 16px;border-bottom:1px solid #f0f4ff;}
+      .form-panel-body{padding:14px;}
+    }
+
+    /* ── Modal ── */
+    .eb-modal-bg{position:fixed;inset:0;background:rgba(13,27,62,.45);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+    .eb-modal-bg.open{display:flex;}
+    .eb-modal{background:#fff;border-radius:18px;width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;animation:fadeUp .25s ease;}
+    .eb-modal.lg{max-width:680px;}
+    .eb-modal-hdr{padding:15px 18px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;justify-content:space-between;}
+    .eb-modal-body{padding:18px;overflow-y:auto;flex:1;}
+    .eb-modal-close{width:29px;height:29px;border-radius:8px;border:none;background:#f1f5f9;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;}
+    .eb-modal-close:hover{background:#e2e8f0;}
+
+    .preview-frame{width:100%;height:60vh;border:1.5px solid var(--d-border);border-radius:12px;background:#eef2f9;}
+
+    /* Customer picker */
+    .cp-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid #f5f8ff;cursor:pointer;}
+    .cp-row:hover{background:#fafbff;}
+    .cp-check{width:16px;height:16px;accent-color:#1a6ef5;flex-shrink:0;}
+    .cp-name{font-size:12.5px;font-weight:600;color:var(--d-text);}
+    .cp-detail{font-size:11px;color:var(--d-muted);}
+
+    @media(max-width:640px){
+      .form-panel-body{padding:14px;}
+      .eb-modal{max-height:92vh;}
+      .preview-frame{height:55vh;}
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout eb-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;" class="a1">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;color:#0d1b3e;margin:0 0 3px;">Broadcast Email</h1>
+          <p style="font-size:12.5px;color:var(--d-muted);margin:0;">Kirim email massal branded ke pelanggan — gangguan, promo, maintenance, dan informasi lainnya</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="eb-grid a2">
+        <div class="eb-card xc-active" data-filter="" onclick="ebCardClick(this)">
+          <div class="eb-lbl">Total Broadcast</div>
+          <span class="eb-val" id="stTotal">0</span>
+          <div class="eb-meta"><span class="eb-pill blue" id="stTotalPill">0</span><span class="eb-sub">Semua riwayat</span></div>
+        </div>
+        <div class="eb-card" data-filter="completed" onclick="ebCardClick(this)">
+          <div class="eb-lbl">Email Terkirim</div>
+          <span class="eb-val" id="stSent">0</span>
+          <div class="eb-meta"><span class="eb-pill green">total</span><span class="eb-sub">Akumulasi semua broadcast</span></div>
+        </div>
+        <div class="eb-card" data-filter="running" onclick="ebCardClick(this)">
+          <div class="eb-lbl">Berjalan / Terjadwal</div>
+          <span class="eb-val" id="stRunning">0</span>
+          <div class="eb-meta"><span class="eb-pill teal" id="stRunningPill">-</span><span class="eb-sub" id="stRunningSub">tidak ada</span></div>
+        </div>
+        <div class="eb-card" data-filter="__coverage" onclick="ebCardClick(this)">
+          <div class="eb-lbl">Pelanggan Punya Email</div>
+          <span class="eb-val" id="stCoverage">0</span>
+          <div class="eb-meta"><span class="eb-pill blue">coverage</span><span class="eb-sub">Jangkauan maksimal broadcast</span></div>
+        </div>
+      </div>
+
+      <!-- Main layout -->
+      <div class="eb-layout a5">
+
+        <!-- ════════ Form Panel ════════ -->
+        <div class="form-panel">
+          <div class="form-panel-hdr">
+            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#1e3a8a,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--d-text);">Buat Broadcast Email</div>
+              <div style="font-size:11px;color:var(--d-muted);">Email branded otomatis dengan header perusahaan</div>
+            </div>
+          </div>
+          <div class="form-panel-body">
+
+            <!-- SMTP status -->
+            <div class="smtp-box warn" id="smtpBox" style="display:none;">
+              <svg width="14" height="14" fill="none" stroke="#b45309" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <div>
+                <div style="font-size:11.5px;font-weight:700;color:#b45309;">SMTP Belum Dikonfigurasi</div>
+                <div style="font-size:11px;color:#b45309;margin-top:1px;">Atur dulu di <a href="/settings" style="color:#b45309;font-weight:700;">Settings &gt; Email</a> sebelum broadcast</div>
+              </div>
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label">Judul Internal *</label>
+              <input type="text" class="pf-input" id="ebTitle" placeholder="Contoh: Info Gangguan Area Cibinong">
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label">Kategori</label>
+              <div class="cat-chips" id="catChips">
+                <button type="button" class="cat-chip active" data-cat="info" onclick="setCategory('info',this)"><span class="dot"></span>Info</button>
+                <button type="button" class="cat-chip" data-cat="gangguan" onclick="setCategory('gangguan',this)"><span class="dot"></span>Gangguan</button>
+                <button type="button" class="cat-chip" data-cat="maintenance" onclick="setCategory('maintenance',this)"><span class="dot"></span>Maintenance</button>
+                <button type="button" class="cat-chip" data-cat="promo" onclick="setCategory('promo',this)"><span class="dot"></span>Promo</button>
+                <button type="button" class="cat-chip" data-cat="billing" onclick="setCategory('billing',this)"><span class="dot"></span>Billing</button>
+              </div>
+              <div style="font-size:10.5px;color:var(--d-muted);margin-top:4px;">Menentukan warna banner pada email</div>
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label">Subjek Email *</label>
+              <input type="text" class="pf-input" id="ebSubject" placeholder="Contoh: Informasi Gangguan Jaringan - {perusahaan}">
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label" style="display:flex;justify-content:space-between;">
+                <span>Isi Pesan *</span>
+                <span id="ebMsgCount" style="font-weight:400;color:var(--d-muted);text-transform:none;letter-spacing:0;">0 karakter</span>
+              </label>
+              <textarea class="pf-textarea" id="ebMessage" placeholder="Yth. {nama},&#10;&#10;Kami informasikan bahwa..." oninput="updateMsgCount()"></textarea>
+              <div class="var-chips" id="varChips">
+                <span class="var-chip" onclick="insertVar('{nama}')">{nama}</span>
+                <span class="var-chip" onclick="insertVar('{cid}')">{cid}</span>
+                <span class="var-chip" onclick="insertVar('{paket}')">{paket}</span>
+                <span class="var-chip" onclick="insertVar('{harga}')">{harga}</span>
+                <span class="var-chip" onclick="insertVar('{alamat}')">{alamat}</span>
+                <span class="var-chip" onclick="insertVar('{invoice}')">{invoice}</span>
+                <span class="var-chip" onclick="insertVar('{jumlah}')">{jumlah}</span>
+                <span class="var-chip" onclick="insertVar('{jatuh_tempo}')">{jatuh_tempo}</span>
+                <span class="var-chip" onclick="insertVar('{perusahaan}')">{perusahaan}</span>
+              </div>
+            </div>
+
+            <!-- Target -->
+            <div class="pf-field">
+              <label class="pf-label">Target Penerima</label>
+              <div class="target-tabs" id="targetTabs">
+                <button type="button" class="ttab active" onclick="setTarget('all',this)">Semua</button>
+                <button type="button" class="ttab" onclick="setTarget('active',this)">Aktif</button>
+                <button type="button" class="ttab" onclick="setTarget('overdue',this)">Overdue</button>
+                <button type="button" class="ttab" onclick="setTarget('by_package',this)">Per Paket</button>
+                <button type="button" class="ttab" onclick="setTarget('by_area',this)">Per Area</button>
+                <button type="button" class="ttab" onclick="setTarget('custom',this)">Manual</button>
+              </div>
+              <input type="hidden" id="ebTargetType" value="all">
+              <div id="targetCountWrap" style="display:none;margin-top:7px;">
+                <span class="target-count-badge">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                  <span id="targetCountNum">0</span> penerima email
+                </span>
+              </div>
+              <div id="pkgPanel" style="display:none;margin-top:8px;">
+                <select class="pf-select" id="ebPackage" onchange="updateTargetCount()">
+                  <option value="">Pilih paket</option>
+                </select>
+              </div>
+              <div id="areaPanel" style="display:none;margin-top:8px;">
+                <div style="font-size:10.5px;color:var(--d-muted);margin-bottom:7px;line-height:1.5;">Filter berjenjang sesuai data alamat pelanggan. Kosongkan level di bawah untuk menargetkan seluruh wilayah di atasnya.</div>
+                <div class="pf-field" style="margin-bottom:8px;">
+                  <label class="pf-label">Provinsi</label>
+                  <select class="pf-select" id="areaProvince" onchange="onAreaChange('province')">
+                    <option value="">Semua provinsi</option>
+                  </select>
+                </div>
+                <div class="pf-field" style="margin-bottom:8px;">
+                  <label class="pf-label">Kabupaten / Kota</label>
+                  <select class="pf-select" id="areaRegency" onchange="onAreaChange('regency')" disabled>
+                    <option value="">Semua kab/kota</option>
+                  </select>
+                </div>
+                <div class="pf-field" style="margin-bottom:8px;">
+                  <label class="pf-label">Kecamatan</label>
+                  <select class="pf-select" id="areaDistrict" onchange="onAreaChange('district')" disabled>
+                    <option value="">Semua kecamatan</option>
+                  </select>
+                </div>
+                <div class="pf-field" style="margin-bottom:0;">
+                  <label class="pf-label">Kelurahan / Desa</label>
+                  <select class="pf-select" id="areaVillage" onchange="onAreaChange('village')" disabled>
+                    <option value="">Semua kelurahan/desa</option>
+                  </select>
+                </div>
+              </div>
+              <div id="manualPanel" style="display:none;margin-top:8px;">
+                <div id="customModeTabs" style="display:flex;gap:0;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:8px;">
+                  <button type="button" class="cmtab active" data-mode="manual" onclick="setCustomMode('manual',this)" style="flex:1;padding:7px 10px;border:none;background:#fff;border-radius:6px;font-size:11.5px;font-weight:600;color:#0d1b3e;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                    Ketik Email Manual
+                  </button>
+                  <button type="button" class="cmtab" data-mode="pick" onclick="setCustomMode('pick',this)" style="flex:1;padding:7px 10px;border:none;background:transparent;border-radius:6px;font-size:11.5px;font-weight:500;color:#64748b;cursor:pointer;font-family:inherit;">
+                    Pilih dari Customer
+                  </button>
+                </div>
+                <div id="manualModeBox">
+                  <textarea class="pf-textarea" id="ebManual" rows="3" placeholder="budi@gmail.com&#10;siti@yahoo.com&#10;(satu alamat per baris)" style="min-height:70px;font-family:'DM Mono',monospace;font-size:12px;" oninput="countManual()"></textarea>
+                  <div style="font-size:11px;color:var(--d-muted);margin-top:3px;" id="manualCount">0 alamat valid</div>
+                </div>
+                <div id="pickModeBox" style="display:none;">
+                  <button type="button" onclick="openCustomerPicker()" style="width:100%;padding:10px 12px;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;border:none;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span id="pickerBtnLbl">Buka Daftar Customer</span>
+                  </button>
+                  <div id="pickerSummary" style="margin-top:6px;font-size:11.5px;color:var(--d-muted);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interval + Jadwal -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="pf-field" style="margin-bottom:0;">
+                <label class="pf-label">Interval (detik)</label>
+                <input type="number" class="pf-input" id="ebInterval" value="2" min="1" max="120">
+                <div style="font-size:10px;color:var(--d-muted);margin-top:2px;">Jeda antar email</div>
+              </div>
+              <div class="pf-field" style="margin-bottom:0;">
+                <label class="pf-label">Jadwal (opsional)</label>
+                <input type="datetime-local" class="pf-input" id="ebScheduled">
+                <div style="font-size:10px;color:var(--d-muted);margin-top:2px;">Kosong = sekarang</div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:14px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+                <button class="eb-btn eb-btn-ghost" onclick="openPreview()" style="padding:9px;">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  Preview
+                </button>
+                <button class="eb-btn eb-btn-ghost" onclick="openTestModal()" style="padding:9px;">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Kirim Test
+                </button>
+              </div>
+              <button class="eb-btn eb-btn-green" onclick="createBroadcast('now')" id="btnSendNow">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Kirim Sekarang
+              </button>
+              <button class="eb-btn eb-btn-blue" onclick="createBroadcast('schedule')" id="btnSchedule">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Jadwalkan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════ List Panel ════════ -->
+        <div class="list-panel">
+          <div class="list-panel-hdr">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">Riwayat Broadcast Email</div>
+              <div style="font-size:11.5px;color:var(--d-muted);margin-top:1px;" id="ebListSub">-</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <select class="list-filter" id="filterCategory" onchange="loadBroadcasts()">
+                <option value="">Semua kategori</option>
+                <option value="gangguan">Gangguan</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="promo">Promo</option>
+                <option value="billing">Billing</option>
+                <option value="info">Info</option>
+              </select>
+              <select class="list-filter" id="filterStatus" onchange="loadBroadcasts()">
+                <option value="">Semua status</option>
+                <option value="draft">Draft</option>
+                <option value="scheduled">Terjadwal</option>
+                <option value="running">Berjalan</option>
+                <option value="completed">Selesai</option>
+                <option value="cancelled">Dibatalkan</option>
+                <option value="failed">Gagal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Desktop table -->
+          <div class="eb-table-wrap" style="overflow-x:auto;">
+            <table class="eb-table">
+              <thead><tr>
+                <th>Broadcast</th><th>Kategori</th><th>Target</th><th>Progress</th><th>Status</th><th style="text-align:right;">Aksi</th>
+              </tr></thead>
+              <tbody id="ebTable">
+                <tr><td colspan="6"><div class="tbl-empty">Memuat data...</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="eb-cards" id="ebCards"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════════ Modal: Preview Email ════════ -->
+<div class="eb-modal-bg" id="previewModal">
+  <div class="eb-modal lg">
+    <div class="eb-modal-hdr">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--d-text);">Preview Email</div>
+        <div style="font-size:11px;color:var(--d-muted);margin-top:1px;" id="previewSubject">-</div>
+      </div>
+      <button class="eb-modal-close" onclick="closeModal('previewModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="eb-modal-body">
+      <iframe class="preview-frame" id="previewFrame" sandbox=""></iframe>
+      <div style="font-size:11px;color:var(--d-muted);margin-top:8px;">Preview menggunakan data contoh pelanggan. Placeholder akan diganti data asli tiap penerima saat dikirim.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Modal: Kirim Test ════════ -->
+<div class="eb-modal-bg" id="testModal">
+  <div class="eb-modal" style="max-width:420px;">
+    <div class="eb-modal-hdr">
+      <div style="font-size:14px;font-weight:700;color:var(--d-text);">Kirim Email Test</div>
+      <button class="eb-modal-close" onclick="closeModal('testModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="eb-modal-body">
+      <label class="pf-label">Alamat Email Tujuan</label>
+      <input type="email" class="pf-input" id="testEmailTo" placeholder="email@anda.com">
+      <div style="font-size:11px;color:var(--d-muted);margin:6px 0 14px;">Email akan dikirim dengan prefix [TEST] memakai subjek &amp; isi pesan dari form, dengan data contoh pelanggan.</div>
+      <button class="eb-btn eb-btn-blue" onclick="sendTest()" id="btnSendTest">Kirim Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Modal: Customer Picker ════════ -->
+<div class="eb-modal-bg" id="pickerModal">
+  <div class="eb-modal">
+    <div class="eb-modal-hdr">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--d-text);">Pilih Customer</div>
+        <div style="font-size:11px;color:var(--d-muted);margin-top:1px;">Hanya menampilkan customer dengan alamat email</div>
+      </div>
+      <button class="eb-modal-close" onclick="closeModal('pickerModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="eb-modal-body" style="padding-top:12px;">
+      <input type="text" class="pf-input" id="cpSearch" placeholder="Cari nama / CID / email..." oninput="cpSearchDebounced()">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:9px 0 4px;">
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--d-muted);cursor:pointer;">
+          <input type="checkbox" class="cp-check" id="cpSelectAll" onchange="cpToggleAll(this.checked)"> Pilih semua hasil
+        </label>
+        <span style="font-size:11.5px;font-weight:700;color:#1a6ef5;" id="cpSelectedCount">0 terpilih</span>
+      </div>
+      <div id="cpList" style="min-height:200px;max-height:46vh;overflow-y:auto;"></div>
+      <button class="eb-btn eb-btn-blue" style="margin-top:12px;" onclick="cpApply()">Gunakan Customer Terpilih</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ Modal: Detail Broadcast ════════ -->
+<div class="eb-modal-bg" id="detailModal">
+  <div class="eb-modal">
+    <div class="eb-modal-hdr">
+      <div style="font-size:14px;font-weight:700;color:var(--d-text);">Detail Broadcast</div>
+      <button class="eb-modal-close" onclick="closeModal('detailModal')">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="eb-modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/email-broadcast.js"></script>
+</body></html>

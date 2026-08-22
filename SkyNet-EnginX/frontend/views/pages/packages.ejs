@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3;
+      --d-text:#0d1b3e; --d-muted:#6b7fa8;
+      --d-blue1:#1a6ef5; --d-blue2:#0047cc;
+      --d-green:#00c896; --d-red:#f5365c; --d-orange:#fb8c00;
+    }
+    .pkg-page { font-family:'DM Sans',sans-serif; background:var(--d-bg) !important; }
+    .btn-outline { background:#fff; border:1.5px solid var(--d-border); color:#374151; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue { background:linear-gradient(135deg,#1a6ef5,#0047cc); border:none; color:#fff; padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; transition:all .15s; }
+    .btn-blue:hover { opacity:.9; }
+    /* ── STAT CARDS — single strip ── */
+    .fin-grid, .fin-grid-4 {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .fin-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .fin-card::before, .fin-card::after { display:none !important; content:none !important; }
+    .fin-card .b1,.fin-card .b2,.fin-card .b3,
+    .fin-card .orb,.fin-card .orb1,.fin-card .orb2 { display:none !important; }
+    .fin-card:last-child { border-right: none; }
+    .fin-card:hover { background: #fafbff; }
+    .fin-card.fc-active { background: #2563eb; border-color: #2563eb; }
+    .fin-card.fc-active:hover { background: #1d4ed8; }
+    .fin-card.fc-active .xc-lbl  { color: rgba(255,255,255,.70); }
+    .fin-card.fc-active .xc-val  { color: #fff; }
+    .fin-card.fc-active .xc-sub  { color: rgba(255,255,255,.60); }
+    .fin-card.fc-active .xc-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fin-card.fc-active .sp-line { stroke: rgba(255,255,255,.70) !important; }
+    .fin-card.fc-active .sp-fill { fill: rgba(255,255,255,.12) !important; }
+    .fin-card.fc-active .sp-dot  { fill: #fff !important; }
+    .xc-lbl  { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; transition:color .15s; }
+    .xc-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .xc-left { display:flex; flex-direction:column; min-width:0; }
+    .xc-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .xc-val { font-size:26px; } }
+    .xc-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .xc-pill { display:inline-flex; align-items:center; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .xc-blue   { background:#dbeafe; color:#1d4ed8; }
+    .xc-green  { background:#dcfce7; color:#16a34a; }
+    .xc-red    { background:#fee2e2; color:#dc2626; }
+    .xc-amber  { background:#fef3c7; color:#b45309; }
+    .xc-teal   { background:#cffafe; color:#0e7490; }
+    .xc-orange { background:#ffedd5; color:#c2410c; }
+    .xc-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .xc-spark { flex-shrink:0; width:72px; height:36px; }
+    .xc-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:repeat(2,1fr); }
+      .fin-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .fin-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .fin-card:nth-child(even) { border-right:none; }
+      .fin-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:1fr; }
+      .fin-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+    }
+        .search-wrap { position:relative; }
+    .search-wrap input { width:100%;padding:10px 14px 10px 40px;box-sizing:border-box;border:1.5px solid var(--d-border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);background:#fff;transition:border-color .15s,box-shadow .15s;outline:none; }
+    .search-wrap input:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .search-wrap .si { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--d-muted);pointer-events:none; }
+    .filter-select { padding:10px 14px;border:1.5px solid var(--d-border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--d-text);background:#fff;cursor:pointer;outline:none;transition:border-color .15s; }
+    .filter-select:focus { border-color:var(--d-blue1); }
+    .pkg-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px; }
+    .pkg-card { background:#fff;border:1.5px solid var(--d-border);border-radius:16px;overflow:hidden;transition:all .2s;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.04); }
+    .pkg-card:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:#c4d0e8; }
+    .pkg-card.inactive { opacity:.55; }
+    .pkg-card-header { padding:18px 20px 16px;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a6ef5,#0047cc); }
+    .pkg-card-header.business   { background:linear-gradient(135deg,#0047cc,#003099); }
+    .pkg-card-header.enterprise { background:linear-gradient(135deg,#2563eb,#1e3a8a); }
+    .pkg-card-header.custom     { background:linear-gradient(135deg,#00a07a,#007a5e); }
+    .pkg-card-header::before, .pkg-card-header::after { display:none !important; content:none !important; }
+    .pkg-type-label { font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:4px; }
+    .pkg-name { font-size:18px;font-weight:800;color:#fff;line-height:1.2;margin:0 0 10px; }
+    .pkg-speed-badge { display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 11px;backdrop-filter:blur(4px); }
+    .pkg-speed-badge span { font-size:12.5px;font-weight:700;color:#fff; }
+    .pkg-inactive-tag { position:absolute;top:12px;right:12px;background:rgba(0,0,0,.35);color:rgba(255,255,255,.9);font-size:9.5px;font-weight:700;letter-spacing:.08em;padding:3px 9px;border-radius:20px;text-transform:uppercase;z-index:1; }
+    .pkg-card-body { padding:18px 22px 20px; }
+    .pkg-price-val  { font-size:26px;font-weight:800;color:var(--d-text);font-family:'DM Mono',monospace;line-height:1;display:inline; }
+    .pkg-price-per  { font-size:12px;color:var(--d-muted);font-weight:500;margin-left:4px; }
+    .pkg-desc { font-size:12.5px;color:var(--d-muted);margin:8px 0 14px;min-height:16px;line-height:1.5; }
+    .pkg-meta { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px; }
+    .pkg-meta-pill { display:flex;align-items:center;gap:5px;background:#f0f5ff;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:600;color:#3d5fc4; }
+    .pkg-meta-pill svg { color:var(--d-blue1);flex-shrink:0; }
+    .pkg-footer { display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--d-border); }
+    .pkg-cust-count { display:flex;align-items:center;gap:5px;font-size:12px;color:var(--d-muted); }
+    .pkg-cust-count strong { color:var(--d-text);font-weight:700; }
+    .rb { padding:5px 12px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;border:1.5px solid; }
+    .rb-edit { background:#fff;color:var(--d-blue1);border-color:#bfdbfe; }
+    .rb-edit:hover { background:#eef3ff; }
+    .rb-toggle-on  { background:#fff;color:#059669;border-color:#a7f3d0; }
+    .rb-toggle-on:hover  { background:#f0fdf9; }
+    .rb-toggle-off { background:#fff;color:var(--d-orange);border-color:#fde68a; }
+    .rb-toggle-off:hover { background:#fffbeb; }
+    .rb-del { background:#fff;color:#cbd5e0;border-color:#e2e8f0;padding:5px 8px; }
+    .rb-del:hover { color:var(--d-red);border-color:#fecdd3;background:#fff4f5; }
+    .pkg-empty { text-align:center;padding:60px 20px;color:var(--d-muted); }
+    .pkg-empty-icon { font-size:48px;margin-bottom:14px;opacity:.4; }
+    .pkg-empty h3 { font-size:16px;font-weight:700;margin:0 0 6px;color:var(--d-text); }
+    .modal-ov { display:none;position:fixed;inset:0;background:rgba(13,27,62,.55);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:28px 16px;backdrop-filter:blur(3px); }
+    .modal-ov.active { display:flex; }
+    .modal-bx { background:#fff;border-radius:22px;width:580px;max-width:100%;padding:30px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.18); }
+    .modal-ttl { font-size:17px;font-weight:800;color:var(--d-text);margin:0 0 22px; }
+    .modal-cls { position:absolute;top:18px;right:18px;background:var(--d-bg);border:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--d-muted);font-size:16px;transition:background .15s; }
+    .modal-cls:hover { background:var(--d-border); }
+    .flbl { display:block;font-size:11.5px;font-weight:700;color:var(--d-muted);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase; }
+    .flbl .req { color:var(--d-red); }
+    .finput { width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);outline:none;transition:border-color .15s,box-shadow .15s;background:#fff; }
+    .finput:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .finput::placeholder { color:#b0bcdc; }
+    textarea.finput { resize:vertical; }
+    .input-with-unit { display:flex;border:1.5px solid var(--d-border);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s;background:#fff; }
+    .input-with-unit:focus-within { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .input-with-unit input { flex:1;padding:10px 12px;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);background:transparent; }
+    .input-unit        { padding:10px 12px;background:#f0f5ff;font-size:12px;font-weight:700;color:var(--d-blue1);border-left:1.5px solid var(--d-border);white-space:nowrap; }
+    .input-prefix-unit { padding:10px 12px;background:#f0f5ff;font-size:12px;font-weight:700;color:var(--d-blue1);border-right:1.5px solid var(--d-border);white-space:nowrap; }
+    .color-opts { display:flex;gap:8px;flex-wrap:wrap; }
+    .color-opt { width:34px;height:34px;border-radius:9px;cursor:pointer;border:2.5px solid transparent;transition:all .15s;position:relative;display:flex;align-items:center;justify-content:center; }
+    .color-opt.sel { border-color:#0d1b3e;transform:scale(1.1); }
+    .color-opt .ck { opacity:0;color:#fff;font-weight:900;font-size:14px; }
+    .color-opt.sel .ck { opacity:1; }
+    .toast-ok  { background:#e6fff7;border:1px solid #a7f3d0;color:#00875a;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+    .toast-err { background:#fff0f2;border:1px solid #fecdd3;color:var(--d-red);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+    .del-body { text-align:center;padding:10px 0 24px; }
+    .del-icon-ring { width:68px;height:68px;border-radius:50%;background:#fff0f2;margin:0 auto 16px;display:flex;align-items:center;justify-content:center; }
+    .del-icon-ring svg { color:var(--d-red); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .a1{animation:fadeUp .45s ease both} .a2{animation:fadeUp .45s .07s ease both}
+    .a3{animation:fadeUp .45s .14s ease both} .a4{animation:fadeUp .45s .21s ease both}
+    .a5{animation:fadeUp .45s .28s ease both}
+    @media(max-width:1100px) { .fin-grid-4 { grid-template-columns:repeat(2,1fr) !important; } }
+    @media(max-width:640px) {
+      .fin-grid-4 { grid-template-columns:1fr 1fr !important;gap:10px !important; }
+      .fin-card { padding:16px !important; } .fin-card .fc-val { font-size:26px !important; }
+      .fin-card .fc-bar-bg { display:none; }
+      .pkg-grid { grid-template-columns:1fr; }
+    }
+  
+    /* ── Standardize card height (match queue.ejs) ── */
+    .fin-card { min-height: 108px; }
+    .xc-val   { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    .xc-lbl   { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    .xc-sub   { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; transition: color .15s; }
+    .xc-meta  { display: flex; align-items: center; gap: 5px; margin-top: 6px; flex-wrap: nowrap; overflow: hidden; }
+    .xc-spark { flex-shrink: 0; width: 72px; height: 36px; }
+    .xc-spark svg { width: 72px; height: 36px; }
+    @media(max-width:1400px){ .xc-val { font-size: 26px; } }
+  </style>
+</head>
+<body>
+<div class="app-layout pkg-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Toast -->
+      <div id="toastOk"  class="toast-ok  a1" style="display:none"></div>
+      <div id="toastErr" class="toast-err a1" style="display:none"></div>
+
+      <!-- PAGE HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px" class="a1">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--d-text)">Paket Layanan</div>
+          <div style="font-size:13px;color:var(--d-muted);margin-top:2px" id="pkgHeaderSub">Kelola daftar paket internet untuk pelanggan</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="openAddPkg()" class="btn-blue">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Tambah Paket
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 FIN-CARDS -->
+     
+      <div class="fin-grid">
+        <div class="fin-card fc-active" id="xc-all" data-filter="all" onclick="setFilter('all')">
+          <div class="xc-lbl">Total Paket</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scTotal">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-blue" id="xp-all">—</span>
+                <span class="xc-sub">Semua kategori</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-all" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-all-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-all-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-all-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-active" data-filter="active" onclick="setFilter('active')">
+          <div class="xc-lbl">Aktif</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scActive">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-green" id="xp-active">—</span>
+                <span class="xc-sub">Tersedia untuk pelanggan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-active" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-active-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-active-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-active-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-cuscount" data-filter="cuscount">
+          <div class="xc-lbl">Total Pelanggan</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scCustomers">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-teal" id="xp-cuscount">—</span>
+                <span class="xc-sub">Menggunakan paket aktif</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-cuscount" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-cuscount-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-cuscount-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-cuscount-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-avgprice" data-filter="avgprice">
+          <div class="xc-lbl">Rata-rata Harga</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scAvgPrice">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-amber" id="xp-avgprice">—</span>
+                <span class="xc-sub">Harga paket aktif</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-avgprice" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-avgprice-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-avgprice-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-avgprice-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER + CARDS CONTAINER -->
+      <div class="w-card a5">
+        <div style="display:flex;align-items:center;gap:10px;padding:18px 20px 16px;flex-wrap:wrap;border-bottom:1px solid var(--d-border)">
+          <div class="search-wrap" style="flex:1;max-width:280px">
+            <svg class="si" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="pkgSearch" placeholder="Cari nama, kecepatan, harga…">
+          </div>
+          <select id="filterCat" class="filter-select">
+            <option value="">Semua Kategori</option>
+            <option value="home">Home</option>
+            <option value="business">Business</option>
+            <option value="enterprise">Enterprise</option>
+            <option value="custom">Custom</option>
+          </select>
+          <select id="filterStatus" class="filter-select">
+            <option value="">Semua Status</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Non-Aktif</option>
+          </select>
+          <select id="filterSort" class="filter-select">
+            <option value="price_asc">Harga ↑</option>
+            <option value="price_desc">Harga ↓</option>
+            <option value="speed_desc">Kecepatan ↓</option>
+            <option value="name_asc">Nama A–Z</option>
+            <option value="customers_desc">Pelanggan ↓</option>
+          </select>
+          <div style="font-size:12.5px;color:var(--d-muted);margin-left:auto;font-weight:600" id="pkgCountLbl">—</div>
+        </div>
+        <div style="padding:20px">
+          <div class="pkg-grid" id="pkgGrid"></div>
+          <div class="pkg-empty" id="pkgEmpty" style="display:none">
+            <div class="pkg-empty-icon">📦</div>
+            <h3>Tidak ada paket</h3>
+            <p>Belum ada paket yang sesuai filter.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL Tambah/Edit -->
+<div id="pkgModal" class="modal-ov">
+  <div class="modal-bx">
+    <button onclick="closeModal()" class="modal-cls">✕</button>
+    <div class="modal-ttl" id="modalTitle">Tambah Paket Baru</div>
+    <div style="overflow-y:auto;max-height:72vh">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="grid-column:1/-1">
+          <label class="flbl">Nama Paket <span class="req">*</span></label>
+          <input type="text" class="finput" id="f_name" placeholder="Contoh: 50 Mbps Business">
+        </div>
+        <div>
+          <label class="flbl">Download <span class="req">*</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="f_speed_down" min="1" placeholder="50">
+            <span class="input-unit">Mbps</span>
+          </div>
+        </div>
+        <div>
+          <label class="flbl">Upload <span class="req">*</span></label>
+          <div class="input-with-unit">
+            <input type="number" id="f_speed_up" min="1" placeholder="25">
+            <span class="input-unit">Mbps</span>
+          </div>
+        </div>
+        <div>
+          <label class="flbl">Harga / Bulan <span class="req">*</span></label>
+          <div class="input-with-unit">
+            <span class="input-prefix-unit">Rp</span>
+            <input type="number" id="f_price" min="0" placeholder="150000">
+          </div>
+        </div>
+        <div>
+          <label class="flbl">Kategori</label>
+          <select class="finput" id="f_category" onchange="syncColor(this.value)">
+            <option value="home">Home</option>
+            <option value="business">Business</option>
+            <option value="enterprise">Enterprise</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="flbl">Deskripsi</label>
+          <textarea class="finput" id="f_description" rows="2" placeholder="Deskripsi singkat paket…"></textarea>
+        </div>
+        <div>
+          <label class="flbl">Warna Kartu</label>
+          <div class="color-opts" id="colorOpts">
+            <div class="color-opt sel" data-c="home"       style="background:linear-gradient(135deg,#1a6ef5,#0047cc)" title="Blue"><span class="ck">✓</span></div>
+            <div class="color-opt"     data-c="business"   style="background:linear-gradient(135deg,#0047cc,#003099)" title="Navy"><span class="ck">✓</span></div>
+            <div class="color-opt"     data-c="enterprise" style="background:linear-gradient(135deg,#2563eb,#1e3a8a)" title="Navy Blue"><span class="ck">✓</span></div>
+            <div class="color-opt"     data-c="custom"     style="background:linear-gradient(135deg,#00a07a,#007a5e)" title="Green"><span class="ck">✓</span></div>
+          </div>
+        </div>
+        <div>
+          <label class="flbl">Status</label>
+          <select class="finput" id="f_is_active">
+            <option value="1">Aktif</option>
+            <option value="0">Non-Aktif</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px">
+        <button onclick="savePkg()" class="btn-blue" id="btnSavePkg" style="flex:1;justify-content:center;padding:11px">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span id="btnSaveTxt">Simpan Paket</span>
+        </button>
+        <button onclick="closeModal()" class="btn-outline" style="padding:11px 22px">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL Delete Confirm -->
+<div id="delModal" class="modal-ov">
+  <div class="modal-bx" style="max-width:420px">
+    <button onclick="closeDelModal()" class="modal-cls">✕</button>
+    <div class="del-body">
+      <div class="del-icon-ring">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--d-text);margin-bottom:8px">Hapus Paket?</div>
+      <div style="font-size:13px;color:var(--d-muted)" id="delMsg">Paket akan dihapus permanen.</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;padding-bottom:4px">
+      <button onclick="closeDelModal()" class="btn-outline" style="min-width:110px">Batal</button>
+      <button onclick="confirmDelete()" id="btnDelConfirm" style="min-width:110px;background:#f43f5e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(244,63,94,.3);display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:opacity .15s">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/packages.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'all':'#2563eb','active':'#16a34a','cuscount':'#0891b2','avgprice':'#d97706'},IDS={'all':'scTotal','active':'scActive','cuscount':'scCustomers','avgprice':'scAvgPrice'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){if(!v||v.length<2)return null;const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);const d=p.reduce((a,[x,y],i)=>{if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);const[px,py]=p[i-1],cx=(px+x)/2;return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);},'');const lp=p[p.length-1],fp=p[0];return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};}
+  function draw(id,v){const s=sp(v);if(!s)return;const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}}
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){Object.keys(C).forEach(k=>{const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();draw('sp-'+k,hist[k]);const p=document.getElementById('xp-'+k);if(p)p.textContent=v;});}
+  window._pkgUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',function(){
+    upd();
+    // Set default active card sparkline ke putih
+    const def = document.getElementById('xc-all');
+    if(def){
+      const l=def.querySelector('.sp-line'),f=def.querySelector('.sp-fill'),d=def.querySelector('.sp-dot');
+      if(l) l.style.stroke='rgba(255,255,255,.70)';
+      if(f) f.style.fill='rgba(255,255,255,.12)';
+      if(d) d.style.fill='#fff';
+    }
+  });
+})();
+</script>
+</body>
+</html>

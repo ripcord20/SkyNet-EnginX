@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;box-shadow:0 5px 14px -8px rgba(30,60,120,.2);}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:4px 16px 20px;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+    .anim{opacity:0;animation:fadeUp .5s cubic-bezier(.22,.61,.36,1) forwards;}
+    .anim.d1{animation-delay:.05s;}.anim.d2{animation-delay:.14s;}
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    .hs-chart{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 16px;margin-bottom:16px;box-shadow:0 8px 20px -15px rgba(30,60,120,.26);display:flex;align-items:center;gap:17px;}
+    .hsc-donut{position:relative;width:100px;height:100px;flex-shrink:0;}
+    .hsc-donut svg{width:100px;height:100px;transform:rotate(-90deg);}
+    .hsc-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .hsc-center b{font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+    .hsc-center span{font-size:8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+    .hsc-info{flex:1;min-width:0;}
+    .hsc-info .hci-t{font-size:12.5px;font-weight:800;color:#3a4a68;margin-bottom:10px;}
+    .hci-row{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;}
+    .hci-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+    .hci-name{color:#5a6885;font-weight:600;}
+    .hci-val{margin-left:auto;font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+    .kpi{background:#fff;border-radius:16px;padding:15px;box-shadow:0 6px 16px -10px rgba(30,60,120,.16);}
+    .kpi-ic{width:34px;height:34px;border-radius:11px;background:#f5f7fb;color:#3a4a68;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+    .kpi-ic svg{width:18px;height:18px;stroke-width:1.8;}
+    .kpi-val{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+    .kpi-lbl{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:500;}
+    .search-wrap{position:relative;margin-bottom:14px;}
+    .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);}
+    .search-wrap input{width:100%;padding:13px 14px 13px 42px;border:none;background:#fff;border-radius:15px;font-size:14px;font-family:inherit;outline:none;box-shadow:0 5px 14px -9px rgba(30,60,120,.16);}
+    .sec{font-size:14px;font-weight:800;margin:4px 2px 12px;letter-spacing:-.2px;}
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .hs{display:flex;align-items:center;gap:12px;background:#fff;border-radius:15px;padding:13px 15px;box-shadow:0 5px 14px -9px rgba(30,60,120,.14);}
+    .hs-av{width:42px;height:42px;border-radius:13px;background:#f5f7fb;color:#3a4a68;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+    .hs-body{flex:1;min-width:0;} .hs-t{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} .hs-s{font-size:11.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .hs-badge{font-size:10px;font-weight:800;padding:4px 10px;border-radius:100px;flex-shrink:0;}
+    .b-on{background:#dcf7ec;color:#0f9d63;} .b-off{background:#fde5e6;color:#d13b42;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="htitle">Hotspot</div><div class="hsub" id="hsSub">Pelanggan hotspot</div></div>
+      <div class="refresh" id="refreshBtn" onclick="loadHotspot(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+    <div class="content">
+      <div class="kpi-grid anim d1">
+        <div class="kpi"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><div class="kpi-val" id="hsTotal">–</div><div class="kpi-lbl">Total hotspot</div></div>
+        <div class="kpi"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div><div class="kpi-val" id="hsActive" style="color:var(--green);">–</div><div class="kpi-lbl">Aktif</div></div>
+      </div>
+
+      <div class="hs-chart anim d1" id="hsChart">
+        <div class="hsc-donut" id="hsDonut"></div>
+        <div class="hsc-info">
+          <div class="hci-t">Status Pelanggan Hotspot</div>
+          <div class="hci-row"><span class="hci-dot" style="background:#0f9d63;"></span><span class="hci-name">Aktif</span><span class="hci-val" id="hscActive">–</span></div>
+          <div class="hci-row"><span class="hci-dot" style="background:#f2545b;"></span><span class="hci-name">Terisolir</span><span class="hci-val" id="hscIso">–</span></div>
+        </div>
+      </div>
+
+      <div class="search-wrap anim d2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="hsSearch" placeholder="Cari nama atau CID…">
+      </div>
+      <div class="sec anim d2">Daftar Pelanggan Hotspot</div>
+      <div class="list anim d2" id="hsList">
+        <div class="hs"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="hs-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+        <div class="hs"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="hs-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url){ const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}); try{ const r=await fetch(url,{credentials:'include',headers}); if(r.status===401){location.href='/login';return null;} const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;} }catch(e){return null;} }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    let _all=[];
+    function hsCard(c){
+      const nm=c.name||'Pelanggan'; const cid=c.customer_id||''; const pkg=c.package_name||''; const isolir=(c.isolir_status==='isolated');
+      const init=(nm[0]||'?').toUpperCase(); const meta=[cid,pkg].filter(Boolean).join(' · ');
+      const badge=isolir?'<span class="hs-badge b-off">Isolir</span>':'<span class="hs-badge b-on">Aktif</span>';
+      return '<div class="hs"><div class="hs-av">'+esc(init)+'</div><div class="hs-body"><div class="hs-t">'+esc(nm)+'</div><div class="hs-s">'+esc(meta||'—')+'</div></div>'+badge+'</div>';
+    }
+    function renderList(rows){
+      const list=document.getElementById('hsList');
+      if(rows.length){ list.innerHTML=rows.map(hsCard).join(''); }
+      else{ list.innerHTML='<div class="empty">Tidak ada pelanggan hotspot</div>'; }
+    }
+    async function loadHotspot(manual){
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+      const j=await api('/api/tools/hotspot/customers');
+      const rows=(j&&j.success)?(Array.isArray(j.data)?j.data:(j.data&&j.data.rows?j.data.rows:[])):[];
+      _all=rows;
+      const total=rows.length, active=rows.filter(r=>r.isolir_status!=='isolated').length;
+      document.getElementById('hsTotal').textContent=total;
+      document.getElementById('hsActive').textContent=active;
+      document.getElementById('hsSub').textContent=total+' pelanggan hotspot';
+      renderHsDonut(total, active);
+      renderList(rows);
+      if(manual) setTimeout(()=>btn.classList.remove('spin'),600);
+    }
+    function renderHsDonut(total, active){
+      const iso=Math.max(0, total-active);
+      const pct=total>0?Math.round(active/total*100):0;
+      const el=document.getElementById('hsDonut'); if(el){
+        const R=42, C=2*Math.PI*R, off=C-(C*pct/100);
+        el.innerHTML='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="'+R+'" fill="none" stroke="#fde5e6" stroke-width="11"/>'+
+          '<circle cx="50" cy="50" r="'+R+'" fill="none" stroke="#0f9d63" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'" style="transition:stroke-dashoffset .9s cubic-bezier(.22,.61,.36,1);"/></svg>'+
+          '<div class="hsc-center"><b style="color:#0f9d63;">'+pct+'%</b><span>Aktif</span></div>';
+        requestAnimationFrame(()=>{ const a=el.querySelector('circle:last-child'); if(a)a.style.strokeDashoffset=off; });
+      }
+      const ha=document.getElementById('hscActive'); if(ha)ha.textContent=active;
+      const hi=document.getElementById('hscIso'); if(hi)hi.textContent=iso;
+    }
+    let _t=null;
+    document.getElementById('hsSearch').addEventListener('input',function(){
+      clearTimeout(_t); const v=this.value.trim().toLowerCase();
+      _t=setTimeout(()=>{ if(!v){renderList(_all);return;} renderList(_all.filter(r=>(String(r.name||'')+String(r.customer_id||'')).toLowerCase().includes(v))); },250);
+    });
+    loadHotspot(false);
+  </script>
+</body>
+</html>

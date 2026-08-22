@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><%= typeof title !== 'undefined' ? title : 'Invoice' %> - <%= appName %></title>
+<%
+  // Template settings (defaults if not configured yet)
+  const t = (typeof tpl === 'object' && tpl) ? tpl : {};
+  const tplVars = {
+    primary_color:    t.primary_color || '#1a6ef5',
+    accent_color:     t.accent_color  || '#1d4ed8',
+    text_color:       t.text_color    || '#0f172a',
+    font_family:      t.font_family   || 'Inter',
+    header_style:     t.header_style  || 'banner',
+    show_logo:        t.show_logo,
+    logo_url:         t.logo_url || '',
+    company_name:     t.company_name    || '',
+    company_tagline:  t.company_tagline || '',
+    company_address:  t.company_address || '',
+    company_phone:    t.company_phone   || '',
+    company_email:    t.company_email   || '',
+    show_subtotal:       t.show_subtotal,
+    show_tax:            t.show_tax,
+    show_due_date:       t.show_due_date,
+    show_payment_method: t.show_payment_method,
+    show_active_until:   t.show_active_until,
+    show_bank_info:      t.show_bank_info,
+    show_signature:      t.show_signature,
+    invoice_label:           t.invoice_label || 'INVOICE',
+    section_recipient_label: t.section_recipient_label || 'TAGIHAN UNTUK',
+    section_detail_label:    t.section_detail_label    || 'DETAIL INVOICE',
+    thank_you_text:          t.thank_you_text || '',
+    footer_text:             t.footer_text    || ''
+  };
+%>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family: '<%= tplVars.font_family %>', -apple-system, BlinkMacSystemFont, sans-serif;
+    background:#f0f4f8; color:#1e293b; min-height:100vh; padding:20px;
+  }
+
+  /* ── Action bar ── */
+  .action-bar {
+    max-width:780px; margin:0 auto 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .action-bar a, .action-bar button {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;
+    cursor:pointer; text-decoration:none; border:none; font-family:inherit; transition:all .15s;
+  }
+  .btn-back  { background:#fff; border:1px solid #e2e8f0; color:#64748b; }
+  .btn-back:hover { background:#f1f5f9; }
+  .btn-print { background: <%= tplVars.primary_color %>; color:#fff; }
+  .btn-print:hover { filter: brightness(0.92); }
+  .btn-wa    { background:#16a34a; color:#fff; }
+  .btn-wa:hover { background:#15803d; }
+  .btn-wa.sent { background:#64748b; cursor:default; opacity:.8; }
+
+  /* ── Invoice card wrapper ── */
+  .invoice-wrap {
+    max-width:780px; margin:0 auto; background:#fff;
+    border-radius:16px; overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.10);
+  }
+
+  /* ── Loading & alert ── */
+  .alert-box {
+    max-width:780px; margin:0 auto 16px;
+    padding:14px 18px; border-radius:10px; font-size:13px; font-weight:500;
+    display:flex; align-items:center; gap:10px;
+  }
+  .alert-err { background:#fef2f2; color:#991b1b; border:1.5px solid #fca5a5; }
+
+  .loading-state {
+    max-width:780px; margin:0 auto; padding:80px 20px; text-align:center;
+    background:#fff; border-radius:16px; color:#94a3b8;
+  }
+  .loading-state svg { width:40px; height:40px; margin:0 auto 12px; animation:invSpin 1s linear infinite; }
+  @keyframes invSpin { to { transform:rotate(360deg); } }
+
+  /* ── Print styles ── */
+  /* ── Invoice viewer modal ── */
+  .inv-modal-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  #invModal .invoice-wrap{max-width:none;margin:0;}
+
+  @media print {
+    body { padding:0; background:#fff; }
+    .action-bar, #alertWrap, .preview-ribbon { display:none !important; }
+    .invoice-wrap { max-width:none; box-shadow:none; border-radius:0; margin:0; }
+    /* Saat print dari modal "Lihat Invoice": sembunyikan semua kecuali invoice modal */
+    body.printing-modal > *:not(#invModal){ display:none !important; }
+    body.printing-modal #invModal{ position:static !important; background:#fff !important; padding:0 !important; display:block !important; overflow:visible !important; }
+    body.printing-modal #invModal .inv-modal-bar{ display:none !important; }
+    body.printing-modal #invModal #invoiceWrapModal{ box-shadow:none; border-radius:0; }
+  }
+  /* ── Payment method card (identik portal pelanggan) ── */
+  .pm-card{max-width:780px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);padding:22px;}
+  /* Di dalam panel publik (#payPanel flex-column), kartu harus selalu
+     mengisi penuh lebar kolom — bukan menyusut mengikuti isi. Auto-margin
+     pada flex item membatalkan stretch & membuat kartu mengecil saat
+     metode transfer manual dihapus. Override di sini menjaga lebar konsisten. */
+  #payPanel{width:100%;}
+  #payPanel > .pm-card{max-width:none;width:100%;margin:0 0 16px;align-self:stretch;box-sizing:border-box;}
+  .pm-card-title{font-size:17px;font-weight:800;margin-bottom:18px;color:#0f172a;}
+  .pm-info-box{background:#f8fafc;border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+  .pm-info-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:12.5px;gap:12px;}
+  .pm-info-row:last-child{margin-bottom:0;}
+  .pm-info-row .lbl{color:#64748b;}
+  .pm-info-row .val{font-weight:700;color:#0f172a;text-align:right;}
+  .pm-info-total{border-top:1px dashed #e2e8f0;padding-top:10px;margin-top:4px;}
+  .pm-info-total .val{font-size:16px;font-weight:800;color:#2563eb;}
+  .pm-heading{font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 10px;}
+  .pm-group{border:1px solid #e2e8f0;border-radius:14px;margin-bottom:10px;overflow:hidden;background:#fff;}
+  .pm-group-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s;}
+  .pm-group-head:hover{background:#f8fafc;}
+  .pm-group-head.open{background:#eff6ff;}
+  .pm-group-ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+  .pm-group-ico.is-ewallet{background:linear-gradient(135deg,#1d4ed8,#1e3a8a);}
+  .pm-group-ico.is-qris{background:linear-gradient(135deg,#f59e0b,#d97706);}
+  .pm-group-ico.is-gw-active{background:linear-gradient(135deg,#06b6d4,#0891b2);box-shadow:0 4px 12px rgba(6,182,212,.35);}
+  .pm-gw-card{margin-bottom:14px;border:2px solid #06b6d4!important;background:linear-gradient(135deg,#ecfeff,#cffafe)!important;position:relative;overflow:hidden;}
+  .pm-gw-card:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(6,182,212,.22);transition:all .2s;}
+  .pm-gw-badge{display:inline-block;background:#06b6d4;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;margin-left:5px;letter-spacing:.4px;vertical-align:1px;}
+  .pm-gw-arrow{color:#0891b2;flex-shrink:0;}
+  .pm-group-text{flex:1;min-width:0;}
+  .pm-group-title{font-size:13px;font-weight:700;color:#0f172a;}
+  .pm-group-sub{font-size:11px;color:#64748b;margin-top:2px;}
+  .pm-group-count{padding:2px 8px;border-radius:20px;background:#e2e8f0;color:#64748b;font-size:10px;font-weight:700;}
+  .pm-group-chev{color:#64748b;transition:transform .25s;flex-shrink:0;}
+  .pm-group-head.open .pm-group-chev{transform:rotate(180deg);}
+  .pm-group-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .pm-group-head.open + .pm-group-body{max-height:2000px;}
+  .pm-group-inner{padding:4px 10px 10px;}
+  .pm-divider{display:flex;align-items:center;gap:10px;margin:14px 2px 10px;color:#64748b;font-size:11px;font-weight:600;}
+  .pm-divider::before,.pm-divider::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+  .pm-divider span{padding:0 4px;text-transform:uppercase;letter-spacing:.6px;}
+  .pm-item{padding:12px;border-radius:11px;margin-bottom:8px;background:#f8fafc;border:1.5px solid transparent;transition:all .15s;}
+  .pm-item:last-child{margin-bottom:0;}
+  .pm-item-row{display:flex;align-items:center;gap:11px;}
+  .pm-logo{width:40px;height:40px;border-radius:8px;background:#fff;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:10px;color:#0f172a;letter-spacing:.3px;text-align:center;line-height:1;padding:0 2px;overflow:hidden;}
+  .pm-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+  .pm-detail{flex:1;min-width:0;}
+  .pm-name{font-size:13px;font-weight:700;color:#0f172a;}
+  .pm-number{font-size:14px;font-weight:700;color:#2563eb;letter-spacing:.5px;margin-top:3px;word-break:break-all;}
+  .pm-owner{font-size:11px;color:#64748b;margin-top:2px;}
+  .pm-copy-btn{padding:8px 12px;border-radius:9px;background:#2563eb;color:#fff;border:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;}
+  .pm-copy-btn:hover{background:#1d4ed8;}
+  .pm-copy-btn.copied{background:#10b981;}
+  .pm-copy-btn svg{width:13px;height:13px;}
+  .pm-qris-box{background:#fff;border-radius:12px;padding:16px;text-align:center;}
+  .pm-qris-box img{max-width:220px;width:100%;height:auto;border-radius:8px;}
+  .pm-qris-hint{font-size:11px;color:#64748b;margin-top:10px;line-height:1.5;}
+  .pm-empty{text-align:center;padding:28px 20px;color:#64748b;font-size:12.5px;background:#f8fafc;border-radius:12px;margin-bottom:14px;}
+  .pm-empty svg{width:36px;height:36px;margin:0 auto 10px;display:block;opacity:.5;}
+  .pm-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-top:10px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;}
+  .pm-warn svg{width:16px;height:16px;color:#d97706;flex-shrink:0;margin-top:1px;}
+  .pm-warn-text{font-size:11.5px;color:#78350f;line-height:1.55;}
+  .pm-warn-text b{color:#92400e;}
+  .pm-wa-btn{width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .pm-wa-btn:hover{opacity:.92;}
+  .pm-wa-btn:disabled{opacity:.5;cursor:not-allowed;}
+  .pm-wa-btn svg{width:18px;height:18px;}
+  /* ── Riwayat Tagihan: tabel responsif (desktop) / kartu (mobile) ── */
+  .ih-table{width:100%;}
+  .ih-head{display:flex;align-items:center;padding:10px 8px;border-bottom:2px solid #f1f5f9;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;}
+  .ih-row{display:flex;align-items:center;padding:14px 8px;border-bottom:1px solid #f1f5f9;transition:background .12s;}
+  .ih-row:hover{background:#f8fafc;}
+  .ih-row.is-current{background:#f8fafc;}
+  .ih-c{padding:0 6px;min-width:0;}
+  .ih-c-inv{flex:1.4;font-size:13px;font-weight:600;color:#0f172a;display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+  .ih-c-status{flex:1.3;}
+  .ih-c-period{flex:1;font-size:13px;color:#475569;}
+  .ih-c-amount{flex:1;font-size:13px;font-weight:700;color:#0f172a;}
+  .ih-c-action{flex:1.1;text-align:right;}
+  .ih-inv-num{font-family:'DM Mono',monospace;font-size:12.5px;}
+  .ih-cur-badge{font-size:9.5px;font-weight:700;color:#2563eb;background:#dbeafe;padding:2px 7px;border-radius:6px;}
+  .ih-status{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;}
+  .ih-actions{display:flex;gap:8px;justify-content:flex-end;align-items:center;}
+  .ih-detail-btn{padding:7px 16px;border-radius:8px;background:#fff;color:#334155;border:1.5px solid #e2e8f0;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s;}
+  .ih-detail-btn:hover{background:#f8fafc;border-color:#cbd5e1;}
+  .ih-pay-btn{padding:7px 16px;border-radius:8px;background:#16a34a;color:#fff;border:1.5px solid #16a34a;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s;}
+  .ih-pay-btn:hover{background:#15803d;border-color:#15803d;}
+  .ih-detail-disabled{font-size:11.5px;color:#94a3b8;font-weight:600;}
+  @media (max-width:640px){
+    .ih-head{display:none;}
+    .ih-row{flex-wrap:wrap;gap:4px 0;padding:14px 4px;}
+    .ih-c{flex:none!important;width:100%;padding:1px 0;display:flex;justify-content:space-between;align-items:center;}
+    .ih-c::before{content:attr(data-lbl);font-size:11px;color:#94a3b8;font-weight:600;}
+    .ih-c-inv{order:1;}
+    .ih-c-status{order:2;}
+    .ih-c-period{order:3;}
+    .ih-c-amount{order:4;}
+    .ih-c-amount::before{content:'Jumlah';}
+    .ih-c-action{order:5;width:100%;text-align:left;margin-top:8px;}
+    .ih-c-action::before{content:'';}
+    .ih-actions{width:100%;}
+    .ih-detail-btn,.ih-pay-btn{flex:1;padding:11px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Action bar -->
+<div class="action-bar" id="actionBar" style="display:none;">
+  <button type="button" class="btn-back" onclick="closeInvoiceWindow()" title="Tutup tab ini">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    Tutup
+  </button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-wa" id="btnSendWa" onclick="sendInvoiceWa()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <span id="btnSendWaText">Kirim via WA</span>
+    </button>
+    <button class="btn-print" onclick="window.print()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print / Save PDF
+    </button>
+  </div>
+</div>
+
+<div id="alertWrap"></div>
+
+<!-- Loading -->
+<div class="loading-state" id="invLoading">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+  <p>Memuat invoice...</p>
+</div>
+
+<!-- Invoice wrapper (rendered by shared renderer) -->
+<div class="invoice-wrap" id="invoiceWrap" style="display:none;"></div>
+
+<!-- ── PUBLIC PAYMENT PANEL (hanya muncul di public mode) ───────────── -->
+<div id="payPanel" style="display:none;max-width:780px;margin:16px auto 0;flex-direction:column;">
+
+  <!-- Header branding (judul di atas rincian tagihan) -->
+  <div id="payBrandHeader" style="order:0;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);padding:20px 22px;margin-bottom:16px;display:flex;align-items:center;gap:16px;">
+    <img id="payBrandLogoImg" src="" alt="logo" style="display:none;height:48px;max-width:240px;width:auto;object-fit:contain;flex-shrink:0;">
+    <div id="payBrandText" style="min-width:0;flex:1;">
+      <div id="payBrandName" style="font-size:18px;font-weight:800;color:#0f172a;line-height:1.2;">—</div>
+      <div id="payBrandTagline" style="font-size:12.5px;color:#64748b;margin-top:3px;">Internet Service Provider</div>
+    </div>
+  </div>
+
+
+  <!-- List pembayaran -->
+  <div id="payHistoryCard" style="display:none;order:3;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);padding:20px 22px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Riwayat Pembayaran
+    </div>
+    <div id="payHistoryList"></div>
+  </div>
+
+  <!-- Riwayat Tagihan (invoice history 1 tahun) -->
+  <div id="invHistoryCard" style="display:none;order:2;background:#fff;border-radius:16px;box-shadow:0 4px 32px rgba(0,0,0,.10);padding:20px 22px;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:#0f172a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        Riwayat Tagihan
+      </span>
+      <span id="invHistoryCount" style="font-size:11.5px;font-weight:600;color:#94a3b8;text-transform:none;letter-spacing:0;"></span>
+    </div>
+    <div id="invHistoryList" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- ── Kartu Pembayaran (gaya identik portal pelanggan) ── -->
+  <div id="payActionCard" class="pm-card" style="display:none;order:1;margin-bottom:16px;">
+    <div class="pm-card-title">Rincian Tagihan</div>
+
+    <!-- Info invoice -->
+    <div class="pm-info-box">
+      <div class="pm-info-row">
+        <span class="lbl">Customer</span>
+        <span class="val" id="payCustomerName">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Service Package</span>
+        <span class="val" id="payServiceName">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Invoice</span>
+        <span class="val" id="payInvNum">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Periode</span>
+        <span class="val" id="payPeriod">—</span>
+      </div>
+      <div class="pm-info-row" id="payRowSubtotal" style="display:none;">
+        <span class="lbl">Subtotal</span>
+        <span class="val" id="paySubtotal">Rp 0</span>
+      </div>
+      <div class="pm-info-row" id="payRowTax" style="display:none;">
+        <span class="lbl" id="payTaxLbl">PPN</span>
+        <span class="val" id="payTax" style="color:#0d9488;">Rp 0</span>
+      </div>
+      <div class="pm-info-row pm-info-total">
+        <span class="lbl" style="font-size:13px;font-weight:700;color:#0f172a;">Total</span>
+        <span class="val" id="payTotal">Rp 0</span>
+      </div>
+    </div>
+
+    <div class="pm-heading" id="pmHeading">Transfer / Bayar ke:</div>
+
+    <!-- Accordion groups diisi dari JS -->
+    <div id="payAccordion"></div>
+
+    <!-- Info footer -->
+    <div class="pm-warn" id="pmWarn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="pm-warn-text">
+        <b>Setelah transfer</b>, klik tombol <b>WhatsApp</b> di bawah untuk konfirmasi. Kirim bukti transfer agar pembayaran segera diverifikasi.
+      </div>
+    </div>
+
+    <!-- WA confirm button -->
+    <button class="pm-wa-btn" id="btnConfirmPay" onclick="pubConfirmManual()">
+      <svg id="btnConfirmIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      <svg id="btnConfirmSpin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;animation:invSpin .8s linear infinite;"><path stroke-linecap="round" d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+      <span id="btnConfirmText">Konfirmasi via WhatsApp</span>
+    </button>
+
+    <!-- Upload bukti transfer (jalur manual) -->
+    <div id="proofBox" style="margin-top:14px;border-top:1px dashed #e2e8f0;padding-top:14px;">
+      <div style="font-size:12.5px;font-weight:700;color:#0f172a;margin-bottom:8px;">Atau unggah bukti transfer langsung</div>
+      <div id="proofIdle">
+        <input type="file" id="proofFile" accept="image/*,application/pdf" style="display:none;" onchange="onProofSelected()">
+        <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap;">
+          <button type="button" onclick="document.getElementById('proofFile').click()" id="proofPickBtn"
+                  style="flex:1;min-width:160px;padding:11px;border:1.5px dashed #cbd5e1;border-radius:12px;background:#f8fafc;color:#475569;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15v4a2 2 0 002 2h14a2 2 0 002-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <span id="proofPickLabel">Pilih foto / PDF bukti</span>
+          </button>
+          <button type="button" id="proofUploadBtn" onclick="uploadProof()" disabled
+                  style="padding:11px 18px;border:none;border-radius:12px;background:#16a34a;color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;opacity:.5;">
+            Kirim Bukti
+          </button>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:6px;">Format: JPG, PNG, atau PDF. Maksimal 5 MB.</div>
+        <div id="proofMsg" style="font-size:11.5px;margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <!-- State: menunggu verifikasi -->
+    <div id="proofPendingCard" style="display:none;margin-top:14px;border-top:1px dashed #fde68a;padding-top:14px;">
+      <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;">
+        <svg width="20" height="20" fill="none" stroke="#b45309" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>
+        <div>
+          <div style="font-size:13.5px;font-weight:800;color:#92400e;">Bukti pembayaran sedang diverifikasi</div>
+          <div style="font-size:12px;color:#a16207;margin-top:3px;">Terima kasih, bukti Anda sudah kami terima. Status akan diperbarui otomatis setelah admin memverifikasi.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paid notice (detail tanggal & channel pembayaran) -->
+  <div id="payPaidCard" style="display:none;order:1;background:#f0fdf4;border:1.5px solid #86efac;border-radius:16px;padding:20px 22px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <svg width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2.2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div style="font-size:15px;font-weight:800;color:#15803d;">Tagihan ini sudah LUNAS</div>
+    </div>
+    <div id="payPaidDetail" style="margin-top:12px;display:none;border-top:1px dashed #bbf7d0;padding-top:12px;">
+      <div class="pm-info-row" style="font-size:12.5px;margin-bottom:8px;">
+        <span style="color:#166534;">Dibayar pada</span>
+        <span id="paidOnDate" style="font-weight:700;color:#14532d;text-align:right;">—</span>
+      </div>
+      <div class="pm-info-row" style="font-size:12.5px;margin-bottom:8px;">
+        <span style="color:#166534;">Metode</span>
+        <span id="paidVia" style="font-weight:700;color:#14532d;text-align:right;">—</span>
+      </div>
+      <div class="pm-info-row" id="paidRefRow" style="font-size:12.5px;margin-bottom:8px;display:none;">
+        <span style="color:#166534;">No. Referensi</span>
+        <span id="paidRef" style="font-weight:700;color:#14532d;text-align:right;word-break:break-all;">—</span>
+      </div>
+      <div class="pm-info-row" style="font-size:12.5px;border-top:1px solid #bbf7d0;padding-top:8px;margin-top:4px;">
+        <span style="color:#166534;font-weight:700;">Jumlah dibayar</span>
+        <span id="paidAmount" style="font-weight:800;color:#15803d;font-size:14px;text-align:right;">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer info perusahaan (desain modern & clean) -->
+  <div id="payFooter" style="order:9;margin:8px auto 28px;width:100%;">
+    <div style="background:#fff;border:1px solid #eef2f7;border-radius:16px;box-shadow:0 2px 16px rgba(15,23,42,.05);padding:22px 24px;text-align:center;">
+      <div id="payFooterName" style="font-size:15px;font-weight:800;color:#0f172a;letter-spacing:.2px;">—</div>
+      <div id="payFooterTagline" style="font-size:12px;color:#94a3b8;margin-top:2px;">Internet Service Provider</div>
+
+      <div style="height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent);margin:16px 0;"></div>
+
+      <div id="payFooterAddress" style="display:none;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:#64748b;line-height:1.5;margin-bottom:8px;"></div>
+      <div id="payFooterCs" style="display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;font-size:12.5px;color:#64748b;"></div>
+      <div id="payFooterWeb" style="display:none;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:#64748b;margin-top:8px;"></div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#cbd5e1;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <span>Halaman pembayaran resmi · jangan bagikan link ini kepada pihak lain.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Invoice viewer modal (public — dibuka dari "Lihat Invoice") ──── -->
+<div id="invModal" style="display:none;position:fixed;inset:0;z-index:9997;background:rgba(15,23,42,.6);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px;">
+  <div id="invModalInner" style="width:100%;max-width:820px;margin:auto;">
+    <div class="inv-modal-bar">
+      <button type="button" class="btn-back" onclick="pubCloseInvoice()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Tutup
+      </button>
+      <button type="button" class="btn-print" onclick="pubPrintInvoice()">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save PDF
+      </button>
+    </div>
+    <div id="invModalLoading" class="loading-state" style="display:none;border-radius:16px;">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      <p>Memuat invoice...</p>
+    </div>
+    <div class="invoice-wrap" id="invoiceWrapModal" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ── Tripay channel picker modal (public) ─────────────────────────── -->
+<div id="pubTripayModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.55);align-items:flex-end;justify-content:center;">
+  <div style="background:#fff;width:100%;max-width:480px;border-radius:18px 18px 0 0;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="padding:18px 20px 12px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:15px;font-weight:700;color:#0f172a;">Pilih Metode Pembayaran</div>
+      <button onclick="pubCloseTripay()" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="pubTripayList" style="padding:6px 18px 22px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+
+<%
+// Di public mode (pelanggan buka dari link WA), JANGAN load app.js karena:
+//   • app.js otomatis panggil App.init() di DOMContentLoaded
+//   • App.init() panggil initSocket(), initNotifications(), dll yang
+//     tergantung pada token admin di localStorage
+//   • App.api() auto-redirect ke /login saat dapat 401 — kalau ada
+//     handler manapun yang panggil App.api() tanpa cek mode, customer
+//     yang BUKAN admin akan langsung di-redirect ke /login
+// Sebagai gantinya, definisikan minimal shim `App` di public mode supaya
+// code yang reference App.showToast tidak crash.
+const _isPub = (typeof publicMode !== 'undefined' && publicMode);
+%>
+<% if (!_isPub) { %>
+<script src="/js/app.js"></script>
+<% } else { %>
+<script>
+// Minimal `App` shim untuk public mode — hanya support showToast (untuk
+// fallback close-window). TIDAK ada App.api() supaya tidak ada path yang
+// bisa trigger redirect ke /login. TIDAK ada App.init() supaya tidak ada
+// socket.io / notification fetch yang attempt auth.
+window.App = {
+  showToast: function(message, type) {
+    var colors = { info: '#3b82f6', warning: '#f59e0b', error: '#ef4444', success: '#22c55e' };
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;top:24px;right:24px;background:white;border-left:4px solid ' + (colors[type] || colors.info) + ';padding:14px 20px;border-radius:8px;box-shadow:0 8px 25px rgba(0,0,0,0.12);z-index:9999;font-size:13px;max-width:360px;';
+    t.textContent = message;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); }, 300); }, 4000);
+  }
+};
+</script>
+<% } %>
+<script src="/js/invoice-renderer.js"></script>
+<script>
+// Template settings di-inject dari server
+window.INVTPL = <%- JSON.stringify(tplVars) %>;
+console.log('[INVTPL] Template settings loaded:', window.INVTPL);
+
+// Public mode flag — diset oleh server saat route `/pub/invoice/:token`
+window.IS_PUBLIC_INVOICE = <%- (typeof publicMode !== 'undefined' && publicMode) ? 'true' : 'false' %>;
+window.PUBLIC_TOKEN      = <%- (typeof publicToken !== 'undefined' && publicToken) ? JSON.stringify(publicToken) : 'null' %>;
+
+// Support empat mode:
+//   /invoice/123                       — payment view (admin auth)
+//   /invoice/inv/456                   — invoice view (admin auth)
+//   /pub/invoice/<token>               — public view (no auth, HMAC token)
+//   /invoice-template/preview-print    — preview template dengan data dummy
+const _pathParts = location.pathname.split('/').filter(Boolean);
+const _isPublicMode   = window.IS_PUBLIC_INVOICE === true;
+const _isInvMode      = _pathParts.includes('inv');
+const _isPreviewMode  = _pathParts[0] === 'invoice-template' && _pathParts[1] === 'preview-print';
+const _payId          = _pathParts[_pathParts.length - 1];
+
+// ── Tombol Tutup ──
+// Halaman invoice selalu dibuka di tab baru (window.open). Tombol Tutup
+// memanggil window.close(). Beberapa browser block window.close() untuk
+// tab yang tidak dibuka oleh script (mis. user manual refresh di tab) —
+// dalam kasus itu kita fallback ke navigasi sederhana.
+function closeInvoiceWindow() {
+  try {
+    window.close();
+    // Jika 200ms tab masih ada, berarti browser block window.close().
+    // Tampilkan info ke user.
+    setTimeout(function(){
+      if (!window.closed) {
+        if (App && App.showToast) {
+          App.showToast('Browser memblokir penutupan tab. Silakan tutup tab ini secara manual.', 'info');
+        } else {
+          alert('Silakan tutup tab ini secara manual.');
+        }
+      }
+    }, 250);
+  } catch (e) {
+    /* ignore */
+  }
+}
+
+async function loadInvoice() {
+  let d;
+  if (_isPreviewMode) {
+    // Preview mode — pakai data dummy dari renderer
+    d = { success: true, data: InvoiceRenderer.sampleData() };
+  } else if (_isPublicMode) {
+    // Public mode — fetch via /api/pub/invoice/<token>/data (no auth)
+    try {
+      const resp = await fetch('/api/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/data');
+      d = await resp.json();
+    } catch(e) {
+      d = { success: false, message: e.message };
+    }
+  } else {
+    const endpoint = _isInvMode
+      ? '/invoices/' + _payId + '/invoice-data'
+      : '/payments/' + _payId + '/invoice-data';
+    d = await App.api(endpoint);
+  }
+  document.getElementById('invLoading').style.display = 'none';
+  if (!d?.success) {
+    document.getElementById('alertWrap').innerHTML =
+      '<div class="alert-box alert-err">Invoice tidak ditemukan atau terjadi kesalahan.</div>';
+    return;
+  }
+
+  // Fallback: kalau template belum punya company_name, pakai dari env (data.company)
+  if (d.data.company && !window.INVTPL.company_name) {
+    window.INVTPL.company_name = d.data.company.name || 'ISP Provider';
+  }
+  if (d.data.company && !window.INVTPL.company_tagline) {
+    window.INVTPL.company_tagline = 'Internet Service Provider';
+  }
+
+  if (_isPublicMode) {
+    // ── Public view (pelanggan dari link WA) ──
+    // Tampilan invoice TIDAK ditampilkan di halaman utama; halaman ini fokus ke
+    // pembayaran. Invoice bisa dilihat on-demand via tombol "Lihat Invoice" di
+    // Riwayat Tagihan (dibuka sebagai modal). Action bar Print disembunyikan.
+    PUB_CURRENT_DATA = d.data;
+    document.getElementById('invoiceWrap').style.display = 'none';
+    document.getElementById('actionBar').style.display = 'none';
+    renderPublicPayPanel(d.data);
+    return;
+  }
+
+  // Render dengan shared renderer — guaranteed identik dengan designer preview
+  InvoiceRenderer.render('#invoiceWrap', d.data, window.INVTPL);
+  document.getElementById('invoiceWrap').style.display = 'block';
+
+  if (_isPreviewMode) {
+    // Hide normal action bar; show preview ribbon
+    const ribbon = document.createElement('div');
+    ribbon.className = 'preview-ribbon';
+    ribbon.style.cssText = 'max-width:780px;margin:0 auto 16px;background:#fef3c7;border:1.5px solid #fde68a;border-radius:10px;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;';
+    ribbon.innerHTML =
+      '<div style="display:flex;align-items:center;gap:9px;color:#92400e;font-size:13px;font-weight:600;">' +
+        '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+        '<span>Preview Mode — data contoh, bukan tagihan asli</span>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;">' +
+        '<button onclick="window.close()" style="padding:7px 13px;border-radius:8px;background:#fff;border:1.5px solid #fde68a;color:#92400e;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;">Tutup</button>' +
+        '<button onclick="window.print()" style="padding:7px 13px;border-radius:8px;background:' + (window.INVTPL.primary_color || '#1e40af') + ';border:none;color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print / Save PDF</button>' +
+      '</div>';
+    document.body.insertBefore(ribbon, document.getElementById('invoiceWrap'));
+  } else {
+    document.getElementById('actionBar').style.display = 'flex';
+  }
+}
+
+async function sendInvoiceWa() {
+  if (_isPreviewMode || _isPublicMode) return;
+
+  const btn = document.getElementById('btnSendWa');
+  const txt = document.getElementById('btnSendWaText');
+  if (btn.classList.contains('sent')) return;
+  btn.disabled = true;
+  txt.textContent = 'Mengirim...';
+  try {
+    // Endpoint berbeda untuk invoice mode vs payment mode.
+    // Invoice mode (/invoice/inv/:id) — support semua status (UNPAID/OVERDUE/PAID),
+    //   backend pilih template berdasarkan status.
+    // Payment mode (/invoice/:paymentId) — pakai endpoint lama (payment-based).
+    const endpoint = _isInvMode
+      ? '/invoices/' + _payId + '/send-wa-invoice'
+      : '/payments/' + _payId + '/send-wa-invoice';
+    const d = await App.api(endpoint, { method:'POST', body:'{}' });
+    if (d?.success) {
+      btn.classList.add('sent');
+      txt.textContent = '✓ Terkirim';
+      if (d.message && App.showToast) App.showToast(d.message, 'success');
+    } else {
+      App.showToast(d?.message || 'Gagal kirim WA', 'error');
+      txt.textContent = 'Kirim via WA';
+    }
+  } catch (e) {
+    App.showToast(e.message || 'Error', 'error');
+    txt.textContent = 'Kirim via WA';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// PUBLIC PAYMENT — tombol Bayar & list pembayaran (tanpa login)
+// ════════════════════════════════════════════════════════════════
+const PUB_GW_META = { provider: null, env: 'sandbox' };
+
+function fmtRpInv(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+function fmtDateInv(s) {
+  if (!s) return '-';
+  try { return new Date(s + (String(s).length <= 10 ? 'T00:00:00' : '')).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }); }
+  catch (e) { return s; }
+}
+
+function renderPublicPayPanel(data) {
+  const panel = document.getElementById('payPanel');
+  if (!panel) return;
+  panel.style.display = 'flex';
+
+  // ── Header & footer branding (nama perusahaan / alamat / CS) ──
+  renderBrandHeaderFooter(data);
+
+  // List pembayaran (untuk invoice yang dibuka)
+  const payments = Array.isArray(data.payments) ? data.payments : [];
+  if (payments.length) {
+    const card = document.getElementById('payHistoryCard');
+    const list = document.getElementById('payHistoryList');
+    list.innerHTML = payments.map(function (p) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;">' +
+        '<div><div style="font-size:13px;font-weight:600;color:#0f172a;">' + (p.method_label || '-') + '</div>' +
+        '<div style="font-size:11.5px;color:#94a3b8;">' + fmtDateInv(p.payment_date) + (p.reference_number ? ' • ' + p.reference_number : '') + '</div></div>' +
+        '<div style="font-size:14px;font-weight:700;color:#16a34a;">' + fmtRpInv(p.amount) + '</div>' +
+        '</div>';
+    }).join('');
+    card.style.display = 'block';
+  }
+
+  // Riwayat Tagihan 1 tahun (periode terdahulu)
+  renderInvoiceHistory(Array.isArray(data.invoice_history) ? data.invoice_history : []);
+
+  // Status pembayaran → tampilkan kartu pembayaran atau notice lunas.
+  // payable & is_paid sudah dihitung robust di backend (status + sum payments).
+  const cancelled = data.invoice_status === 'cancelled';
+  if (data.payable === true) {
+    populatePayInfo(data);
+    PUB_PAY_CFG = data.payment_config || { gateway_enabled:false, gateway_provider:'midtrans', company_whatsapp:'', payment_accounts:[] };
+    renderPaymentAccordion(PUB_PAY_CFG);
+    document.getElementById('payActionCard').style.display = 'block';
+    // Kalau bukti sudah diunggah & menunggu verifikasi admin, tampilkan state
+    // "menunggu verifikasi" dan sembunyikan form upload (cegah dobel kirim).
+    applyVerificationState(data.verification_status);
+    // Polling status: jika pelanggan bayar via gateway di tab lain, atau admin
+    // memverifikasi bukti, kartu LUNAS muncul otomatis tanpa refresh manual.
+    startStatusPolling();
+  } else if (data.is_paid === true) {
+    renderPaidDetail(data);
+    document.getElementById('payPaidCard').style.display = 'block';
+  } else if (cancelled) {
+    // Invoice dibatalkan — jangan tampilkan tombol bayar maupun notice lunas.
+    const pc = document.getElementById('payPaidCard');
+    pc.style.background = '#f8fafc';
+    pc.style.border = '1.5px solid #e2e8f0';
+    const titleEl = pc.querySelector('div > div:last-child');
+    if (titleEl) { titleEl.textContent = 'Tagihan ini dibatalkan.'; titleEl.style.color = '#64748b'; }
+    const detailEl = document.getElementById('payPaidDetail');
+    if (detailEl) detailEl.style.display = 'none';
+    const svg = pc.querySelector('svg'); if (svg) svg.style.stroke = '#94a3b8';
+    pc.style.display = 'block';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// UPLOAD BUKTI PEMBAYARAN (jalur transfer manual)
+// ════════════════════════════════════════════════════════════════
+let PUB_PROOF_FILE = null;
+
+// Tampilkan/sembunyikan UI sesuai verification_status.
+function applyVerificationState(vs) {
+  const idle    = document.getElementById('proofBox');
+  const pending = document.getElementById('proofPendingCard');
+  const confirmBtn = document.getElementById('btnConfirmPay');
+  if (vs === 'submitted') {
+    if (idle) idle.style.display = 'none';
+    if (pending) pending.style.display = 'block';
+    // Sembunyikan tombol WA juga supaya alur jelas: sudah kirim bukti.
+    if (confirmBtn) confirmBtn.style.display = 'none';
+  } else {
+    if (idle) idle.style.display = 'block';
+    if (pending) pending.style.display = 'none';
+    if (confirmBtn) confirmBtn.style.display = '';
+    if (vs === 'rejected') {
+      setProofMsg('Bukti sebelumnya ditolak admin. Silakan unggah ulang bukti yang benar.', '#b45309');
+    }
+  }
+}
+
+function setProofMsg(html, color) {
+  const m = document.getElementById('proofMsg');
+  if (m) m.innerHTML = html ? '<span style="color:' + (color || '#64748b') + '">' + html + '</span>' : '';
+}
+
+function onProofSelected() {
+  const inp = document.getElementById('proofFile');
+  const btn = document.getElementById('proofUploadBtn');
+  const label = document.getElementById('proofPickLabel');
+  const f = inp && inp.files && inp.files[0];
+  if (!f) { PUB_PROOF_FILE = null; if (btn) { btn.disabled = true; btn.style.opacity = '.5'; } return; }
+  // Validasi sisi klien: ukuran & tipe
+  const MAX = 5 * 1024 * 1024;
+  if (f.size > MAX) { setProofMsg('Ukuran file melebihi 5 MB.', '#dc2626'); inp.value = ''; return; }
+  const okType = /^image\//.test(f.type) || /pdf$/i.test(f.type) || /\.(jpe?g|png|webp|heic|heif|pdf)$/i.test(f.name);
+  if (!okType) { setProofMsg('Format tidak didukung. Gunakan gambar atau PDF.', '#dc2626'); inp.value = ''; return; }
+  PUB_PROOF_FILE = f;
+  if (label) label.textContent = f.name.length > 28 ? (f.name.slice(0, 25) + '…') : f.name;
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  setProofMsg('');
+}
+
+async function uploadProof() {
+  if (!window.PUBLIC_TOKEN || !PUB_PROOF_FILE) return;
+  const btn = document.getElementById('proofUploadBtn');
+  const pickBtn = document.getElementById('proofPickBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Mengirim…'; btn.style.opacity = '.7'; }
+  if (pickBtn) pickBtn.disabled = true;
+  setProofMsg('');
+  try {
+    const fd = new FormData();
+    fd.append('proof', PUB_PROOF_FILE);
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/proof', {
+      method: 'POST', body: fd
+    });
+    const j = await r.json();
+    if (j && j.success) {
+      App.showToast(j.message || 'Bukti terkirim. Menunggu verifikasi.', 'success');
+      applyVerificationState('submitted');
+    } else {
+      setProofMsg((j && j.message) || 'Gagal mengirim bukti', '#dc2626');
+      if (btn) { btn.disabled = false; btn.textContent = 'Kirim Bukti'; btn.style.opacity = '1'; }
+      if (pickBtn) pickBtn.disabled = false;
+    }
+  } catch (e) {
+    setProofMsg('Error: ' + (e.message || e), '#dc2626');
+    if (btn) { btn.disabled = false; btn.textContent = 'Kirim Bukti'; btn.style.opacity = '1'; }
+    if (pickBtn) pickBtn.disabled = false;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// POLLING STATUS — deteksi pembayaran (mis. via gateway di tab lain)
+// dan tampilkan kartu LUNAS otomatis tanpa refresh manual.
+// ════════════════════════════════════════════════════════════════
+let PUB_STATUS_TIMER = null;
+const PUB_POLL_INTERVAL_MS = 12000;
+
+function startStatusPolling() {
+  if (PUB_STATUS_TIMER || !window.PUBLIC_TOKEN) return;
+  PUB_STATUS_TIMER = setInterval(pollInvoiceStatus, PUB_POLL_INTERVAL_MS);
+  // Hemat resource: hentikan polling saat tab disembunyikan, lanjutkan +
+  // cek sekali saat tab kembali aktif (supaya status langsung ter-update).
+  document.addEventListener('visibilitychange', onVisibilityChange);
+}
+
+function stopStatusPolling() {
+  if (PUB_STATUS_TIMER) { clearInterval(PUB_STATUS_TIMER); PUB_STATUS_TIMER = null; }
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+}
+
+function onVisibilityChange() {
+  if (document.hidden) {
+    if (PUB_STATUS_TIMER) { clearInterval(PUB_STATUS_TIMER); PUB_STATUS_TIMER = null; }
+  } else if (!PUB_STATUS_TIMER && window.PUBLIC_TOKEN) {
+    pollInvoiceStatus(); // cek segera saat kembali aktif
+    PUB_STATUS_TIMER = setInterval(pollInvoiceStatus, PUB_POLL_INTERVAL_MS);
+  }
+}
+
+async function pollInvoiceStatus() {
+  if (!window.PUBLIC_TOKEN) return;
+  try {
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/status');
+    if (!r.ok) return;
+    const j = await r.json();
+    const st = j && j.success && j.data ? j.data.status : null;
+    const vs = j && j.success && j.data ? j.data.verification_status : null;
+    if (st === 'paid' || st === 'cancelled') {
+      // Status berubah → hentikan polling lalu muat ulang data lengkap supaya
+      // kartu LUNAS (dgn detail tanggal & metode) atau notice batal tampil.
+      stopStatusPolling();
+      await refreshPayPanel();
+    } else if (vs) {
+      // Sinkronkan tampilan kalau verifikasi berubah (mis. bukti ditolak admin,
+      // atau diunggah dari perangkat lain).
+      applyVerificationState(vs);
+    }
+  } catch (e) { /* diam: percobaan berikutnya akan mencoba lagi */ }
+}
+
+// Muat ulang data invoice & render ulang panel (tanpa reload halaman penuh).
+async function refreshPayPanel() {
+  try {
+    const resp = await fetch('/api/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/data');
+    const d = await resp.json();
+    if (!d || !d.success) return;
+    PUB_CURRENT_DATA = d.data;
+    // Sembunyikan kartu pembayaran lama sebelum render ulang.
+    const pc = document.getElementById('payActionCard');
+    if (pc) pc.style.display = 'none';
+    if (d.data.is_paid === true) {
+      App.showToast('Pembayaran diterima. Terima kasih!', 'success');
+    }
+    renderPublicPayPanel(d.data);
+  } catch (e) { /* abaikan */ }
+}
+
+// ── Header & footer branding ─────────────────────────────────────
+function renderBrandHeaderFooter(data) {
+  const cfg = data.payment_config || {};
+  const tpl = window.INVTPL || {};
+  const company = data.company || {};
+  const name = cfg.company_name || tpl.company_name || company.name || 'ISP Provider';
+  const tagline = (tpl.company_tagline && String(tpl.company_tagline).trim())
+    || 'Internet Service Provider';
+  const address = cfg.company_address || tpl.company_address || company.address || '';
+  const cs = cfg.company_whatsapp || cfg.company_phone || tpl.company_phone || company.phone || '';
+  const website = cfg.company_website || company.website || '';
+  const logo = String(tpl.logo_url || '').trim();
+
+  const setTxt = function (id, val) { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  // Header — jika logo tampil, sembunyikan teks judul (logo saja).
+  // Jika logo tidak ada / gagal dimuat, tampilkan nama + tagline.
+  setTxt('payBrandName', name);
+  setTxt('payBrandTagline', tagline);
+  const brandText = document.getElementById('payBrandText');
+  if (logo) {
+    const img = document.getElementById('payBrandLogoImg');
+    if (img) {
+      img.onerror = function () {
+        img.style.display = 'none';
+        if (brandText) brandText.style.display = 'block';
+      };
+      img.onload = function () {
+        img.style.display = 'block';
+        if (brandText) brandText.style.display = 'none';
+      };
+      img.src = logo;
+    }
+  }
+
+  // Footer (desain modern)
+  setTxt('payFooterName', name);
+  setTxt('payFooterTagline', tagline);
+  if (address) {
+    const a = document.getElementById('payFooterAddress');
+    if (a) {
+      a.innerHTML = '<span>' + pubEscapeHtml(address).replace(/\n/g, '<br>') + '</span>';
+      a.style.display = 'flex';
+    }
+  }
+  if (cs) {
+    const c = document.getElementById('payFooterCs');
+    if (c) {
+      const disp = String(cs).replace(/[^0-9]/g, '');
+      const num = pubEscapeHtml(cs);
+      c.innerHTML =
+        '<span>Customer Service · <b style="color:#334155;">' + num + '</b></span>' +
+        (disp ? '<a href="https://wa.me/' + disp + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;color:#16a34a;font-weight:700;text-decoration:none;margin-left:2px;">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>WhatsApp</a>' : '');
+      c.style.display = 'flex';
+    }
+  }
+  if (website) {
+    const w = document.getElementById('payFooterWeb');
+    if (w) {
+      // Normalisasi: tambahkan https:// jika belum ada skema, untuk href.
+      const raw = String(website).trim();
+      const href = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+      // Tampilkan tanpa skema agar lebih bersih.
+      const disp = raw.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+      w.innerHTML =
+        '<a href="' + pubEscapeHtml(href) + '" target="_blank" rel="noopener" style="color:#2563eb;font-weight:600;text-decoration:none;">' + pubEscapeHtml(disp) + '</a>';
+      w.style.display = 'flex';
+    }
+  }
+}
+
+// ── Detail pembayaran untuk invoice yang sudah lunas ─────────────
+function renderPaidDetail(data) {
+  const detail = document.getElementById('payPaidDetail');
+  if (!detail) return;
+  const payments = Array.isArray(data.payments) ? data.payments : [];
+  // Ambil pembayaran terbaru (list sudah ORDER BY payment_date DESC dari backend).
+  const last = payments.length ? payments[0] : null;
+  if (!last) { detail.style.display = 'none'; return; }
+
+  const setTxt = function (id, val) { const el = document.getElementById(id); if (el) el.textContent = val; };
+  setTxt('paidOnDate', fmtDateInv(last.payment_date));
+  setTxt('paidVia', last.method_label || '-');
+
+  if (last.reference_number) {
+    document.getElementById('paidRefRow').style.display = 'flex';
+    setTxt('paidRef', last.reference_number);
+  }
+
+  const totalPaid = (typeof data.total_paid === 'number')
+    ? data.total_paid
+    : payments.reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+  setTxt('paidAmount', fmtRpInv(totalPaid || last.amount));
+
+  detail.style.display = 'block';
+}
+
+// ── Render daftar Riwayat Tagihan (invoice history 1 tahun) ──
+const INV_MONTHS = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+const INV_STATUS_STYLE = {
+  paid:      { bg:'#dcfce7', color:'#15803d' },
+  unpaid:    { bg:'#fef9c3', color:'#a16207' },
+  overdue:   { bg:'#fee2e2', color:'#b91c1c' },
+  cancelled: { bg:'#f1f5f9', color:'#64748b' }
+};
+function renderInvoiceHistory(history) {
+  const card = document.getElementById('invHistoryCard');
+  const list = document.getElementById('invHistoryList');
+  const cnt  = document.getElementById('invHistoryCount');
+  if (!card || !list) return;
+  if (!history.length) { card.style.display = 'none'; return; }
+  if (cnt) cnt.textContent = history.length + ' tagihan';
+
+  const statusIcon = function (key) {
+    if (key === 'paid')
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>';
+    if (key === 'overdue')
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+    if (key === 'cancelled')
+      return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a16207" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  };
+
+  const rows = history.map(function (h) {
+    const st = INV_STATUS_STYLE[h.status] || INV_STATUS_STYLE.unpaid;
+    const periode = (INV_MONTHS[h.period_month] || h.period_month) + ' ' + h.period_year;
+    const isCur = h.is_current === true;
+    const curBadge = isCur
+      ? '<span class="ih-cur-badge">TAGIHAN INI</span>' : '';
+    const viewBtn = '<button class="ih-detail-btn" onclick="pubOpenInvoice(\'' + h.token + '\')">Invoice</button>';
+    const payBtn = (h.payable === true)
+      ? '<button class="ih-pay-btn" onclick="pubGoPay(\'' + h.token + '\')">Bayar</button>'
+      : '';
+    const action = '<div class="ih-actions">' + payBtn + viewBtn + '</div>';
+    return '<div class="ih-row' + (isCur ? ' is-current' : '') + '">' +
+      '<div class="ih-c ih-c-inv" data-lbl="Invoice ID"><span class="ih-inv-num">' + (h.invoice_number || '-') + '</span>' + curBadge + '</div>' +
+      '<div class="ih-c ih-c-status" data-lbl="Status"><span class="ih-status" style="color:' + st.color + ';">' + statusIcon(h.status) + ' ' + h.status_label + '</span></div>' +
+      '<div class="ih-c ih-c-period" data-lbl="Periode">' + periode + '</div>' +
+      '<div class="ih-c ih-c-amount" data-lbl="Jumlah">' + fmtRpInv(h.total) + '</div>' +
+      '<div class="ih-c ih-c-action">' + action + '</div>' +
+    '</div>';
+  }).join('');
+
+  list.innerHTML =
+    '<div class="ih-table">' +
+      '<div class="ih-head">' +
+        '<div class="ih-c ih-c-inv">Invoice ID</div>' +
+        '<div class="ih-c ih-c-status">Status</div>' +
+        '<div class="ih-c ih-c-period">Periode</div>' +
+        '<div class="ih-c ih-c-amount">Jumlah</div>' +
+        '<div class="ih-c ih-c-action"></div>' +
+      '</div>' +
+      rows +
+    '</div>';
+  card.style.display = 'block';
+}
+// Var global menyimpan data invoice yang sedang dibuka (untuk modal default)
+let PUB_CURRENT_DATA = null;
+
+// Tombol "Bayar" di Riwayat Tagihan → buka halaman pembayaran publik untuk
+// invoice periode tsb. Kalau token = invoice yang sedang dibuka, cukup scroll
+// ke kartu pembayaran; selain itu navigasi ke /pub/invoice/<token>.
+function pubGoPay(token) {
+  if (!token) return;
+  if (token === window.PUBLIC_TOKEN) {
+    const card = document.getElementById('payActionCard');
+    if (card && card.style.display !== 'none') {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+  }
+  window.location.href = '/pub/invoice/' + encodeURIComponent(token);
+}
+
+// Buka tampilan invoice (modal) untuk invoice tertentu dari Riwayat Tagihan.
+// Status PAID/UNPAID otomatis tercermin di header invoice (InvoiceRenderer).
+async function pubOpenInvoice(token) {
+  if (!token) return;
+  const modal   = document.getElementById('invModal');
+  const wrap    = document.getElementById('invoiceWrapModal');
+  const loading = document.getElementById('invModalLoading');
+  modal.style.display = 'flex';
+  wrap.style.display = 'none';
+  loading.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  try {
+    let data;
+    // Kalau token = invoice yang sedang dibuka, pakai data yang sudah ada (hemat request)
+    if (PUB_CURRENT_DATA && token === window.PUBLIC_TOKEN) {
+      data = PUB_CURRENT_DATA;
+    } else {
+      const r = await fetch('/api/pub/invoice/' + encodeURIComponent(token) + '/data');
+      const j = await r.json();
+      if (!j.success) {
+        loading.innerHTML = '<p style="color:#dc2626;font-size:13px;">Gagal memuat invoice.</p>';
+        return;
+      }
+      data = j.data;
+    }
+    InvoiceRenderer.render('#invoiceWrapModal', data, window.INVTPL);
+    loading.style.display = 'none';
+    wrap.style.display = 'block';
+  } catch (e) {
+    loading.innerHTML = '<p style="color:#dc2626;font-size:13px;">Error: ' + e.message + '</p>';
+  }
+}
+function pubCloseInvoice() {
+  document.getElementById('invModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+function pubPrintInvoice() {
+  // Print hanya area invoice modal
+  document.body.classList.add('printing-modal');
+  window.print();
+  setTimeout(function () { document.body.classList.remove('printing-modal'); }, 500);
+}
+
+// ── Populate info box (Customer / Service / Invoice / Periode / Total) ──
+function populatePayInfo(data) {
+  const set = function (id, val) { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const periodeStr = (INV_MONTHS[data.period_month] || data.period_month || '') + ' ' + (data.period_year || '');
+  set('payCustomerName', data.cust_name || '—');
+  set('payServiceName',  data.pkg_name || '—');
+  set('payInvNum',       data.invoice_number || '—');
+  set('payPeriod',       periodeStr.trim() || '—');
+
+  const subtotal = parseFloat(data.invoice_subtotal || 0);
+  const tax      = parseFloat(data.invoice_tax || 0);
+  const total    = parseFloat(data.invoice_total || data.amount || 0);
+  if (tax > 0) {
+    document.getElementById('payRowSubtotal').style.display = 'flex';
+    document.getElementById('payRowTax').style.display = 'flex';
+    set('paySubtotal', fmtRpInv(subtotal));
+    const taxLbl = (data.tax_label || 'PPN') + (data.tax_rate ? ' (' + data.tax_rate + '%)' : '');
+    set('payTaxLbl', taxLbl);
+    set('payTax', fmtRpInv(tax));
+  }
+  set('payTotal', fmtRpInv(total));
+}
+
+// ── Label maps (sama dengan portal) ──
+const PM_BANK_LABELS  = { bca:'BCA', bni:'BNI', bri:'BRI', mandiri:'Mandiri', seabank:'SeaBank', permata:'Permata', cimb:'CIMB Niaga', bsi:'BSI', btpn:'BTPN Jenius', danamon:'Danamon' };
+const PM_EWALLET_LABELS = { dana:'DANA', ovo:'OVO', gopay:'GoPay', shopeepay:'ShopeePay', linkaja:'LinkAja' };
+
+function pubEscapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function pubJsEsc(s) { return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+
+let PUB_PAY_CFG = null;
+
+// ── Bangun accordion metode pembayaran (identik portal) ──
+function renderPaymentAccordion(cfg) {
+  let methods = (cfg && Array.isArray(cfg.payment_accounts)) ? cfg.payment_accounts : [];
+  methods = methods.filter(function (m) { return m && m.is_active !== false; });
+
+  const banks    = methods.filter(function (m) { return m.type === 'bank'; });
+  const ewallets = methods.filter(function (m) { return m.type === 'ewallet'; });
+  const qrisList = methods.filter(function (m) { return m.type === 'qris'; });
+  const gwActive = !!(cfg && cfg.gateway_enabled);
+
+  const container = document.getElementById('payAccordion');
+  let html = '';
+
+  // GROUP 1: Bayar Online (gateway)
+  if (gwActive) {
+    html += '<div class="pm-group pm-gw-card" onclick="pubPayOnline()" style="cursor:pointer">' +
+      '<div class="pm-group-head pm-gw-head" style="cursor:pointer">' +
+        '<div class="pm-group-ico is-gw-active">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' +
+        '</div>' +
+        '<div class="pm-group-text">' +
+          '<div class="pm-group-title">Bayar Online <span class="pm-gw-badge">Otomatis</span></div>' +
+          '<div class="pm-group-sub">VA, QRIS, E-Wallet, Kartu Kredit · langsung lunas</div>' +
+        '</div>' +
+        '<svg class="pm-gw-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</div>' +
+    '</div>';
+  }
+
+  const hasManual = banks.length || ewallets.length || qrisList.length;
+  if (hasManual) {
+    if (gwActive) html += '<div class="pm-divider"><span>atau transfer manual</span></div>';
+  } else if (!gwActive) {
+    html += '<div class="pm-empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>' +
+      'Metode pembayaran belum tersedia.<br>Hubungi admin via WhatsApp untuk info pembayaran.' +
+      '</div>';
+  }
+
+  if (banks.length) {
+    html += pubBuildGroup({
+      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>',
+      title: 'Transfer Bank', sub: 'BCA, BRI, Mandiri, SeaBank, dll',
+      items: banks, labelMap: PM_BANK_LABELS, iconClass: ''
+    });
+  }
+  if (ewallets.length) {
+    html += pubBuildGroup({
+      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20M16 15h3"/></svg>',
+      title: 'E-Wallet', sub: 'DANA, OVO, GoPay, ShopeePay',
+      items: ewallets, labelMap: PM_EWALLET_LABELS, iconClass: 'is-ewallet'
+    });
+  }
+  if (qrisList.length) html += pubBuildGroupQris(qrisList[0]);
+
+  container.innerHTML = html;
+
+  // Accordion toggle
+  container.querySelectorAll('.pm-group-head:not(.pm-gw-head)').forEach(function (head) {
+    head.addEventListener('click', function () {
+      const wasOpen = head.classList.contains('open');
+      container.querySelectorAll('.pm-group-head').forEach(function (h) { h.classList.remove('open'); });
+      if (!wasOpen) head.classList.add('open');
+    });
+  });
+  if (!gwActive) {
+    const firstHead = container.querySelector('.pm-group-head:not(.pm-gw-head)');
+    if (firstHead) firstHead.classList.add('open');
+  }
+
+  // WA confirm & warning hanya muncul kalau ada metode manual
+  const btnWa = document.getElementById('btnConfirmPay');
+  const warnEl = document.getElementById('pmWarn');
+  if (btnWa)  btnWa.style.display  = hasManual ? 'flex' : 'none';
+  if (warnEl) warnEl.style.display = hasManual ? 'flex' : 'none';
+  const heading = document.getElementById('pmHeading');
+  if (heading) heading.style.display = (gwActive || hasManual) ? 'block' : 'none';
+}
+
+function pubBuildGroup(opts) {
+  let itemsHtml = '';
+  opts.items.forEach(function (m) {
+    const label = (opts.labelMap && opts.labelMap[(m.provider || '').toLowerCase()]) || (m.provider || '').toUpperCase() || '—';
+    const logo  = m.logo_url
+      ? '<img src="' + pubEscapeHtml(m.logo_url) + '" alt="' + pubEscapeHtml(label) + '" onerror="this.outerHTML=\'' + pubEscapeHtml(label) + '\'">'
+      : pubEscapeHtml(label);
+    const num   = m.account_number || '—';
+    const owner = m.account_owner || '';
+    itemsHtml +=
+      '<div class="pm-item"><div class="pm-item-row">' +
+        '<div class="pm-logo">' + logo + '</div>' +
+        '<div class="pm-detail">' +
+          '<div class="pm-name">' + pubEscapeHtml(label) + '</div>' +
+          '<div class="pm-number">' + pubEscapeHtml(num) + '</div>' +
+          (owner ? '<div class="pm-owner">a.n. ' + pubEscapeHtml(owner) + '</div>' : '') +
+        '</div>' +
+        '<button class="pm-copy-btn" onclick="pubCopyAccount(this, \'' + pubJsEsc(num) + '\')">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+          '<span>Salin</span>' +
+        '</button>' +
+      '</div></div>';
+  });
+  return '<div class="pm-group">' +
+    '<div class="pm-group-head">' +
+      '<div class="pm-group-ico ' + (opts.iconClass || '') + '">' + opts.icon + '</div>' +
+      '<div class="pm-group-text">' +
+        '<div class="pm-group-title">' + pubEscapeHtml(opts.title) + '</div>' +
+        '<div class="pm-group-sub">' + pubEscapeHtml(opts.sub) + '</div>' +
+      '</div>' +
+      '<span class="pm-group-count">' + opts.items.length + '</span>' +
+      '<svg class="pm-group-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+    '</div>' +
+    '<div class="pm-group-body"><div class="pm-group-inner">' + itemsHtml + '</div></div>' +
+  '</div>';
+}
+
+function pubBuildGroupQris(m) {
+  const imgHtml = m && m.logo_url
+    ? '<img src="' + pubEscapeHtml(m.logo_url) + '" alt="QRIS">'
+    : '<div style="padding:40px 20px;color:#64748b;font-size:12px">QR code belum di-upload di admin</div>';
+  const owner = m && m.account_owner ? m.account_owner : '';
+  return '<div class="pm-group">' +
+    '<div class="pm-group-head">' +
+      '<div class="pm-group-ico is-qris">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h2M14 17h5M14 20h3M17 14h4"/></svg>' +
+      '</div>' +
+      '<div class="pm-group-text">' +
+        '<div class="pm-group-title">QRIS</div>' +
+        '<div class="pm-group-sub">Scan pakai GoPay, OVO, DANA, m-banking</div>' +
+      '</div>' +
+      '<span class="pm-group-count">1</span>' +
+      '<svg class="pm-group-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+    '</div>' +
+    '<div class="pm-group-body"><div class="pm-group-inner">' +
+      '<div class="pm-qris-box">' + imgHtml +
+        (owner ? '<div class="pm-owner" style="margin-top:10px">a.n. ' + pubEscapeHtml(owner) + '</div>' : '') +
+        '<div class="pm-qris-hint">Scan QR di atas dengan aplikasi e-wallet atau m-banking Anda.</div>' +
+      '</div>' +
+    '</div></div>' +
+  '</div>';
+}
+
+function pubCopyAccount(btn, number) {
+  const clean = String(number).replace(/\s+/g, '');
+  const span  = btn.querySelector('span');
+  const orig  = span ? span.textContent : 'Salin';
+  function done() {
+    btn.classList.add('copied');
+    if (span) span.textContent = 'Tersalin!';
+    setTimeout(function () { btn.classList.remove('copied'); if (span) span.textContent = orig; }, 1800);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(clean).then(done).catch(function () { pubFallbackCopy(clean); done(); });
+  } else { pubFallbackCopy(clean); done(); }
+}
+function pubFallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+// ── Helper: set/reset loading state tombol konfirmasi WA ──
+function setConfirmLoading(on) {
+  const btn  = document.getElementById('btnConfirmPay');
+  const icon = document.getElementById('btnConfirmIcon');
+  const spin = document.getElementById('btnConfirmSpin');
+  const txt  = document.getElementById('btnConfirmText');
+  if (!btn) return;
+  btn.disabled = !!on;
+  if (icon) icon.style.display = on ? 'none' : '';
+  if (spin) spin.style.display = on ? 'block' : 'none';
+  if (txt)  txt.textContent = on ? 'Memproses...' : 'Konfirmasi via WhatsApp';
+}
+
+// ── Manual confirm (Konfirmasi via WhatsApp) ──
+async function pubConfirmManual() {
+  if (!window.PUBLIC_TOKEN) return;
+
+  // Cek nomor WA perusahaan dulu — kalau belum diatur, beri feedback jelas
+  // dan jangan memanggil server (tidak akan menghasilkan wa_url).
+  const waNum = (PUB_PAY_CFG && PUB_PAY_CFG.company_whatsapp ? String(PUB_PAY_CFG.company_whatsapp) : '').replace(/[^0-9]/g, '');
+  if (!waNum) {
+    App.showToast('Nomor WhatsApp untuk konfirmasi belum diatur. Silakan hubungi admin.', 'warning');
+    return;
+  }
+
+  setConfirmLoading(true);
+  try {
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/pay', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'manual' })
+    });
+    const j = await r.json();
+    if (!j.success) {
+      if (j.code === 'ALREADY_PAID') {
+        App.showToast('Tagihan ini sudah dibayar.', 'success');
+        setTimeout(function () { window.location.reload(); }, 1200);
+        return;
+      }
+      App.showToast(j.message || 'Gagal membuat konfirmasi', 'error');
+      setConfirmLoading(false);
+      return;
+    }
+    if (j.wa_url) {
+      window.open(j.wa_url, '_blank');
+      App.showToast('WhatsApp dibuka, kirim bukti transfer ya', 'success');
+    } else {
+      App.showToast(j.message || 'Nomor WhatsApp belum diatur. Silakan hubungi admin.', 'warning');
+    }
+  } catch (e) {
+    App.showToast('Error: ' + e.message, 'error');
+  } finally {
+    setConfirmLoading(false);
+  }
+}
+
+// Midtrans Snap loader (sama pola dgn portal)
+let PUB_SNAP_LOADED = false;
+function pubLoadSnap(clientKey, env) {
+  return new Promise(function (resolve, reject) {
+    if (window.snap) return resolve();
+    if (PUB_SNAP_LOADED) {
+      let tries = 0;
+      const iv = setInterval(function () {
+        if (window.snap) { clearInterval(iv); resolve(); }
+        else if (++tries > 50) { clearInterval(iv); reject(new Error('Snap.js timeout')); }
+      }, 100);
+      return;
+    }
+    PUB_SNAP_LOADED = true;
+    const s = document.createElement('script');
+    s.src = (env === 'production')
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js';
+    s.setAttribute('data-client-key', clientKey || '');
+    s.onload = function () { resolve(); };
+    s.onerror = function () { reject(new Error('Gagal load Snap.js')); };
+    document.head.appendChild(s);
+  });
+}
+
+// ── Bayar Online (gateway) ──
+async function pubPayOnline() {
+  if (!window.PUBLIC_TOKEN) return;
+  const gwCard = document.querySelector('.pm-gw-card');
+  if (gwCard) gwCard.style.opacity = '.6';
+  try {
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/pay', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    });
+    const j = await r.json();
+    if (!j.success) {
+      if (j.code === 'TRIPAY_METHOD_REQUIRED') { if (gwCard) gwCard.style.opacity = ''; return pubOpenTripay(); }
+      if (j.code === 'ALREADY_PAID') {
+        App.showToast('Tagihan ini sudah dibayar.', 'success');
+        setTimeout(function () { window.location.reload(); }, 1200);
+        return;
+      }
+      App.showToast(j.message || 'Gagal membuat transaksi', 'error');
+      if (gwCard) gwCard.style.opacity = '';
+      return;
+    }
+    pubHandleGatewayResponse(j);
+  } catch (e) {
+    App.showToast('Error: ' + e.message, 'error');
+    if (gwCard) gwCard.style.opacity = '';
+  }
+}
+
+async function pubHandleGatewayResponse(j) {
+  const finishUrl = '/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN);
+  if (j.mode === 'midtrans' && j.snap_token) {
+    try { await pubLoadSnap(j.client_key, j.env); }
+    catch (e) {
+      if (j.snap_url) { window.location.href = j.snap_url; return; }
+      App.showToast('Gagal memuat Snap. Coba lagi.', 'error');
+      const gwCard = document.querySelector('.pm-gw-card'); if (gwCard) gwCard.style.opacity = '';
+      return;
+    }
+    window.snap.pay(j.snap_token, {
+      onSuccess: function () { window.location.href = finishUrl; },
+      onPending: function () { window.location.href = finishUrl; },
+      onError:   function () { App.showToast('Pembayaran gagal.', 'error'); const g=document.querySelector('.pm-gw-card'); if(g)g.style.opacity=''; },
+      onClose:   function () { App.showToast('Transaksi belum selesai. Anda bisa coba lagi kapan saja.', 'info'); const g=document.querySelector('.pm-gw-card'); if(g)g.style.opacity=''; }
+    });
+    return;
+  }
+  const url = j.invoice_url || j.payment_url;
+  if (url) { window.location.href = url; return; }
+  App.showToast('Respons gateway tidak dikenali', 'error');
+  const gwCard = document.querySelector('.pm-gw-card'); if (gwCard) gwCard.style.opacity = '';
+}
+
+// ── Tripay channel picker (public) ──
+function pubCloseTripay() { document.getElementById('pubTripayModal').style.display = 'none'; }
+async function pubOpenTripay() {
+  const modal = document.getElementById('pubTripayModal');
+  const box = document.getElementById('pubTripayList');
+  box.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:13px">Memuat channel…</div>';
+  modal.style.display = 'flex';
+  try {
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/tripay-channels');
+    const j = await r.json();
+    if (!j.success || !Array.isArray(j.channels) || !j.channels.length) {
+      box.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;font-size:13px">' + (j.message || 'Tidak ada channel tersedia') + '</div>';
+      return;
+    }
+    const groups = {};
+    j.channels.forEach(function (c) { (groups[c.group || 'Lainnya'] = groups[c.group || 'Lainnya'] || []).push(c); });
+    let html = '';
+    Object.keys(groups).forEach(function (g) {
+      html += '<div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin:12px 2px 8px">' + g + '</div>';
+      groups[g].forEach(function (c) {
+        let feeTxt = '';
+        if (c.fee_flat) feeTxt = 'Biaya Rp ' + Number(c.fee_flat).toLocaleString('id-ID');
+        else if (c.fee_percent && c.fee_percent !== '0') feeTxt = 'Biaya ' + c.fee_percent + '%';
+        html += '<div onclick="pubPayTripay(\'' + c.code + '\')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;transition:all .15s" ' +
+          'onmouseover="this.style.borderColor=\'#2563eb\';this.style.background=\'#f8fafc\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'\'">' +
+          (c.icon ? '<img src="' + c.icon + '" alt="" style="width:36px;height:24px;object-fit:contain"/>' : '<div style="width:36px;height:24px;background:#eef2ff;border-radius:6px"></div>') +
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:#1e293b">' + c.name + '</div>' +
+          (feeTxt ? '<div style="font-size:11px;color:#94a3b8">' + feeTxt + '</div>' : '') + '</div>' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</div>';
+      });
+    });
+    box.innerHTML = html;
+  } catch (e) {
+    box.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;font-size:13px">Error: ' + e.message + '</div>';
+  }
+}
+async function pubPayTripay(method) {
+  if (!method) return;
+  const box = document.getElementById('pubTripayList');
+  if (box) box.style.opacity = '.5';
+  try {
+    const r = await fetch('/pub/invoice/' + encodeURIComponent(window.PUBLIC_TOKEN) + '/pay', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tripay_method: method })
+    });
+    const j = await r.json();
+    if (!j.success) { App.showToast(j.message || 'Gagal membuat transaksi', 'error'); return; }
+    if (j.payment_url) { window.location.href = j.payment_url; return; }
+    App.showToast('Respons gateway tidak dikenali', 'error');
+  } catch (e) {
+    App.showToast('Error: ' + e.message, 'error');
+  } finally {
+    if (box) box.style.opacity = '';
+  }
+}
+
+loadInvoice();
+</script>
+</body>
+</html>

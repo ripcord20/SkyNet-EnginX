@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ot-blue:#2563eb;  --ot-blue-d:#1d4ed8; --ot-blue-l:#eff6ff;
+      --ot-green:#16a34a; --ot-green-d:#15803d; --ot-green-l:#f0fdf4;
+      --ot-red:#dc2626;   --ot-red-d:#b91c1c;   --ot-red-l:#fef2f2;
+      --ot-amber:#d97706; --ot-amber-d:#b45309; --ot-amber-l:#fffbeb;
+      --ot-teal:#0891b2;  --ot-teal-l:#ecfeff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8; --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    body,html{ font-family:'Plus Jakarta Sans',sans-serif; }
+    .page-content{ background:#f6f8fc; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+    @keyframes spin  { to{transform:rotate(360deg)} }
+    @keyframes fadeUp{ from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    .a1{animation:fadeUp .3s ease both}.a2{animation:fadeUp .3s .06s ease both}.a3{animation:fadeUp .3s .12s ease both}
+
+    /* HEADER */
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+    .ot-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .ot-hdr-l h1 .ic { width:32px; height:32px; border-radius:9px; background:linear-gradient(135deg,#1e3a8a,#2563eb); display:grid; place-items:center; box-shadow:0 4px 12px rgba(37,99,235,.28); }
+    .ot-hdr-l h1 .ic svg { width:17px; height:17px; stroke:#fff; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; display:flex; align-items:center; gap:6px; }
+    .ot-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue  { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); }
+    .btn-sm    { padding:6px 13px; font-size:12px; border-radius:9px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ROUTER BAR */
+    .ot-routerbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff; border:1.5px solid var(--border); border-radius:13px; padding:11px 16px; margin-bottom:18px; }
+    .ot-routerbar label { font-size:12px; font-weight:700; color:var(--muted); }
+    .ot-routerbar select { font-family:inherit; font-size:13px; font-weight:600; padding:8px 12px; border:1.5px solid var(--border); border-radius:9px; background:#f8fafc; min-width:200px; color:var(--text); outline:none; }
+    .ot-routerbar select:focus { border-color:var(--ot-blue); background:#fff; }
+    .ot-proto { font-size:10.5px; font-weight:800; padding:3px 9px; border-radius:100px; background:var(--ot-blue-l); color:var(--ot-blue); letter-spacing:.04em; }
+
+    /* STAT CARDS */
+    .ot-cards { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-radius:16px; border:1px solid #e8eaed; overflow:hidden; margin-bottom:20px; }
+    .ot-card { padding:20px 22px 18px; border-right:1px solid #e8eaed; cursor:pointer; display:flex; flex-direction:column; position:relative; overflow:hidden; transition:background .15s; }
+    .ot-card:last-child { border-right:none; }
+    .ot-card:hover { background:#fafbff; }
+    .ot-card.otc-active { background:#2563eb; border-color:#2563eb; }
+    .ot-card.otc-active:hover { background:#1d4ed8; }
+    .ot-card.otc-active .card-lbl  { color:rgba(255,255,255,.70); }
+    .ot-card.otc-active .card-val  { color:#fff; }
+    .ot-card.otc-active .card-sub  { color:rgba(255,255,255,.60); }
+    .ot-card.otc-active .sp-line   { stroke:rgba(255,255,255,.70) !important; }
+    .ot-card.otc-active .sp-fill   { fill:rgba(255,255,255,.12) !important; }
+    .ot-card.otc-active .sp-dot    { fill:#fff !important; }
+    .card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; transition:color .15s; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-sub { font-size:11.5px; color:#94a3b8; margin-top:7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .card-spark { flex-shrink:0; width:72px; height:36px; align-self:flex-end; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    @media(max-width:700px) {
+      .ot-cards { grid-template-columns:repeat(2,1fr); }
+      .ot-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .ot-card:nth-child(odd) { border-right:1px solid #e8eaed; }
+      .ot-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:420px) {
+      .ot-cards { grid-template-columns:1fr; }
+      .ot-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .ot-card:last-child { border-bottom:none; }
+    }
+
+    /* TABLE */
+    .ot-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .ot-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ot-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ot-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+    .ot-tbl-tools { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+
+    .filter-chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .fchip { padding:5px 13px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--muted); transition:all .15s; font-family:inherit; }
+    .fchip:hover { border-color:var(--ot-blue); color:var(--ot-blue); }
+    .fchip.active        { background:var(--ot-blue);  border-color:var(--ot-blue);  color:#fff; }
+    .fchip.green.active  { background:var(--ot-green); border-color:var(--ot-green); }
+    .fchip.amber.active  { background:var(--ot-amber); border-color:var(--ot-amber); }
+    .fchip.red.active    { background:var(--ot-red);   border-color:var(--ot-red);   }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:210px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .iface-select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:12.5px; font-weight:600; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); cursor:pointer; }
+    .iface-select:focus { border-color:var(--ot-blue); background:#fff; }
+
+    .ot-table { width:100%; border-collapse:collapse; }
+    .ot-table thead tr { background:#fafbfc; }
+    .ot-table th { padding:11px 16px; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.06em; text-align:left; border-bottom:1px solid #eef2f7; white-space:nowrap; }
+    .ot-table th.ta-r { text-align:right; }
+    .ot-table tbody tr { border-bottom:1px solid #f5f7fa; transition:background .15s; }
+    .ot-table tbody tr:hover { background:#fafbff; }
+    .ot-table tbody tr:last-child { border-bottom:none; }
+    .ot-table tbody tr.row-disabled { opacity:.6; }
+    .ot-table td { padding:13px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+    .ot-table td.ta-r { text-align:right; }
+
+    /* cells */
+    .ip-cell { display:flex; align-items:center; gap:9px; min-width:0; }
+    .ip-ic { width:26px; height:26px; border-radius:7px; background:var(--ot-blue-l); color:var(--ot-blue); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ip-ic svg { width:13px; height:13px; stroke-width:2; }
+    .ip-addr { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:13px; font-weight:700; color:#0f172a; letter-spacing:-.2px; }
+    .ip-net { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:11.5px; color:#94a3b8; letter-spacing:-.2px; }
+    .iface-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:8px; background:#f1f5f9; font-size:12px; font-weight:700; color:#334155; }
+    .iface-pill .dot { width:7px; height:7px; border-radius:50%; background:var(--ot-green); flex-shrink:0; }
+    .iface-pill .dot.off { background:#cbd5e1; }
+    .type-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+    .type-pill.static { background:var(--ot-blue-l); color:var(--ot-blue-d); }
+    .type-pill.dynamic{ background:var(--ot-amber-l); color:var(--ot-amber-d); }
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; }
+    .sdot { width:5px; height:5px; border-radius:50%; flex-shrink:0; background:currentColor; }
+    .pill-on  { background:var(--ot-green-l); color:#15803d; }
+    .pill-on .sdot { animation:pulse 2s infinite; }
+    .pill-off { background:#f1f5f9; color:#94a3b8; }
+    .cmt-txt { font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; display:inline-block; }
+    .cmt-empty,.cell-empty { font-size:11px; color:#cbd5e1; }
+
+    /* action icon buttons */
+    .act-btns { display:flex; gap:5px; justify-content:flex-end; }
+    .act-btn { width:30px; height:30px; padding:0; border-radius:8px; border:1px solid #e8eaed; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; color:#64748b; font-family:inherit; }
+    .act-btn svg { width:14px; height:14px; stroke-width:1.9; }
+    .act-btn:hover { transform:translateY(-1px); box-shadow:0 2px 6px -1px rgba(15,23,42,.10); }
+    .act-edit:hover   { color:var(--ot-blue);  border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .act-toggle:hover { color:var(--ot-amber); border-color:#fde68a; background:var(--ot-amber-l); }
+    .act-del:hover    { color:var(--ot-red);   border-color:#fecaca; background:var(--ot-red-l); }
+    .act-dim { font-size:11px; color:#cbd5e1; font-weight:600; padding-right:4px; }
+
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:38px; height:38px; opacity:.35; margin-bottom:10px; display:block; margin:0 auto 10px; }
+    .tbl-empty p { font-size:13px; margin:4px 0 0; }
+    .spinner { display:inline-block; width:15px; height:15px; border:2px solid rgba(37,99,235,.25); border-top-color:var(--ot-blue); border-radius:50%; animation:spin .7s linear infinite; }
+    .spinner.light { border-color:rgba(255,255,255,.4); border-top-color:#fff; }
+    .ot-tbl-footer { padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f5f9; font-size:12.5px; color:#475569; flex-wrap:wrap; gap:8px; }
+
+    /* RESPONSIVE: table → cards */
+    @media(max-width:760px){
+      .ot-table thead { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+      .ot-table, .ot-table tbody { display:block; }
+      .ot-table tbody tr { display:block; padding:14px 16px; border-bottom:8px solid #f6f8fc; }
+      .ot-table tbody tr:hover { background:#fff; }
+      .ot-table td { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed #eef2f7; }
+      .ot-table td:last-child { border-bottom:none; padding-top:10px; }
+      .ot-table td::before { content:attr(data-l); font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; flex-shrink:0; }
+      .ot-table td[data-l=""]::before { content:none; }
+      .ot-table td.ta-r { justify-content:flex-end; }
+      .cmt-txt { max-width:60%; }
+      .search-wrap input { width:100%; }
+      .ot-tbl-tools { width:100%; }
+      .search-wrap { flex:1; }
+    }
+
+    /* MODAL */
+    .modal-back { position:fixed; inset:0; background:rgba(15,23,42,.55); display:none; align-items:center; justify-content:center; z-index:9999; padding:16px; }
+    .modal-back.show { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; padding:24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; animation:fadeUp .22s ease both; }
+    .modal-box h3 { font-size:17px; font-weight:800; color:var(--text); margin:0 0 5px; }
+    .modal-box p { font-size:12.5px; color:var(--muted); margin:0 0 18px; }
+    .modal-actions { display:flex; gap:9px; justify-content:flex-end; margin-top:20px; }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:560px){ .grid2 { grid-template-columns:1fr; } .modal-box { padding:18px; } }
+    .fg { display:flex; flex-direction:column; gap:6px; }
+    .fg label { font-size:12px; font-weight:700; color:#475569; }
+    .fg .hint { font-weight:500; color:#94a3b8; }
+    .fg input, .fg select { font-family:inherit; font-size:13px; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; background:#f8fafc; color:var(--text); outline:none; transition:all .15s; }
+    .fg input:focus, .fg select:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .fg input.mono { font-family:'Geist Mono',ui-monospace,monospace; }
+  </style>
+</head>
+<body>
+<div class="app-layout ot">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="ot-hdr a1">
+        <div class="ot-hdr-l">
+          <h1>IP Addressing</h1>
+          <p>Kelola alamat IP pada interface MikroTik — tambah, edit, hapus langsung dari aplikasi</p>
+        </div>
+        <div class="ot-hdr-r">
+          <button class="btn btn-outline" onclick="loadAddresses()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15.5 6.3L3 16"/><polyline points="3 21 3 16 8 16"/></svg>Refresh</button>
+          <button class="btn btn-blue" onclick="openIpModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Tambah IP</button>
+        </div>
+      </div>
+
+      <div class="ot-routerbar a2">
+        <label>Router:</label>
+        <select id="routerSel" onchange="onRouterChange()"><option value="">— Memuat… —</option></select>
+        <span class="ot-proto" id="routerProto" style="display:none"></span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;color:#9aa8c4">Semua operasi memakai router terpilih</span>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="ot-cards a2">
+        <div class="ot-card otc-active" id="ipc-all" onclick="ipFilterClick('all')">
+          <div class="card-lbl">Total IP Address</div>
+          <div class="card-body">
+            <div class="card-left"><span class="card-val" id="ipsTotal">—</span><span class="card-sub">Semua alamat terpasang</span></div>
+            <div class="card-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="sp-fill" d="M0,28 L12,22 L24,25 L36,16 L48,20 L60,10 L72,14 L72,36 L0,36 Z" fill="#2563eb" opacity=".12"/><path class="sp-line" d="M0,28 L12,22 L24,25 L36,16 L48,20 L60,10 L72,14" stroke="#2563eb"/><circle class="sp-dot" cx="72" cy="14" r="2.5" fill="#2563eb"/></svg></div>
+          </div>
+        </div>
+        <div class="ot-card" id="ipc-static" onclick="ipFilterClick('static')">
+          <div class="card-lbl">Statis (Manual)</div>
+          <div class="card-body">
+            <div class="card-left"><span class="card-val" id="ipsStatic" style="color:#16a34a">—</span><span class="card-sub">Bisa diedit / dihapus</span></div>
+            <div class="card-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="sp-fill" d="M0,24 L12,26 L24,18 L36,20 L48,12 L60,16 L72,9 L72,36 L0,36 Z" fill="#16a34a" opacity=".12"/><path class="sp-line" d="M0,24 L12,26 L24,18 L36,20 L48,12 L60,16 L72,9" stroke="#16a34a"/><circle class="sp-dot" cx="72" cy="9" r="2.5" fill="#16a34a"/></svg></div>
+          </div>
+        </div>
+        <div class="ot-card" id="ipc-dynamic" onclick="ipFilterClick('dynamic')">
+          <div class="card-lbl">Dinamis</div>
+          <div class="card-body">
+            <div class="card-left"><span class="card-val" id="ipsDynamic" style="color:#d97706">—</span><span class="card-sub">Otomatis (DHCP / PPP)</span></div>
+            <div class="card-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="sp-fill" d="M0,20 L12,24 L24,16 L36,26 L48,18 L60,22 L72,17 L72,36 L0,36 Z" fill="#d97706" opacity=".12"/><path class="sp-line" d="M0,20 L12,24 L24,16 L36,26 L48,18 L60,22 L72,17" stroke="#d97706"/><circle class="sp-dot" cx="72" cy="17" r="2.5" fill="#d97706"/></svg></div>
+          </div>
+        </div>
+        <div class="ot-card" id="ipc-disabled" onclick="ipFilterClick('disabled')">
+          <div class="card-lbl">Nonaktif</div>
+          <div class="card-body">
+            <div class="card-left"><span class="card-val" id="ipsDisabled" style="color:#dc2626">—</span><span class="card-sub">Disabled di router</span></div>
+            <div class="card-spark"><svg viewBox="0 0 72 36" preserveAspectRatio="none"><path class="sp-fill" d="M0,16 L12,14 L24,20 L36,18 L48,24 L60,22 L72,28 L72,36 L0,36 Z" fill="#dc2626" opacity=".12"/><path class="sp-line" d="M0,16 L12,14 L24,20 L36,18 L48,24 L60,22 L72,28" stroke="#dc2626"/><circle class="sp-dot" cx="72" cy="28" r="2.5" fill="#dc2626"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="ot-tbl-wrap a3">
+        <div class="ot-tbl-hdr">
+          <div class="ot-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ot-blue)" stroke-width="2.5"><rect x="2" y="4" width="20" height="6" rx="1.5"/><rect x="2" y="14" width="20" height="6" rx="1.5"/><path stroke-linecap="round" d="M6 7h.01M6 17h.01"/></svg>
+            Daftar IP Address <span class="ot-count" id="ipCount">0</span>
+          </div>
+          <div class="ot-tbl-tools">
+            <div class="filter-chips">
+              <button class="fchip active"      data-f="all"      onclick="ipFilterClick('all')">Semua</button>
+              <button class="fchip green"        data-f="static"   onclick="ipFilterClick('static')">Statis</button>
+              <button class="fchip amber"        data-f="dynamic"  onclick="ipFilterClick('dynamic')">Dinamis</button>
+              <button class="fchip red"          data-f="disabled" onclick="ipFilterClick('disabled')">Nonaktif</button>
+            </div>
+            <select class="iface-select" id="ifaceFilter" onchange="renderAddresses()"><option value="">Semua interface</option></select>
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input id="ipSearch" placeholder="Cari IP / interface / komentar…" oninput="renderAddresses()">
+            </div>
+          </div>
+        </div>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+          <table class="ot-table">
+            <thead><tr>
+              <th>Address</th><th>Interface</th><th>Tipe</th><th>Status</th><th>Komentar</th><th class="ta-r">Aksi</th>
+            </tr></thead>
+            <tbody id="ipBody">
+              <tr><td colspan="6"><div class="tbl-empty"><span class="spinner"></span><p>Memuat…</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ot-tbl-footer"><span id="ipFooter">—</span></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="modal-back" id="mdGeneric"><div class="modal-box" id="mdBox"></div></div>
+
+<script src="/js/app.js"></script>
+<script src="/js/ip-addressing.js"></script>
+</body></html>

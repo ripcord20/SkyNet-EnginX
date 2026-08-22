@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ot-blue:#2563eb;  --ot-blue-d:#1d4ed8; --ot-blue-l:#eff6ff;
+      --ot-green:#16a34a; --ot-green-d:#15803d; --ot-green-l:#f0fdf4;
+      --ot-red:#dc2626;   --ot-red-d:#b91c1c;   --ot-red-l:#fef2f2;
+      --ot-amber:#d97706; --ot-amber-d:#b45309; --ot-amber-l:#fffbeb;
+      --ot-teal:#0891b2;  --ot-teal-l:#ecfeff;
+      --ot-slate:#475569;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .ot { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* HEADER */
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ot-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; display:flex; align-items:center; gap:6px; }
+    .ot-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue  { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); }
+    .btn-amber { background:var(--ot-amber); border-color:var(--ot-amber); color:#fff; }
+    .btn-amber:hover { background:var(--ot-amber-d); }
+    .btn-red   { background:var(--ot-red); border-color:var(--ot-red); color:#fff; }
+    .btn-red:hover { background:var(--ot-red-d); }
+    .btn-sm    { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; background:var(--ot-green-l); border:1px solid #bbf7d0; color:var(--ot-green); }
+    .live-chip .ldot { width:7px; height:7px; border-radius:50%; background:var(--ot-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+    @keyframes spin  { to{transform:rotate(360deg)} }
+
+    /* STAT CARDS — Modern Fresh */
+    /* ── STAT CARDS — single strip with dividers ── */
+    .ot-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .ot-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .ot-card:last-child { border-right: none; }
+    .ot-card:hover { background: #fafbff; }
+    /* Reset ornamen lama — paksa hapus ::before dan ::after */
+    .ot-card::before,
+    .ot-card::after { display: none !important; content: none !important; }
+
+    /* Active — biru solid */
+    .ot-card.otc-active { background: #2563eb; border-color: #2563eb; }
+    .ot-card.otc-active:hover { background: #1d4ed8; }
+    .ot-card.otc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .ot-card.otc-active .card-val  { color: #fff; }
+    .ot-card.otc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .ot-card.otc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .ot-card.otc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .ot-card.otc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .ot-card.otc-active .sp-dot    { fill: #fff !important; }
+
+    /* ── Custom GenieACS Server card ── */
+    .ot-card-server {
+      padding: 18px 22px 16px !important;
+      gap: 10px !important;
+      justify-content: space-between;
+    }
+    .srv-hdr { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .srv-icon {
+      width:34px; height:34px; border-radius:9px;
+      background:#ecfdf5; color:#059669;
+      display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+      transition: background .15s, color .15s;
+    }
+    .srv-icon svg { width:16px; height:16px; stroke-width:2; }
+    .srv-pill {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 10px; border-radius:20px;
+      background:#dcfce7; color:#15803d;
+      font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em;
+      white-space:nowrap;
+      transition: background .15s, color .15s;
+    }
+    .srv-pd {
+      width:6px; height:6px; border-radius:50%;
+      background:#10b981; animation: srvpulse 2s infinite;
+    }
+    @keyframes srvpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    /* Error / disconnected states */
+    .srv-pill.err   { background:#fee2e2; color:#b91c1c; }
+    .srv-pill.err .srv-pd { background:#ef4444; animation:none; }
+    .srv-icon.err   { background:#fee2e2; color:#b91c1c; }
+    .srv-pill.warn  { background:#fef3c7; color:#b45309; }
+    .srv-pill.warn .srv-pd { background:#f59e0b; }
+    .srv-icon.warn  { background:#fef3c7; color:#b45309; }
+
+    .srv-stack { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .srv-name { font-size:14px; font-weight:700; color:#0f172a; line-height:1.2; letter-spacing:-.2px; }
+    .srv-url {
+      font-family:'Geist Mono', ui-monospace, Menlo, monospace;
+      font-size:11px; color:#64748b; letter-spacing:-.2px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;
+    }
+    .srv-foot {
+      display:flex; align-items:center; gap:10px;
+      padding-top:10px; border-top:1px dashed #eef2f7;
+      font-size:10.5px; color:#94a3b8; font-weight:600;
+    }
+    .srv-foot b { color:#334155; font-weight:700; font-family:'Geist Mono', ui-monospace, monospace; }
+    .srv-foot .latok { color:#15803d; }
+    .srv-dot-sep { color:#cbd5e1; }
+
+    /* When active (card clicked to filter), invert colors */
+    .ot-card-server.otc-active { background:#2563eb; border-color:#2563eb; }
+    .ot-card-server.otc-active .srv-icon { background:rgba(255,255,255,.18); color:#fff; }
+    .ot-card-server.otc-active .srv-pill { background:rgba(255,255,255,.20); color:#fff; }
+    .ot-card-server.otc-active .srv-pd { background:#bbf7d0; }
+    .ot-card-server.otc-active .srv-name { color:#fff; }
+    .ot-card-server.otc-active .srv-url { color:rgba(255,255,255,.75); }
+    .ot-card-server.otc-active .srv-foot { color:rgba(255,255,255,.70); border-top-color:rgba(255,255,255,.20); }
+    .ot-card-server.otc-active .srv-foot b { color:#fff; }
+    .ot-card-server.otc-active .srv-foot .latok { color:#bbf7d0; }
+    .ot-card-server.otc-active .srv-dot-sep { color:rgba(255,255,255,.35); }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    /* body */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    /* meta */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .pill-teal   { background:#cffafe; color:#0e7490; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    /* responsive */
+    @media(max-width:700px) {
+      .ot-cards { grid-template-columns:repeat(2,1fr); }
+      .ot-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .ot-card:nth-child(odd)  { border-right: 1px solid #e8eaed; }
+      .ot-card:nth-child(even) { border-right: none; }
+      .ot-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .ot-cards { grid-template-columns:1fr; }
+      .ot-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .ot-card:last-child { border-bottom: none; }
+    }
+
+    .card-sub { font-size:12px; opacity:.8; font-weight:500; }
+
+    /* ALERT */
+    .ot-alert { display:none; background:var(--ot-red-l); border:1.5px solid #fecaca; border-left:4px solid var(--ot-red); border-radius:10px; padding:11px 16px; margin-bottom:16px; font-size:13px; font-weight:500; color:var(--ot-red); align-items:center; gap:10px; }
+    .ot-alert.show { display:flex; }
+
+    /* TABLE WRAPPER */
+    .ot-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .ot-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ot-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ot-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    /* Filter chips */
+    .filter-chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .fchip { padding:5px 13px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--muted); transition:all .15s; font-family:inherit; }
+    .fchip:hover { border-color:var(--ot-blue); color:var(--ot-blue); }
+    .fchip.active       { background:var(--ot-blue);  border-color:var(--ot-blue);  color:#fff; }
+    .fchip.online.active  { background:var(--ot-green); border-color:var(--ot-green); }
+    .fchip.offline.active { background:var(--ot-red);   border-color:var(--ot-red);   }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:220px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+
+    .ot-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    .ot-table thead tr { background:#fafbfc; }
+    .ot-table th { padding:11px 14px; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.06em; text-align:left; border-bottom:1px solid #eef2f7; white-space:nowrap; }
+    .ot-table tbody tr { border-bottom:1px solid #f5f7fa; transition:background .15s; cursor:pointer; }
+    .ot-table tbody tr:hover { background:#fafbff; }
+    .ot-table tbody tr:last-child { border-bottom:none; }
+    .ot-table tbody tr.row-offline { opacity:.55; }
+    .ot-table td { padding:14px; font-size:13px; color:#374151; vertical-align:middle; overflow:hidden; }
+
+    /* More breathing space for narrow metric cols */
+    .ot-table th:nth-child(4),.ot-table td:nth-child(4),
+    .ot-table th:nth-child(5),.ot-table td:nth-child(5),
+    .ot-table th:nth-child(6),.ot-table td:nth-child(6),
+    .ot-table th:nth-child(7),.ot-table td:nth-child(7) { padding-left:16px; padding-right:16px; }
+
+    /* ── Responsive: aggressive column hiding, keep table format ── */
+    /* < 1280px: hide Uptime, hide tanggal sub di Last Inform */
+    @media(max-width:1280px) {
+      .ot-table th:nth-child(7),.ot-table td:nth-child(7) { display:none; } /* Uptime */
+      .inform-sub { display:none; }
+    }
+    /* < 1024px: hide Clients + SSID */
+    @media(max-width:1024px) {
+      .ot-table th:nth-child(5),.ot-table td:nth-child(5) { display:none; } /* Clients */
+      .ot-table th:nth-child(8),.ot-table td:nth-child(8) { display:none; } /* SSID */
+    }
+    /* < 900px: hide Suhu + WAN IP */
+    @media(max-width:900px) {
+      .ot-table th:nth-child(6),.ot-table td:nth-child(6) { display:none; } /* Suhu */
+      .ot-table th:nth-child(9),.ot-table td:nth-child(9) { display:none; } /* WAN IP */
+    }
+    /* < 720px: hide Customer + Last Inform */
+    @media(max-width:720px) {
+      .ot-table th:nth-child(3),.ot-table td:nth-child(3) { display:none; } /* Customer */
+      .ot-table th:nth-child(10),.ot-table td:nth-child(10) { display:none; } /* Last Inform */
+    }
+    /* Mobile compact: < 640px — tighten padding, smaller fonts, keep table */
+    @media(max-width:640px) {
+      .ot-table th { padding:9px 8px; font-size:9px; letter-spacing:.04em; }
+      .ot-table td { padding:10px 8px; font-size:12px; }
+      .ot-table th:nth-child(4),.ot-table td:nth-child(4),
+      .ot-table th:nth-child(5),.ot-table td:nth-child(5),
+      .ot-table th:nth-child(6),.ot-table td:nth-child(6),
+      .ot-table th:nth-child(7),.ot-table td:nth-child(7) { padding-left:6px; padding-right:6px; }
+      .num-cell { font-size:10px; }
+      .sn-num { font-size:11px; }
+      .sn-sub { font-size:9.5px; }
+      .rx-val { font-size:11px; }
+      .rx-lbl { font-size:8.5px; }
+      .dev-val { font-size:10.5px; }
+      .ip-badge { font-size:9.5px; padding:1.5px 5px; }
+      .act-btn { width:26px; height:26px; }
+      .act-btn svg { width:12px; height:12px; }
+      /* Override earlier hide rules — show Customer + Uptime in mobile */
+      .ot-table th:nth-child(3),.ot-table td:nth-child(3) { display:table-cell !important; } /* Customer */
+      .ot-table th:nth-child(7),.ot-table td:nth-child(7) { display:table-cell !important; } /* Uptime */
+      /* Compact Customer in mobile */
+      .cust-name { font-size:11px; }
+      .cust-id { font-size:9px; }
+      .cust-empty { font-size:9.5px; }
+      .cust-empty::before { width:4px; height:4px; }
+      /* Compact uptime */
+      .dev-val.uptime-txt { font-size:10px; }
+      /* Card list container — tetap allow horizontal scroll jika ada cell yang min-content lebih lebar */
+      .ot-tbl-wrap > div[style*="overflow-x"] { -webkit-overflow-scrolling:touch; }
+    }
+
+    .num-cell { color:#94a3b8; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums; font-family:'Geist Mono',ui-monospace,Menlo,monospace; }
+
+    /* Serial + Model combined cell — text-only stack, no icon */
+    .sn-cell { display:flex; flex-direction:column; gap:3px; min-width:0; }
+    .sn-num { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:12px; font-weight:700; color:var(--text); letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sn-sub { font-size:10.5px; color:#94a3b8; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    /* Model cell (legacy) */
+    .model-cell { font-size:12px; color:var(--muted); }
+
+    /* Customer cell */
+    .cust-cell { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .cust-name { font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .cust-id   { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:10px; color:#94a3b8; }
+    .cust-empty{ display:inline-flex; align-items:center; gap:5px; font-size:10.5px; color:#cbd5e1; font-weight:500; }
+    .cust-empty::before { content:''; width:5px; height:5px; border-radius:50%; background:#e2e8f0; flex-shrink:0; }
+
+    /* RX power tier cell — text only (no icon) */
+    .rx-txt { display:flex; flex-direction:column; gap:1px; line-height:1.1; min-width:0; }
+    .rx-val { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:12px; font-weight:700; letter-spacing:-.2px; font-variant-numeric:tabular-nums; }
+    .rx-val.good { color:#15803d; }
+    .rx-val.weak { color:#b45309; }
+    .rx-val.bad  { color:#b91c1c; }
+    .rx-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .rx-lbl.good { color:#16a34a; }
+    .rx-lbl.weak { color:#d97706; }
+    .rx-lbl.bad  { color:#dc2626; }
+    .rx-empty { font-size:11px; color:#cbd5e1; }
+
+    /* SSID cell */
+    .ssid-cell { display:flex; align-items:center; gap:6px; min-width:0; }
+    .ssid-ic { width:22px; height:22px; border-radius:6px; background:#f1f5f9; color:#64748b; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ssid-ic svg { width:11px; height:11px; stroke-width:2.2; }
+    .ssid-txt { font-size:12px; font-weight:600; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1; }
+
+    /* WAN IP badge */
+    .ip-badge { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:10.5px; font-weight:600; background:var(--ot-blue-l); color:var(--ot-blue-d); border:1px solid #dbeafe; border-radius:5px; padding:2px 7px; letter-spacing:-.2px; white-space:nowrap; }
+    .ip-empty { font-size:11px; color:#cbd5e1; }
+
+    /* Per-metric cell: clients / temp / uptime */
+    .dev-cell { display:inline-flex; align-items:center; gap:6px; min-width:0; }
+    .dev-ic { width:22px; height:22px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .dev-ic svg { width:11px; height:11px; stroke-width:2.2; }
+    .dev-ic.clients { background:#eff6ff; color:#1d4ed8; }
+    .dev-ic.temp    { background:#fef3c7; color:#b45309; }
+    .dev-ic.temp.hot{ background:#fee2e2; color:#b91c1c; }
+    .dev-ic.uptime  { background:#dcfce7; color:#15803d; }
+    .dev-val { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:12px; font-weight:700; color:#334155; font-variant-numeric:tabular-nums; letter-spacing:-.2px; line-height:1.1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dev-val.warn { color:#b45309; }
+    .dev-val.hot  { color:#b91c1c; }
+    .dev-val .u { font-size:9.5px; font-weight:600; color:#94a3b8; margin-left:1px; }
+    .dev-val.uptime-txt { font-family:'Plus Jakarta Sans',sans-serif; font-size:11px; font-weight:700; }
+    .dev-empty { font-size:11px; color:#cbd5e1; }
+
+    /* Status pill (kept for modal & optional use) */
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+    .sdot { width:5px; height:5px; border-radius:50%; flex-shrink:0; background:currentColor; }
+    .pill-online  { background:var(--ot-green-l); color:#15803d; }
+    .pill-online .sdot  { animation:pulse 2s infinite; }
+    .pill-offline { background:#f1f5f9; color:#94a3b8; }
+
+    /* Last inform */
+    .inform-cell { display:flex; flex-direction:column; gap:1px; font-size:10.5px; line-height:1.3; }
+    .inform-ago  { font-weight:700; color:var(--text); }
+    .inform-sub  { font-size:9.5px; color:#94a3b8; font-variant-numeric:tabular-nums; margin-top:0; }
+
+    /* Action buttons */
+    .act-btns { display:flex; gap:4px; justify-content:flex-end; }
+    .act-btn { width:28px; height:28px; padding:0; border-radius:8px; border:1px solid #e8eaed; background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; color:#64748b; font-family:inherit; }
+    .act-btn svg { width:13px; height:13px; stroke-width:1.9; }
+    .act-btn:hover { transform:translateY(-1px); box-shadow:0 2px 6px -1px rgba(15,23,42,.08); }
+    .act-detail:hover { color:var(--ot-blue); border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .act-wifi:hover   { color:var(--ot-teal); border-color:#a5f3fc; background:var(--ot-teal-l); }
+    .act-reboot:hover { color:var(--ot-amber); border-color:#fde68a; background:var(--ot-amber-l); }
+
+    /* Empty state */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; display:block; margin-left:auto; margin-right:auto; }
+    .tbl-empty p { font-size:13px; margin:4px 0 0; }
+
+    /* Pagination */
+    .ot-tbl-footer { padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8fafc; }
+    .pg-info { font-size:12px; color:var(--faint); flex:1; }
+    .pg-info .pg-empty { color:#94a3b8; font-style:italic; }
+
+    .pg-wrap{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; flex-wrap:wrap; width:100%;
+    }
+    .pg-info-text{
+      font-size:12.5px; color:#475569; font-weight:500;
+      font-variant-numeric:tabular-nums;
+    }
+    .pg-info-text strong{ color:#0d1b3e; font-weight:700; }
+    .pg-controls{
+      display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    }
+    .pg-perpage{
+      display:inline-flex; align-items:center; gap:7px;
+      font-size:12px; color:#64748b; font-weight:500;
+    }
+    .pg-perpage select{
+      padding:5px 10px; border:1px solid #e2e8f0; border-radius:7px;
+      background:#fff; font-family:inherit; font-size:12px; color:#0d1b3e;
+      font-weight:600; cursor:pointer; outline:none;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .pg-perpage select:hover{ border-color:#cbd5e1; }
+    .pg-perpage select:focus{
+      border-color:#1d4ed8;
+      box-shadow:0 0 0 3px rgba(29,78,216,.10);
+    }
+    .pg-nav{
+      display:inline-flex; align-items:center; gap:3px;
+      background:#f8fafc; border:1px solid #ecf0f9; border-radius:9px;
+      padding:3px;
+    }
+    .pg-btn{
+      min-width:30px; height:28px; padding:0 8px;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:transparent; border:none; border-radius:6px;
+      font-family:inherit; font-size:12.5px; font-weight:700;
+      color:#475569; cursor:pointer;
+      font-variant-numeric:tabular-nums;
+      transition:all .12s;
+    }
+    .pg-btn:hover:not(:disabled):not(.pg-active){
+      background:#fff; color:#1d4ed8;
+      box-shadow:0 1px 3px rgba(0,0,0,.06);
+    }
+    .pg-btn.pg-active{
+      background:#1d4ed8; color:#fff;
+      box-shadow:0 2px 6px -2px rgba(29,78,216,.45);
+      cursor:default;
+    }
+    .pg-btn:disabled:not(.pg-active){
+      opacity:.4; cursor:not-allowed;
+    }
+    .pg-btn.pg-arrow svg{ width:13px; height:13px; }
+    .pg-ellipsis{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:24px; height:28px;
+      color:#94a3b8; font-weight:700; font-size:13px;
+      user-select:none;
+    }
+
+    @media (max-width:720px){
+      .pg-wrap{ gap:10px; }
+      .pg-controls{ width:100%; justify-content:space-between; }
+      .pg-info-text{ width:100%; text-align:center; font-size:12px; }
+    }
+    @media (max-width:480px){
+      .pg-perpage span{ display:none; }
+      .pg-nav .pg-btn:not(.pg-arrow):not(.pg-active){ display:none; }
+      /* Saat layar sempit, hanya tampilkan: arrow prev + nomor halaman aktif + arrow next */
+    }
+
+    /* ── MODAL REDESIGN ── */
+    .ot-modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); backdrop-filter:blur(6px); z-index:1100; align-items:center; justify-content:center; padding:16px; }
+    .ot-modal-overlay.show { display:flex; }
+    .ot-modal-box { background:#fff; border-radius:24px; width:92%; max-width:820px; max-height:92vh; overflow:hidden; display:flex; flex-direction:column; font-family:'Plus Jakarta Sans',sans-serif; box-shadow:0 32px 80px rgba(0,0,0,.22); }
+
+    /* Header */
+    .ot-modal-hdr { padding:22px 24px 16px; flex-shrink:0; border-bottom:1.5px solid #f1f5f9; }
+    .modal-hdr-top { display:flex; justify-content:space-between; align-items:flex-start; }
+    .ot-modal-hdr-l h3 { font-size:20px; font-weight:800; color:var(--text); margin:0 0 3px; }
+    .ot-modal-hdr-l p  { font-size:11px; color:var(--faint); margin:0; font-family:monospace; }
+    .ot-modal-hdr-r { display:flex; gap:8px; align-items:center; }
+    .ot-modal-close { background:#f1f5f9; border:none; border-radius:10px; width:34px; height:34px; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted); transition:all .15s; }
+    .ot-modal-close:hover { background:#e2e8f0; color:var(--text); }
+    .ot-modal-close svg { width:16px; height:16px; stroke:currentColor; fill:none; }
+    .ot-modal-body { overflow-y:auto; padding:18px 24px; flex:1; }
+    .ot-modal-footer { padding:12px 24px; border-top:1.5px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px; flex-shrink:0; }
+
+    /* Info grid — 4 kolom */
+    .info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:12px; }
+    @media(max-width:600px){ .info-grid { grid-template-columns:repeat(2,1fr); } }
+    .info-item { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:12px 14px; }
+    .info-lbl { font-size:9.5px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.8px; margin-bottom:5px; }
+    .info-val { font-size:13px; font-weight:600; color:var(--text); word-break:break-all; line-height:1.3; }
+    .info-val.mono { font-family:monospace; font-size:12px; }
+
+    /* Signal bar — dark modern */
+    .signal-panel { display:flex; align-items:center; gap:0; background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%); border-radius:16px; padding:18px 22px; margin-bottom:16px; flex-wrap:wrap; gap:12px; }
+    .sig-item { display:flex; flex-direction:column; gap:4px; min-width:80px; }
+    .sig-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,.5); text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:4px; }
+    .sig-lbl svg { width:10px; height:10px; stroke:rgba(255,255,255,.5); fill:none; flex-shrink:0; }
+    .sig-val { font-size:22px; font-weight:800; color:#fff; font-family:monospace; letter-spacing:-.5px; }
+    .sig-val.good  { color:#4ade80; }
+    .sig-val.warn  { color:#fbbf24; }
+    .sig-val.bad   { color:#f87171; }
+    .sig-val.dim   { color:rgba(255,255,255,.3); }
+    .sig-divider { width:1px; background:rgba(255,255,255,.1); height:40px; align-self:center; flex-shrink:0; }
+    .sig-spacer { flex:1; }
+    .sig-ssid-group { display:flex; gap:20px; align-items:center; }
+    .sig-ssid-item { display:flex; flex-direction:column; gap:4px; align-items:flex-end; }
+    .sig-ssid-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,.5); text-transform:uppercase; letter-spacing:1px; }
+    .sig-ssid-val { font-size:15px; font-weight:700; color:#fff; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Tabs */
+    .m-tabs { display:flex; gap:2px; margin:0 -24px 16px; padding:0 24px; border-bottom:2px solid #f1f5f9; overflow-x:auto; overflow-y:visible; scrollbar-width:none; -ms-overflow-style:none; flex-wrap:nowrap; }
+    .m-tabs::-webkit-scrollbar { display:none; }
+    .m-tab { display:inline-flex; align-items:center; gap:6px; padding:11px 16px; font-size:12.5px; font-weight:600; cursor:pointer; border:none; background:none; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-2px; transition:all .15s; font-family:inherit; white-space:nowrap; }
+    .m-tab svg { width:14px; height:14px; flex-shrink:0; stroke:currentColor; fill:none; }
+    .m-tab:hover { color:#1e78ff; }
+    .m-tab.active { color:#1e78ff; border-bottom-color:#1e78ff; }
+    .m-panel { display:none; }
+    .m-panel.active { display:block; }
+
+    /* WiFi form */
+    .wifi-band-box { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+    .wifi-band-header { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+    .wifi-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+    .wifi-badge-2g { background:#eff6ff; color:#1e78ff; border:1.5px solid #bfdbfe; }
+    .wifi-badge-5g { background:#fffbeb; color:#ff8800; border:1.5px solid #fed7aa; }
+    .wifi-badge svg { width:12px; height:12px; stroke:currentColor; fill:none; }
+    .form-row { margin-bottom:12px; }
+    .form-row label { display:block; font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+    .form-row input { width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; font-family:inherit; color:var(--text); outline:none; background:#fff; transition:border .15s; }
+    .form-row input:focus { border-color:#1e78ff; box-shadow:0 0 0 3px #1e78ff14; }
+    .pw-wrap { position:relative; }
+    .pw-wrap input { padding-right:44px; }
+    .pw-eye { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--faint); display:flex; align-items:center; padding:0; }
+    .pw-eye svg { width:16px; height:16px; stroke:currentColor; fill:none; }
+
+    /* Task cards */
+    .task-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    @media(max-width:500px){ .task-grid { grid-template-columns:1fr; } }
+    .task-card { background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:14px; padding:16px; }
+    .task-card-hdr { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+    .task-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .task-icon svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2; }
+    .ti-amber { background:#fffbeb; color:#ff8800; }
+    .ti-red   { background:#fef2f2; color:#ef4444; }
+    .ti-blue  { background:#eff6ff; color:#1e78ff; }
+    .task-card h4 { font-size:13px; font-weight:700; color:var(--text); margin:0; }
+    .task-card p  { font-size:12px; color:var(--muted); margin:0 0 12px; line-height:1.5; }
+
+    /* Settings modal */
+    .settings-modal-box { max-width:460px !important; }
+    .settings-form-row { margin-bottom:14px; }
+    .settings-form-row label { display:block; font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
+    .settings-form-row input { width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px; font-family:inherit; color:var(--text); outline:none; background:#fff; }
+    .settings-form-row input:focus { border-color:#1e78ff; }
+    .settings-form-row small { font-size:11px; color:var(--faint); margin-top:4px; display:block; }
+
+    /* Signal history */
+    .hist-btn { padding:5px 13px; border:1.5px solid #e2e8f0; border-radius:20px; background:#fff; color:#64748b; font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .hist-btn:hover { border-color:#1e78ff; color:#1e78ff; }
+    .hist-btn.active { background:#1e78ff; color:#fff; border-color:#1e78ff; }
+
+    /* Inline alert */
+    .inline-alert { padding:10px 14px; border-radius:10px; font-size:13px; font-weight:500; display:none; margin-top:8px; }
+    .inline-alert.success { background:#f0fdf4; border:1.5px solid #bbf7d0; color:#16a34a; }
+    .inline-alert.error   { background:#fef2f2; border:1.5px solid #fecaca; color:#dc2626; }
+    .inline-alert.info    { background:#eff6ff; border:1.5px solid #bfdbfe; color:#1e78ff; }
+
+    /* ═══════════════════════════════════════════
+       MOBILE CARD LIST (≤768px)
+       ═══════════════════════════════════════════ */
+    .ot-mobile-list { display:none; padding:8px; flex-direction:column; gap:7px; }
+
+    @media(max-width:768px) {
+      /* Sembunyikan tabel desktop, tampilkan card list */
+      .ot-tbl-wrap > div[style*="overflow-x"] { display:none; }
+      .ot-tbl-wrap > .ot-tbl-footer { padding:10px 14px; }
+      .ot-mobile-list { display:flex; }
+
+      /* Compact header */
+      .ot-hdr { margin-bottom:18px; }
+      .ot-hdr-l h1 { font-size:19px; }
+      .ot-hdr-l p { font-size:12px; }
+
+      /* Table header bar — stack & full width */
+      .ot-tbl-hdr { padding:12px 14px; gap:8px; }
+      .ot-tbl-hdr > div:first-child { width:100%; }
+      .search-wrap { width:100%; }
+      .search-wrap input { width:100% !important; }
+      .filter-chips { width:100%; }
+      .fchip { flex:1; text-align:center; padding:6px 8px; font-size:11.5px; }
+    }
+
+    /* Mobile ONT card */
+    .ot-mcard {
+      background:#fff;
+      border:1.5px solid #e8eaed;
+      border-radius:12px;
+      padding:10px 11px;
+      transition:transform .12s;
+      position:relative;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ot-mcard:active { transform:scale(.99); }
+
+    .ot-mcard-top {
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:8px; margin-bottom:8px;
+    }
+    .ot-mcard-l { flex:1; min-width:0; display:flex; gap:8px; align-items:flex-start; }
+    .ot-mcard-num {
+      flex-shrink:0;
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+      font-size:10px; font-weight:700; color:#94a3b8;
+      background:#f1f5f9; padding:2px 6px;
+      border-radius:5px; line-height:1.2;
+      letter-spacing:-.2px;
+      min-width:22px; text-align:center;
+    }
+    .ot-mcard-info { flex:1; min-width:0; }
+    .ot-mcard-serial {
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+      font-size:12px; font-weight:700; color:var(--text);
+      letter-spacing:-.2px; line-height:1.2;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      margin-bottom:1px;
+    }
+    .ot-mcard-model {
+      font-size:10px; color:var(--faint); font-weight:500;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .ot-mcard-status {
+      flex-shrink:0;
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 7px; border-radius:20px;
+      font-size:9px; font-weight:800; text-transform:uppercase;
+      letter-spacing:.04em; white-space:nowrap;
+    }
+    .ot-mcard-status .sdot { width:5px; height:5px; border-radius:50%; }
+    .ot-mcard-status.is-online { background:var(--ot-green-l); color:#15803d; }
+    .ot-mcard-status.is-online .sdot { background:var(--ot-green); animation:pulse 2s infinite; }
+    .ot-mcard-status.is-offline { background:#f1f5f9; color:#94a3b8; }
+    .ot-mcard-status.is-offline .sdot { background:#94a3b8; }
+
+    /* Customer row — compact */
+    .ot-mcard-cust {
+      display:flex; align-items:center; gap:5px;
+      padding:5px 8px; background:#f8fafc;
+      border-radius:7px; margin-bottom:7px;
+      font-size:11px; min-width:0;
+    }
+    .ot-mcard-cust-ic {
+      width:16px; height:16px; border-radius:4px;
+      background:#dbeafe; color:#1d4ed8;
+      display:inline-flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .ot-mcard-cust-ic svg { width:9px; height:9px; }
+    .ot-mcard-cust-name {
+      font-weight:700; color:var(--text); flex:1; min-width:0;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-size:11px;
+    }
+    .ot-mcard-cust-id {
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+      font-size:9.5px; color:var(--faint); flex-shrink:0;
+    }
+    .ot-mcard-cust.empty .ot-mcard-cust-ic { background:#f1f5f9; color:#cbd5e1; }
+    .ot-mcard-cust.empty .ot-mcard-cust-name { color:#cbd5e1; font-weight:500; font-style:italic; }
+
+    /* Stats grid — compact */
+    .ot-mcard-stats {
+      display:grid; grid-template-columns:repeat(3, 1fr);
+      gap:6px; margin-bottom:8px;
+    }
+    .ot-mcard-stat {
+      background:#f8fafc;
+      border:1px solid #eef2f7;
+      border-radius:7px;
+      padding:5px 7px;
+      min-width:0;
+    }
+    .ot-mcard-stat-lbl {
+      font-size:8.5px; font-weight:700; color:var(--faint);
+      text-transform:uppercase; letter-spacing:.4px;
+      margin-bottom:2px; line-height:1;
+    }
+    .ot-mcard-stat-val {
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+      font-size:11.5px; font-weight:700; color:var(--text);
+      letter-spacing:-.3px; line-height:1.1;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      display:block;
+    }
+    .ot-mcard-stat-val.dim { color:#cbd5e1; font-weight:500; }
+    .ot-mcard-stat-val.good { color:#15803d; }
+    .ot-mcard-stat-val.weak { color:#b45309; }
+    .ot-mcard-stat-val.bad  { color:#b91c1c; }
+    .ot-mcard-stat-val.hot  { color:#b91c1c; }
+    .ot-mcard-stat-val.warn { color:#b45309; }
+    .ot-mcard-stat-val .u { font-size:8.5px; font-weight:600; color:var(--faint); margin-left:1px; }
+    .ot-mcard-stat-sub {
+      font-size:8px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.04em; margin-top:1px; line-height:1;
+      display:block;
+    }
+    .ot-mcard-stat-sub.good { color:#16a34a; }
+    .ot-mcard-stat-sub.weak { color:#d97706; }
+    .ot-mcard-stat-sub.bad  { color:#dc2626; }
+
+    /* Meta row — SSID, WAN, Last */
+    .ot-mcard-meta {
+      display:flex; align-items:center; gap:5px;
+      flex-wrap:wrap;
+      padding:6px 0 0; margin-bottom:8px;
+      border-top:1px dashed #e8eaed;
+      font-size:10px;
+    }
+    .ot-mcard-meta-item {
+      display:inline-flex; align-items:center; gap:3px;
+      color:var(--muted);
+      max-width:100%;
+    }
+    .ot-mcard-meta-item svg { width:10px; height:10px; flex-shrink:0; color:var(--faint); }
+    .ot-mcard-meta-item .lbl { color:var(--faint); font-weight:500; }
+    .ot-mcard-meta-item .val {
+      font-weight:700; color:#334155;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      max-width:120px;
+      font-size:10px;
+    }
+    .ot-mcard-meta-item .val.mono {
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+      font-size:10px;
+    }
+    .ot-mcard-meta-sep {
+      width:1px; height:9px; background:#e2e8f0;
+    }
+
+    /* Actions row — compact */
+    .ot-mcard-actions {
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr auto;
+      gap:5px;
+    }
+    .ot-mact {
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:4px; padding:6px 4px;
+      border:1.5px solid #e2e8f0; border-radius:7px;
+      background:#fff; color:var(--muted);
+      font-size:10.5px; font-weight:700;
+      font-family:inherit; cursor:pointer;
+      transition:all .12s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ot-mact svg { width:11px; height:11px; flex-shrink:0; }
+    .ot-mact:active { transform:scale(.96); }
+    .ot-mact.is-detail { color:var(--ot-blue); border-color:#bfdbfe; background:var(--ot-blue-l); }
+    .ot-mact.is-detail:active { background:#dbeafe; }
+    .ot-mact.is-wifi { color:var(--ot-teal); border-color:#a5f3fc; background:var(--ot-teal-l); }
+    .ot-mact.is-wifi:active { background:#cffafe; }
+    .ot-mact.is-reboot { color:var(--ot-amber); border-color:#fde68a; background:var(--ot-amber-l); }
+    .ot-mact.is-reboot:active { background:#fef3c7; }
+    .ot-mact-more {
+      width:32px; padding:6px 0;
+      border:1.5px solid #e2e8f0; border-radius:7px;
+      background:#fff; color:var(--muted);
+      cursor:pointer; transition:all .12s;
+      display:inline-flex; align-items:center; justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ot-mact-more:active { background:#f1f5f9; transform:scale(.96); }
+    .ot-mact-more svg { width:14px; height:14px; }
+
+    /* Empty state mobile */
+    .ot-mempty {
+      padding:50px 20px; text-align:center; color:var(--muted);
+    }
+    .ot-mempty svg { color:var(--faint); margin-bottom:12px; }
+    .ot-mempty-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .ot-mempty-sub { font-size:12px; }
+
+    /* ═══════════════════════════════════════════
+       BOTTOM ACTION SHEET
+       ═══════════════════════════════════════════ */
+    .ot-sheet-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(15,23,42,.5);
+      z-index:1200; backdrop-filter:blur(3px);
+      animation:fadeIn .2s ease;
+    }
+    .ot-sheet-overlay.active { display:block; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .ot-sheet {
+      position:fixed; left:0; right:0; bottom:0;
+      background:#fff; z-index:1201;
+      border-top-left-radius:20px; border-top-right-radius:20px;
+      transform:translateY(100%);
+      transition:transform .25s cubic-bezier(.4,0,.2,1);
+      box-shadow:0 -8px 30px rgba(0,0,0,.15);
+      max-height:80vh; overflow-y:auto;
+      padding-bottom:env(safe-area-inset-bottom, 0);
+    }
+    .ot-sheet.active { transform:translateY(0); }
+    .ot-sheet-handle {
+      width:40px; height:4px; background:#cbd5e1;
+      border-radius:2px; margin:10px auto 0;
+    }
+    .ot-sheet-hdr {
+      padding:14px 20px 12px; border-bottom:1px solid #f1f5f9;
+    }
+    .ot-sheet-hdr h3 {
+      font-size:14.5px; font-weight:800; color:var(--text);
+      margin:0 0 3px; line-height:1.2;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      font-family:'Geist Mono',ui-monospace,Menlo,monospace;
+    }
+    .ot-sheet-hdr p {
+      font-size:11.5px; color:var(--muted); margin:0;
+    }
+    .ot-sheet-body { padding:6px 0; }
+    .ot-sheet-item {
+      display:flex; align-items:center; gap:14px;
+      width:100%; padding:13px 20px;
+      background:none; border:none; cursor:pointer;
+      font-family:inherit; font-size:14px; font-weight:600;
+      color:var(--text); text-align:left;
+      transition:background .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ot-sheet-item:active { background:#f1f5f9; }
+    .ot-sheet-item-icon {
+      width:36px; height:36px; border-radius:10px;
+      display:inline-flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .ot-sheet-item-icon svg { width:17px; height:17px; }
+    .ot-sheet-item-text { flex:1; min-width:0; }
+    .ot-sheet-item-sub {
+      display:block; font-size:11.5px; color:var(--muted);
+      font-weight:500; margin-top:1px;
+    }
+    .ot-sheet-item.detail .ot-sheet-item-icon { background:var(--ot-blue-l); color:var(--ot-blue); }
+    .ot-sheet-item.wifi   .ot-sheet-item-icon { background:var(--ot-teal-l); color:var(--ot-teal); }
+    .ot-sheet-item.reboot .ot-sheet-item-icon { background:var(--ot-amber-l); color:var(--ot-amber); }
+    .ot-sheet-cancel {
+      margin:8px 16px 16px;
+      padding:13px;
+      background:#f1f5f9; border:none;
+      border-radius:12px;
+      font-family:inherit; font-size:14px; font-weight:700;
+      color:var(--text); cursor:pointer; width:calc(100% - 32px);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .ot-sheet-cancel:active { background:#e2e8f0; }
+  </style>
+</head>
+<body>
+<div class="app-layout ot">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ot-hdr">
+        <div class="ot-hdr-l">
+          <h1>
+            ONT Management
+          </h1>
+          <p>
+            Monitoring & konfigurasi ONT via GenieACS TR-069
+            <span id="last-refresh-label" style="margin-left:8px;font-size:11px;color:var(--faint);"></span>
+          </p>
+        </div>
+        <div class="ot-hdr-r">
+          <div class="live-chip"><span class="ldot"></span>LIVE</div>
+          <button class="btn btn-outline btn-sm" onclick="GeniePage.refresh()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-blue btn-sm" onclick="GeniePage.openSettings()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Pengaturan Server
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div class="ot-alert" id="genie-alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="genie-alert-msg">GenieACS tidak dapat dijangkau</span>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="ot-cards">
+
+        <div class="ot-card otc-active" id="otc-total" data-filter="all" onclick="otcClick(this)">
+          <div class="card-lbl">Total ONT</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-total">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="ot-pill-total">— device</span>
+                <span class="card-sub">Semua perangkat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card" id="otc-online" data-filter="online" onclick="otcClick(this)">
+          <div class="card-lbl">Online</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-online">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="ot-pill-online">— ONT</span>
+                <span class="card-sub">ONT aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-online" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-online-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-online-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-online-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card" id="otc-offline" data-filter="offline" onclick="otcClick(this)">
+          <div class="card-lbl">Offline</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="stat-offline">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="ot-pill-offline">— ONT</span>
+                <span class="card-sub">ONT tidak aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-offline" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-offline-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-offline-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-offline-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ot-card ot-card-server" id="otc-server" data-filter="server" onclick="otcClick(this)">
+          <div class="srv-hdr">
+            <div class="card-lbl" style="margin:0;">Status Server</div>
+            <span class="srv-pill" id="srv-pill">
+              <span class="srv-pd"></span>
+              <span id="stat-server">—</span>
+            </span>
+          </div>
+          <div class="srv-stack">
+            <span class="srv-name">GenieACS NBI</span>
+            <span class="srv-url" id="stat-server-url">—</span>
+          </div>
+          <div class="srv-foot">
+            <span>TR-069</span>
+            <span class="srv-dot-sep">·</span>
+            <span id="srv-latency">Latency <b>—</b></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Table -->
+      <div class="ot-tbl-wrap">
+        <div class="ot-tbl-hdr">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="ot-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ot-blue)" stroke-width="2.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8"/></svg>
+              Daftar ONT / CPE
+              <span class="ot-count" id="ont-count-label">0 device</span>
+            </div>
+            <div class="filter-chips">
+              <button class="fchip active" onclick="GeniePage.setFilter('')">Semua</button>
+              <button class="fchip online"  onclick="GeniePage.setFilter('online')">Online</button>
+              <button class="fchip offline" onclick="GeniePage.setFilter('offline')">Offline</button>
+            </div>
+          </div>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="genie-search" placeholder="Cari serial, SSID, model..." oninput="GeniePage.debounce()">
+          </div>
+        </div>
+
+        <div style="overflow-x:auto">
+          <table class="ot-table">
+            <thead>
+              <tr>
+                <th style="width:42px;">#</th>
+                <th style="width:200px;">Serial / Model</th>
+                <th style="width:140px;">Customer</th>
+                <th style="width:118px;">RX Power</th>
+                <th style="width:88px;">Clients</th>
+                <th style="width:96px;">Suhu</th>
+                <th style="width:108px;">Uptime</th>
+                <th>SSID 2.4G</th>
+                <th style="width:108px;">WAN IP</th>
+                <th style="width:104px;">Last Inform</th>
+                <th style="width:108px;text-align:right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="genie-tbody">
+              <tr><td colspan="11">
+                <div class="tbl-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8"/></svg>
+                  <p>Memuat data ONT...</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile card list (≤768px) -->
+        <div class="ot-mobile-list" id="genie-mobile-list">
+          <div class="ot-mempty">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8"/>
+            </svg>
+            <div class="ot-mempty-title">Memuat data ONT...</div>
+          </div>
+        </div>
+        <div class="ot-tbl-footer">
+          <span class="pg-info" id="genie-pg-info"></span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<!-- ═══ BOTTOM ACTION SHEET (mobile) ═══ -->
+<div class="ot-sheet-overlay" id="ot-sheet-overlay" onclick="closeOntSheet()"></div>
+<div class="ot-sheet" id="ot-sheet" role="dialog" aria-modal="true">
+  <div class="ot-sheet-handle"></div>
+  <div class="ot-sheet-hdr">
+    <h3 id="ot-sheet-serial">—</h3>
+    <p id="ot-sheet-sub">—</p>
+  </div>
+  <div class="ot-sheet-body">
+    <button class="ot-sheet-item detail" onclick="ontSheetAction('detail')">
+      <span class="ot-sheet-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </span>
+      <span class="ot-sheet-item-text">
+        Lihat Detail
+        <span class="ot-sheet-item-sub">Info, signal, clients, history</span>
+      </span>
+    </button>
+    <button class="ot-sheet-item wifi" onclick="ontSheetAction('wifi')">
+      <span class="ot-sheet-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+      </span>
+      <span class="ot-sheet-item-text">
+        Ubah WiFi
+        <span class="ot-sheet-item-sub">SSID & password 2.4G / 5G</span>
+      </span>
+    </button>
+    <button class="ot-sheet-item reboot" onclick="ontSheetAction('reboot')">
+      <span class="ot-sheet-item-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15.5 6.3L3 16"/><polyline points="3 21 3 16 8 16"/></svg>
+      </span>
+      <span class="ot-sheet-item-text">
+        Reboot Device
+        <span class="ot-sheet-item-sub">Restart ONT/CPE jarak jauh</span>
+      </span>
+    </button>
+  </div>
+  <button class="ot-sheet-cancel" onclick="closeOntSheet()">Batal</button>
+</div>
+
+<!-- ═══ MODAL: DETAIL ═══ -->
+<div class="ot-modal-overlay" id="modal-detail">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <div class="modal-hdr-top">
+        <div class="ot-modal-hdr-l">
+          <h3 id="modal-title">Detail ONT</h3>
+          <p id="modal-subtitle">—</p>
+        </div>
+        <div class="ot-modal-hdr-r">
+          <span id="modal-status-badge" class="status-pill pill-online"><span class="sdot"></span>Online</span>
+          <button class="ot-modal-close" onclick="GeniePage.closeModal('modal-detail')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="ot-modal-body">
+
+      <!-- Info Grid 4 kolom -->
+      <div class="info-grid">
+        <div class="info-item"><div class="info-lbl">Manufacturer</div><div class="info-val" id="d-manufacturer">—</div></div>
+        <div class="info-item"><div class="info-lbl">Model</div><div class="info-val" id="d-model">—</div></div>
+        <div class="info-item"><div class="info-lbl">Firmware</div><div class="info-val mono" id="d-firmware">—</div></div>
+        <div class="info-item"><div class="info-lbl">WAN IP</div><div class="info-val mono" id="d-ip">—</div></div>
+        <div class="info-item"><div class="info-lbl">WAN Status</div><div class="info-val" id="d-wan-status">—</div></div>
+        <div class="info-item"><div class="info-lbl">Uptime</div><div class="info-val" id="d-uptime">—</div></div>
+        <div class="info-item"><div class="info-lbl">Last Inform</div><div class="info-val" id="d-last-inform">—</div></div>
+        <div class="info-item"><div class="info-lbl">Serial</div><div class="info-val mono" id="d-serial">—</div></div>
+      </div>
+
+      <!-- Signal Bar Dark -->
+      <div class="signal-panel">
+        <div class="sig-item">
+          <div class="sig-lbl"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg> RX Power</div>
+          <div class="sig-val" id="d-rx">—</div>
+        </div>
+        <div class="sig-divider"></div>
+        <div class="sig-item">
+          <div class="sig-lbl"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg> TX Power</div>
+          <div class="sig-val" id="d-tx">—</div>
+        </div>
+        <div class="sig-divider"></div>
+        <div class="sig-item">
+          <div class="sig-lbl"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg> Suhu</div>
+          <div class="sig-val" id="d-temp">—</div>
+        </div>
+        <div class="sig-spacer"></div>
+        <div class="sig-ssid-group">
+          <div class="sig-ssid-item"><div class="sig-ssid-lbl">SSID 2.4G</div><div class="sig-ssid-val" id="d-ssid">—</div></div>
+          <div class="sig-ssid-item"><div class="sig-ssid-lbl">SSID 5G</div><div class="sig-ssid-val" id="d-ssid5g">—</div></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="m-tabs">
+        <button class="m-tab active" onclick="GeniePage.switchTab(this,'tab-wifi')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+          Ubah WiFi
+        </button>
+        <button class="m-tab" onclick="GeniePage.switchTab(this,'tab-clients')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Perangkat Terhubung
+        </button>
+        <button class="m-tab" onclick="GeniePage.switchTab(this,'tab-tasks')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Kontrol
+        </button>
+        <button class="m-tab" onclick="GeniePage.switchTab(this,'tab-signal')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          Signal History
+        </button>
+        <button class="m-tab" onclick="GeniePage.switchTab(this,'tab-usage')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>
+          Usage
+        </button>
+        <button class="m-tab" onclick="GeniePage.switchTab(this,'tab-assign')">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="23" y2="8"/><line x1="21" y1="6" x2="21" y2="10"/></svg>
+          Assign Pelanggan
+        </button>
+      </div>
+
+      <!-- Tab: WiFi -->
+      <div id="tab-wifi" class="m-panel active">
+        <div class="wifi-band-box">
+          <div class="wifi-band-header">
+            <span class="wifi-badge wifi-badge-2g">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+              2.4 GHz
+            </span>
+          </div>
+          <div class="form-row">
+            <label>Nama WiFi (SSID)</label>
+            <input type="text" id="wifi-ssid" placeholder="Nama WiFi 2.4GHz">
+          </div>
+          <div class="form-row">
+            <label>Password WiFi <span id="wifi-pass-hint" style="color:#16a34a;font-weight:600;letter-spacing:0;text-transform:none;font-size:10px;margin-left:4px"></span></label>
+            <div class="pw-wrap">
+              <input type="password" id="wifi-pass" placeholder="Min. 8 karakter">
+              <button class="pw-eye" type="button" onclick="GeniePage.togglePw('wifi-pass')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div id="wifi-pass-info" style="font-size:10.5px;color:#94a3b8;margin-top:5px;line-height:1.5">Klik 👁 untuk melihat password saat ini. Kosongkan jika tidak ingin mengubah password.</div>
+          </div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted)">
+            <input type="checkbox" id="wifi-show-5g" onchange="GeniePage.toggle5g()"> Tampilkan pengaturan 5GHz
+          </label>
+        </div>
+        <div class="wifi-band-box" id="wifi-5g-section" style="display:none">
+          <div class="wifi-band-header">
+            <span class="wifi-badge wifi-badge-5g">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>
+              5 GHz
+            </span>
+          </div>
+          <div class="form-row">
+            <label>Nama WiFi 5GHz (SSID)</label>
+            <input type="text" id="wifi-ssid-5g" placeholder="Nama WiFi 5GHz">
+          </div>
+          <div class="form-row">
+            <label>Password WiFi 5GHz</label>
+            <div class="pw-wrap">
+              <input type="password" id="wifi-pass-5g" placeholder="Min. 8 karakter">
+              <button class="pw-eye" type="button" onclick="GeniePage.togglePw('wifi-pass-5g')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="inline-alert" id="wifi-result"></div>
+        <div style="margin-top:16px;display:flex;justify-content:flex-end">
+          <button class="btn btn-blue" id="btn-save-wifi" onclick="GeniePage.submitWifi()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+            Simpan & Terapkan
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab: Connected Devices -->
+      <div id="tab-clients" class="m-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:13px;color:var(--muted)" id="clients-summary">Klik untuk memuat data...</div>
+          <button class="btn btn-outline btn-sm" onclick="GeniePage.loadClients()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div id="clients-content">
+          <div class="tbl-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <p>Klik tab ini untuk memuat perangkat terhubung</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Tasks -->
+      <div id="tab-tasks" class="m-panel">
+        <div class="task-grid">
+          <div class="task-card">
+            <div class="task-card-hdr">
+              <div class="task-icon ti-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div>
+              <h4>Reboot Device</h4>
+            </div>
+            <p>Kirim perintah reboot ke ONT. Device akan restart dalam beberapa detik.</p>
+            <button class="btn btn-amber btn-sm" onclick="GeniePage.sendTask('reboot')">Kirim Reboot</button>
+          </div>
+          <div class="task-card">
+            <div class="task-card-hdr">
+              <div class="task-icon ti-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+              <h4>Factory Reset</h4>
+            </div>
+            <p>Reset ONT ke pengaturan pabrik. <strong style="color:#ef4444">Semua konfigurasi akan hilang!</strong></p>
+            <button class="btn btn-red btn-sm" onclick="GeniePage.sendTask('factory-reset')">Factory Reset</button>
+          </div>
+        </div>
+        <div class="task-card" style="margin-bottom:12px">
+          <div class="task-card-hdr">
+            <div class="task-icon ti-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></div>
+            <h4>Refresh Data dari Device</h4>
+          </div>
+          <p>Paksa GenieACS memperbarui semua parameter dari ONT sekarang.</p>
+          <button class="btn btn-outline btn-sm" onclick="GeniePage.sendRefresh()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh Sekarang
+          </button>
+        </div>
+        <div class="inline-alert" id="task-result"></div>
+      </div>
+
+      <!-- Tab: Signal History -->
+      <div id="tab-signal" class="m-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div style="display:flex;gap:6px">
+            <button class="hist-btn active" onclick="GeniePage.loadSignalHistory(6,this)">6 Jam</button>
+            <button class="hist-btn" onclick="GeniePage.loadSignalHistory(24,this)">24 Jam</button>
+            <button class="hist-btn" onclick="GeniePage.loadSignalHistory(72,this)">3 Hari</button>
+            <button class="hist-btn" onclick="GeniePage.loadSignalHistory(168,this)">7 Hari</button>
+          </div>
+          <div id="signal-current" style="font-size:12px;color:var(--muted)"></div>
+        </div>
+        <!-- Chart -->
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;position:relative;height:200px">
+          <canvas id="rx-chart"></canvas>
+          <div id="signal-no-data" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            <p style="font-size:12px;margin:6px 0 0">Belum ada data historis RX Power</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Usage / Bandwidth -->
+      <div id="tab-usage" class="m-panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-size:11px;color:var(--muted)" id="bw-source">Sumber: MikroTik (PPPoE / Queue)</div>
+          <button class="btn btn-outline btn-sm" onclick="GeniePage.loadBandwidth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:14px">
+          ⚠ Assign pelanggan ke ONT ini terlebih dahulu untuk melihat data usage
+        </div>
+
+        <!-- Stat cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:linear-gradient(135deg,#1548be,#0d4b9c);border-radius:16px;padding:20px;color:#fff;position:relative;overflow:hidden">
+            <div style="position:absolute;right:-12px;top:-12px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:5px">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5,12 12,19 19,12"/></svg>
+              Total Download
+            </div>
+            <div style="font-size:28px;font-weight:800;font-family:monospace;letter-spacing:-.5px" id="bw-rx">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:4px" id="bw-rx-packets">— packets</div>
+          </div>
+          <div style="background:linear-gradient(135deg,#118566,#0bb182);border-radius:16px;padding:20px;color:#fff;position:relative;overflow:hidden">
+            <div style="position:absolute;right:-12px;top:-12px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+            <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:5px">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19,12 12,5 5,12"/></svg>
+              Total Upload
+            </div>
+            <div style="font-size:28px;font-weight:800;font-family:monospace;letter-spacing:-.5px" id="bw-tx">—</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.45);margin-top:4px" id="bw-tx-packets">— packets</div>
+          </div>
+        </div>
+
+        <!-- Usage bar -->
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px">
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:10px">Rasio Download vs Upload</div>
+          <div id="bw-ratio-bar" style="height:8px;border-radius:4px;background:#e2e8f0;overflow:hidden;margin-bottom:8px">
+            <div id="bw-ratio-fill" style="height:100%;background:linear-gradient(90deg,#1e78ff,#00c851);border-radius:4px;width:50%;transition:width .6s ease"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#94a3b8">
+            <span id="bw-ratio-dl" style="color:#1e78ff;font-weight:600">↓ —%</span>
+            <span id="bw-ratio-ul" style="color:#16a34a;font-weight:600">↑ —%</span>
+          </div>
+          <div id="bw-error" style="display:none;font-size:12px;color:#94a3b8;text-align:center;padding:10px">
+            Assign pelanggan ke ONT ini di tab "Assign Pelanggan" untuk melihat data usage dari MikroTik.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Assign Pelanggan -->
+      <div id="tab-assign" class="m-panel">
+        <!-- Current customer -->
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px">Pelanggan Saat Ini</div>
+          <div id="current-customer-display" style="color:#64748b;font-size:13px">Memuat...</div>
+        </div>
+        <!-- Search & assign -->
+        <div style="margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Cari & Assign Pelanggan</div>
+          <div style="position:relative;margin-bottom:8px">
+            <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="customer-search-input" placeholder="Cari nama / ID pelanggan..." oninput="GeniePage.searchCustomers()"
+              style="width:100%;padding:10px 12px 10px 36px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;outline:none;transition:border .15s"
+              onfocus="this.style.borderColor='#1e78ff'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+          <div id="customer-search-results" style="border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;max-height:200px;overflow-y:auto;display:none;background:#fff"></div>
+        </div>
+        <div class="inline-alert" id="assign-result"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-outline btn-sm" onclick="GeniePage.unassignCustomer()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+            Unassign
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="ot-modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="GeniePage.closeModal('modal-detail')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: SETTINGS ═══ -->
+<div class="ot-modal-overlay" id="modal-settings">
+  <div class="ot-modal-box settings-modal-box">
+
+    <!-- Header dengan gradient -->
+    <div style="background:linear-gradient(135deg,#1e78ff 0%,#0052cc 100%);padding:22px 24px;border-radius:20px 20px 0 0;position:relative;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            </div>
+            <h3 style="font-size:17px;font-weight:800;color:#fff;margin:0">Pengaturan GenieACS</h3>
+          </div>
+          <p style="font-size:12px;color:rgba(255,255,255,.55);margin:0">Konfigurasi koneksi ke server GenieACS TR-069 ACS</p>
+        </div>
+        <button onclick="GeniePage.closeModal('modal-settings')" style="background:rgba(255,255,255,.1);border:none;border-radius:10px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="ot-modal-body" style="padding:20px 24px">
+
+      <!-- NBI URL -->
+      <div style="margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          GenieACS NBI URL <span style="color:#ef4444">*</span>
+        </label>
+        <div style="position:relative">
+          <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:#94a3b8;pointer-events:none">http://</span>
+          <input type="text" id="cfg-nbi-url" placeholder="192.168.1.10:7557"
+            value="<%= genieacsUrl ? genieacsUrl.replace(/^https?:\/\//,'') : '' %>"
+            style="width:100%;padding:11px 14px 11px 54px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;transition:all .15s;background:#f8fafc"
+            onfocus="this.style.borderColor='#1e78ff';this.style.background='#fff';this.style.boxShadow='0 0 0 3px rgba(30,120,255,.1)'"
+            onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'">
+        </div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:5px;display:flex;align-items:center;gap:4px">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Default port NBI adalah 7557. Contoh: <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:10px">192.168.10.10:7557</code>
+        </div>
+      </div>
+
+      <!-- Divider auth -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="flex:1;height:1px;background:#f1f5f9"></div>
+        <span style="font-size:10px;font-weight:700;color:#cbd5e1;text-transform:uppercase;letter-spacing:.7px">Autentikasi (opsional)</span>
+        <div style="flex:1;height:1px;background:#f1f5f9"></div>
+      </div>
+
+      <!-- Username & Password side by side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Username</label>
+          <input type="text" id="cfg-username" placeholder="admin"
+            style="width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#f8fafc;transition:all .15s"
+            onfocus="this.style.borderColor='#1e78ff';this.style.background='#fff';this.style.boxShadow='0 0 0 3px rgba(30,120,255,.1)'"
+            onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Password</label>
+          <div style="position:relative">
+            <input type="password" id="cfg-password" placeholder="••••••••"
+              style="width:100%;padding:11px 40px 11px 14px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:inherit;color:#0f172a;outline:none;background:#f8fafc;transition:all .15s"
+              onfocus="this.style.borderColor='#1e78ff';this.style.background='#fff';this.style.boxShadow='0 0 0 3px rgba(30,120,255,.1)'"
+              onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc';this.style.boxShadow='none'">
+            <button type="button" onclick="GeniePage.togglePw('cfg-password')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;display:flex;align-items:center;padding:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status indicator -->
+      <div id="cfg-test-result" class="inline-alert"></div>
+
+      <!-- Status chip jika sudah tersimpan -->
+      <% if (genieacsUrl) { %>
+      <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:#16a34a;font-weight:500">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
+        Server tersimpan: <span style="font-family:monospace;font-weight:700"><%= genieacsUrl %></span>
+      </div>
+      <% } %>
+
+    </div>
+
+    <div style="padding:14px 24px;border-top:1.5px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center">
+      <button class="btn btn-outline btn-sm" onclick="GeniePage.testConn()" id="btn-test-conn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        Test Koneksi
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline btn-sm" onclick="GeniePage.closeModal('modal-settings')">Batal</button>
+        <button class="btn btn-blue btn-sm" onclick="GeniePage.saveSettings()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
+          Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: KONFIRMASI ═══ -->
+<div class="ot-modal-overlay" id="modal-confirm">
+  <div class="ot-modal-box" style="max-width:380px">
+    <div class="ot-modal-hdr">
+      <div class="ot-modal-hdr-l">
+        <h3 id="confirm-title">Konfirmasi</h3>
+      </div>
+      <button class="ot-modal-close" onclick="GeniePage.closeModal('modal-confirm')">✕</button>
+    </div>
+    <div class="ot-modal-body">
+      <p id="confirm-message" style="font-size:13px;color:var(--muted);margin:0"></p>
+    </div>
+    <div class="ot-modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="GeniePage.closeModal('modal-confirm')">Batal</button>
+      <button class="btn btn-red btn-sm" id="btn-confirm" onclick="GeniePage.doConfirm()">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/genieacs.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={total:[],online:[],offline:[]};
+  const COLORS={total:'#2563eb',online:'#16a34a',offline:'#dc2626',server:'#d97706'};
+  function sparkPath(vals){
+    if(!vals||vals.length<2)return null;
+    const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W,H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1],fp=pts[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function drawSpark(id,vals){
+    const sp=sparkPath(vals); if(!sp)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',sp.fill);
+    if(l)l.setAttribute('d',sp.d);
+    if(d){d.setAttribute('cx',sp.dot[0].toFixed(1));d.setAttribute('cy',sp.dot[1].toFixed(1));}
+  }
+  function readNum(id){const el=document.getElementById(id);return el?parseFloat(el.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function updateAll(){
+    const vals={total:readNum('stat-total'),online:readNum('stat-online'),offline:readNum('stat-offline')};
+    ['total','online','offline'].forEach(k=>{
+      hist[k].push(vals[k]);
+      if(hist[k].length>MAX)hist[k].shift();
+      drawSpark('sp-'+k,hist[k]);
+      const p=document.getElementById('ot-pill-'+k);
+      if(p)p.textContent=vals[k]+' ONT';
+    });
+  }
+  window._otUpdateCards=updateAll;
+  ['stat-total','stat-online','stat-offline'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)new MutationObserver(()=>setTimeout(updateAll,50)).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+  document.addEventListener('DOMContentLoaded',updateAll);
+})();
+function otcClick(el){
+  const cards=document.querySelectorAll('.ot-card[data-filter]');
+  const wasActive=el.classList.contains('otc-active');
+  const COLORS={total:'#2563eb',online:'#16a34a',offline:'#dc2626',server:'#d97706'};
+  cards.forEach(c=>{
+    c.classList.remove('otc-active');
+    const col=COLORS[c.dataset.filter]||'#64748b';
+    const line=c.querySelector('.sp-line'),fill=c.querySelector('.sp-fill'),dot=c.querySelector('.sp-dot');
+    if(line)line.style.stroke=col;
+    if(fill)fill.style.fill=col;
+    if(dot)dot.style.fill=col;
+  });
+  if(!wasActive){
+    el.classList.add('otc-active');
+    const line=el.querySelector('.sp-line'),fill=el.querySelector('.sp-fill'),dot=el.querySelector('.sp-dot');
+    if(line)line.style.stroke='rgba(255,255,255,.70)';
+    if(fill)fill.style.fill='rgba(255,255,255,.12)';
+    if(dot)dot.style.fill='#fff';
+    // sync filter chips
+    const filter=el.dataset.filter;
+    if(filter==='online')  { const btn=document.querySelector('.fchip.online');  if(btn)btn.click(); }
+    else if(filter==='offline') { const btn=document.querySelector('.fchip.offline'); if(btn)btn.click(); }
+    else { const btn=document.querySelector('.fchip.active[onclick*="setFilter(\'\')"]')||document.querySelector('.fchip:first-child'); if(btn)btn.click(); }
+  }
+}
+
+// ═══════════════════════════════════════════
+// MOBILE: Bottom Action Sheet handlers
+// (semua handler di-attach ke window agar dapat dipanggil
+//  dari inline onclick attribute di card mobile)
+// ═══════════════════════════════════════════
+window._ontSheetId = null;
+
+window.openOntSheet = function(deviceId, serial, sub) {
+  window._ontSheetId = deviceId;
+  document.getElementById('ot-sheet-serial').textContent = serial || '—';
+  document.getElementById('ot-sheet-sub').textContent = sub || '—';
+  document.getElementById('ot-sheet-overlay').classList.add('active');
+  document.getElementById('ot-sheet').classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeOntSheet = function() {
+  document.getElementById('ot-sheet-overlay').classList.remove('active');
+  document.getElementById('ot-sheet').classList.remove('active');
+  document.body.style.overflow = '';
+  window._ontSheetId = null;
+};
+
+window.ontSheetAction = function(action) {
+  const id = window._ontSheetId;
+  if (!id) return;
+  closeOntSheet();
+  setTimeout(function(){
+    if (typeof GeniePage === 'undefined') { console.warn('[ont] GeniePage not loaded'); return; }
+    if (action === 'detail')      GeniePage.openDetail && GeniePage.openDetail(id);
+    else if (action === 'wifi')   GeniePage.openDetailTab && GeniePage.openDetailTab(id, 'tab-wifi');
+    else if (action === 'reboot') GeniePage.confirmReboot && GeniePage.confirmReboot(id);
+  }, 180);
+};
+
+// Helper: ambil device ID dari card element terdekat
+function _ontGetCard(ev) {
+  let el = ev && (ev.currentTarget || ev.target);
+  while (el && el.classList && !el.classList.contains('ot-mcard')) el = el.parentElement;
+  return el || null;
+}
+
+// Klik baris card di mobile → buka detail
+window.ontMobileRowClick = function(ev) {
+  const card = _ontGetCard(ev);
+  const id = card && card.getAttribute('data-device-id');
+  if (!id) { console.warn('[ont] no device id on card'); return; }
+  if (typeof GeniePage === 'undefined' || !GeniePage.openDetail) { console.warn('[ont] GeniePage.openDetail missing'); return; }
+  GeniePage.openDetail(id);
+};
+
+// Klik tombol aksi di card mobile
+window.ontMobileBtnClick = function(ev, action) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  const card = _ontGetCard(ev);
+  const id = card && card.getAttribute('data-device-id');
+  if (!id) { console.warn('[ont] no device id on card'); return; }
+  if (typeof GeniePage === 'undefined') { console.warn('[ont] GeniePage not loaded'); return; }
+  if (action === 'detail')      GeniePage.openDetail && GeniePage.openDetail(id);
+  else if (action === 'wifi')   GeniePage.openDetailTab && GeniePage.openDetailTab(id, 'tab-wifi');
+  else if (action === 'reboot') GeniePage.confirmReboot && GeniePage.confirmReboot(id);
+};
+
+// Klik tombol "more" di card mobile → buka action sheet
+window.ontMobileMore = function(ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  const card = _ontGetCard(ev);
+  if (!card) return;
+  const id = card.getAttribute('data-device-id');
+  const serial = card.getAttribute('data-serial') || '—';
+  const sub = card.getAttribute('data-sub') || '—';
+  if (!id) return;
+  openOntSheet(id, serial, sub);
+};
+
+// ═══════════════════════════════════════════
+// MOBILE: Auto-sync card list dari tbody
+// (tidak perlu modify genieacs.js)
+// ═══════════════════════════════════════════
+(function() {
+  function escMob(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Build mobile cards dari window.devices yang sudah di-load oleh GeniePage
+  function rebuildMobileCards() {
+    const wrap = document.getElementById('genie-mobile-list');
+    if (!wrap) return;
+
+    // Cari devices array dari module GeniePage (lewat _genieDeviceMap untuk indexing yang sama)
+    const map = window._genieDeviceMap || {};
+    const tbody = document.getElementById('genie-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr[data-idx]');
+
+    // Empty state — cek apakah tbody menunjukkan tbl-empty
+    if (rows.length === 0) {
+      const emptyDiv = tbody.querySelector('.tbl-empty');
+      if (emptyDiv) {
+        const txt = emptyDiv.querySelector('p')?.textContent || 'Memuat...';
+        const isErr = emptyDiv.querySelector('p[style*="color"]');
+        const isLoading = txt.toLowerCase().includes('memuat');
+        wrap.innerHTML = `<div class="ot-mempty">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ${isLoading ? 'style="animation:spin 1s linear infinite"' : ''}>
+            ${isLoading
+              ? '<polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>'
+              : '<rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M6 14h.01M10 10h8"/>'}
+          </svg>
+          <div class="ot-mempty-title" ${isErr ? 'style="color:#dc2626"' : ''}>${escMob(txt)}</div>
+        </div>`;
+      } else {
+        wrap.innerHTML = '';
+      }
+      return;
+    }
+
+    // Render satu kartu per row
+    const cards = [];
+    rows.forEach(tr => {
+      const idx = parseInt(tr.getAttribute('data-idx'));
+      const id  = map[idx];
+      if (id == null) return;
+
+      // Ambil data dari cells tabel
+      const cells = tr.querySelectorAll('td');
+      // Layout cells: 0=#, 1=Serial/Model, 2=Customer, 3=RX, 4=Clients, 5=Suhu, 6=Uptime, 7=SSID, 8=WAN IP, 9=Last Inform, 10=Aksi
+      const num = String(idx + 1).padStart(2, '0');
+      const isOnline = !tr.classList.contains('row-offline');
+
+      // Serial & Model (dari cell 1)
+      const snNum = cells[1]?.querySelector('.sn-num')?.textContent?.trim() || '';
+      const snSub = cells[1]?.querySelector('.sn-sub')?.textContent?.trim() || '';
+
+      // Customer (dari cell 2)
+      const custName = cells[2]?.querySelector('.cust-name')?.textContent?.trim();
+      const custId   = cells[2]?.querySelector('.cust-id')?.textContent?.trim();
+      const custEmpty = !custName;
+
+      // RX Power (dari cell 3) — sudah ber-class good/weak/bad
+      const rxValEl = cells[3]?.querySelector('.rx-val');
+      const rxLblEl = cells[3]?.querySelector('.rx-lbl');
+      let rxStat = '<span class="ot-mcard-stat-val dim">—</span>';
+      if (rxValEl) {
+        const cls = ['good','weak','bad'].find(c => rxValEl.classList.contains(c)) || '';
+        const rxText = rxValEl.textContent.replace(/\s+/g,' ').trim();
+        const rxLbl  = rxLblEl?.textContent?.trim() || '';
+        rxStat = `<span class="ot-mcard-stat-val ${cls}">${escMob(rxText)}</span>`
+               + (rxLbl ? `<span class="ot-mcard-stat-sub ${cls}">${escMob(rxLbl)}</span>` : '');
+      }
+
+      // Clients (dari cell 4)
+      const clVal = cells[4]?.querySelector('.dev-val')?.textContent?.trim();
+      let clStat = '<span class="ot-mcard-stat-val dim">—</span>';
+      if (clVal) clStat = `<span class="ot-mcard-stat-val">${escMob(clVal)} <span class="u">dev</span></span>`;
+
+      // Uptime (dari cell 6)
+      const upVal = cells[6]?.querySelector('.dev-val')?.textContent?.trim();
+      let upStat = '<span class="ot-mcard-stat-val dim">—</span>';
+      if (upVal) upStat = `<span class="ot-mcard-stat-val" style="font-family:'Plus Jakarta Sans',sans-serif">${escMob(upVal)}</span>`;
+
+      // SSID (dari cell 7)
+      const ssidTxt = cells[7]?.querySelector('.ssid-txt')?.textContent?.trim();
+      // WAN IP (dari cell 8)
+      const wanIp = cells[8]?.querySelector('.ip-badge')?.textContent?.trim();
+      // Last Inform (dari cell 9)
+      const informAgo = cells[9]?.querySelector('.inform-ago')?.textContent?.trim();
+
+      const metaItems = [];
+      if (ssidTxt) metaItems.push(`<span class="ot-mcard-meta-item" title="SSID 2.4G">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+        <span class="val">${escMob(ssidTxt)}</span></span>`);
+      if (wanIp) metaItems.push(`<span class="ot-mcard-meta-item" title="WAN IP">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 014 10 15 15 0 01-4 10 15 15 0 01-4-10 15 15 0 014-10z"/></svg>
+        <span class="val mono">${escMob(wanIp)}</span></span>`);
+      if (informAgo) metaItems.push(`<span class="ot-mcard-meta-item" title="Last Inform">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="val">${escMob(informAgo)}</span></span>`);
+      const metaHtml = metaItems.length
+        ? `<div class="ot-mcard-meta">${metaItems.join('<span class="ot-mcard-meta-sep"></span>')}</div>`
+        : '';
+
+      const custHtml = custEmpty
+        ? `<div class="ot-mcard-cust empty">
+             <span class="ot-mcard-cust-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+             <span class="ot-mcard-cust-name">Belum assigned</span>
+           </div>`
+        : `<div class="ot-mcard-cust">
+             <span class="ot-mcard-cust-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+             <span class="ot-mcard-cust-name">${escMob(custName)}</span>
+             ${custId ? `<span class="ot-mcard-cust-id">${escMob(custId)}</span>` : ''}
+           </div>`;
+
+      // Escape attribute value untuk dipakai di data-* attributes
+      const attrSerial = escMob(snNum);
+      const attrSub    = escMob(snSub);
+      const attrId     = escMob(id);
+
+      cards.push(`<div class="ot-mcard ${isOnline ? 'is-online' : 'is-offline'}" data-device-id="${attrId}" data-serial="${attrSerial}" data-sub="${attrSub}" onclick="ontMobileRowClick(event)">
+        <div class="ot-mcard-top">
+          <div class="ot-mcard-l">
+            <span class="ot-mcard-num">${num}</span>
+            <div class="ot-mcard-info">
+              <div class="ot-mcard-serial" title="${escMob(snNum)}">${escMob(snNum)}</div>
+              <div class="ot-mcard-model">${escMob(snSub)}</div>
+            </div>
+          </div>
+          <span class="ot-mcard-status ${isOnline ? 'is-online' : 'is-offline'}">
+            <span class="sdot"></span>${isOnline ? 'Online' : 'Offline'}
+          </span>
+        </div>
+        ${custHtml}
+        <div class="ot-mcard-stats">
+          <div class="ot-mcard-stat"><div class="ot-mcard-stat-lbl">RX Power</div>${rxStat}</div>
+          <div class="ot-mcard-stat"><div class="ot-mcard-stat-lbl">Clients</div>${clStat}</div>
+          <div class="ot-mcard-stat"><div class="ot-mcard-stat-lbl">Uptime</div>${upStat}</div>
+        </div>
+        ${metaHtml}
+        <div class="ot-mcard-actions">
+          <button class="ot-mact is-detail" onclick="ontMobileBtnClick(event, 'detail')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            Detail
+          </button>
+          <button class="ot-mact is-wifi" onclick="ontMobileBtnClick(event, 'wifi')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>
+            WiFi
+          </button>
+          <button class="ot-mact is-reboot" onclick="ontMobileBtnClick(event, 'reboot')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0115.5-6.3L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 01-15.5 6.3L3 16"/><polyline points="3 21 3 16 8 16"/></svg>
+            Reboot
+          </button>
+          <button class="ot-mact-more" onclick="ontMobileMore(event)" aria-label="Aksi lainnya">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+          </button>
+        </div>
+      </div>`);
+    });
+
+    wrap.innerHTML = cards.join('');
+  }
+
+  // Debounce rebuild biar tidak terlalu sering ke-trigger
+  let rebuildTimer = null;
+  function scheduleRebuild() {
+    clearTimeout(rebuildTimer);
+    rebuildTimer = setTimeout(rebuildMobileCards, 50);
+  }
+
+  // Setup MutationObserver pada tbody — auto-rebuild kapan pun renderTable() update tbody
+  document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.getElementById('genie-tbody');
+    if (!tbody) return;
+
+    // Initial render
+    scheduleRebuild();
+
+    const observer = new MutationObserver(scheduleRebuild);
+    observer.observe(tbody, { childList: true, subtree: true });
+  });
+
+  // Deep-link: kalau URL ada `?filter=online` atau `?filter=offline`,
+  // auto-click card filter yang sesuai setelah data ter-load.
+  // Dipakai dari NOC Dashboard yang link langsung ke filter tertentu.
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const filter = params.get('filter');
+      if (!filter || !['online','offline','total','server'].includes(filter)) return;
+      // Delay sedikit supaya data sudah ter-load & card sudah render
+      setTimeout(function() {
+        const card = document.querySelector('.ot-card[data-filter="' + filter + '"]');
+        if (card && typeof otcClick === 'function') {
+          otcClick(card);
+          // Scroll ke daftar device biar langsung visible
+          const tbl = document.getElementById('genie-tbody');
+          if (tbl) tbl.closest('.ot-table-wrap, .ot-card, table')?.scrollIntoView({ behavior:'smooth', block:'start' });
+        }
+      }, 800);
+    } catch(_) { /* abaikan */ }
+  });
+})();
+</script>
+</body>
+</html>

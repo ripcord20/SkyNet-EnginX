@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ot-blue:#2563eb;  --ot-blue-d:#1d4ed8; --ot-blue-l:#eff6ff;
+      --ot-green:#16a34a; --ot-green-d:#15803d; --ot-green-l:#f0fdf4;
+      --ot-red:#dc2626;   --ot-red-d:#b91c1c;   --ot-red-l:#fef2f2;
+      --ot-amber:#d97706; --ot-amber-d:#b45309; --ot-amber-l:#fffbeb;
+      --ot-teal:#0891b2;  --ot-teal-l:#ecfeff;
+      --ot-slate:#475569;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .ot { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .ot-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ot-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .ot-hdr-l p  { font-size:13px; color:var(--muted); margin:0; display:flex; align-items:center; gap:6px; }
+    .ot-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue  { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .btn-blue:hover { background:var(--ot-blue-d); }
+    .btn-amber { background:var(--ot-amber); border-color:var(--ot-amber); color:#fff; }
+    .btn-amber:hover { background:var(--ot-amber-d); }
+    .btn-red   { background:var(--ot-red); border-color:var(--ot-red); color:#fff; }
+    .btn-red:hover { background:var(--ot-red-d); }
+    .btn-sm    { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; background:var(--ot-green-l); border:1px solid #bbf7d0; color:var(--ot-green); }
+    .live-chip .ldot { width:7px; height:7px; border-radius:50%; background:var(--ot-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS ── */
+    .ot-cards { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-bottom:20px; }
+    @media(max-width:1100px){ .ot-cards { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:600px) { .ot-cards { grid-template-columns:repeat(2,1fr); } }
+    .ot-card { border-radius:var(--rc); padding:20px; position:relative; overflow:hidden; color:#fff; min-height:100px; display:flex; flex-direction:column; gap:4px; }
+    .c-blue   { background:linear-gradient(135deg,#2563eb,#1d4ed8); }
+    .c-green  { background:linear-gradient(135deg,#16a34a,#15803d); }
+    .c-red    { background:linear-gradient(135deg,#dc2626,#b91c1c); }
+    .c-amber  { background:linear-gradient(135deg,#d97706,#b45309); }
+    .c-teal   { background:linear-gradient(135deg,#0891b2,#0e7490); }
+    .c-slate  { background:linear-gradient(135deg,#475569,#334155); }
+    .card-lbl { font-size:10px; font-weight:700; letter-spacing:1.2px; opacity:.8; text-transform:uppercase; }
+    .card-val { font-size:30px; font-weight:800; line-height:1; }
+    .card-sub { font-size:11px; opacity:.75; margin-top:2px; }
+    .card-ico { position:absolute; right:14px; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:10px; background:rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; }
+    .card-ico svg { width:19px; height:19px; stroke:rgba(255,255,255,.9); fill:none; }
+
+    /* ── ALERT BANNER ── */
+    .ot-alert { display:none; background:var(--ot-red-l); border:1.5px solid #fecaca; border-left:4px solid var(--ot-red); border-radius:10px; padding:11px 16px; margin-bottom:16px; font-size:13px; font-weight:500; color:var(--ot-red); align-items:center; gap:10px; }
+    .ot-alert.show { display:flex; }
+
+    /* ── TABLE ── */
+    .ot-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .ot-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ot-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ot-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    /* Filter chips */
+    .filter-chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .fchip { padding:5px 13px; border-radius:20px; border:1.5px solid var(--border); background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--muted); transition:all .15s; font-family:inherit; }
+    .fchip:hover { border-color:var(--ot-blue); color:var(--ot-blue); }
+    .fchip.active { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .fchip.online.active  { background:var(--ot-green); border-color:var(--ot-green); }
+    .fchip.offline.active { background:var(--ot-red);   border-color:var(--ot-red);   }
+    .fchip.warning.active { background:var(--ot-amber); border-color:var(--ot-amber); }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:220px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ot-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+
+    .ot-table { width:100%; border-collapse:collapse; }
+    .ot-table thead tr { background:#f8fafc; }
+    .ot-table th { padding:10px 14px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .ot-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; cursor:pointer; }
+    .ot-table tbody tr:hover { background:#f8fafc; }
+    .ot-table tbody tr:last-child { border-bottom:none; }
+    .ot-table td { padding:10px 14px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell  { color:var(--faint); font-size:12px; font-weight:600; }
+    .sn-badge  { font-family:monospace; font-size:12px; font-weight:700; color:#334155; }
+    .cust-name { font-weight:600; color:var(--text); }
+    .cust-id   { font-size:11px; color:var(--faint); margin-top:1px; }
+    .model-cell { font-size:12px; color:var(--muted); }
+    .ip-badge  { font-family:monospace; font-size:12px; background:#f1f5f9; color:#334155; padding:3px 8px; border-radius:6px; border:1px solid #e2e8f0; }
+
+    /* Status pill */
+    .status-pill { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; white-space:nowrap; }
+    .sdot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .pill-online  { background:var(--ot-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .pill-online .sdot  { background:#22c55e; animation:pulse 2s infinite; }
+    .pill-offline { background:var(--ot-red-l); color:#b91c1c; border:1px solid #fecaca; }
+    .pill-offline .sdot { background:#ef4444; }
+    .pill-warning { background:var(--ot-amber-l); color:var(--ot-amber); border:1px solid #fde68a; }
+    .pill-warning .sdot { background:#f59e0b; animation:pulse 1.5s infinite; }
+    .pill-unknown { background:#f1f5f9; color:var(--muted); border:1px solid var(--border); }
+    .pill-unknown .sdot { background:var(--faint); }
+
+    /* Signal bar */
+    .signal-wrap { display:flex; align-items:center; gap:6px; }
+    .signal-track { width:72px; height:4px; background:#f1f5f9; border-radius:2px; overflow:hidden; flex-shrink:0; }
+    .signal-fill  { height:100%; border-radius:2px; transition:width .3s; }
+    .signal-good  .signal-fill { background:var(--ot-green); }
+    .signal-warn  .signal-fill { background:var(--ot-amber); }
+    .signal-bad   .signal-fill { background:var(--ot-red); }
+    .signal-none  .signal-fill { background:var(--faint); }
+    .signal-val   { font-family:monospace; font-size:11.5px; font-weight:700; }
+
+    .inform-cell { font-size:12px; color:var(--text); }
+    .inform-sub  { font-size:10.5px; color:var(--faint); margin-top:1px; }
+    .uptime-cell { font-size:12px; color:var(--muted); }
+
+    .act-btns { display:flex; gap:4px; }
+    .act-btn { padding:4px 8px; border-radius:7px; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:inherit; }
+    .act-detail { background:#fff; border-color:var(--border); color:#374151; }
+    .act-detail:hover { background:#f8fafc; }
+    .act-reboot { background:#fff; border-color:#fde68a; color:var(--ot-amber); }
+    .act-reboot:hover { background:var(--ot-amber-l); }
+
+    /* Pagination */
+    .ot-tbl-footer { padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f8fafc; }
+    .pg-info { font-size:12px; color:var(--faint); }
+    .pg-btns { display:flex; gap:4px; }
+    .pg-btn { padding:5px 10px; border:1.5px solid var(--border); border-radius:8px; background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--muted); font-family:inherit; transition:all .15s; }
+    .pg-btn:hover:not(:disabled) { border-color:var(--ot-blue); color:var(--ot-blue); }
+    .pg-btn.active { background:var(--ot-blue); border-color:var(--ot-blue); color:#fff; }
+    .pg-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+    /* Empty */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    /* ── DETAIL MODAL ── */
+    .ot-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1100; align-items:center; justify-content:center; }
+    .ot-modal-overlay.show { display:flex; }
+    .ot-modal-box { background:#fff; border-radius:18px; width:92%; max-width:880px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; font-family:'Plus Jakarta Sans',sans-serif; }
+    .ot-modal-hdr { display:flex; justify-content:space-between; align-items:flex-start; padding:18px 22px; border-bottom:1.5px solid #f1f5f9; flex-shrink:0; }
+    .ot-modal-hdr-l h3 { font-size:17px; font-weight:800; color:var(--text); margin:0 0 3px; }
+    .ot-modal-hdr-l p  { font-size:11.5px; color:var(--faint); margin:0; font-family:monospace; }
+    .ot-modal-hdr-r { display:flex; gap:8px; align-items:center; }
+    .ot-modal-close { background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:5px 11px; cursor:pointer; font-size:16px; color:var(--muted); font-family:inherit; }
+    .ot-modal-close:hover { background:#f1f5f9; }
+    .ot-modal-body { overflow-y:auto; padding:18px 22px; flex:1; }
+    .ot-modal-footer { padding:12px 22px; border-top:1.5px solid #f1f5f9; display:flex; justify-content:flex-end; flex-shrink:0; }
+
+    /* Info grid */
+    .info-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:16px; }
+    .info-item { background:#f8fafc; border:1.5px solid var(--border); border-radius:10px; padding:10px 13px; }
+    .info-lbl { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.7px; margin-bottom:4px; }
+    .info-val { font-size:13px; font-weight:600; color:var(--text); word-break:break-all; }
+    .info-val.mono { font-family:monospace; font-size:12px; }
+
+    /* Signal panel */
+    .signal-panel { display:flex; gap:12px; background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:14px 18px; margin-bottom:16px; flex-wrap:wrap; }
+    .sig-item { display:flex; flex-direction:column; gap:3px; }
+    .sig-lbl  { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.7px; }
+    .sig-val  { font-size:22px; font-weight:800; font-family:monospace; }
+    .sig-spacer { flex:1; }
+    .cust-panel { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+    .cust-panel .lbl { font-size:10px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.7px; }
+    .cust-panel .val { font-size:14px; font-weight:700; color:var(--text); }
+    .cust-panel .sub { font-size:11px; color:var(--faint); }
+
+    /* Modal tabs */
+    .m-tabs { display:flex; gap:4px; margin-bottom:14px; border-bottom:1.5px solid #f1f5f9; padding-bottom:0; }
+    .m-tab  { padding:8px 16px; font-size:12.5px; font-weight:600; cursor:pointer; border:none; background:none; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1.5px; transition:all .15s; font-family:inherit; }
+    .m-tab.active { color:var(--ot-blue); border-bottom-color:var(--ot-blue); }
+    .m-panel { display:none; }
+    .m-panel.active { display:block; }
+
+    /* Signal chart */
+    .sig-chart-wrap { position:relative; height:190px; background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:10px; }
+    .hist-btns { display:flex; gap:6px; margin-bottom:12px; }
+    .hist-btn { padding:5px 13px; border:1.5px solid var(--border); border-radius:20px; background:#fff; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .hist-btn:hover { border-color:var(--ot-blue); color:var(--ot-blue); }
+    .hist-btn.active { background:var(--ot-blue); color:#fff; border-color:var(--ot-blue); }
+
+    /* Param table */
+    .param-search-wrap { position:relative; margin-bottom:10px; display:flex; gap:8px; }
+    .param-search-wrap input { flex:1; padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); }
+    .param-search-wrap input:focus { border-color:var(--ot-blue); }
+    .param-tbl-wrap { max-height:300px; overflow-y:auto; border:1.5px solid var(--border); border-radius:10px; overflow:hidden; }
+    .param-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .param-table thead tr { background:#f8fafc; position:sticky; top:0; }
+    .param-table th { padding:8px 12px; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .param-table td { padding:7px 12px; border-bottom:1px solid #f8fafc; vertical-align:top; }
+    .param-table tr:last-child td { border-bottom:none; }
+    .param-table tr:hover td { background:#f8fafc; }
+    .param-path  { color:var(--muted); font-family:monospace; font-size:11px; word-break:break-all; }
+    .param-value { color:var(--ot-blue); font-family:monospace; }
+    .param-type  { color:var(--faint); font-size:10px; }
+
+    /* Task cards */
+    .task-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+    @media(max-width:500px){ .task-grid { grid-template-columns:1fr; } }
+    .task-card { background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:14px 16px; }
+    .task-card h4 { font-size:13px; font-weight:700; color:var(--text); margin:0 0 6px; display:flex; align-items:center; gap:6px; }
+    .task-card p  { font-size:12px; color:var(--muted); margin:0 0 12px; line-height:1.5; }
+
+    .get-set-card { background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+    .get-set-card h4 { font-size:13px; font-weight:700; color:var(--text); margin:0 0 10px; }
+    .get-set-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .get-set-row input, .get-set-row select { padding:7px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; font-family:monospace; background:#fff; outline:none; color:var(--text); }
+    .get-set-row input:focus, .get-set-row select:focus { border-color:var(--ot-blue); }
+    .param-result { margin-top:8px; font-family:monospace; font-size:12px; color:#334155; background:#fff; border:1.5px solid var(--border); border-radius:8px; padding:8px 12px; display:none; }
+
+    /* Assign tab */
+    .assign-wrap { display:flex; gap:8px; align-items:flex-end; }
+    .assign-wrap select { flex:1; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); }
+    .assign-wrap select:focus { border-color:var(--ot-blue); }
+    .assign-info { margin-top:12px; padding:11px 14px; background:var(--ot-green-l); border:1.5px solid #bbf7d0; border-radius:10px; font-size:13px; color:#15803d; display:none; }
+
+    @media(max-width:768px) {
+      .ot-cards { grid-template-columns:repeat(3,1fr); }
+      .ot-table th:nth-child(3),.ot-table td:nth-child(3),
+      .ot-table th:nth-child(7),.ot-table td:nth-child(7),
+      .ot-table th:nth-child(8),.ot-table td:nth-child(8) { display:none; }
+      .search-wrap input { width:160px; }
+      .ot-modal-box { width:98%; border-radius:16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout ot">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ot-hdr">
+        <div class="ot-hdr-l">
+          <h1>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--ot-blue)"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            ONT Status
+          </h1>
+          <p>
+            <span class="ldot" style="width:7px;height:7px;border-radius:50%;background:var(--ot-green);display:inline-block;animation:pulse 2s infinite;"></span>
+            Realtime via GenieACS TR-069
+            <span id="last-sync-label" style="margin-left:8px;font-size:11px;color:var(--faint);"></span>
+          </p>
+        </div>
+        <div class="ot-hdr-r">
+          <div class="live-chip"><span class="ldot"></span>LIVE</div>
+          <button class="btn btn-outline btn-sm" onclick="OntPage.checkHealth()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            Health
+          </button>
+          <button class="btn btn-blue btn-sm" id="btn-sync" onclick="OntPage.sync()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            Sync GenieACS
+          </button>
+        </div>
+      </div>
+
+      <!-- GenieACS alert -->
+      <div class="ot-alert" id="genieacs-alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="genieacs-alert-msg">GenieACS tidak dapat dijangkau</span>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="ot-cards">
+        <div class="ot-card c-blue">
+          <span class="card-lbl">Total ONT</span>
+          <span class="card-val" id="stat-total">—</span>
+          <span class="card-sub">Semua perangkat</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+        </div>
+        <div class="ot-card c-green">
+          <span class="card-lbl">Online</span>
+          <span class="card-val" id="stat-online">—</span>
+          <span class="card-sub">ONT aktif</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+        </div>
+        <div class="ot-card c-red">
+          <span class="card-lbl">Offline</span>
+          <span class="card-val" id="stat-offline">—</span>
+          <span class="card-sub">ONT mati</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+        </div>
+        <div class="ot-card c-amber">
+          <span class="card-lbl">Warning</span>
+          <span class="card-val" id="stat-warning">—</span>
+          <span class="card-sub">Sinyal lemah</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        </div>
+        <div class="ot-card c-slate">
+          <span class="card-lbl">Unassigned</span>
+          <span class="card-val" id="stat-unassigned">—</span>
+          <span class="card-sub">Tanpa pelanggan</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        </div>
+        <div class="ot-card c-teal">
+          <span class="card-lbl">Uptime</span>
+          <span class="card-val" id="stat-uptime-pct">—</span>
+          <span class="card-sub">Persentase online</span>
+          <div class="card-ico"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="ot-tbl-wrap">
+        <div class="ot-tbl-hdr">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="ot-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ot-blue)" stroke-width="2.5"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              Daftar ONT
+              <span class="ot-count" id="ont-count-label">0 ONT</span>
+            </div>
+            <div class="filter-chips">
+              <button class="fchip active" data-status="" onclick="OntPage.setFilter('status','')">Semua</button>
+              <button class="fchip online" data-status="online" onclick="OntPage.setFilter('status','online')">Online</button>
+              <button class="fchip offline" data-status="offline" onclick="OntPage.setFilter('status','offline')">Offline</button>
+              <button class="fchip warning" data-status="warning" onclick="OntPage.setFilter('status','warning')">Warning</button>
+              <button class="fchip" data-status="unknown" onclick="OntPage.setFilter('status','unknown')">Unknown</button>
+            </div>
+          </div>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="ont-search" placeholder="Cari serial, IP, model..." oninput="OntPage.debounceLoad()">
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ot-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Serial Number</th>
+                <th>Pelanggan</th>
+                <th>Model</th>
+                <th>Status</th>
+                <th>RX Signal</th>
+                <th>IP Address</th>
+                <th>Last Inform</th>
+                <th>Uptime</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="ont-table-body">
+              <tr><td colspan="10">
+                <div class="tbl-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+                  <p>Memuat data ONT...</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ot-tbl-footer">
+          <span class="pg-info" id="pagination-info"></span>
+          <div class="pg-btns" id="pagination-btns"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── MODAL DETAIL ── -->
+<div class="ot-modal-overlay" id="modal-detail">
+  <div class="ot-modal-box">
+    <div class="ot-modal-hdr">
+      <div class="ot-modal-hdr-l">
+        <h3 id="modal-title">Detail ONT</h3>
+        <p id="modal-subtitle">—</p>
+      </div>
+      <div class="ot-modal-hdr-r">
+        <span id="modal-status-badge" class="status-pill pill-unknown"><span class="sdot"></span>—</span>
+        <button class="ot-modal-close" onclick="OntPage.closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="ot-modal-body">
+
+      <!-- Info grid -->
+      <div class="info-grid">
+        <div class="info-item"><div class="info-lbl">Manufacturer</div><div class="info-val" id="d-manufacturer">—</div></div>
+        <div class="info-item"><div class="info-lbl">Model</div><div class="info-val" id="d-model">—</div></div>
+        <div class="info-item"><div class="info-lbl">Firmware</div><div class="info-val mono" id="d-firmware">—</div></div>
+        <div class="info-item"><div class="info-lbl">IP Address</div><div class="info-val mono" id="d-ip">—</div></div>
+        <div class="info-item"><div class="info-lbl">MAC Address</div><div class="info-val mono" id="d-mac">—</div></div>
+        <div class="info-item"><div class="info-lbl">Uptime</div><div class="info-val" id="d-uptime">—</div></div>
+        <div class="info-item"><div class="info-lbl">Last Inform</div><div class="info-val" id="d-last-inform">—</div></div>
+        <div class="info-item"><div class="info-lbl">GenieACS ID</div><div class="info-val mono" id="d-device-id" style="font-size:11px">—</div></div>
+      </div>
+
+      <!-- Signal panel -->
+      <div class="signal-panel">
+        <div class="sig-item">
+          <span class="sig-lbl">↓ RX Power</span>
+          <span class="sig-val" id="d-rx">—</span>
+        </div>
+        <div class="sig-item">
+          <span class="sig-lbl">↑ TX Power</span>
+          <span class="sig-val" id="d-tx">—</span>
+        </div>
+        <div class="sig-item">
+          <span class="sig-lbl">OLT RX Power</span>
+          <span class="sig-val" id="d-olt-rx">—</span>
+        </div>
+        <div class="sig-spacer"></div>
+        <div class="cust-panel">
+          <span class="lbl">Pelanggan</span>
+          <span class="val" id="d-customer">—</span>
+          <span class="sub" id="d-customer-id">—</span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="m-tabs">
+        <button class="m-tab active" data-tab="signal" onclick="OntPage.switchTab(this,'signal')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>Signal History
+        </button>
+        <button class="m-tab" data-tab="params" onclick="OntPage.switchTab(this,'params')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>Parameter TR-069
+        </button>
+        <button class="m-tab" data-tab="tasks" onclick="OntPage.switchTab(this,'tasks')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Task
+        </button>
+        <button class="m-tab" data-tab="assign" onclick="OntPage.switchTab(this,'assign')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Assign Pelanggan
+        </button>
+      </div>
+
+      <!-- Tab: Signal History -->
+      <div id="tab-signal" class="m-panel active">
+        <div class="hist-btns">
+          <button class="hist-btn active" onclick="OntPage.loadSignalHistory(6,this)">6 Jam</button>
+          <button class="hist-btn" onclick="OntPage.loadSignalHistory(24,this)">24 Jam</button>
+          <button class="hist-btn" onclick="OntPage.loadSignalHistory(72,this)">3 Hari</button>
+          <button class="hist-btn" onclick="OntPage.loadSignalHistory(168,this)">7 Hari</button>
+        </div>
+        <div class="sig-chart-wrap"><canvas id="signal-chart"></canvas></div>
+        <div id="signal-no-data" class="tbl-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          <p>Belum ada data sinyal tersimpan</p>
+        </div>
+      </div>
+
+      <!-- Tab: Parameters -->
+      <div id="tab-params" class="m-panel">
+        <div class="param-search-wrap">
+          <input type="text" id="param-search" placeholder="Filter parameter... (contoh: RXPower, IPAddress)" oninput="OntPage.filterParams()">
+          <button class="btn btn-outline btn-sm" onclick="OntPage.refreshParams()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh dari Device
+          </button>
+        </div>
+        <div id="params-loading" class="tbl-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="animation:spin 1s linear infinite"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          <p>Memuat parameter...</p>
+        </div>
+        <div class="param-tbl-wrap" id="params-table-wrap">
+          <table class="param-table">
+            <thead><tr><th>Parameter Path</th><th>Value</th><th>Type</th><th>Timestamp</th></tr></thead>
+            <tbody id="params-tbody"></tbody>
+          </table>
+        </div>
+        <div id="params-no-data" class="tbl-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p>Klik tab ini untuk memuat parameter</p>
+        </div>
+      </div>
+
+      <!-- Tab: Tasks -->
+      <div id="tab-tasks" class="m-panel">
+        <div class="task-grid">
+          <div class="task-card">
+            <h4>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ot-amber)" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Reboot Device
+            </h4>
+            <p>Kirim perintah reboot ke ONT. Device akan restart dalam beberapa detik.</p>
+            <button class="btn btn-amber btn-sm" id="btn-reboot" onclick="OntPage.sendTask('reboot')">Kirim Reboot</button>
+          </div>
+          <div class="task-card">
+            <h4>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ot-red)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+              Factory Reset
+            </h4>
+            <p>Reset ONT ke pengaturan pabrik. <strong style="color:var(--ot-red)">Semua konfigurasi akan hilang!</strong></p>
+            <button class="btn btn-red btn-sm" id="btn-factory-reset" onclick="OntPage.sendTask('factory-reset')">Factory Reset</button>
+          </div>
+        </div>
+        <div class="get-set-card">
+          <h4>Get Parameter Value</h4>
+          <div class="get-set-row">
+            <input type="text" id="get-param-input" placeholder="InternetGatewayDevice.DeviceInfo.SoftwareVersion" style="flex:1;min-width:200px;">
+            <button class="btn btn-outline btn-sm" onclick="OntPage.getParamValue()">Get Value</button>
+          </div>
+          <div class="param-result" id="get-param-result"></div>
+        </div>
+        <div class="get-set-card">
+          <h4>Set Parameter Value</h4>
+          <div class="get-set-row">
+            <input type="text" id="set-param-name" placeholder="Parameter path" style="flex:2;min-width:180px;">
+            <input type="text" id="set-param-value" placeholder="Value" style="flex:1;min-width:80px;">
+            <select id="set-param-type">
+              <option value="xsd:string">string</option>
+              <option value="xsd:int">integer</option>
+              <option value="xsd:boolean">boolean</option>
+              <option value="xsd:unsignedInt">unsignedInt</option>
+            </select>
+            <button class="btn btn-blue btn-sm" onclick="OntPage.setParamValue()">Set Value</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Assign -->
+      <div id="tab-assign" class="m-panel">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">Hubungkan ONT ini ke data pelanggan untuk monitoring per-pelanggan.</p>
+        <div class="assign-wrap">
+          <div style="flex:1;">
+            <label style="font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:6px;">Pilih Pelanggan</label>
+            <select id="assign-customer-select" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;background:#f8fafc;outline:none;">
+              <option value="">— Unassigned —</option>
+            </select>
+          </div>
+          <button class="btn btn-blue" onclick="OntPage.assignCustomer()" style="margin-top:22px;">Simpan</button>
+        </div>
+        <div class="assign-info" id="current-customer-info"></div>
+      </div>
+
+    </div>
+    <div class="ot-modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="OntPage.closeModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<style>@keyframes spin { to { transform:rotate(360deg); } }</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/ont.js"></script>
+</body>
+</html>

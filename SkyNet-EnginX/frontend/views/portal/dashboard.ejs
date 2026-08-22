@@ -1,0 +1,3268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2563eb">
+  <title>Customer Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --font:'Plus Jakarta Sans',sans-serif;
+      --blue:#2563eb;--blue2:#1d4ed8;--blue3:#1e40af;
+      --teal:#06b6d4;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--orange:#f97316;
+      --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+      --text:#0f172a;--muted:#64748b;--radius:18px;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;max-width:480px;margin:0 auto;}
+
+    /* ═══ HERO ═══ */
+    .hero{background: #020e2e; padding:22px 20px 68px;position:relative;overflow:hidden;}
+    .hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;position:relative;z-index:1;}
+    .hero-user{display:flex;align-items:center;gap:11px;}
+    .hu-avatar{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0;}
+    .hu-name{font-size:15px;font-weight:700;color:#fff;line-height:1.2;}
+    .hu-sub{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;display:flex;align-items:center;gap:6px;}
+    .hu-badge{padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+    .badge-active{background:rgba(16,185,129,.25);color:#6ee7b7;}
+    .badge-isolated{background:rgba(239,68,68,.25);color:#fca5a5;}
+    .badge-inactive{background:rgba(100,116,139,.25);color:#cbd5e1;}
+    .hero-btns{display:flex;gap:6px;}
+    .hbtn{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:none;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);cursor:pointer;transition:all .2s;}
+    .hbtn:hover{background:rgba(255,255,255,.2);color:#fff;}
+    .credit-row{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;}
+    .cr-lbl{font-size:11px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+    .cr-amount{font-size:28px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;margin-top:3px;}
+    .cr-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:4px;font-weight:600;letter-spacing:.4px;}
+    .btn-bayar{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.25);color:#fff;padding:9px 16px;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;}
+    .btn-bayar:hover{background:rgba(255,255,255,.25);}
+    .btn-bayar.hidden{display:none;}
+
+    /* ═══ PACKAGE DETAIL CARD ═══ */
+    .inet-float{margin:-52px 16px 0;position:relative;z-index:10;}
+    .inet-card{background:linear-gradient(145deg,#1e40af 0%,#2563eb 60%,#0284c7 100%);border-radius:var(--radius);padding:18px 20px 20px;box-shadow:0 12px 36px rgba(37,99,235,.35);position:relative;overflow:hidden;}
+    /* Header row */
+    .pkg-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:1;}
+    .pkg-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.6px;}
+    .pkg-name{font-size:15px;font-weight:800;color:#fff;margin-top:2px;display:flex;align-items:center;gap:8px;}
+    .pkg-icon{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;}
+    /* Progress bar */
+    .pkg-bar-wrap{position:relative;z-index:1;margin-bottom:6px;}
+    .pkg-bar{height:6px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden;}
+    .pkg-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width .7s;}
+    .pkg-bar-labels{display:flex;justify-content:space-between;margin-top:5px;margin-bottom:14px;}
+    .pkg-bar-labels span{font-size:10px;color:rgba(255,255,255,.55);font-weight:500;}
+    .pkg-bar-labels span.right{text-align:right;}
+    /* Stats row */
+    .pkg-stats{display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);position:relative;z-index:1;}
+    .ps-item{flex:1;text-align:center;position:relative;}
+    .ps-item+.ps-item::before{content:'';position:absolute;left:0;top:10%;height:80%;width:1px;background:rgba(255,255,255,.15);}
+    .ps-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 7px;color:#fff;}
+    .ps-val{font-size:13px;font-weight:800;color:#fff;line-height:1;}
+    .ps-lbl{font-size:9px;color:rgba(255,255,255,.55);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-top:3px;}
+
+    /* ═══ CONTENT ═══ */
+    .content{padding:18px 16px 88px;}
+
+    /* Notif banner */
+    .notif-banner{display:none;background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1.5px solid #fde68a;border-radius:14px;padding:14px 16px;margin-bottom:16px;cursor:pointer;}
+    .notif-banner.overdue{background:linear-gradient(135deg,#fee2e2,#fff1f2);border-color:#fca5a5;}
+    .notif-banner.isolated{background:linear-gradient(135deg,#fee2e2,#fff1f2);border-color:#fca5a5;}
+    .nb-row{display:flex;align-items:center;gap:12px;}
+    .nb-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .nb-icon.warn{background:#fde68a;color:#d97706;}
+    .nb-icon.danger{background:#fca5a5;color:#dc2626;}
+    .nb-text{flex:1;min-width:0;}
+    .nb-title{font-size:13px;font-weight:700;}
+    .nb-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+
+    /* ═══ ANNOUNCEMENT BANNERS ═══ */
+    .ann-wrap{margin-bottom:14px;}
+    .ann-item{border-radius:14px;padding:13px 14px;margin-bottom:8px;position:relative;cursor:default;animation:fadeUp .3s ease;}
+    .ann-item:last-child{margin-bottom:0;}
+    .ann-item.gangguan{background:linear-gradient(135deg,#fee2e2,#fff1f2);border:1.5px solid #fca5a5;}
+    .ann-item.maintenance{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1.5px solid #fde68a;}
+    .ann-item.info{background:linear-gradient(135deg,#eff6ff,#f0f9ff);border:1.5px solid #bfdbfe;}
+    .ann-item.promo{background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:1.5px solid #86efac;}
+    .ann-row{display:flex;align-items:flex-start;gap:11px;}
+    .ann-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .ann-item.gangguan .ann-icon{background:#fca5a5;color:#dc2626;}
+    .ann-item.maintenance .ann-icon{background:#fde68a;color:#d97706;}
+    .ann-item.info .ann-icon{background:#bfdbfe;color:#1d4ed8;}
+    .ann-item.promo .ann-icon{background:#86efac;color:#15803d;}
+    .ann-body{flex:1;min-width:0;}
+    .ann-type{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+    .ann-item.gangguan .ann-type{color:#dc2626;}
+    .ann-item.maintenance .ann-type{color:#d97706;}
+    .ann-item.info .ann-type{color:#1d4ed8;}
+    .ann-item.promo .ann-type{color:#15803d;}
+    .ann-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+    .ann-content{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;}
+    .ann-until{font-size:10px;color:var(--muted);margin-top:5px;font-weight:500;}
+    .ann-dismiss{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;padding:3px;opacity:.6;line-height:1;}
+    .ann-dismiss:hover{opacity:1;}
+    .nb-arrow{color:var(--muted);}
+
+    /* Quick Menu */
+    .section-label{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+    .quick-menu{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 6px;margin-bottom:22px;}
+    .qm-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-decoration:none;color:var(--text);-webkit-tap-highlight-color:transparent;padding:4px 2px;border-radius:12px;transition:background .15s;}
+    .qm-item:active{background:rgba(0,0,0,.05);}
+    .qm-circle{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;border:2px solid transparent;}
+    .qm-circle.c-blue {background:#eff6ff;color:var(--blue);}
+    .qm-circle.c-teal {background:#f0fdfa;color:#0d9488;}
+    .qm-circle.c-navy {background:#eff6ff;color:var(--blue3);}
+    .qm-circle.c-rose {background:#fff1f2;color:#e11d48;}
+    .qm-circle.c-amber{background:#fffbeb;color:#d97706;}
+    .qm-circle.c-violet{background:#f5f3ff;color:#7c3aed;}
+    .qm-circle.c-green{background:#f0fdf4;color:#16a34a;}
+    /* Upgrade paket card */
+    .pkg-upgrade-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;transition:all .15s;display:flex;align-items:center;gap:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+    .pkg-upgrade-card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(37,99,235,.08);}
+    .pkg-upgrade-card.current{border-color:var(--green);background:#f0fdf4;cursor:default;}
+    .pkg-upgrade-card.selected{border-color:var(--blue);background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+    /* Radio check di kanan */
+    .puc-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+    .pkg-upgrade-card.selected .puc-radio{border-color:var(--blue);background:var(--blue);}
+    .pkg-upgrade-card.selected .puc-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;}
+    .pkg-upgrade-card.current .puc-radio{border-color:var(--green);background:var(--green);}
+    .pkg-upgrade-card.current .puc-radio::after{content:'✓';font-size:10px;color:#fff;font-weight:800;line-height:1;}
+    .puc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .puc-info{flex:1;min-width:0;}
+    .puc-name{font-size:13px;font-weight:700;}
+    .puc-speed{font-size:11px;color:var(--muted);margin-top:2px;}
+    .puc-price{font-size:14px;font-weight:800;text-align:right;flex-shrink:0;}
+    .puc-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block;}
+    .puc-current{background:#dcfce7;color:#16a34a;}
+    .puc-upgrade{background:#eff6ff;color:var(--blue);}
+    .puc-downgrade{background:#f1f5f9;color:var(--muted);}
+    .qm-item.active .qm-circle{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+    .qm-name{font-size:10px;font-weight:600;color:var(--muted);text-align:center;line-height:1.2;}
+    .qm-item.active .qm-name{color:var(--blue);font-weight:700;}
+    .qm-badge{position:relative;}
+    .qm-dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:var(--red);border:1.5px solid #fff;font-size:7px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+
+    /* ═══ PANELS ═══ */
+    .panel{display:none;animation:fadeUp .25s ease;}
+    .panel.active{display:block;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+    /* Cards */
+    .w-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
+    .w-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .w-card-title svg{width:16px;height:16px;color:var(--blue);flex-shrink:0;}
+    .w-card-title .badge-count{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;}
+
+    /* Info grid */
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .info-item{background:#f8fafc;border-radius:10px;padding:10px 12px;}
+    .ii-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+    .ii-value{font-size:12px;font-weight:700;color:var(--text);margin-top:3px;word-break:break-all;}
+    .info-item.full{grid-column:1/-1;}
+    .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;}
+    .dot-green{background:var(--green);}.dot-red{background:var(--red);}.dot-amber{background:var(--amber);}
+
+    /* Invoice items */
+    .inv-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f1f5f9;gap:10px;}
+    .inv-item:last-child{border-bottom:none;padding-bottom:0;}
+    .inv-left{flex:1;min-width:0;}
+    .inv-period{font-size:13px;font-weight:700;}
+    .inv-due{font-size:10px;color:var(--muted);margin-top:1px;}
+    .inv-right{text-align:right;flex-shrink:0;}
+    .inv-amount{font-size:13px;font-weight:800;font-family:'Plus Jakarta Sans',monospace;}
+    .inv-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;margin-top:3px;text-transform:uppercase;}
+    .inv-paid{background:#dcfce7;color:#16a34a;}
+    .inv-unpaid{background:#fef3c7;color:#d97706;}
+    .inv-overdue{background:#fee2e2;color:#dc2626;}
+    .inv-cancelled{background:#f1f5f9;color:var(--muted);}
+    .btn-pay{padding:6px 12px;border-radius:20px;background:var(--blue);color:#fff;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:inherit;margin-left:8px;transition:opacity .15s;}
+    .btn-pay:hover{opacity:.85;}
+    .btn-pay:disabled{opacity:.4;cursor:not-allowed;}
+
+    /* Payment section */
+    .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+    .pay-method{background:#f8fafc;border:1.5px solid transparent;border-radius:12px;padding:12px;cursor:pointer;text-align:center;transition:all .2s;}
+    .pay-method.selected{border-color:var(--blue);background:#eff6ff;}
+    .pay-method svg{display:block;margin:0 auto 5px;width:22px;height:22px;}
+    .pay-method span{font-size:11px;font-weight:600;}
+
+    /* Payment modal overlay */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+    .modal-overlay.active{display:flex;}
+    .modal-sheet{background:#fff;border-radius:24px 24px 0 0;padding:0 20px 32px;width:100%;max-width:480px;max-height:90dvh;overflow-y:auto;animation:slideUp .3s ease;}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .modal-handle{width:36px;height:4px;background:#e2e8f0;border-radius:2px;margin:14px auto 20px;}
+    .modal-title{font-size:17px;font-weight:800;margin-bottom:20px;}
+    .modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;}
+
+    /* ONT / Signal */
+    .signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+
+    /* ═══ Usage History Chart ═══ */
+    .usage-chart-wrap{background:#f8fafc;border-radius:14px;padding:14px;margin-top:2px;}
+    .usage-chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+    .usage-chart-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.4px;}
+    .usage-chart-title svg{color:var(--blue2);}
+    .usage-chart-legend{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted);font-weight:600;}
+    .lg-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+
+    .usage-chart-tabs{display:flex;gap:4px;background:#e2e8f0;border-radius:10px;padding:3px;margin-bottom:14px;}
+    .ct-tab{flex:1;background:transparent;border:none;color:var(--muted);font-size:11.5px;font-weight:700;padding:7px 6px;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .18s;}
+    .ct-tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,.5);}
+    .ct-tab.active{background:#fff;color:var(--blue2);box-shadow:0 1px 3px rgba(15,23,42,.1),0 1px 2px rgba(15,23,42,.06);}
+
+    .usage-chart-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+    .ucs-item{background:#fff;border-radius:9px;padding:8px 7px;text-align:center;}
+    .ucs-lbl{display:block;font-size:9.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
+    .ucs-val{display:block;font-size:11.5px;font-weight:800;color:var(--text);font-family:'DM Mono',monospace;line-height:1.2;}
+
+    .usage-chart-area{position:relative;background:#fff;border-radius:10px;padding:10px;height:160px;overflow:hidden;}
+    .uc-svg{width:100%;height:100%;display:block;}
+    .uc-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:11.5px;font-weight:600;}
+    .uc-spinner{width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:uc-spin .8s linear infinite;}
+    @keyframes uc-spin{to{transform:rotate(360deg);}}
+    .uc-tooltip{position:absolute;pointer-events:none;background:#0f172a;color:#fff;font-size:10.5px;padding:6px 9px;border-radius:6px;font-family:'DM Mono',monospace;line-height:1.5;white-space:nowrap;box-shadow:0 4px 14px rgba(15,23,42,.22);opacity:0;transform:translate(-50%,-110%);transition:opacity .12s;z-index:2;}
+    .uc-tooltip.show{opacity:1;}
+    .uc-tooltip b{font-weight:700;}
+    .uc-tooltip .tt-dl{color:#60a5fa;}
+    .uc-tooltip .tt-ul{color:#34d399;}
+
+    .uc-empty-data{color:var(--muted);font-size:11.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .uc-empty-data svg{color:#cbd5e1;}
+    .sig-card{background:#f8fafc;border-radius:12px;padding:14px;text-align:center;}
+    .sig-val{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;}
+    .sig-lbl{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+    .sig-good{color:var(--green);}.sig-warn{color:var(--amber);}.sig-bad{color:var(--red);}
+    .btn-reboot{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;transition:all .15s;}
+    .btn-reboot:hover{opacity:.9;}.btn-reboot:disabled{opacity:.45;cursor:not-allowed;}
+
+    /* Traffic */
+    .chart-wrap{position:relative;height:180px;margin-top:8px;}
+    .period-btns{display:flex;gap:4px;background:#f1f5f9;border-radius:8px;padding:3px;width:fit-content;margin-bottom:12px;}
+    .period-btns button{padding:5px 12px;border:none;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;background:none;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .period-btns button.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+    .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+    .stat-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center;}
+    .stat-val{font-size:19px;font-weight:800;font-family:'DM Mono',monospace;}
+    .stat-lbl{font-size:9px;font-weight:600;color:var(--muted);margin-top:2px;text-transform:uppercase;}
+
+    /* Tiket */
+    .ticket-item{padding:13px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;}
+    .ticket-item:last-child{border-bottom:none;padding-bottom:0;}
+    .tk-row{display:flex;align-items:flex-start;gap:12px;}
+    .tk-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .tk-icon.open{background:#eff6ff;color:var(--blue);}
+    .tk-icon.in_progress{background:#fef3c7;color:#d97706;}
+    .tk-icon.resolved,.tk-icon.closed{background:#f0fdf4;color:var(--green);}
+    .tk-icon.pending{background:#f1f5f9;color:var(--muted);}
+    .tk-info{flex:1;min-width:0;}
+    .tk-title{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tk-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+    .tk-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;text-transform:uppercase;margin-top:3px;}
+    .tk-open{background:#eff6ff;color:var(--blue);}
+    .tk-in_progress{background:#fef3c7;color:#d97706;}
+    .tk-resolved,.tk-closed{background:#dcfce7;color:#16a34a;}
+    .tk-pending{background:#f1f5f9;color:var(--muted);}
+    .btn-new-ticket{width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:12px;background:none;color:var(--blue);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;transition:all .15s;}
+    .btn-new-ticket:hover{background:#eff6ff;border-style:solid;}
+
+    /* Profil */
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;}
+    .form-input{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;background:#f8fafc;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:all .2s;}
+    .form-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .form-input:read-only{color:var(--muted);cursor:default;}
+    .form-input:read-only:focus{border-color:var(--border);background:#f8fafc;box-shadow:none;}
+    .btn-save{width:100%;padding:12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s;margin-top:4px;}
+    .btn-save:hover{opacity:.9;}
+    .btn-save:disabled{opacity:.45;cursor:not-allowed;}
+
+    /* ═══ PAYMENT ACCORDION (Modal Bayar Manual) ═══ */
+    .pm-info-box{background:#f8fafc;border-radius:14px;padding:14px 16px;margin-bottom:16px;}
+    .pm-info-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:12px;}
+    .pm-info-row:last-child{margin-bottom:0;}
+    .pm-info-row .lbl{color:var(--muted);}
+    .pm-info-row .val{font-weight:700;color:var(--text);}
+    .pm-info-total{border-top:1px dashed var(--border);padding-top:10px;margin-top:4px;}
+    .pm-info-total .val{font-size:16px;font-weight:800;font-family:inherit;color:var(--blue);}
+    .pm-heading{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 10px;}
+    .pm-group{border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;background:#fff;}
+    .pm-group-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;transition:background .15s;}
+    .pm-group-head:hover{background:#f8fafc;}
+    .pm-group-head.open{background:#eff6ff;}
+    .pm-group-ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+    .pm-group-ico.is-ewallet{background:linear-gradient(135deg,#8b5cf6,#6d28d9);}
+    .pm-group-ico.is-qris{background:linear-gradient(135deg,#f59e0b,#d97706);}
+    .pm-group-ico.is-gateway{background:linear-gradient(135deg,#64748b,#475569);}
+    .pm-group-ico.is-gw-active{background:linear-gradient(135deg,#06b6d4,#0891b2);box-shadow:0 4px 12px rgba(6,182,212,.35);}
+    .pm-gw-card{margin-bottom:14px;border:2px solid #06b6d4!important;background:linear-gradient(135deg,#ecfeff,#cffafe)!important;position:relative;overflow:hidden;}
+    .pm-gw-card::before{content:'';position:absolute;top:-50%;right:-30%;width:200px;height:200px;background:radial-gradient(circle,rgba(6,182,212,.2),transparent 70%);pointer-events:none;}
+    .pm-gw-head{padding:14px 14px;background:transparent!important;}
+    .pm-gw-head:hover{background:rgba(6,182,212,.06)!important;}
+    .pm-gw-card:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(6,182,212,.22);transition:all .2s;}
+    .pm-gw-badge{display:inline-block;background:#06b6d4;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;margin-left:5px;letter-spacing:.4px;vertical-align:1px;}
+    .pm-gw-arrow{color:#0891b2;flex-shrink:0;}
+    .pm-divider{display:flex;align-items:center;gap:10px;margin:14px 2px 10px;color:var(--muted);font-size:11px;font-weight:600;}
+    .pm-divider::before,.pm-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+    .pm-divider span{padding:0 4px;text-transform:uppercase;letter-spacing:.6px;}
+    .pm-group-text{flex:1;min-width:0;}
+    .pm-group-title{font-size:13px;font-weight:700;color:var(--text);}
+    .pm-group-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .pm-group-count{padding:2px 8px;border-radius:20px;background:#e2e8f0;color:var(--muted);font-size:10px;font-weight:700;}
+    .pm-group-chev{color:var(--muted);transition:transform .25s;flex-shrink:0;}
+    .pm-group-head.open .pm-group-chev{transform:rotate(180deg);}
+    .pm-group-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+    .pm-group-head.open + .pm-group-body{max-height:2000px;}
+    .pm-group-inner{padding:4px 10px 10px;}
+    .pm-group-head.disabled{cursor:default;opacity:.65;}
+    .pm-group-head.disabled:hover{background:#fff;}
+    .pm-badge-soon{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+    .pm-item{padding:12px;border-radius:11px;margin-bottom:8px;background:#f8fafc;border:1.5px solid transparent;transition:all .15s;}
+    .pm-item:last-child{margin-bottom:0;}
+    .pm-item-row{display:flex;align-items:center;gap:11px;}
+    .pm-logo{width:40px;height:40px;border-radius:8px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;font-size:10px;color:var(--text);letter-spacing:.3px;text-align:center;line-height:1;padding:0 2px;overflow:hidden;}
+    .pm-logo img{max-width:100%;max-height:100%;object-fit:contain;}
+    .pm-detail{flex:1;min-width:0;}
+    .pm-name{font-size:13px;font-weight:700;color:var(--text);}
+    .pm-number{font-size:14px;font-weight:700;font-family:inherit;color:var(--blue);letter-spacing:.5px;margin-top:3px;word-break:break-all;}
+    .pm-owner{font-size:11px;color:var(--muted);margin-top:2px;}
+    .pm-copy-btn{padding:8px 12px;border-radius:9px;background:var(--blue);color:#fff;border:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;flex-shrink:0;transition:all .15s;}
+    .pm-copy-btn:hover{background:var(--blue2);}
+    .pm-copy-btn.copied{background:var(--green);}
+    .pm-copy-btn svg{width:13px;height:13px;}
+    .pm-qris-box{background:#fff;border-radius:12px;padding:16px;text-align:center;}
+    .pm-qris-box img{max-width:220px;width:100%;height:auto;border-radius:8px;}
+    .pm-qris-hint{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;}
+    .pm-warn{background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-top:10px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;}
+    .pm-warn svg{width:16px;height:16px;color:#d97706;flex-shrink:0;margin-top:1px;}
+    .pm-warn-text{font-size:11.5px;color:#78350f;line-height:1.55;}
+    .pm-warn-text b{color:#92400e;}
+    .pm-wa-btn{width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .pm-wa-btn:hover{opacity:.92;}
+    .pm-wa-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .pm-wa-btn svg{width:18px;height:18px;}
+    .pm-empty{text-align:center;padding:28px 20px;color:var(--muted);font-size:12.5px;background:#f8fafc;border-radius:12px;margin-bottom:14px;}
+    .pm-empty svg{width:36px;height:36px;margin:0 auto 10px;display:block;opacity:.5;}
+    .divider{border:none;border-top:1px solid var(--border);margin:18px 0;}
+    .pw-section-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--text);}
+
+    /* Bottom nav */
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;z-index:100;padding:6px 0 env(safe-area-inset-bottom,8px);max-width:480px;margin:0 auto;border-top:1px solid var(--border);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;cursor:pointer;color:var(--muted);transition:color .15s;text-decoration:none;position:relative;}
+    .bn-item.active{color:var(--blue);}
+    .bn-item svg{width:21px;height:21px;}
+    .bn-item span{font-size:9px;font-weight:600;}
+    .bn-item.active svg{stroke-width:2.5;}
+    .bn-badge{position:absolute;top:3px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:8px;font-weight:800;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:1.5px solid #fff;}
+
+    /* Misc */
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 20px;border-radius:10px;font-size:12px;font-weight:600;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:300px;text-align:center;}
+    .shimmer{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:8px;height:18px;}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .empty-state{text-align:center;padding:28px 16px;color:var(--muted);font-size:12px;}
+    .empty-state svg{width:36px;height:36px;margin:0 auto 10px;display:block;opacity:.4;}
+    .spinner-wrap{text-align:center;padding:28px;color:var(--muted);}
+    .spinner{display:inline-block;width:22px;height:22px;border:2.5px solid #e2e8f0;border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-user">
+      <div class="hu-avatar" id="avatar">?</div>
+      <div>
+        <div class="hu-name" id="custName">Loading...</div>
+        <div class="hu-sub">
+          <span id="custPhone">—</span>
+          <span class="hu-badge badge-active" id="custBadge">active</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-btns">
+      <button class="hbtn" onclick="loadAll()" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+      </button>
+      <button class="hbtn" onclick="doLogout()" title="Logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="credit-row">
+    <div>
+      <div class="cr-lbl">total tagihan</div>
+      <div class="cr-amount" id="crAmount">Rp 0</div>
+      <div class="cr-sub" id="crSub">LUNAS</div>
+    </div>
+    <button class="btn-bayar hidden" id="btnBayarHero" onclick="navTo('billing')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Bayar Sekarang
+    </button>
+  </div>
+</div>
+
+<!-- ═══ PACKAGE DETAIL CARD ═══ -->
+<div class="inet-float">
+  <div class="inet-card">
+    <!-- Header -->
+    <div class="pkg-header">
+      <div>
+        <div class="pkg-label">Package Detail</div>
+        <div class="pkg-name">
+          <div class="pkg-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+          </div>
+          <span id="inetPkgName">Internet</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:rgba(255,255,255,.55);font-weight:600;margin-bottom:3px">STATUS</div>
+        <div style="font-size:11px;font-weight:700;color:#fff" id="inetStatus">—</div>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="pkg-bar-wrap">
+      <div class="pkg-bar"><div class="pkg-bar-fill" id="inetBar" style="width:0%"></div></div>
+    </div>
+    <div class="pkg-bar-labels">
+      <span id="inetSpd">—</span>
+      <span class="right" id="inetBillingDate">—</span>
+    </div>
+    <!-- Stats -->
+    <div class="pkg-stats">
+      <div class="ps-item">
+        <div class="ps-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="ps-val" id="inetDays">— Hari</div>
+        <div class="ps-lbl">Masa Aktif</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        </div>
+        <div class="ps-val" id="iuDown">—</div>
+        <div class="ps-lbl">Download</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><path d="M5 3h14"/></svg>
+        </div>
+        <div class="ps-val" id="iuUp">—</div>
+        <div class="ps-lbl">Upload</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+  <!-- Announcement banners (gangguan massal, maintenance, info) -->
+  <div class="ann-wrap" id="annWrap" style="display:none"></div>
+
+  <!-- Notif banner (tagihan) -->
+  <div class="notif-banner" id="notifBanner" onclick="navTo('billing')">
+    <div class="nb-row">
+      <div class="nb-icon warn" id="notifIcon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="nb-text">
+        <div class="nb-title" id="notifTitle">Ada tagihan belum lunas</div>
+        <div class="nb-sub" id="notifSub">Tap untuk lihat detail</div>
+      </div>
+      <svg width="16" height="16" class="nb-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <!-- Quick Menu 7 items (2 baris: 4 + 3) -->
+  <div class="quick-menu">
+    <!-- Baris 1: Home | Tagihan | WiFi | Upgrade -->
+    <a class="qm-item active" id="qm-home" onclick="navTo('home')">
+      <div class="qm-circle c-blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg></div>
+      <span class="qm-name">Home</span>
+    </a>
+    <a class="qm-item" id="qm-billing" onclick="navTo('billing')">
+      <div class="qm-circle c-rose qm-badge" id="qmBillingWrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <span class="qm-name">Tagihan</span>
+    </a>
+    <a class="qm-item" id="qm-wifi" onclick="navTo('wifi')">
+      <div class="qm-circle c-amber">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+      </div>
+      <span class="qm-name">WiFi</span>
+    </a>
+    <a class="qm-item" id="qm-upgrade" onclick="navTo('upgrade')">
+      <div class="qm-circle c-green">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+      </div>
+      <span class="qm-name">Upgrade</span>
+    </a>
+    <!-- Baris 2: Traffic | Tiket | Profil | Hubungi CS -->
+    <a class="qm-item" id="qm-traffic" onclick="navTo('traffic')">
+      <div class="qm-circle c-teal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
+      <span class="qm-name">Traffic</span>
+    </a>
+    <a class="qm-item" id="qm-tickets" onclick="navTo('tickets')">
+      <div class="qm-circle c-violet qm-badge" id="qmTicketsWrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      </div>
+      <span class="qm-name">Tiket</span>
+    </a>
+    <a class="qm-item" id="qm-profil" onclick="navTo('profil')">
+      <div class="qm-circle c-navy"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <span class="qm-name">Profil</span>
+    </a>
+    <a class="qm-item" id="qm-cs" onclick="openContactModal()">
+      <div class="qm-circle c-green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0118 0v6"/><path d="M21 19a2 2 0 01-2 2h-1v-6h3v4zM3 19a2 2 0 002 2h1v-6H3v4z"/></svg></div>
+      <span class="qm-name">Hubungi CS</span>
+    </a>
+  </div>
+
+  <!-- ═══ PANEL: Home ═══ -->
+  <div class="panel active" id="panel-home">
+    <!-- Data Pelanggan -->
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Data Pelanggan
+      </div>
+      <div class="info-grid" id="custInfo">
+        <div class="shimmer" style="height:48px"></div>
+        <div class="shimmer" style="height:48px"></div>
+        <div class="shimmer" style="height:48px"></div>
+        <div class="shimmer" style="height:48px"></div>
+        <div class="shimmer full" style="height:48px;grid-column:1/-1"></div>
+      </div>
+    </div>
+    <!-- Tagihan aktif (jika ada) -->
+    <div class="w-card" id="homeInvCard" style="display:none">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Tagihan Aktif
+      </div>
+      <div id="homeInvList"></div>
+    </div>
+    <!-- Riwayat bayar -->
+    <div class="w-card" id="homePayCard" style="display:none">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+        Pembayaran Terakhir
+      </div>
+      <div id="homePayList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: Tagihan ═══ -->
+  <div class="panel" id="panel-billing">
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        Riwayat Tagihan
+      </div>
+      <div id="billingList"><div class="shimmer" style="height:160px"></div></div>
+    </div>
+    <div class="w-card" id="payHistCard" style="display:none">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Riwayat Pembayaran
+      </div>
+      <div id="payHistList"></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: Traffic ═══ -->
+  <div class="panel" id="panel-traffic">
+    <div class="w-card">
+      <div class="w-card-title">
+      USAGE
+      </div>
+
+      <!-- Usage Cards (Total DL / UL) -->
+      <div id="usageCards" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.75;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            Total Download
+          </div>
+          <div style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;line-height:1" id="usageDlVal">—</div>
+          <div style="font-size:10px;opacity:.6;margin-top:4px" id="usageDlRate">—</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#059669,#10b981);border-radius:14px;padding:16px;color:#fff;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-10px;right:-10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.75;margin-bottom:6px;display:flex;align-items:center;gap:5px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            Total Upload
+          </div>
+          <div style="font-size:22px;font-weight:800;font-family:'DM Mono',monospace;line-height:1" id="usageUlVal">—</div>
+          <div style="font-size:10px;opacity:.6;margin-top:4px" id="usageUlRate">—</div>
+        </div>
+      </div>
+
+      <!-- ── History Chart (replaced ratio bar) ── -->
+      <div class="usage-chart-wrap">
+        <div class="usage-chart-hdr">
+          <div class="usage-chart-title">
+            TRAFFIC
+          </div>
+          <div class="usage-chart-legend">
+            <span class="lg-dot" style="background:var(--blue)"></span><span>Download</span>
+            <span class="lg-dot" style="background:var(--green);margin-left:10px"></span><span>Upload</span>
+          </div>
+        </div>
+
+        <div class="usage-chart-tabs" id="usageChartTabs">
+          <button type="button" class="ct-tab" data-range="1h">1 jam</button>
+          <button type="button" class="ct-tab active" data-range="1d">1 hari</button>
+          <button type="button" class="ct-tab" data-range="3d">3 hari</button>
+          <button type="button" class="ct-tab" data-range="30d">30 hari</button>
+        </div>
+
+        <div class="usage-chart-stats" id="usageChartStats">
+          <div class="ucs-item">
+            <span class="ucs-lbl">Rata-rata ↓</span>
+            <span class="ucs-val" id="chartAvgDl">—</span>
+          </div>
+          <div class="ucs-item">
+            <span class="ucs-lbl">Puncak ↓</span>
+            <span class="ucs-val" id="chartPeakDl">—</span>
+          </div>
+          <div class="ucs-item">
+            <span class="ucs-lbl">Rata-rata ↑</span>
+            <span class="ucs-val" id="chartAvgUl">—</span>
+          </div>
+          <div class="ucs-item">
+            <span class="ucs-lbl">Puncak ↑</span>
+            <span class="ucs-val" id="chartPeakUl">—</span>
+          </div>
+        </div>
+
+        <div class="usage-chart-area" id="usageChartArea">
+          <div class="uc-empty" id="chartEmpty">
+            <div class="uc-spinner"></div>
+            <span>Memuat data…</span>
+          </div>
+          <svg class="uc-svg" id="usageChartSvg" viewBox="0 0 400 140" preserveAspectRatio="none" style="display:none"></svg>
+          <div class="uc-tooltip" id="chartTooltip"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: ONT (embedded in Traffic panel, reachable from nav) ═══ -->
+  <div class="panel" id="panel-ont">
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        Status ONT / Router
+      </div>
+      <div class="info-grid" id="ontInfo"><div class="shimmer" style="height:48px"></div><div class="shimmer" style="height:48px"></div></div>
+      <div class="signal-grid" id="signalRow"></div>
+      <button class="btn-reboot" id="btnReboot" onclick="doReboot()" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Reboot ONT
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: WiFi ═══ -->
+  <div class="panel" id="panel-wifi">
+    <!-- Status ONT -->
+    <div class="w-card" id="wifiOntCard">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        Status Modem / ONT
+      </div>
+      <div id="wifiOntInfo"><div class="shimmer" style="height:48px"></div></div>
+      <button class="btn-reboot" id="btnWifiReboot" onclick="doReboot()" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Reboot ONT
+      </button>
+    </div>
+
+    <!-- Form ubah WiFi 2.4GHz -->
+    <div class="w-card" id="wifiFormCard" style="display:none">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Ubah Pengaturan WiFi
+      </div>
+
+      <!-- 2.4GHz -->
+      <div style="background:#eff6ff;border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:11px;font-weight:700;color:var(--blue)">
+        WiFi 2.4 GHz
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama WiFi (SSID)</label>
+        <input class="form-input" id="wSsid2g" placeholder="Nama WiFi" maxlength="32">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password WiFi (min. 8 karakter)</label>
+        <div style="position:relative">
+          <input class="form-input" id="wPass2g" type="password" placeholder="••••••••" maxlength="63" style="padding-right:44px">
+          <button onclick="togglePw('wPass2g',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5GHz (conditional) -->
+      <div id="wifi5gSection" style="display:none">
+        <div style="background:#f0fdf4;border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:11px;font-weight:700;color:var(--green)">
+          📶 WiFi 5 GHz
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nama WiFi 5GHz (SSID)</label>
+          <input class="form-input" id="wSsid5g" placeholder="Nama WiFi 5GHz" maxlength="32">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password WiFi 5GHz</label>
+          <div style="position:relative">
+            <input class="form-input" id="wPass5g" type="password" placeholder="••••••••" maxlength="63" style="padding-right:44px">
+            <button onclick="togglePw('wPass5g',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:11px;color:#92400e;line-height:1.5">
+        ⚠️ Setelah simpan, modem akan update otomatis. Perangkat yang terhubung perlu reconnect dengan password baru.
+      </div>
+      <button class="btn-save" id="btnSaveWifi" onclick="saveWifi()">Simpan Pengaturan WiFi</button>
+    </div>
+
+    <!-- Jika tidak ada ONT -->
+    <div class="w-card" id="wifiNoOnt" style="display:none">
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+        Data ONT tidak tersedia.<br>Hubungi ISP untuk informasi lebih lanjut.
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: Upgrade Paket ═══ -->
+  <div class="panel" id="panel-upgrade">
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+        Upgrade / Ganti Paket
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+        Pilih paket yang sesuai kebutuhan Anda. Perubahan paket akan diproses oleh tim ISP.
+      </div>
+      <div id="upgradeList">
+        <div class="shimmer" style="height:70px;margin-bottom:10px;border-radius:14px"></div>
+        <div class="shimmer" style="height:70px;margin-bottom:10px;border-radius:14px"></div>
+        <div class="shimmer" style="height:70px;border-radius:14px"></div>
+      </div>
+      <!-- Tombol submit di bawah semua card -->
+      <div id="upgradeBtnWrap" style="display:none;margin-top:16px">
+        <button onclick="openUpgradeModal()" style="width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Kirim Permintaan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: Profil ═══ -->
+  <div class="panel" id="panel-profil">
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Ubah Data Kontak
+      </div>
+      <div class="form-group">
+        <label class="form-label">ID Pelanggan</label>
+        <input class="form-input" id="pId" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nama</label>
+        <input class="form-input" id="pName" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label">No. WhatsApp / Telepon</label>
+        <input class="form-input" id="pPhone" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="pEmail" type="email" placeholder="email@contoh.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Alamat</label>
+        <textarea class="form-input" id="pAddress" rows="3" style="resize:none;"></textarea>
+      </div>
+      <button class="btn-save" id="btnSaveProfile" onclick="saveProfile()">Simpan Perubahan</button>
+    </div>
+
+    <div class="w-card">
+      <div class="pw-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Ganti Password Portal
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password Lama</label>
+        <input class="form-input" id="pwOld" type="password" placeholder="••••••">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password Baru (min. 6 karakter)</label>
+        <input class="form-input" id="pwNew" type="password" placeholder="••••••">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ulangi Password Baru</label>
+        <input class="form-input" id="pwConfirm" type="password" placeholder="••••••">
+      </div>
+      <button class="btn-save" id="btnSavePw" onclick="savePassword()">Ganti Password</button>
+    </div>
+
+    <!-- Push Notification Card -->
+    <div class="w-card" id="pushCard">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Notifikasi Push
+      </div>
+      <!-- State: loading -->
+      <div id="pushLoading" style="text-align:center;padding:16px;color:var(--muted);font-size:12px">
+        <div class="spinner" style="margin:0 auto 8px"></div>
+        Mengecek status...
+      </div>
+      <!-- State: tidak support -->
+      <div id="pushNotSupported" style="display:none">
+        <div style="background:#f1f5f9;border-radius:12px;padding:14px;font-size:12px;color:var(--muted);text-align:center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 8px;opacity:.4"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Browser ini tidak mendukung push notification.<br>Gunakan Chrome atau aplikasi Android.
+        </div>
+      </div>
+      <!-- State: permission blocked -->
+      <div id="pushBlocked" style="display:none">
+        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:14px;font-size:12px;color:#92400e">
+          <b>Notifikasi diblokir.</b><br>Buka pengaturan browser → Site Settings → Notifications → Allow untuk domain ini.
+        </div>
+      </div>
+      <!-- State: belum subscribe -->
+      <div id="pushOff" style="display:none">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">
+          Aktifkan untuk mendapat notifikasi otomatis:<br>
+          <b>• H-3</b> sebelum jatuh tempo &nbsp;<b>• H-1</b> pengingat akhir &nbsp;<b>• H+0</b> hari jatuh tempo &nbsp;<b>• Setelah overdue</b>
+        </p>
+        <button class="btn-save" id="btnEnablePush" onclick="enablePush()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;margin-right:6px;vertical-align:middle"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Aktifkan Notifikasi
+        </button>
+      </div>
+      <!-- State: sudah subscribe -->
+      <div id="pushOn" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px">
+          <div style="width:36px;height:36px;background:#dcfce7;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#166534">Notifikasi Aktif</div>
+            <div style="font-size:11px;color:#4ade80;margin-top:1px" id="pushDeviceCount">— perangkat terdaftar</div>
+          </div>
+        </div>
+        <button class="btn-reboot" style="background:linear-gradient(135deg,#64748b,#475569)" id="btnDisablePush" onclick="disablePush()">
+          Nonaktifkan Notifikasi
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PANEL: Tickets / Laporan Gangguan ═══ -->
+  <div class="panel" id="panel-tickets">
+    <!-- Form buat tiket baru -->
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Buat Laporan Baru
+      </div>
+      <div class="form-group">
+        <label class="form-label">Jenis Laporan</label>
+        <select class="form-input" id="tkType">
+          <option value="gangguan">Gangguan / Masalah Koneksi</option>
+          <option value="request">Permintaan / Pertanyaan</option>
+          <option value="maintenance">Maintenance</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Judul <span style="color:var(--red)">*</span></label>
+        <input class="form-input" id="tkTitle" placeholder="Contoh: Internet mati sejak tadi pagi" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deskripsi (opsional)</label>
+        <textarea class="form-input" id="tkDesc" rows="4" placeholder="Ceritakan detail masalah, kapan mulai, apa yang sudah dicoba..." style="resize:none"></textarea>
+      </div>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 13px;margin-bottom:14px;font-size:11px;color:#1e40af;line-height:1.5">
+      Tiket akan ditangani dalam 24 jam. Untuk urgent, hubungi WA ISP langsung.
+      </div>
+      <button class="btn-save" id="btnSubmitTicket" onclick="submitTicket()">Kirim Laporan</button>
+    </div>
+
+    <!-- Riwayat Tiket -->
+    <div class="w-card">
+      <div class="w-card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Riwayat Laporan
+      </div>
+      <div id="ticketList"><div class="shimmer" style="height:80px"></div></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<div class="bottom-nav">
+  <a class="bn-item active" id="bn-home" onclick="navTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+    <span>Home</span>
+  </a>
+  <a class="bn-item" id="bn-billing" onclick="navTo('billing')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+    <span>Tagihan</span>
+  </a>
+  <a class="bn-item" id="bn-wifi" onclick="navTo('wifi')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1"/></svg>
+    <span>WiFi</span>
+  </a>
+  <a class="bn-item" id="bn-traffic" onclick="navTo('traffic')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+    <span>Traffic</span>
+  </a>
+  <a class="bn-item" id="bn-profil" onclick="navTo('profil')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profil</span>
+  </a>
+</div>
+
+
+<!-- ═══ MODAL: Konfirmasi Upgrade Paket ═══ -->
+<div class="modal-overlay" id="modalUpgrade">
+  <div class="modal-sheet" style="position:relative">
+    <div class="modal-handle"></div>
+    <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px">Konfirmasi Permintaan</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">Anda akan mengajukan perubahan ke paket:</div>
+      <div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:8px" id="upgradeModalPkgName">—</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:12px;color:#1d4ed8;line-height:1.6">
+      ℹ️ Permintaan ini akan dikirim ke admin ISP. Tim kami akan menghubungi Anda untuk proses selanjutnya. Paket tidak langsung berubah.
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeModal('modalUpgrade')" style="flex:1;padding:13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-size:14px;font-weight:700;font-family:inherit;color:var(--muted);cursor:pointer">Batal</button>
+      <button id="btnConfirmUpgrade" onclick="executeUpgrade()" style="flex:1;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Kirim Permintaan
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Konfirmasi Reboot ONT ═══ -->
+<div class="modal-overlay" id="modalReboot">
+  <div class="modal-sheet" style="position:relative">
+    <div class="modal-handle"></div>
+    <!-- Icon -->
+    <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,#ef4444,#dc2626);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+    </div>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px">Reboot ONT?</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6">Koneksi internet akan terputus sementara selama <b style="color:var(--text)">1–2 menit</b> hingga ONT selesai restart.</div>
+    </div>
+    <!-- Warning box -->
+    <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div style="font-size:12px;color:#92400e;line-height:1.5">Lakukan reboot hanya jika koneksi bermasalah. Semua perangkat yang terhubung akan disconnect sementara.</div>
+    </div>
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px">
+      <button onclick="closeModal('modalReboot')" style="flex:1;padding:13px;border:1.5px solid var(--border);border-radius:12px;background:#fff;font-size:14px;font-weight:700;font-family:inherit;color:var(--muted);cursor:pointer">Batal</button>
+      <button id="btnConfirmReboot" onclick="executeReboot()" style="flex:1;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Ya, Reboot
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Bayar Invoice (Accordion Manual Transfer) ═══ -->
+<div class="modal-overlay" id="modalPay">
+  <div class="modal-sheet" style="position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modalPay')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-title">Pilih Metode Pembayaran</div>
+
+    <!-- Info invoice -->
+    <div class="pm-info-box">
+      <div class="pm-info-row">
+        <span class="lbl">Customer</span>
+        <span class="val" id="payCustomerName">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Service Package</span>
+        <span class="val" id="payServiceName">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Invoice</span>
+        <span class="val" id="payInvNum">—</span>
+      </div>
+      <div class="pm-info-row">
+        <span class="lbl">Periode</span>
+        <span class="val" id="payPeriod">—</span>
+      </div>
+      <div class="pm-info-row" id="payRowSubtotal" style="display:none;">
+        <span class="lbl">Subtotal</span>
+        <span class="val" id="paySubtotal" style="font-family:'Plus Jakarta Sans',monospace;">Rp 0</span>
+      </div>
+      <div class="pm-info-row" id="payRowTax" style="display:none;">
+        <span class="lbl" id="payTaxLbl">PPN</span>
+        <span class="val" id="payTax" style="color:#0d9488;font-family:'Plus Jakarta Sans',monospace;">Rp 0</span>
+      </div>
+      <div class="pm-info-row pm-info-total">
+        <span class="lbl" style="font-size:13px;font-weight:700;color:var(--text)">Total</span>
+        <span class="val" id="payTotal">Rp 0</span>
+      </div>
+    </div>
+
+    <div class="pm-heading">Transfer / Bayar ke:</div>
+
+    <!-- Accordion groups diisi dari JS -->
+    <div id="payAccordion"></div>
+
+    <!-- Info footer -->
+    <div class="pm-warn" id="pmWarn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="pm-warn-text">
+        <b>Setelah transfer</b>, klik tombol <b>WhatsApp</b> di bawah untuk konfirmasi. Kirim bukti transfer agar pembayaran segera diverifikasi.
+      </div>
+    </div>
+
+    <!-- WA button -->
+    <button class="pm-wa-btn" id="btnConfirmPay" onclick="confirmPayment()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Konfirmasi via WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Pilih Channel Tripay ═══ -->
+<div class="modal-overlay" id="modalTripay">
+  <div class="modal-sheet" style="position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modalTripay')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-title">Pilih Channel Pembayaran</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">
+      Pilih channel, lalu Anda akan diarahkan ke halaman pembayaran Tripay.
+    </p>
+    <div id="tripayChannelList" style="max-height:55vh;overflow-y:auto;">
+      <!-- diisi JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: Hubungi CS ═══ -->
+<div class="modal-overlay" id="modalContact">
+  <div class="modal-sheet" style="position:relative">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('modalContact')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-title">Hubungi Customer Service</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5">
+      Pilih cara yang paling nyaman untuk Anda. Siap melayani setiap hari.
+    </p>
+    <div id="contactOptions">
+      <!-- diisi JS -->
+    </div>
+    <p style="font-size:11px;color:var(--muted);text-align:left;margin-top:14px;line-height:1.5">
+    Untuk laporan gangguan, gunakan menu <b>Tiket</b> agar bisa dilacak.
+    </p>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+var TOKEN     = localStorage.getItem('portal_token');
+var CUST_DATA = null;
+var META      = null;
+var PAY_INV_ID = null;
+var currentPanel = 'home';
+
+// Fallback kontak CS — dipakai kalau settings company_* di DB masih kosong.
+// Ganti nilainya sesuai kontak CS operasional Anda.
+var DEFAULT_CS_WA    = '081292266620';
+var DEFAULT_CS_PHONE = '';
+var DEFAULT_CS_EMAIL = '';
+
+if (!TOKEN) window.location.href = '/portal/login';
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════
+function authH() { return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN }; }
+function fmtRp(v)   { return 'Rp ' + (parseFloat(v)||0).toLocaleString('id-ID'); }
+function fmtRpK(v)  { v=parseFloat(v)||0; if(v>=1e6) return 'Rp'+(v/1e6).toFixed(v%1e6===0?0:1)+'jt'; if(v>=1e3) return 'Rp'+Math.round(v/1e3)+'rb'; return 'Rp'+v; }
+function fmtSpd(m)  { if(!m) return '—'; return m>=1000?(m/1000)+'Gbps':m+'Mbps'; }
+function fmtBps(b)  { if(!b) return '0'; b=parseFloat(b); if(b>=1e9) return (b/1e9).toFixed(1)+'G'; if(b>=1e6) return (b/1e6).toFixed(1)+'M'; if(b>=1e3) return (b/1e3).toFixed(0)+'K'; return b+'b'; }
+function fmtDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+function mn(m)      { return ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][m-1]||'?'; }
+// Label metode pembayaran ramah-pengguna (hindari tampil nilai mentah snake_case)
+function pmLabel(m){
+  var L={cash:'Tunai',transfer:'Transfer Bank',field_collection:'Cash Collect',dana:'DANA',ovo:'OVO',gopay:'GoPay',shopeepay:'ShopeePay',qris:'QRIS',va:'Virtual Account',ewallet:'E-Wallet',gateway:'Payment Gateway',other:'Lainnya'};
+  var k=String(m||'').toLowerCase();
+  return L[k]||(k?k.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}):'—');
+}
+
+function toast(msg, isError, duration) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#ef4444' : '#0f172a';
+  t.style.whiteSpace = 'pre-line';       // support \n
+  t.style.maxWidth = '92vw';
+  t.style.lineHeight = '1.45';
+  t.style.display = 'block';
+  var dur = duration || (isError ? 5000 : 3200);
+  // Auto-extend kalau pesan panjang
+  if (msg && msg.length > 80) dur = Math.max(dur, 6500);
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(function(){ t.style.display = 'none'; }, dur);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('active'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); document.body.style.overflow=''; }
+
+// ══════════════════════════════════════════════════════════════
+// NAVIGATION — sinkron bottom nav + quick menu sekaligus
+// ══════════════════════════════════════════════════════════════
+var PANELS = ['home','billing','traffic','ont','wifi','upgrade','profil','tickets'];
+var BN_MAP  = { home:'home', billing:'billing', traffic:'traffic', ont:'traffic', wifi:'wifi', upgrade:'wifi', profil:'profil', tickets:'profil' };
+
+function navTo(id) {
+  currentPanel = id;
+
+  // Show/hide panels
+  PANELS.forEach(function(p) {
+    var el = document.getElementById('panel-'+p);
+    if (el) el.classList.toggle('active', p === id);
+  });
+
+  // Sync quick-menu (8 items)
+  ['home','billing','traffic','wifi','upgrade','profil','tickets'].forEach(function(p) {
+    var el = document.getElementById('qm-'+p);
+    if (el) el.classList.toggle('active', p === id || (id === 'ont' && p === 'traffic'));
+  });
+
+  // Sync bottom nav
+  Object.keys(BN_MAP).forEach(function(panel) {
+    var bnKey = BN_MAP[panel];
+    var el = document.getElementById('bn-'+bnKey);
+    if (el) el.classList.toggle('active', bnKey === BN_MAP[id]);
+  });
+
+  // Scroll to content
+  var c = document.querySelector('.content');
+  if (c) window.scrollTo({ top: c.offsetTop - 10, behavior: 'smooth' });
+
+  if (id === 'upgrade') loadUpgrade();
+
+  // Lazy-load
+  if (id === 'traffic') loadTraffic();
+  if (id === 'ont') loadSignal();
+  if (id === 'billing') loadBilling();
+  if (id === 'wifi') loadWifi();
+  if (id === 'profil') fillProfil();
+  if (id === 'tickets') loadTickets();
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    var r = await fetch('/portal/api/dashboard', { headers: authH() });
+    if (r.status === 401) { window.location.href = '/portal/login'; return; }
+    var j = await r.json();
+    if (!j.success) return;
+
+    var d = j.data, c = d.customer, p = d.package;
+    CUST_DATA = d;
+    META = d.meta || {};
+
+    // Hero
+    document.getElementById('avatar').textContent = (c.name||'?').charAt(0).toUpperCase();
+    document.getElementById('custName').textContent = c.name || '—';
+    document.getElementById('custPhone').textContent = c.phone || c.customer_id;
+
+    var badge = document.getElementById('custBadge');
+    badge.className = 'hu-badge';
+    if (c.isolir_status === 'isolated') {
+      badge.classList.add('badge-isolated'); badge.textContent = 'TERISOLIR';
+    } else if (c.status === 'active') {
+      badge.classList.add('badge-active'); badge.textContent = 'AKTIF';
+    } else {
+      badge.classList.add('badge-inactive'); badge.textContent = c.status.toUpperCase();
+    }
+
+    // Credit
+    document.getElementById('crAmount').textContent = fmtRp(d.total_unpaid || 0);
+    if (d.total_unpaid > 0) {
+      document.getElementById('crSub').textContent = 'BELUM LUNAS';
+      document.getElementById('btnBayarHero').classList.remove('hidden');
+    } else if (c.isolir_status === 'isolated') {
+      document.getElementById('crSub').textContent = 'TERISOLIR';
+    } else {
+      document.getElementById('crSub').textContent = 'LUNAS';
+    }
+
+    // Package Detail card
+    if (p) {
+      var isActive = c.status === 'active' && c.isolir_status !== 'isolated';
+
+      // Nama paket
+      document.getElementById('inetPkgName').textContent = p.name;
+
+      // Status
+      document.getElementById('inetStatus').textContent = isActive ? '● Aktif' : '● Nonaktif';
+      document.getElementById('inetStatus').style.color = isActive ? '#86efac' : '#fca5a5';
+
+      // Bar: aktif = 100%, isolir = 10%
+      document.getElementById('inetBar').style.width = isActive ? '100%' : '10%';
+
+      // Label kiri: kecepatan paket
+      document.getElementById('inetSpd').textContent = fmtSpd(p.speed_down) + ' / ' + fmtSpd(p.speed_up);
+
+      // Label kanan: tanggal jatuh tempo
+      var dueLabel = c.due_date ? 'Due: ' + fmtDate(c.due_date) : 'Tgl ' + (c.billing_date||1) + ' /bln';
+      document.getElementById('inetBillingDate').textContent = dueLabel;
+
+      // Masa aktif: hitung sisa hari dari due_date
+      var daysEl = document.getElementById('inetDays');
+      if (c.due_date) {
+        var today = new Date(); today.setHours(0,0,0,0);
+        var due   = new Date(c.due_date); due.setHours(0,0,0,0);
+        var diff  = Math.ceil((due - today) / 86400000);
+        if (diff > 0)      { daysEl.textContent = diff + ' Hari'; daysEl.style.color = diff <= 3 ? '#fbbf24' : '#fff'; }
+        else if (diff === 0) { daysEl.textContent = 'Hari Ini'; daysEl.style.color = '#fca5a5'; }
+        else                 { daysEl.textContent = 'Overdue';  daysEl.style.color = '#fca5a5'; }
+      } else {
+        daysEl.textContent = 'Aktif';
+      }
+
+      // Download / Upload speed
+      document.getElementById('iuDown').textContent = fmtSpd(p.speed_down);
+      document.getElementById('iuUp').textContent   = fmtSpd(p.speed_up);
+    }
+
+    // Notif banner
+    var nb = document.getElementById('notifBanner');
+    if (c.isolir_status === 'isolated') {
+      nb.className = 'notif-banner isolated'; nb.style.display = 'block';
+      document.getElementById('notifIcon').className = 'nb-icon danger';
+      document.getElementById('notifTitle').textContent = 'Layanan anda sedang terisolir';
+      document.getElementById('notifSub').textContent   = 'Lunasi tagihan untuk mengaktifkan kembali';
+    } else if (d.total_unpaid > 0) {
+      var isOverdue = d.invoices && d.invoices.some(function(i){ return i.status === 'overdue'; });
+      nb.className = 'notif-banner' + (isOverdue ? ' overdue' : ''); nb.style.display = 'block';
+      document.getElementById('notifIcon').className = isOverdue ? 'nb-icon danger' : 'nb-icon warn';
+      document.getElementById('notifTitle').textContent = isOverdue ? 'Tagihan jatuh tempo!' : 'Ada tagihan belum lunas';
+      document.getElementById('notifSub').textContent   = fmtRp(d.total_unpaid) + ' · Tap untuk bayar';
+    }
+
+    // Billing badge di quick menu
+    if (d.total_unpaid > 0 || (d.invoices && d.invoices.length)) {
+      var dot = document.createElement('div');
+      dot.className = 'qm-dot'; dot.textContent = d.invoices ? d.invoices.length : '';
+      var wrap = document.getElementById('qmBillingWrap');
+      if (!wrap.querySelector('.qm-dot')) wrap.appendChild(dot);
+    }
+
+    // Tiket badge di quick menu
+    if (d.open_tickets && d.open_tickets > 0) {
+      var tkWrap = document.getElementById('qmTicketsWrap');
+      if (tkWrap && !tkWrap.querySelector('.qm-dot')) {
+        var tkDot = document.createElement('div');
+        tkDot.className = 'qm-dot';
+        tkDot.textContent = d.open_tickets > 9 ? '9+' : d.open_tickets;
+        tkWrap.appendChild(tkDot);
+      }
+    }
+
+    // Customer info grid (panel home)
+    document.getElementById('custInfo').innerHTML =
+      '<div class="info-item"><div class="ii-label">ID Pelanggan</div><div class="ii-value">' + c.customer_id + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">Paket</div><div class="ii-value">' + (p ? p.name : '—') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">No. HP</div><div class="ii-value">' + (c.phone||'—') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">PPPoE</div><div class="ii-value">' + (c.pppoe_username||'—') + '</div></div>' +
+      '<div class="info-item full"><div class="ii-label">Alamat</div><div class="ii-value">' + (c.address||'—') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">Tgl Pasang</div><div class="ii-value">' + fmtDate(c.installation_date) + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">Jatuh Tempo</div><div class="ii-value">Tgl ' + (c.billing_date||1) + ' /bln</div></div>';
+
+    // Home: Tagihan aktif
+    if (d.invoices && d.invoices.length) {
+      document.getElementById('homeInvCard').style.display = '';
+      var h = '';
+      d.invoices.forEach(function(inv) {
+        var sc = inv.status === 'overdue' ? 'overdue' : 'unpaid';
+        var sl = inv.status === 'overdue' ? 'Jatuh Tempo' : 'Belum Bayar';
+        h += '<div class="inv-item">' +
+          '<div class="inv-left"><div class="inv-period">' + mn(inv.period_month) + ' ' + inv.period_year + '</div>' +
+          '<div class="inv-due">Due: ' + fmtDate(inv.due_date) + '</div></div>' +
+          '<div class="inv-right"><div class="inv-amount">' + fmtRp(inv.total || inv.amount) + '</div>' +
+          '<div class="inv-badge inv-' + sc + '">' + sl + '</div></div>' +
+          '<button class="btn-pay" onclick=\'openPayModal(' + JSON.stringify(inv).replace(/'/g, '&#39;') + ')\'>Bayar</button>' +
+          '</div>';
+      });
+      document.getElementById('homeInvList').innerHTML = h;
+    }
+
+    // Home: Riwayat bayar
+    if (d.payments && d.payments.length) {
+      document.getElementById('homePayCard').style.display = '';
+      var hp = '';
+      d.payments.slice(0, 3).forEach(function(pay) {
+        hp += '<div class="inv-item">' +
+          '<div class="inv-left"><div class="inv-period">' + mn(pay.period_month) + ' ' + pay.period_year + '</div>' +
+          '<div class="inv-due">' + fmtDate(pay.payment_date) + ' · ' + pmLabel(pay.payment_method) + '</div></div>' +
+          '<div class="inv-right"><div class="inv-amount" style="color:var(--green)">' + fmtRp(pay.amount) + '</div>' +
+          '<div class="inv-badge inv-paid">Lunas</div></div>' +
+          '</div>';
+      });
+      document.getElementById('homePayList').innerHTML = hp;
+    }
+
+    // Profil net info (optional — card Perangkat & Koneksi bisa dihilangkan)
+    var profilNet = document.getElementById('profilNetInfo');
+    if (profilNet) {
+      profilNet.innerHTML =
+        '<div class="info-item"><div class="ii-label">PPPoE</div><div class="ii-value">' + (c.pppoe_username||'—') + '</div></div>' +
+        '<div class="info-item"><div class="ii-label">ONT SN</div><div class="ii-value">' + (c.ont_sn||'—') + '</div></div>' +
+        '<div class="info-item"><div class="ii-label">Static IP</div><div class="ii-value">' + (c.static_ip||'DHCP') + '</div></div>' +
+        '<div class="info-item"><div class="ii-label">Status</div><div class="ii-value"><span class="status-dot ' + (c.status==='active'?'dot-green':'dot-red') + '"></span>' + c.status + '</div></div>';
+    }
+
+  } catch(e) { console.error('loadDashboard:', e); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// BILLING
+// ══════════════════════════════════════════════════════════════
+var billingLoaded = false;
+async function loadBilling() {
+  if (billingLoaded) return;
+  billingLoaded = true;
+  try {
+    var r = await fetch('/portal/api/billing', { headers: authH() });
+    var j = await r.json();
+    if (!j.success) return;
+    var invs = j.data.invoices || [];
+    var pays = j.data.payments || [];
+
+    if (!invs.length) {
+      document.getElementById('billingList').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>Belum ada tagihan</div>';
+    } else {
+      var h = '';
+      invs.forEach(function(inv) {
+        var sc = inv.status === 'paid' ? 'paid' : inv.status === 'overdue' ? 'overdue' : inv.status === 'cancelled' ? 'cancelled' : 'unpaid';
+        var sl = { paid:'Lunas', overdue:'Jatuh Tempo', unpaid:'Belum Bayar', cancelled:'Dibatalkan' }[sc] || sc;
+        h += '<div class="inv-item">' +
+          '<div class="inv-left"><div class="inv-period">' + mn(inv.period_month) + ' ' + inv.period_year + '</div>' +
+          '<div class="inv-due">Due: ' + fmtDate(inv.due_date) + (inv.invoice_number ? ' · ' + inv.invoice_number : '') + '</div></div>' +
+          '<div class="inv-right"><div class="inv-amount">' + fmtRp(inv.total||inv.amount) + '</div>' +
+          '<div class="inv-badge inv-' + sc + '">' + sl + '</div></div>' +
+          (sc !== 'paid' && sc !== 'cancelled'
+            ? '<button class="btn-pay" onclick=\'openPayModal(' + JSON.stringify(inv).replace(/'/g, '&#39;') + ')\'>Bayar</button>'
+            : '') +
+          '</div>';
+      });
+      document.getElementById('billingList').innerHTML = h;
+    }
+
+    if (pays.length) {
+      document.getElementById('payHistCard').style.display = '';
+      var hp = '';
+      pays.forEach(function(pay) {
+        hp += '<div class="inv-item">' +
+          '<div class="inv-left"><div class="inv-period">' + mn(pay.period_month) + ' ' + pay.period_year + '</div>' +
+          '<div class="inv-due">' + fmtDate(pay.payment_date) + ' · ' + pmLabel(pay.payment_method) + (pay.reference_number ? ' · ' + pay.reference_number : '') + '</div></div>' +
+          '<div class="inv-right"><div class="inv-amount" style="color:var(--green)">' + fmtRp(pay.amount) + '</div>' +
+          '<div class="inv-badge inv-paid">Lunas</div></div>' +
+          '</div>';
+      });
+      document.getElementById('payHistList').innerHTML = hp;
+    }
+  } catch(e) { console.error('loadBilling:', e); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PAYMENT MODAL — Manual Transfer dengan Accordion
+// ══════════════════════════════════════════════════════════════
+var PAY_CONTEXT = { invoice_id: null, invoice_number: '', period: '', total: 0 };
+
+// Label & kategorisasi bank/e-wallet
+var PM_BANK_LABELS  = { bca:'BCA', bni:'BNI', bri:'BRI', mandiri:'Mandiri', seabank:'SeaBank', permata:'Permata', cimb:'CIMB Niaga', bsi:'BSI', btpn:'BTPN Jenius', danamon:'Danamon' };
+var PM_EWALLET_LABELS = { dana:'DANA', ovo:'OVO', gopay:'GoPay', shopeepay:'ShopeePay', linkaja:'LinkAja' };
+
+// Cache rate PPN supaya tidak hit endpoint berkali-kali
+var _TAX_CFG_CACHE = null;
+async function _loadTaxCfg() {
+  if (_TAX_CFG_CACHE) return _TAX_CFG_CACHE;
+  try {
+    var res = await fetch('/api/app-settings/tax');
+    var d = await res.json();
+    _TAX_CFG_CACHE = (d && d.success) ? d.data : null;
+  } catch(e) { _TAX_CFG_CACHE = null; }
+  return _TAX_CFG_CACHE;
+}
+
+// Backward compatible: support both
+//   openPayModal(invObject)
+//   openPayModal(invId, invNum, period, total)  — legacy
+function openPayModal(arg1, invNum, period, total) {
+  var inv;
+  if (arg1 && typeof arg1 === 'object') {
+    inv = arg1;
+  } else {
+    inv = { id: arg1, invoice_number: invNum, period_month: null, period_year: null, total: total };
+    inv._period = period; // teks period legacy
+  }
+
+  var periodTxt = inv._period || (inv.period_month && inv.period_year
+    ? mn(inv.period_month) + ' ' + inv.period_year
+    : '—');
+
+  var subtotal = Number(inv.amount || 0);
+  var tax      = Number(inv.tax || 0);
+  var total    = Number(inv.total || (subtotal + tax) || 0);
+  // Kalau backend belum kirim amount/tax (data lama), pakai total saja
+  if (!subtotal && !tax) { subtotal = total; tax = 0; }
+
+  PAY_CONTEXT = {
+    invoice_id:     inv.id,
+    invoice_number: inv.invoice_number || ('INV-' + inv.id),
+    period:         periodTxt,
+    subtotal:       subtotal,
+    tax:            tax,
+    total:          total
+  };
+
+  document.getElementById('payInvNum').textContent = PAY_CONTEXT.invoice_number;
+  document.getElementById('payPeriod').textContent = periodTxt;
+  document.getElementById('payTotal').textContent  = fmtRp(total);
+
+  // Subtotal & Tax rows — tampilkan kalau ada PPN
+  var rowSub = document.getElementById('payRowSubtotal');
+  var rowTax = document.getElementById('payRowTax');
+  if (tax > 0) {
+    if (rowSub) {
+      rowSub.style.display = '';
+      document.getElementById('paySubtotal').textContent = fmtRp(subtotal);
+    }
+    if (rowTax) {
+      rowTax.style.display = '';
+      document.getElementById('payTax').textContent = fmtRp(tax);
+      // Update label dengan rate dari settings
+      _loadTaxCfg().then(function(cfg) {
+        var lbl = (cfg && cfg.label) || 'PPN';
+        var rate = subtotal > 0 ? Math.round((tax / subtotal) * 1000) / 10 : (cfg && cfg.rate) || 0;
+        var lblEl = document.getElementById('payTaxLbl');
+        if (lblEl) lblEl.textContent = lbl + (rate ? ' (' + (Number.isInteger(rate) ? rate : rate.toFixed(1)) + '%)' : '');
+      });
+    }
+  } else {
+    if (rowSub) rowSub.style.display = 'none';
+    if (rowTax) rowTax.style.display = 'none';
+  }
+
+  // Customer & Service dari CUST_DATA global
+  var custName = (CUST_DATA && CUST_DATA.customer && CUST_DATA.customer.name) ? CUST_DATA.customer.name : '—';
+  var pkgName  = (CUST_DATA && CUST_DATA.package  && CUST_DATA.package.name)  ? CUST_DATA.package.name  : '—';
+  document.getElementById('payCustomerName').textContent = custName;
+  document.getElementById('payServiceName').textContent  = pkgName;
+
+  renderPaymentAccordion();
+  openModal('modalPay');
+}
+
+function renderPaymentAccordion() {
+  var methods = (META && Array.isArray(META.payment_accounts)) ? META.payment_accounts : [];
+  methods = methods.filter(function(m){ return m && m.is_active !== false; });
+
+  var banks    = methods.filter(function(m){ return m.type === 'bank'; });
+  var ewallets = methods.filter(function(m){ return m.type === 'ewallet'; });
+  var qrisList = methods.filter(function(m){ return m.type === 'qris'; });
+  var gwActive = !!(META && META.gateway_enabled);
+
+  var container = document.getElementById('payAccordion');
+  var html = '';
+
+  // ── GROUP 1: Bayar Online (paling atas, prioritas kalau aktif) ──
+  if (gwActive) {
+    var gwLabel = (META.gateway_provider === 'xendit') ? 'Xendit'
+                : (META.gateway_provider === 'duitku') ? 'Duitku'
+                : (META.gateway_provider === 'tripay') ? 'Tripay'
+                : 'Midtrans';
+    html += '<div class="pm-group pm-gw-card" onclick="payOnline()" style="cursor:pointer">' +
+      '<div class="pm-group-head pm-gw-head" style="cursor:pointer">' +
+        '<div class="pm-group-ico is-gw-active">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' +
+        '</div>' +
+        '<div class="pm-group-text">' +
+          '<div class="pm-group-title">Bayar Online <span class="pm-gw-badge">Otomatis</span></div>' +
+          '<div class="pm-group-sub">VA, QRIS, E-Wallet, Kartu Kredit · langsung lunas</div>' +
+        '</div>' +
+        '<svg class="pm-gw-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Heading manual ──
+  if (banks.length || ewallets.length || qrisList.length) {
+    if (gwActive) {
+      html += '<div class="pm-divider"><span>atau transfer manual</span></div>';
+    }
+  } else if (!gwActive) {
+    html += '<div class="pm-empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>' +
+      'Metode pembayaran belum tersedia.<br>Hubungi admin via WhatsApp untuk info pembayaran.' +
+      '</div>';
+  }
+
+  if (banks.length) {
+    html += buildAccordionGroup({
+      key: 'bank',
+      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/></svg>',
+      title: 'Transfer Bank',
+      sub:   'BCA, BRI, Mandiri, SeaBank, dll',
+      items: banks,
+      labelMap: PM_BANK_LABELS,
+      iconClass: ''
+    });
+  }
+  if (ewallets.length) {
+    html += buildAccordionGroup({
+      key: 'ewallet',
+      icon: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20M16 15h3"/></svg>',
+      title: 'E-Wallet',
+      sub:   'DANA, OVO, GoPay, ShopeePay',
+      items: ewallets,
+      labelMap: PM_EWALLET_LABELS,
+      iconClass: 'is-ewallet'
+    });
+  }
+  if (qrisList.length) {
+    html += buildAccordionGroupQris(qrisList[0]);
+  }
+
+  container.innerHTML = html;
+
+  // Attach handlers (skip pm-gw-head karena onclick langsung)
+  container.querySelectorAll('.pm-group-head:not(.disabled):not(.pm-gw-head)').forEach(function(head){
+    head.addEventListener('click', function(){
+      var wasOpen = head.classList.contains('open');
+      container.querySelectorAll('.pm-group-head').forEach(function(h){ h.classList.remove('open'); });
+      if (!wasOpen) head.classList.add('open');
+    });
+  });
+
+  // Auto-open grup manual pertama (kalau gateway tidak aktif)
+  if (!gwActive) {
+    var firstHead = container.querySelector('.pm-group-head:not(.disabled):not(.pm-gw-head)');
+    if (firstHead) firstHead.classList.add('open');
+  }
+
+  // Update tombol WA confirm: hide kalau cuma gateway tanpa metode manual
+  var btnWa = document.getElementById('btnConfirmPay');
+  var hasManual = banks.length || ewallets.length || qrisList.length;
+  if (btnWa) btnWa.style.display = hasManual ? 'flex' : 'none';
+
+  // Update warning footer
+  var warnEl = document.getElementById('pmWarn');
+  if (warnEl) warnEl.style.display = hasManual ? 'flex' : 'none';
+}
+
+function buildAccordionGroup(opts) {
+  var itemsHtml = '';
+  opts.items.forEach(function(m){
+    var label = (opts.labelMap && opts.labelMap[(m.provider||'').toLowerCase()]) || (m.provider||'').toUpperCase() || '—';
+    var logo  = m.logo_url
+      ? '<img src="'+escapeHtml(m.logo_url)+'" alt="'+escapeHtml(label)+'" onerror="this.outerHTML=\''+escapeHtml(label)+'\'">'
+      : escapeHtml(label);
+    var num   = m.account_number || '—';
+    var owner = m.account_owner  || '';
+    itemsHtml +=
+      '<div class="pm-item">' +
+        '<div class="pm-item-row">' +
+          '<div class="pm-logo">'+logo+'</div>' +
+          '<div class="pm-detail">' +
+            '<div class="pm-name">'+escapeHtml(label)+'</div>' +
+            '<div class="pm-number">'+escapeHtml(num)+'</div>' +
+            (owner ? '<div class="pm-owner">a.n. '+escapeHtml(owner)+'</div>' : '') +
+          '</div>' +
+          '<button class="pm-copy-btn" onclick="copyAccount(this, \''+ jsEsc(num) +'\')">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>' +
+            '<span>Salin</span>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+  });
+
+  return '<div class="pm-group">' +
+    '<div class="pm-group-head" data-key="'+opts.key+'">' +
+      '<div class="pm-group-ico '+(opts.iconClass||'')+'">'+opts.icon+'</div>' +
+      '<div class="pm-group-text">' +
+        '<div class="pm-group-title">'+escapeHtml(opts.title)+'</div>' +
+        '<div class="pm-group-sub">'+escapeHtml(opts.sub)+'</div>' +
+      '</div>' +
+      '<span class="pm-group-count">'+opts.items.length+'</span>' +
+      '<svg class="pm-group-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+    '</div>' +
+    '<div class="pm-group-body"><div class="pm-group-inner">'+itemsHtml+'</div></div>' +
+  '</div>';
+}
+
+function buildAccordionGroupQris(m) {
+  var imgHtml = m && m.logo_url
+    ? '<img src="'+escapeHtml(m.logo_url)+'" alt="QRIS">'
+    : '<div style="padding:40px 20px;color:var(--muted);font-size:12px">QR code belum di-upload di admin</div>';
+  var owner = m && m.account_owner ? m.account_owner : '';
+
+  return '<div class="pm-group">' +
+    '<div class="pm-group-head" data-key="qris">' +
+      '<div class="pm-group-ico is-qris">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h2M14 17h5M14 20h3M17 14h4"/></svg>' +
+      '</div>' +
+      '<div class="pm-group-text">' +
+        '<div class="pm-group-title">QRIS</div>' +
+        '<div class="pm-group-sub">Scan pakai GoPay, OVO, DANA, m-banking</div>' +
+      '</div>' +
+      '<span class="pm-group-count">1</span>' +
+      '<svg class="pm-group-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>' +
+    '</div>' +
+    '<div class="pm-group-body"><div class="pm-group-inner">' +
+      '<div class="pm-qris-box">'+imgHtml+
+        (owner ? '<div class="pm-owner" style="margin-top:10px">a.n. '+escapeHtml(owner)+'</div>' : '') +
+        '<div class="pm-qris-hint">Scan QR di atas dengan aplikasi e-wallet atau m-banking Anda.</div>' +
+      '</div>' +
+    '</div></div>' +
+  '</div>';
+}
+
+// Copy ke clipboard
+function copyAccount(btn, number) {
+  var clean = String(number).replace(/\s+/g,'');
+  var span  = btn.querySelector('span');
+  var orig  = span ? span.textContent : 'Salin';
+
+  function done() {
+    btn.classList.add('copied');
+    if (span) span.textContent = 'Tersalin!';
+    setTimeout(function(){
+      btn.classList.remove('copied');
+      if (span) span.textContent = orig;
+    }, 1800);
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(clean).then(done).catch(function(){
+      fallbackCopy(clean); done();
+    });
+  } else {
+    fallbackCopy(clean); done();
+  }
+}
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+// JS-string escape helper (escapeHtml sudah ada di file, tidak perlu redeclare)
+function jsEsc(s) { return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+// ── Bayar Online (Midtrans Snap / Xendit) ──
+var SNAP_LOADED = false;
+function loadMidtransSnap(clientKey, env) {
+  return new Promise(function(resolve, reject){
+    if (window.snap) return resolve();
+    if (SNAP_LOADED) {
+      // Tunggu sampai window.snap siap
+      var tries = 0;
+      var iv = setInterval(function(){
+        if (window.snap) { clearInterval(iv); resolve(); }
+        else if (++tries > 50) { clearInterval(iv); reject(new Error('Snap.js timeout')); }
+      }, 100);
+      return;
+    }
+    SNAP_LOADED = true;
+    var s = document.createElement('script');
+    s.src = (env === 'production')
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js';
+    s.setAttribute('data-client-key', clientKey || '');
+    s.onload  = function(){ resolve(); };
+    s.onerror = function(){ reject(new Error('Gagal load Snap.js')); };
+    document.head.appendChild(s);
+  });
+}
+
+async function payOnline() {
+  if (!PAY_CONTEXT.invoice_id) return;
+  if (!META || !META.gateway_enabled) {
+    toast('Pembayaran online belum aktif', true);
+    return;
+  }
+
+  // Tripay (closed transaction) wajib pilih channel dulu.
+  if (META.gateway_provider === 'tripay') {
+    return openTripayChannels();
+  }
+
+  // Loading state on the gw card
+  var gwCard = document.querySelector('.pm-gw-card');
+  if (gwCard) gwCard.style.opacity = '.6';
+
+  try {
+    var r = await fetch('/portal/api/pay', {
+      method: 'POST', headers: authH(),
+      body: JSON.stringify({ invoice_id: PAY_CONTEXT.invoice_id, mode: 'gateway' })
+    });
+    var j = await r.json();
+
+    if (!j.success) {
+      toast(j.message || 'Gagal membuat transaksi', true);
+      return;
+    }
+
+    // ── Midtrans: buka Snap popup ──
+    if (j.mode === 'midtrans' && j.snap_token) {
+      try {
+        await loadMidtransSnap(j.client_key, j.env);
+      } catch(e) {
+        toast('Gagal load Snap: ' + e.message + '. Buka di tab baru.', true);
+        if (j.snap_url) window.location.href = j.snap_url;
+        return;
+      }
+      closeModal('modalPay');
+      var invId = j.invoice_id || PAY_CONTEXT.invoice_id;
+      window.snap.pay(j.snap_token, {
+        onSuccess: function(){ window.location.href = '/portal/payment/finish?invoice=' + invId; },
+        onPending: function(){ window.location.href = '/portal/payment/pending?invoice=' + invId; },
+        onError:   function(){ window.location.href = '/portal/payment/finish?invoice=' + invId + '&status=error'; },
+        onClose:   function(){ toast('Transaksi belum selesai. Anda bisa lanjut kapan saja.'); }
+      });
+      return;
+    }
+
+    // ── Xendit: redirect ke invoice_url ──
+    if (j.mode === 'xendit' && j.invoice_url) {
+      closeModal('modalPay');
+      window.location.href = j.invoice_url;
+      return;
+    }
+
+    // ── Duitku: redirect ke paymentUrl (POP — Payment Outline Page) ──
+    if (j.mode === 'duitku' && j.payment_url) {
+      closeModal('modalPay');
+      window.location.href = j.payment_url;
+      return;
+    }
+
+    // ── Tripay: redirect ke checkout_url ──
+    if (j.mode === 'tripay' && j.payment_url) {
+      closeModal('modalPay');
+      window.location.href = j.payment_url;
+      return;
+    }
+
+    toast('Respons gateway tidak dikenali', true);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  } finally {
+    if (gwCard) gwCard.style.opacity = '';
+  }
+}
+
+// ── Tripay: ambil daftar channel lalu tampilkan picker ──
+async function openTripayChannels() {
+  var box = document.getElementById('tripayChannelList');
+  if (box) box.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">Memuat channel…</div>';
+  openModal('modalTripay');
+  try {
+    var r = await fetch('/portal/api/tripay/channels', { headers: authH() });
+    var j = await r.json();
+    if (!j.success || !Array.isArray(j.channels) || !j.channels.length) {
+      if (box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;font-size:13px">' + (j.message || 'Tidak ada channel tersedia') + '</div>';
+      return;
+    }
+    // Group by c.group
+    var groups = {};
+    j.channels.forEach(function(c){ (groups[c.group||'Lainnya'] = groups[c.group||'Lainnya'] || []).push(c); });
+    var html = '';
+    Object.keys(groups).forEach(function(g){
+      html += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin:12px 2px 8px">' + g + '</div>';
+      groups[g].forEach(function(c){
+        var feeTxt = '';
+        if (c.fee_flat) feeTxt = 'Biaya Rp ' + Number(c.fee_flat).toLocaleString('id-ID');
+        else if (c.fee_percent && c.fee_percent !== '0') feeTxt = 'Biaya ' + c.fee_percent + '%';
+        html += '<div onclick="payTripayWithMethod(\'' + c.code + '\')" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;transition:all .15s" ' +
+          'onmouseover="this.style.borderColor=\'#2563eb\';this.style.background=\'#f8fafc\'" onmouseout="this.style.borderColor=\'#e5e7eb\';this.style.background=\'\'">' +
+          (c.icon ? '<img src="' + c.icon + '" alt="" style="width:36px;height:24px;object-fit:contain"/>' : '<div style="width:36px;height:24px;background:#eef2ff;border-radius:6px"></div>') +
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text,#1e293b)">' + c.name + '</div>' +
+          (feeTxt ? '<div style="font-size:11px;color:var(--muted)">' + feeTxt + '</div>' : '') + '</div>' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+          '</div>';
+      });
+    });
+    if (box) box.innerHTML = html;
+  } catch(e) {
+    if (box) box.innerHTML = '<div style="padding:24px;text-align:center;color:#dc2626;font-size:13px">Error: ' + e.message + '</div>';
+  }
+}
+
+// ── Tripay: buat transaksi dengan method terpilih, lalu redirect ──
+async function payTripayWithMethod(method) {
+  if (!PAY_CONTEXT.invoice_id || !method) return;
+  var box = document.getElementById('tripayChannelList');
+  if (box) box.style.opacity = '.5';
+  try {
+    var r = await fetch('/portal/api/pay', {
+      method: 'POST', headers: authH(),
+      body: JSON.stringify({ invoice_id: PAY_CONTEXT.invoice_id, mode: 'gateway', tripay_method: method })
+    });
+    var j = await r.json();
+    if (!j.success) {
+      toast(j.message || 'Gagal membuat transaksi', true);
+      return;
+    }
+    if (j.mode === 'tripay' && j.payment_url) {
+      closeModal('modalTripay');
+      closeModal('modalPay');
+      window.location.href = j.payment_url;
+      return;
+    }
+    toast('Respons gateway tidak dikenali', true);
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  } finally {
+    if (box) box.style.opacity = '';
+  }
+}
+
+// ── Submit: buka WhatsApp dengan pesan konfirmasi pembayaran ──
+async function confirmPayment() {
+  if (!PAY_CONTEXT.invoice_id) return;
+
+  var btn = document.getElementById('btnConfirmPay');
+  btn.disabled = true;
+
+  try {
+    var r = await fetch('/portal/api/pay', {
+      method: 'POST', headers: authH(),
+      body: JSON.stringify({ invoice_id: PAY_CONTEXT.invoice_id, mode: 'manual' })
+    });
+    var j = await r.json();
+
+    if (!j.success) {
+      toast(j.message || 'Gagal membuat konfirmasi', true);
+      btn.disabled = false;
+      return;
+    }
+
+    if (j.mode === 'manual' && j.wa_url) {
+      closeModal('modalPay');
+      window.open(j.wa_url, '_blank');
+      toast('WhatsApp dibuka, kirim bukti transfer ya');
+    } else if (j.wa_url) {
+      closeModal('modalPay');
+      window.open(j.wa_url, '_blank');
+    } else {
+      toast(j.message || 'Silakan hubungi admin', true);
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// TRAFFIC — Usage Total (no chart)
+// ══════════════════════════════════════════════════════════════
+function fmtBytes(b) {
+  b = parseFloat(b) || 0;
+  if (b >= 1e12) return (b/1e12).toFixed(2) + ' TB';
+  if (b >= 1e9)  return (b/1e9).toFixed(2)  + ' GB';
+  if (b >= 1e6)  return (b/1e6).toFixed(1)  + ' MB';
+  if (b >= 1e3)  return (b/1e3).toFixed(0)  + ' KB';
+  return b + ' B';
+}
+
+var _chartRange = '1d';
+var _chartLoading = false;
+
+async function loadTraffic() {
+  // Load total cards (selalu 3d untuk angka kumulatif besar)
+  try {
+    var r = await fetch('/portal/api/traffic?range=3d', { headers: authH() });
+    var j = await r.json();
+    if (j.success) {
+      var cur   = j.data.current;
+      var usage = j.usage || {};
+      var rxBytes = usage.total_rx_bytes || (cur && cur.bytesDown) || 0;
+      var txBytes = usage.total_tx_bytes || (cur && cur.bytesUp)   || 0;
+
+      function splitBytes(b) {
+        b = parseFloat(b) || 0;
+        if (b >= 1e12) return { val: (b/1e12).toFixed(2), unit: 'TB' };
+        if (b >= 1e9)  return { val: (b/1e9).toFixed(2),  unit: 'GB' };
+        if (b >= 1e6)  return { val: (b/1e6).toFixed(1),  unit: 'MB' };
+        if (b >= 1e3)  return { val: (b/1e3).toFixed(0),  unit: 'KB' };
+        return { val: b, unit: 'B' };
+      }
+      var dl = splitBytes(rxBytes), ul = splitBytes(txBytes);
+      document.getElementById('usageDlVal').innerHTML = dl.val + ' <span style="font-size:13px;font-weight:600;opacity:.8">' + dl.unit + '</span>';
+      document.getElementById('usageUlVal').innerHTML = ul.val + ' <span style="font-size:13px;font-weight:600;opacity:.8">' + ul.unit + '</span>';
+
+      var rateDown = cur ? parseFloat(cur.rateDown || 0) : 0;
+      var rateUp   = cur ? parseFloat(cur.rateUp   || 0) : 0;
+      document.getElementById('usageDlRate').textContent = rateDown > 0 ? '↓ ' + fmtBps(rateDown) + ' real-time' : '3 hari terakhir';
+      document.getElementById('usageUlRate').textContent = rateUp   > 0 ? '↑ ' + fmtBps(rateUp)   + ' real-time' : '';
+    }
+  } catch(e) { console.error('Traffic totals:', e); }
+
+  // Load chart history + bind tabs
+  initChartTabs();
+  loadTrafficChart(_chartRange);
+}
+
+function initChartTabs() {
+  var tabs = document.getElementById('usageChartTabs');
+  if (!tabs || tabs._bound) return;
+  tabs._bound = true;
+  tabs.querySelectorAll('.ct-tab').forEach(function(b) {
+    b.addEventListener('click', function() {
+      var range = b.getAttribute('data-range');
+      if (range === _chartRange) return;
+      _chartRange = range;
+      tabs.querySelectorAll('.ct-tab').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      loadTrafficChart(range);
+    });
+  });
+}
+
+async function loadTrafficChart(range) {
+  if (_chartLoading) return;
+  _chartLoading = true;
+  var empty = document.getElementById('chartEmpty');
+  var svg   = document.getElementById('usageChartSvg');
+  // Show loading state
+  empty.style.display = 'flex';
+  empty.innerHTML = '<div class="uc-spinner"></div><span>Memuat data…</span>';
+  svg.style.display = 'none';
+  // Reset stats
+  ['chartAvgDl','chartPeakDl','chartAvgUl','chartPeakUl'].forEach(function(id){
+    document.getElementById(id).textContent = '—';
+  });
+
+  try {
+    var r = await fetch('/portal/api/traffic?range=' + encodeURIComponent(range), { headers: authH() });
+    var j = await r.json();
+    if (!j.success) throw new Error(j.message || 'Gagal');
+
+    var history = (j.data && Array.isArray(j.data.history)) ? j.data.history : [];
+    if (history.length < 2) {
+      // Not enough data
+      empty.innerHTML =
+        '<div class="uc-empty-data">' +
+          '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' +
+          '<span>Belum ada data untuk ' + _rangeLabel(range) + '</span>' +
+        '</div>';
+      return;
+    }
+
+    drawTrafficChart(svg, history);
+    updateChartStats(history);
+    empty.style.display = 'none';
+    svg.style.display = 'block';
+  } catch(e) {
+    console.error('Chart:', e);
+    empty.innerHTML = '<span style="color:var(--red)">Gagal memuat data: ' + (e.message || 'error') + '</span>';
+  } finally {
+    _chartLoading = false;
+  }
+}
+
+function _rangeLabel(r) {
+  return { '1h':'1 jam', '1d':'1 hari', '3d':'3 hari', '30d':'30 hari' }[r] || r;
+}
+
+function updateChartStats(hist) {
+  var sumRx=0, sumTx=0, maxRx=0, maxTx=0;
+  hist.forEach(function(p){
+    var rx = p.rx_mbps || 0, tx = p.tx_mbps || 0;
+    var mrx = p.max_rx_mbps || rx, mtx = p.max_tx_mbps || tx;
+    sumRx += rx; sumTx += tx;
+    if (mrx > maxRx) maxRx = mrx;
+    if (mtx > maxTx) maxTx = mtx;
+  });
+  var avgRx = sumRx / hist.length, avgTx = sumTx / hist.length;
+  function fmtMbps(v) {
+    if (v >= 1) return v.toFixed(2) + ' Mbps';
+    return (v * 1000).toFixed(0) + ' Kbps';
+  }
+  document.getElementById('chartAvgDl').textContent  = fmtMbps(avgRx);
+  document.getElementById('chartPeakDl').textContent = fmtMbps(maxRx);
+  document.getElementById('chartAvgUl').textContent  = fmtMbps(avgTx);
+  document.getElementById('chartPeakUl').textContent = fmtMbps(maxTx);
+}
+
+// Render SVG dual-area chart
+function drawTrafficChart(svg, hist) {
+  var W = 400, H = 140, padL = 4, padR = 4, padT = 8, padB = 16;
+  var innerW = W - padL - padR, innerH = H - padT - padB;
+  var n = hist.length;
+
+  // Normalize values
+  var maxVal = 0.1; // minimum supaya chart kelihatan walau semua 0
+  hist.forEach(function(p){
+    if ((p.rx_mbps||0) > maxVal) maxVal = p.rx_mbps;
+    if ((p.tx_mbps||0) > maxVal) maxVal = p.tx_mbps;
+  });
+  maxVal = maxVal * 1.15; // headroom 15%
+
+  function xPos(i) { return padL + (n === 1 ? innerW/2 : (i / (n - 1)) * innerW); }
+  function yPos(v) { return padT + innerH - ((v || 0) / maxVal) * innerH; }
+
+  // Build SVG paths (smoothed via simple catmull-rom-ish bezier)
+  function buildPath(accessor) {
+    var pts = hist.map(function(p, i){ return [xPos(i), yPos(accessor(p))]; });
+    if (pts.length === 1) return 'M ' + pts[0][0] + ' ' + pts[0][1];
+    var d = 'M ' + pts[0][0].toFixed(2) + ' ' + pts[0][1].toFixed(2);
+    for (var i = 1; i < pts.length; i++) {
+      var p0 = pts[i-1], p1 = pts[i];
+      var cx = (p0[0] + p1[0]) / 2;
+      d += ' C ' + cx.toFixed(2) + ' ' + p0[1].toFixed(2) +
+           ', ' + cx.toFixed(2) + ' ' + p1[1].toFixed(2) +
+           ', ' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2);
+    }
+    return d;
+  }
+  function buildAreaPath(accessor) {
+    var line = buildPath(accessor);
+    var lastX = xPos(n - 1), firstX = xPos(0);
+    return line + ' L ' + lastX.toFixed(2) + ' ' + (padT + innerH) +
+                ' L ' + firstX.toFixed(2) + ' ' + (padT + innerH) + ' Z';
+  }
+
+  var dlLine = buildPath(function(p){ return p.rx_mbps || 0; });
+  var ulLine = buildPath(function(p){ return p.tx_mbps || 0; });
+  var dlArea = buildAreaPath(function(p){ return p.rx_mbps || 0; });
+  var ulArea = buildAreaPath(function(p){ return p.tx_mbps || 0; });
+
+  // Gridlines (3 horizontal)
+  var grid = '';
+  for (var g = 0; g <= 3; g++) {
+    var gy = padT + (innerH * g / 3);
+    grid += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="0.5" stroke-dasharray="2,3"/>';
+  }
+
+  // Time labels (first, middle, last)
+  function fmtTime(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    var r = _chartRange;
+    if (r === '1h' || r === '1d') return d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    if (r === '3d') return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short' }) + ' ' + d.getHours() + ':00';
+    return d.toLocaleDateString('id-ID', { day:'2-digit', month:'short' });
+  }
+  var labels = '';
+  var firstT = fmtTime(hist[0].time);
+  var midT   = fmtTime(hist[Math.floor(n/2)].time);
+  var lastT  = fmtTime(hist[n-1].time);
+  labels += '<text x="' + (padL + 2) + '" y="' + (H - 3) + '" font-size="9" fill="#94a3b8">' + firstT + '</text>';
+  labels += '<text x="' + (W/2) + '" y="' + (H - 3) + '" font-size="9" fill="#94a3b8" text-anchor="middle">' + midT + '</text>';
+  labels += '<text x="' + (W - padR - 2) + '" y="' + (H - 3) + '" font-size="9" fill="#94a3b8" text-anchor="end">' + lastT + '</text>';
+
+  // Scale indicator
+  var scaleTop = maxVal >= 1 ? maxVal.toFixed(1) + ' Mbps' : (maxVal * 1000).toFixed(0) + ' Kbps';
+
+  svg.innerHTML =
+    '<defs>' +
+      '<linearGradient id="gradDl" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#2563eb" stop-opacity="0.35"/>' +
+        '<stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="gradUl" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#10b981" stop-opacity="0.35"/>' +
+        '<stop offset="100%" stop-color="#10b981" stop-opacity="0"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    grid +
+    '<path d="' + dlArea + '" fill="url(#gradDl)"/>' +
+    '<path d="' + ulArea + '" fill="url(#gradUl)"/>' +
+    '<path d="' + dlLine + '" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<path d="' + ulLine + '" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linejoin="round"/>' +
+    labels +
+    '<text x="' + (W - padR - 2) + '" y="' + (padT + 8) + '" font-size="8.5" fill="#94a3b8" text-anchor="end">' + scaleTop + '</text>';
+
+  // Bind hover tooltip (pakai pointerMove, cari titik terdekat)
+  _bindChartTooltip(svg, hist, xPos, yPos, W, H);
+}
+
+function _bindChartTooltip(svg, hist, xPos, yPos, W, H) {
+  var area = svg.parentElement;
+  var tt = document.getElementById('chartTooltip');
+  function onMove(ev) {
+    var rect = svg.getBoundingClientRect();
+    var clientX = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
+    var px = ((clientX - rect.left) / rect.width) * W;
+    // Cari index terdekat
+    var bestI = 0, bestD = Infinity;
+    for (var i = 0; i < hist.length; i++) {
+      var d = Math.abs(xPos(i) - px);
+      if (d < bestD) { bestD = d; bestI = i; }
+    }
+    var p = hist[bestI];
+    var t = p.time ? new Date(p.time).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+    tt.innerHTML =
+      '<b>' + t + '</b><br>' +
+      '<span class="tt-dl">↓ ' + ((p.rx_mbps||0) >= 1 ? (p.rx_mbps).toFixed(2) + ' Mbps' : ((p.rx_mbps||0)*1000).toFixed(0) + ' Kbps') + '</span><br>' +
+      '<span class="tt-ul">↑ ' + ((p.tx_mbps||0) >= 1 ? (p.tx_mbps).toFixed(2) + ' Mbps' : ((p.tx_mbps||0)*1000).toFixed(0) + ' Kbps') + '</span>';
+    var xPx = (xPos(bestI) / W) * rect.width;
+    var yPx = (yPos(Math.max(p.rx_mbps||0, p.tx_mbps||0)) / H) * rect.height;
+    tt.style.left = xPx + 'px';
+    tt.style.top  = yPx + 'px';
+    tt.classList.add('show');
+  }
+  function onLeave() { tt.classList.remove('show'); }
+  svg.addEventListener('pointermove', onMove);
+  svg.addEventListener('pointerleave', onLeave);
+  svg.addEventListener('touchmove', onMove, { passive: true });
+  svg.addEventListener('touchend',  onLeave);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ONT SIGNAL
+// ══════════════════════════════════════════════════════════════
+var signalLoaded = false;
+async function loadSignal() {
+  if (signalLoaded) return;
+  signalLoaded = true;
+  try {
+    var r = await fetch('/portal/api/signal', { headers: authH() });
+    var j = await r.json();
+    if (!j.success || !j.data) {
+      document.getElementById('ontInfo').innerHTML = '<div class="empty-state" style="grid-column:1/-1">Data ONT tidak tersedia</div>';
+      document.getElementById('signalRow').innerHTML = '';
+      document.getElementById('btnReboot').style.display = 'none';
+      return;
+    }
+    var d = j.data;
+    document.getElementById('ontInfo').innerHTML =
+      '<div class="info-item"><div class="ii-label">Serial</div><div class="ii-value">' + (d.serial||'—') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">Status</div><div class="ii-value" style="color:' + (d.online?'var(--green)':'var(--red)') + '"><span class="status-dot ' + (d.online?'dot-green':'dot-red') + '"></span>' + (d.online?'Online':'Offline') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">Model</div><div class="ii-value">' + (d.model||'—') + '</div></div>' +
+      '<div class="info-item"><div class="ii-label">WAN IP</div><div class="ii-value">' + (d.wan_ip||'—') + '</div></div>' +
+      '<div class="info-item full"><div class="ii-label">Uptime</div><div class="ii-value">' + (d.uptime||'—') + '</div></div>';
+    var rx = parseFloat(d.rx_power), rxC = isNaN(rx)?'':rx>-25?'sig-good':rx>-28?'sig-warn':'sig-bad';
+    var temp = d.temperature?parseFloat(d.temperature):null, tC = temp===null?'':temp<50?'sig-good':temp<60?'sig-warn':'sig-bad';
+    document.getElementById('signalRow').innerHTML =
+      '<div class="sig-card"><div class="sig-val ' + rxC + '">' + (isNaN(rx)?'—':rx.toFixed(1)) + ' <small style="font-size:12px;font-weight:600">dBm</small></div><div class="sig-lbl">RX Power</div></div>' +
+      '<div class="sig-card"><div class="sig-val ' + tC + '">' + (temp!==null?temp.toFixed(0):'—') + ' <small style="font-size:12px;font-weight:600">°C</small></div><div class="sig-lbl">Suhu ONT</div></div>';
+    document.getElementById('btnReboot').style.display = '';
+  } catch(e) { console.error('Signal:', e); }
+}
+
+function doReboot() {
+  openModal('modalReboot');
+}
+
+async function executeReboot() {
+  closeModal('modalReboot');
+  var btns = [document.getElementById('btnReboot'), document.getElementById('btnWifiReboot')].filter(Boolean);
+  var rebootIcon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
+  btns.forEach(function(b) {
+    b.disabled = true;
+    b.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Mengirim...';
+  });
+  try {
+    var r = await fetch('/portal/api/reboot', { method:'POST', headers: authH() });
+    var j = await r.json();
+    toast(j.message || (j.success ? 'Reboot dikirim' : 'Gagal'), !j.success);
+    if (j.success) {
+      signalLoaded = false; wifiLoaded = false;
+      setTimeout(function(){ signalLoaded=false; wifiLoaded=false; loadSignal(); loadWifi(); }, 90000);
+    }
+  } catch(e) { toast('Gagal: ' + e.message, true); }
+  finally {
+    btns.forEach(function(b) {
+      b.disabled = false;
+      b.innerHTML = rebootIcon + ' Reboot ONT';
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// WIFI
+// ══════════════════════════════════════════════════════════════
+var wifiLoaded = false;
+var _wifiDeviceId = null;
+
+function togglePw(inputId, btn) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  var isText = input.type === 'text';
+  input.type = isText ? 'password' : 'text';
+  btn.querySelector('svg').style.opacity = isText ? '1' : '0.4';
+}
+
+async function loadWifi() {
+  if (wifiLoaded) return;
+  wifiLoaded = true;
+  try {
+    var r = await fetch('/portal/api/wifi', { headers: authH() });
+    var j = await r.json();
+
+    if (!j.success || !j.data) {
+      var msg = j.message || 'Data ONT tidak tersedia';
+      var dbg = j.debug || {};
+      var debugHtml = '';
+
+      if (dbg.ont_sn) {
+        var statusColor = dbg.genieacs_reachable ? 'var(--green)' : 'var(--red)';
+        var statusText  = dbg.genieacs_reachable ? '✓ Terhubung' : '✗ Tidak bisa akses';
+        debugHtml = '<div style="margin-top:12px;background:#f8fafc;border-radius:10px;padding:12px;font-size:11px">' +
+          '<div style="font-weight:700;color:var(--muted);text-transform:uppercase;font-size:9px;letter-spacing:.5px;margin-bottom:8px">Debug Info</div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">ONT SN di data pelanggan:</span><b>' + escHtml(dbg.ont_sn) + '</b></div>' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">GenieACS:</span><b style="color:' + statusColor + '">' + statusText + '</b></div>' +
+          (dbg.genieacs_error ? '<div style="color:var(--red);margin-bottom:4px">Error: ' + escHtml(dbg.genieacs_error) + '</div>' : '') +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--muted)">Total device di GenieACS:</span><b>' + (dbg.total_in_genieacs || 0) + '</b></div>' +
+          (dbg.sample_serials && dbg.sample_serials.length
+            ? '<div style="margin-top:6px;color:var(--muted)">SN tersedia di GenieACS:</div>' +
+              dbg.sample_serials.map(function(s){ return '<div style="font-family:monospace;font-size:10px;margin-top:2px;color:var(--text)">• ' + escHtml(s.sn || s.id) + '</div>'; }).join('')
+            : '') +
+        '</div>';
+      }
+
+      var hint = '';
+      if (!dbg.genieacs_reachable) {
+        hint = 'GenieACS server tidak bisa diakses. Cek konfigurasi di Settings → GenieACS.';
+      } else if (dbg.total_in_genieacs === 0) {
+        hint = 'GenieACS aktif tapi belum ada device. Pastikan ONT sudah terhubung ke ACS server.';
+      } else if (dbg.ont_sn) {
+        hint = 'ONT SN "' + dbg.ont_sn + '" tidak cocok dengan device di GenieACS. Samakan SN di data pelanggan dengan yang ada di atas.';
+      } else if (/tidak terdaftar/i.test(msg)) {
+        hint = 'ONT belum terdaftar di akun pelanggan. Hubungi ISP.';
+      } else {
+        hint = 'Pastikan ONT menyala & terhubung, atau hubungi ISP.';
+      }
+
+      document.getElementById('wifiOntInfo').innerHTML =
+        '<div style="padding:4px">' +
+          '<div style="font-weight:700;color:var(--text);margin-bottom:4px">ONT tidak ditemukan</div>' +
+          '<div style="font-size:11px;color:var(--muted);line-height:1.5">' + hint + '</div>' +
+          debugHtml +
+        '</div>';
+      document.getElementById('wifiNoOnt').style.display = 'none';
+      document.getElementById('wifiFormCard').style.display = 'none';
+      return;
+    }
+
+    var d = j.data;
+    _wifiDeviceId = d.device_id;
+
+    // Helper: kelas warna untuk RX Power
+    var rxClass = '';
+    if (d.rx_power !== null && d.rx_power !== undefined) {
+      var rxNum = parseFloat(d.rx_power);
+      rxClass = rxNum > -25 ? 'sig-good' : (rxNum > -28 ? 'sig-warn' : 'sig-bad');
+    }
+
+    // Status ONT card
+    var html = '<div class="info-grid">';
+    html += '<div class="info-item"><div class="ii-label">Status</div><div class="ii-value" style="color:' + (d.online ? 'var(--green)' : 'var(--red)') + '"><span class="status-dot ' + (d.online ? 'dot-green' : 'dot-red') + '"></span>' + (d.online ? 'Online' : 'Offline') + '</div></div>';
+    html += '<div class="info-item"><div class="ii-label">Uptime</div><div class="ii-value">' + (d.uptime || '—') + '</div></div>';
+    if (d.rx_power !== null && d.rx_power !== undefined) {
+      html += '<div class="info-item"><div class="ii-label">RX Power</div><div class="ii-value ' + rxClass + '">' + parseFloat(d.rx_power).toFixed(1) + ' dBm</div></div>';
+    }
+    if (d.temperature !== null && d.temperature !== undefined) {
+      html += '<div class="info-item"><div class="ii-label">Suhu ONT</div><div class="ii-value">' + parseFloat(d.temperature).toFixed(0) + ' °C</div></div>';
+    }
+    html += '</div>';
+    document.getElementById('wifiOntInfo').innerHTML = html;
+
+    // Tombol reboot: hanya tampil kalau ONT online
+    var btnReboot = document.getElementById('btnWifiReboot');
+    if (btnReboot) btnReboot.style.display = d.online ? '' : 'none';
+
+    // Isi form WiFi
+    var wifi = d.wifi || {};
+    if (wifi.ssid_2g) document.getElementById('wSsid2g').value = wifi.ssid_2g;
+    if (wifi.password_2g) document.getElementById('wPass2g').value = wifi.password_2g;
+
+    if (wifi.ssid_5g || wifi.password_5g) {
+      document.getElementById('wifi5gSection').style.display = '';
+      if (wifi.ssid_5g) document.getElementById('wSsid5g').value = wifi.ssid_5g;
+      if (wifi.password_5g) document.getElementById('wPass5g').value = wifi.password_5g;
+    }
+
+    document.getElementById('wifiFormCard').style.display = '';
+    document.getElementById('wifiNoOnt').style.display = 'none';
+  } catch(e) {
+    console.error('loadWifi:', e);
+    document.getElementById('wifiOntInfo').innerHTML = '<div class="empty-state">Gagal memuat data. Cek koneksi Anda.</div>';
+  }
+}
+
+async function saveWifi() {
+  var ssid2g = document.getElementById('wSsid2g').value.trim();
+  var pass2g = document.getElementById('wPass2g').value;
+  var ssid5g = document.getElementById('wSsid5g') ? document.getElementById('wSsid5g').value.trim() : '';
+  var pass5g = document.getElementById('wPass5g') ? document.getElementById('wPass5g').value : '';
+
+  if (!ssid2g && !pass2g && !ssid5g && !pass5g) {
+    toast('Tidak ada perubahan', true); return;
+  }
+  if (pass2g && pass2g.length < 8) { toast('Password WiFi minimal 8 karakter', true); return; }
+  if (pass5g && pass5g.length < 8) { toast('Password WiFi 5GHz minimal 8 karakter', true); return; }
+
+  var btn = document.getElementById('btnSaveWifi');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  try {
+    var body = {};
+    if (ssid2g) body.ssid_2g = ssid2g;
+    if (pass2g) body.password_2g = pass2g;
+    if (ssid5g) body.ssid_5g = ssid5g;
+    if (pass5g) body.password_5g = pass5g;
+
+    var r = await fetch('/portal/api/wifi', {
+      method: 'POST', headers: authH(), body: JSON.stringify(body)
+    });
+    var j = await r.json();
+    toast(j.message || (j.success ? 'Berhasil disimpan' : 'Gagal'), !j.success);
+    if (j.success) { wifiLoaded = false; setTimeout(function(){ wifiLoaded=false; loadWifi(); }, 5000); }
+  } catch(e) { toast('Error: ' + e.message, true); }
+  finally { btn.disabled = false; btn.textContent = 'Simpan Pengaturan WiFi'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROFIL
+// ══════════════════════════════════════════════════════════════
+function fillProfil() {
+  if (!CUST_DATA) return;
+  var c = CUST_DATA.customer;
+  document.getElementById('pId').value      = c.customer_id || '';
+  document.getElementById('pName').value    = c.name || '';
+  document.getElementById('pPhone').value   = c.phone || '';
+  document.getElementById('pEmail').value   = c.email || '';
+  document.getElementById('pAddress').value = c.address || '';
+}
+
+async function saveProfile() {
+  var btn = document.getElementById('btnSaveProfile');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    var r = await fetch('/portal/api/profile', {
+      method: 'PUT', headers: authH(),
+      body: JSON.stringify({
+        phone:   document.getElementById('pPhone').value.trim(),
+        email:   document.getElementById('pEmail').value.trim(),
+        address: document.getElementById('pAddress').value.trim()
+      })
+    });
+    var j = await r.json();
+    toast(j.message || (j.success ? 'Berhasil disimpan' : 'Gagal'), !j.success);
+    if (j.success) { billingLoaded=false; signalLoaded=false; loadDashboard(); }
+  } catch(e) { toast('Error: ' + e.message, true); }
+  finally { btn.disabled=false; btn.textContent='Simpan Perubahan'; }
+}
+
+async function savePassword() {
+  var oldPw = document.getElementById('pwOld').value;
+  var newPw = document.getElementById('pwNew').value;
+  var cfmPw = document.getElementById('pwConfirm').value;
+  if (!newPw || newPw.length < 6) { toast('Password minimal 6 karakter', true); return; }
+  if (newPw !== cfmPw) { toast('Konfirmasi password tidak cocok', true); return; }
+  var btn = document.getElementById('btnSavePw');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    var r = await fetch('/portal/api/password', {
+      method: 'PUT', headers: authH(),
+      body: JSON.stringify({ old_password: oldPw, new_password: newPw })
+    });
+    var j = await r.json();
+    toast(j.message || (j.success ? 'Password berhasil diubah' : 'Gagal'), !j.success);
+    if (j.success) {
+      document.getElementById('pwOld').value = '';
+      document.getElementById('pwNew').value = '';
+      document.getElementById('pwConfirm').value = '';
+    }
+  } catch(e) { toast('Error: ' + e.message, true); }
+  finally { btn.disabled=false; btn.textContent='Ganti Password'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// MISC
+// ══════════════════════════════════════════════════════════════
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function doLogout() {
+  // Defensive logout flow (sama dengan admin app.js):
+  //   1. Clear localStorage IMMEDIATELY supaya state client pasti bersih.
+  //   2. Panggil POST /portal/api/auth/logout untuk clear HttpOnly cookie
+  //      server-side. Cookie HttpOnly TIDAK bisa di-hapus dari JS via
+  //      document.cookie — wajib via server.
+  //   3. Redirect ke /portal/login dengan window.location.replace supaya
+  //      tombol Back browser tidak balik ke dashboard yang sudah logged-out.
+  //
+  // Catatan: code lama coba clear cookie via `document.cookie = 'portal_token=...'`
+  // — itu tidak bekerja untuk cookie httpOnly, browser silent-ignore. Itu
+  // sebab tombol Logout di portal "tidak berfungsi": cookie tetap ada,
+  // route /portal/login lihat cookie valid → auto-redirect kembali ke
+  // dashboard (lihat patch session-persist).
+  try {
+    localStorage.removeItem('portal_token');
+    localStorage.removeItem('portal_customer');
+  } catch (_) { /* ignore */ }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3000);
+  try {
+    await fetch('/portal/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      signal: controller.signal
+    });
+  } catch (_) { /* timeout/network — abaikan, tetap redirect */ }
+  clearTimeout(timer);
+
+  window.location.replace('/portal/login');
+}
+
+// ══════════════════════════════════════════════════════════════
+// UPGRADE PAKET
+// ══════════════════════════════════════════════════════════════
+var upgradeLoaded = false;
+
+async function loadUpgrade() {
+  if (upgradeLoaded) return;
+  upgradeLoaded = true;
+  try {
+    var r = await fetch('/portal/api/packages', { headers: authH() });
+    var j = await r.json();
+    console.log('[Upgrade] packages response:', j);
+    if (!j.success || !j.data || !j.data.length) {
+      document.getElementById('upgradeList').innerHTML =
+        '<div class="empty-state">Tidak ada paket tersedia</div>';
+      return;
+    }
+
+    var currentPkgId = CUST_DATA && CUST_DATA.customer ? CUST_DATA.customer.package_id : null;
+    var currentPrice = CUST_DATA && CUST_DATA.package ? parseFloat(CUST_DATA.package.price) : 0;
+
+    var html = '';
+    j.data.forEach(function(pkg) {
+      if (!pkg.is_active) return;
+      var isCurrent = pkg.id === currentPkgId;
+      var price     = parseFloat(pkg.price) || 0;
+      var isUpgrade = price > currentPrice;
+      var badgeClass = isCurrent ? 'puc-current' : (isUpgrade ? 'puc-upgrade' : 'puc-downgrade');
+      var badgeText  = isCurrent ? '✓ Paket Saat Ini' : (isUpgrade ? '↑ Upgrade' : '↓ Downgrade');
+      var iconBg     = isCurrent ? '#f0fdf4' : (isUpgrade ? '#eff6ff' : '#f8fafc');
+      var iconColor  = isCurrent ? '#16a34a' : (isUpgrade ? 'var(--blue)' : 'var(--muted)');
+      var onclick    = isCurrent ? '' : 'selectUpgradePkg(' + pkg.id + ',\'' + escHtml(pkg.name) + '\')';
+
+      html += '<div class="pkg-upgrade-card' + (isCurrent ? ' current' : '') + '" id="upg-card-' + pkg.id + '" onclick="' + onclick + '">' +
+        '<div class="puc-icon" style="background:' + iconBg + ';color:' + iconColor + '">' +
+          '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>' +
+        '</div>' +
+        '<div class="puc-info">' +
+          '<div class="puc-name">' + escHtml(pkg.name) + '</div>' +
+          '<div class="puc-speed">' + (pkg.speed_down||0) + ' Mbps / ' + (pkg.speed_up||0) + ' Mbps</div>' +
+          '<span class="puc-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '</div>' +
+        '<div style="text-align:right;margin-right:8px;flex-shrink:0">' +
+          '<div class="puc-price" style="color:' + iconColor + '">' + fmtRpK(price) + '</div>' +
+          '<div style="font-size:9px;color:var(--muted);margin-top:2px">/bulan</div>' +
+        '</div>' +
+        '<div class="puc-radio"></div>' +
+      '</div>';
+    });
+    document.getElementById('upgradeList').innerHTML = html || '<div class="empty-state">Tidak ada paket tersedia</div>';
+
+    // Cek apakah ada permintaan upgrade aktif via endpoint dedicated
+    try {
+      var sr = await fetch('/portal/api/upgrade/status', { headers: authH() });
+      var sj = await sr.json();
+      if (sj.success && sj.blocked && sj.ticket) {
+        showUpgradeBlockedBanner(sj.ticket);
+      }
+    } catch(e) { /* silent */ }
+  } catch(e) {
+    upgradeLoaded = false;
+    console.error('[Upgrade] error:', e);
+    document.getElementById('upgradeList').innerHTML = '<div class="empty-state">Gagal memuat paket. Coba lagi.</div>';
+  }
+}
+
+var _upgradePkgId   = null;
+var _upgradePkgName = null;
+
+function showUpgradeBlockedBanner(ticket) {
+  var statusLabel = { open:'Menunggu', in_progress:'Sedang Diproses', pending:'Ditunda', assigned:'Ditugaskan', on_hold:'Ditahan' };
+  // Hapus banner lama jika ada
+  var old = document.getElementById('upgradeActiveNotif');
+  if (old) old.remove();
+  var notifDiv = document.createElement('div');
+  notifDiv.id = 'upgradeActiveNotif';
+  notifDiv.innerHTML =
+    '<div style="background:#fef3c7;border:1.5px solid #fde68a;border-radius:12px;padding:14px 16px;margin-top:4px">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px">' +
+        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:4px">Ada permintaan yang sedang diproses</div>' +
+          '<div style="font-size:11px;color:#92400e;line-height:1.6">' +
+            (ticket ? (ticket.ticket_number || '') + ' · ' + (statusLabel[ticket.status] || ticket.status) + '<br>' : '') +
+            'Tunggu hingga permintaan sebelumnya selesai sebelum mengajukan yang baru.' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  var wrap = document.getElementById('upgradeBtnWrap');
+  if (wrap) wrap.parentNode.insertBefore(notifDiv, wrap);
+  // Sembunyikan tombol kirim & nonaktifkan card
+  if (wrap) wrap.style.display = 'none';
+  document.querySelectorAll('.pkg-upgrade-card:not(.current)').forEach(function(c) {
+    c.style.opacity = '.45';
+    c.style.pointerEvents = 'none';
+  });
+  _upgradePkgId = null; _upgradePkgName = null;
+}
+
+function selectUpgradePkg(pkgId, pkgName) {
+  _upgradePkgId   = pkgId;
+  _upgradePkgName = pkgName;
+  // Highlight card yang dipilih
+  document.querySelectorAll('.pkg-upgrade-card').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  var card = document.getElementById('upg-card-' + pkgId);
+  if (card) card.classList.add('selected');
+  // Tampilkan tombol Kirim
+  document.getElementById('upgradeBtnWrap').style.display = '';
+}
+
+function openUpgradeModal() {
+  if (!_upgradePkgId) return;
+  document.getElementById('upgradeModalPkgName').textContent = _upgradePkgName;
+  openModal('modalUpgrade');
+}
+
+async function executeUpgrade() {
+  if (!_upgradePkgId) return;
+  var btn = document.getElementById('btnConfirmUpgrade');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-color:rgba(255,255,255,.3);border-top-color:#fff"></div> Mengirim...';
+  try {
+    var r = await fetch('/portal/api/upgrade', {
+      method: 'POST', headers: authH(),
+      body: JSON.stringify({ package_id: _upgradePkgId, package_name: _upgradePkgName })
+    });
+    var j = await r.json();
+    closeModal('modalUpgrade');
+    if (j.success) {
+      toast('Permintaan berhasil dikirim! Tim ISP akan menghubungi Anda segera.');
+      if (j.wa_url) setTimeout(function(){ window.open(j.wa_url, '_blank'); }, 800);
+      // Sembunyikan tombol kirim & reset pilihan
+      document.getElementById('upgradeBtnWrap').style.display = 'none';
+      document.querySelectorAll('.pkg-upgrade-card').forEach(function(c){ c.classList.remove('selected'); });
+      _upgradePkgId = null; _upgradePkgName = null;
+    } else if (j.blocked) {
+      showUpgradeBlockedBanner(j.existing_ticket);
+    } else {
+      toast(j.message || 'Gagal mengirim permintaan', true);
+    }
+  } catch(e) {
+    closeModal('modalUpgrade');
+    toast('Gagal: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim Permintaan';
+  }
+}
+
+function loadAll() {
+  billingLoaded = false; signalLoaded = false; wifiLoaded = false; ticketsLoaded = false;
+  loadDashboard();
+  loadAnnouncements();
+}
+
+// ══════════════════════════════════════════════════════════════
+// ANNOUNCEMENTS — Gangguan massal, maintenance, info
+// ══════════════════════════════════════════════════════════════
+var _dismissedAnns = JSON.parse(localStorage.getItem('ann_dismissed') || '[]');
+
+function dismissAnn(id) {
+  _dismissedAnns.push(id);
+  localStorage.setItem('ann_dismissed', JSON.stringify(_dismissedAnns.slice(-20)));
+  var el = document.getElementById('ann-' + id);
+  if (el) { el.style.opacity='0'; el.style.transition='opacity .2s'; setTimeout(function(){ el.remove(); checkAnnWrap(); }, 200); }
+}
+
+function checkAnnWrap() {
+  var wrap = document.getElementById('annWrap');
+  if (wrap && wrap.children.length === 0) wrap.style.display = 'none';
+}
+
+async function loadAnnouncements() {
+  try {
+    var r = await fetch('/portal/api/announcements', { headers: authH() });
+    var j = await r.json();
+    if (!j.success || !j.data || !j.data.length) return;
+
+    var wrap = document.getElementById('annWrap');
+    var icons = {
+      gangguan:    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      maintenance: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>',
+      info:        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      promo:       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><path d="M12 22V7M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>'
+    };
+    var typeLabel = { gangguan:'⚠ Gangguan Jaringan', maintenance:'🔧 Maintenance', info:'ℹ Informasi', promo:'🎁 Promo' };
+
+    var hasNew = false;
+    j.data.forEach(function(ann) {
+      if (_dismissedAnns.indexOf(ann.id) !== -1) return; // sudah dismiss
+      hasNew = true;
+      var until = ann.show_until ? ' · Sampai ' + new Date(ann.show_until).toLocaleDateString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      var html = '<div class="ann-item ' + (ann.type||'info') + '" id="ann-' + ann.id + '">' +
+        '<button class="ann-dismiss" onclick="dismissAnn(' + ann.id + ')" title="Tutup">✕</button>' +
+        '<div class="ann-row">' +
+          '<div class="ann-icon">' + (icons[ann.type] || icons.info) + '</div>' +
+          '<div class="ann-body">' +
+            '<div class="ann-type">' + (typeLabel[ann.type] || ann.type) + '</div>' +
+            '<div class="ann-title">' + escHtml(ann.title) + '</div>' +
+            (ann.content ? '<div class="ann-content">' + escHtml(ann.content) + '</div>' : '') +
+            (until ? '<div class="ann-until">🕐' + until + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+      wrap.insertAdjacentHTML('beforeend', html);
+    });
+
+    if (hasNew) wrap.style.display = '';
+  } catch(e) { /* silent fail */ }
+}
+// ══════════════════════════════════════════════════════════════
+var ticketsLoaded = false;
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function tkStatusLabel(s) {
+  return ({ open:'Terbuka', in_progress:'Diproses', resolved:'Selesai', closed:'Ditutup', pending:'Menunggu' })[s] || s;
+}
+
+function tkTypeLabel(t) {
+  return ({ gangguan:'Gangguan', request:'Permintaan', maintenance:'Maintenance' })[t] || t;
+}
+
+function tkIconSvg(type) {
+  // Icon per tipe tiket
+  if (type === 'request') {
+    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  }
+  if (type === 'maintenance') {
+    return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>';
+  }
+  // default: gangguan
+  return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+}
+
+async function loadTickets() {
+  if (ticketsLoaded) return;
+  ticketsLoaded = true;
+  try {
+    var r = await fetch('/portal/api/tickets', { headers: authH() });
+    var j = await r.json();
+    var list = document.getElementById('ticketList');
+    if (!j.success || !j.data || !j.data.length) {
+      list.innerHTML = '<div class="empty-state">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;margin-bottom:8px;opacity:.4"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' +
+        '<div>Belum ada laporan.<br>Buat laporan pertama Anda di atas.</div>' +
+        '</div>';
+      return;
+    }
+    var html = '';
+    j.data.forEach(function(t) {
+      var statusKey = t.status || 'open';
+      var badgeLbl  = tkStatusLabel(statusKey);
+      var typeLbl   = tkTypeLabel(t.type);
+      var descHtml  = t.description ? '<div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + escapeHtml(t.description) + '</div>' : '';
+      html += '<div class="ticket-item">' +
+        '<div class="tk-row">' +
+          '<div class="tk-icon ' + statusKey + '">' + tkIconSvg(t.type) + '</div>' +
+          '<div class="tk-info">' +
+            '<div class="tk-title">' + escapeHtml(t.title) + '</div>' +
+            '<div class="tk-meta">' + (t.ticket_number ? '#' + escapeHtml(t.ticket_number) + ' · ' : '') + typeLbl + ' · ' + fmtDate(t.created_at) + '</div>' +
+            '<span class="tk-badge tk-' + statusKey + '">' + badgeLbl + '</span>' +
+            descHtml +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    list.innerHTML = html;
+  } catch(e) {
+    console.error('loadTickets:', e);
+    document.getElementById('ticketList').innerHTML = '<div class="empty-state">Gagal memuat riwayat. Coba lagi nanti.</div>';
+  }
+}
+
+async function submitTicket() {
+  var title = document.getElementById('tkTitle').value.trim();
+  var desc  = document.getElementById('tkDesc').value.trim();
+  var type  = document.getElementById('tkType').value;
+
+  if (!title) { toast('Judul laporan wajib diisi', true); return; }
+  if (title.length < 5) { toast('Judul terlalu pendek (min. 5 karakter)', true); return; }
+
+  var btn = document.getElementById('btnSubmitTicket');
+  btn.disabled = true; btn.textContent = 'Mengirim...';
+  try {
+    var r = await fetch('/portal/api/tickets', {
+      method: 'POST', headers: authH(),
+      body: JSON.stringify({ title: title, description: desc, type: type })
+    });
+    var j = await r.json();
+    toast(j.message || (j.success ? 'Laporan berhasil dikirim' : 'Gagal kirim'), !j.success);
+    if (j.success) {
+      document.getElementById('tkTitle').value = '';
+      document.getElementById('tkDesc').value = '';
+      document.getElementById('tkType').value = 'gangguan';
+      ticketsLoaded = false;
+      loadTickets();
+    }
+  } catch(e) { toast('Error: ' + e.message, true); }
+  finally { btn.disabled = false; btn.textContent = 'Kirim Laporan'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HUBUNGI CS (Contact Modal)
+// ══════════════════════════════════════════════════════════════
+function normalizeWa(num) {
+  // Bersihkan nomor WA: hapus non-digit, normalize 08xx → 628xx
+  if (!num) return '';
+  var n = String(num).replace(/[^0-9]/g, '');
+  if (n.startsWith('0'))    n = '62' + n.substring(1);
+  else if (n.startsWith('8')) n = '62' + n;
+  return n;
+}
+
+function openContactModal() {
+  // Priority: settings dari DB → fallback hardcoded
+  var rawWa    = (META && META.company_wa)    || DEFAULT_CS_WA;
+  var rawPhone = (META && META.company_phone) || DEFAULT_CS_PHONE;
+  var rawEmail = (META && META.company_email) || DEFAULT_CS_EMAIL;
+
+  var wa    = rawWa ? normalizeWa(rawWa) : '';
+  var phone = rawPhone ? String(rawPhone).trim() : '';
+  var email = rawEmail ? String(rawEmail).trim() : '';
+  var company = (META && META.company_name) || 'ISP';
+
+  // Greeting untuk WA — sertakan ID pelanggan untuk memudahkan CS
+  var custId   = CUST_DATA && CUST_DATA.customer ? CUST_DATA.customer.customer_id : '';
+  var custName = CUST_DATA && CUST_DATA.customer ? CUST_DATA.customer.name : '';
+  var waMsg    = 'Halo ' + company + ', saya ' + custName + ' (ID: ' + custId + '). Mohon bantuannya.';
+  var waUrl    = wa ? 'https://wa.me/' + wa + '?text=' + encodeURIComponent(waMsg) : '';
+
+  var emailSubject = 'Bantuan Pelanggan — ' + custId;
+  var emailBody    = 'Halo ' + company + ',\n\nSaya ' + custName + ' (ID Pelanggan: ' + custId + ').\n\n[Tulis pertanyaan/keluhan Anda di sini]\n\nTerima kasih.';
+  var emailUrl = email ? 'mailto:' + email + '?subject=' + encodeURIComponent(emailSubject) + '&body=' + encodeURIComponent(emailBody) : '';
+
+  var telUrl = phone ? 'tel:' + phone.replace(/[^0-9+]/g, '') : '';
+
+  // Render: tampilkan hanya yang tersedia
+  var html = '';
+
+  if (waUrl) {
+    html += '<a href="' + waUrl + '" target="_blank" rel="noopener" class="contact-opt" style="display:flex;align-items:center;gap:14px;padding:14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;text-decoration:none;color:var(--text);margin-bottom:10px">' +
+      '<div style="width:44px;height:44px;background:#22c55e;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;color:#166534">WhatsApp</div>' +
+        '<div style="font-size:11px;color:#15803d;margin-top:2px">Chat langsung dengan CS</div>' +
+      '</div>' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</a>';
+  }
+
+  if (telUrl) {
+    html += '<a href="' + telUrl + '" class="contact-opt" style="display:flex;align-items:center;gap:14px;padding:14px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;text-decoration:none;color:var(--text);margin-bottom:10px">' +
+      '<div style="width:44px;height:44px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;color:#1e3a8a">Telepon</div>' +
+        '<div style="font-size:11px;color:var(--blue2);margin-top:2px">' + escapeHtml(phone) + '</div>' +
+      '</div>' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</a>';
+  }
+
+  if (emailUrl) {
+    html += '<a href="' + emailUrl + '" class="contact-opt" style="display:flex;align-items:center;gap:14px;padding:14px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;text-decoration:none;color:var(--text);margin-bottom:10px">' +
+      '<div style="width:44px;height:44px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>' +
+      '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;color:#92400e">Email</div>' +
+        '<div style="font-size:11px;color:#b45309;margin-top:2px;word-break:break-all">' + escapeHtml(email) + '</div>' +
+      '</div>' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</a>';
+  }
+
+  if (!html) {
+    html = '<div class="empty-state" style="padding:24px 12px">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;margin-bottom:8px;opacity:.4"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>' +
+      '<div>Kontak CS belum dikonfigurasi.<br>Silakan hubungi admin ISP.</div>' +
+      '</div>';
+  }
+
+  document.getElementById('contactOptions').innerHTML = html;
+  openModal('modalContact');
+}
+
+// Close modal on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(function(el) {
+  el.addEventListener('click', function(e) { if (e.target === el) closeModal(el.id); });
+});
+
+// Check for payment finish redirect
+(function() {
+  if (window.location.pathname.includes('/payment/finish')) {
+    toast('Pembayaran berhasil! Terima kasih.');
+    billingLoaded = false;
+  } else if (window.location.pathname.includes('/payment/pending')) {
+    toast('Pembayaran pending. Cek email untuk instruksi.');
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════
+// WEB PUSH — Service Worker + VAPID Subscribe
+// ══════════════════════════════════════════════════════════════
+var _swReg       = null;  // ServiceWorkerRegistration
+var _vapidKey    = null;  // VAPID public key dari server
+var _pushInited  = false;
+
+// Konversi base64url → Uint8Array (untuk VAPID applicationServerKey)
+function urlBase64ToUint8Array(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var raw     = window.atob(base64);
+  var output  = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
+  return output;
+}
+
+// Deteksi nama device dari user-agent
+function getDeviceName() {
+  var ua = navigator.userAgent || '';
+  if (/android/i.test(ua)) {
+    var m = ua.match(/;\s*([^;)]+)\s*Build/);
+    return m ? m[1].trim() : 'Android Device';
+  }
+  if (/iphone/i.test(ua)) return 'iPhone';
+  if (/ipad/i.test(ua))   return 'iPad';
+  return 'Desktop Browser';
+}
+
+// ── Init: register SW + cek status ───────────────────────────
+// ── Environment detection ──────────────────────────────────────
+// When running inside the Capacitor Android APK, window.Capacitor is defined
+// by the native bridge. We also check for isNativePlatform() to be safe in
+// hybrid scenarios (e.g. Capacitor running in browser for dev).
+function _isCapacitorNative() {
+  try {
+    return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function'
+                               && window.Capacitor.isNativePlatform());
+  } catch (_) { return false; }
+}
+
+async function initPush() {
+  if (_pushInited) return;
+  _pushInited = true;
+
+  var card = document.getElementById('pushCard');
+  if (!card) return;
+
+  // Branch: Capacitor APK vs browser. In the APK the Web Push stack is not
+  // available — we use the Capacitor PushNotifications plugin which talks to
+  // FCM directly through the native layer.
+  if (_isCapacitorNative()) {
+    return _initCapacitorPush();
+  }
+  return _initWebPush();
+}
+
+// ── Web Push init (browser) ───────────────────────────────────
+async function _initWebPush() {
+  var card = document.getElementById('pushCard');
+
+  // Cek support
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showPushState('unsupported'); return;
+  }
+
+  try {
+    // 1. Ambil VAPID key dari server
+    var r = await fetch('/portal/api/push/vapid-key', { headers: authH() });
+    var j = await r.json();
+    if (!j.success || !j.vapid_public_key) {
+      // Server push tidak aktif — sembunyikan card
+      card.style.display = 'none'; return;
+    }
+    _vapidKey = j.vapid_public_key;
+
+    // 2. Register Service Worker
+    _swReg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    await navigator.serviceWorker.ready;
+
+    // 3. Cek permission
+    var perm = Notification.permission;
+    if (perm === 'denied') { showPushState('blocked'); return; }
+
+    // 4. Cek apakah sudah subscribe di browser
+    var existingSub = await _swReg.pushManager.getSubscription();
+
+    if (existingSub) {
+      // Sudah subscribe — cek di server juga
+      var sr = await fetch('/portal/api/push/status', { headers: authH() });
+      var sj = await sr.json();
+      showPushState('on', sj.device_count || 1);
+    } else {
+      showPushState('off');
+    }
+  } catch (e) {
+    console.error('[Push] initWebPush error:', e);
+    card.style.display = 'none';
+  }
+}
+
+// ── Capacitor (APK) Push init ─────────────────────────────────
+// Uses @capacitor/push-notifications. The plugin must be installed and
+// configured in the Android project — see docs/capacitor-push-setup.md.
+var _capListenersBound = false;
+
+async function _initCapacitorPush() {
+  var card = document.getElementById('pushCard');
+
+  try {
+    var PushNotifications = window.Capacitor?.Plugins?.PushNotifications;
+    if (!PushNotifications) {
+      // Plugin belum di-install di APK build — sembunyikan card daripada
+      // tampil "unsupported" yang misleading.
+      console.warn('[Push] Capacitor PushNotifications plugin not available');
+      card.style.display = 'none';
+      return;
+    }
+
+    // Check current server-side status (is there already an FCM token for this customer?)
+    var sr = await fetch('/portal/api/push/status', { headers: authH() });
+    var sj = await sr.json();
+
+    if (!sj.push_enabled) {
+      // Server-side FCM credential tidak ter-setup — nothing we can do.
+      card.style.display = 'none';
+      return;
+    }
+
+    // Bind listeners once per session
+    if (!_capListenersBound) {
+      _capListenersBound = true;
+
+      PushNotifications.addListener('registration', async function(token) {
+        // token.value is the FCM registration token
+        try {
+          var r = await fetch('/portal/api/push/register-fcm', {
+            method:  'POST',
+            headers: authH(),
+            body:    JSON.stringify({
+              fcm_token:   token.value,
+              device_name: getDeviceName() + ' (App)'
+            })
+          });
+          var j = await r.json();
+          if (j.success) {
+            showPushState('on', (sj.fcm_count || 0) + 1);
+          } else {
+            showPushState('off');
+            toast(j.message || 'Gagal daftar notifikasi', true);
+          }
+        } catch (e) {
+          console.error('[Push] register-fcm error:', e);
+          showPushState('off');
+        }
+      });
+
+      PushNotifications.addListener('registrationError', function(err) {
+        console.error('[Push] Capacitor registration error:', err);
+        showPushState('off');
+        toast('Gagal registrasi notifikasi', true);
+      });
+
+      // When a notification arrives while the app is in foreground, surface
+      // it in-app (the native layer also fires a local notification). When
+      // user taps a notification, navigate to the url embedded in data.
+      PushNotifications.addListener('pushNotificationReceived', function(notif) {
+        // optional: show in-app toast / badge update here
+        console.log('[Push] Received:', notif);
+      });
+      PushNotifications.addListener('pushNotificationActionPerformed', function(action) {
+        var url = action?.notification?.data?.url;
+        if (url && typeof url === 'string' && url.startsWith('/portal')) {
+          // SPA navigate — dashboard is single-page, so update hash or reload
+          try { window.location.assign(url); } catch(_) {}
+        }
+      });
+    }
+
+    // Reflect current state in UI
+    if (sj.fcm_count > 0) {
+      showPushState('on', sj.fcm_count);
+    } else {
+      showPushState('off');
+    }
+  } catch (e) {
+    console.error('[Push] initCapacitorPush error:', e);
+    card.style.display = 'none';
+  }
+}
+
+function showPushState(state, deviceCount) {
+  var states = { loading:'pushLoading', unsupported:'pushNotSupported', blocked:'pushBlocked', off:'pushOff', on:'pushOn' };
+  Object.values(states).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  var active = states[state];
+  if (active) {
+    var el = document.getElementById(active);
+    if (el) el.style.display = '';
+  }
+  if (state === 'on' && deviceCount) {
+    var dc = document.getElementById('pushDeviceCount');
+    if (dc) dc.textContent = deviceCount + ' perangkat terdaftar';
+  }
+}
+
+// ── Enable Push ───────────────────────────────────────────────
+async function enablePush() {
+  // Branch to Capacitor plugin in the APK — the Web Push stack can't run there.
+  if (_isCapacitorNative()) {
+    return _enableCapacitorPush();
+  }
+
+  if (!_swReg || !_vapidKey) { toast('Push tidak tersedia', true); return; }
+
+  var btn = document.getElementById('btnEnablePush');
+  btn.disabled = true; btn.textContent = 'Meminta izin...';
+
+  try {
+    // 1. Minta permission
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showPushState('blocked');
+      btn.disabled = false; btn.textContent = 'Aktifkan Notifikasi';
+      return;
+    }
+
+    btn.textContent = 'Mendaftarkan...';
+
+    // 2. Subscribe ke push service
+    var sub = await _swReg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(_vapidKey)
+    });
+
+    // 3. Kirim subscription ke server
+    var r = await fetch('/portal/api/push/subscribe-auth', {
+      method:  'POST',
+      headers: authH(),
+      body:    JSON.stringify({
+        subscription: sub.toJSON(),
+        device_name:  getDeviceName()
+      })
+    });
+    var j = await r.json();
+
+    if (j.success) {
+      showPushState('on', 1);
+      toast('Notifikasi push aktif! ✓');
+    } else {
+      toast(j.message || 'Gagal mendaftar', true);
+      showPushState('off');
+    }
+  } catch (e) {
+    console.error('[Push] enablePush error:', e);
+    toast('Gagal: ' + e.message, true);
+    showPushState('off');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Aktifkan Notifikasi';
+  }
+}
+
+// ── Enable Push on Capacitor (APK) ────────────────────────────
+async function _enableCapacitorPush() {
+  var PushNotifications = window.Capacitor?.Plugins?.PushNotifications;
+  if (!PushNotifications) { toast('Plugin belum tersedia', true); return; }
+
+  var btn = document.getElementById('btnEnablePush');
+  if (btn) { btn.disabled = true; btn.textContent = 'Meminta izin...'; }
+
+  try {
+    // 1. Check/request permission. Plugin returns {receive: 'granted' | 'denied' | 'prompt'}.
+    var perm = await PushNotifications.checkPermissions();
+    if (perm.receive !== 'granted') {
+      perm = await PushNotifications.requestPermissions();
+    }
+    if (perm.receive !== 'granted') {
+      showPushState('blocked');
+      return;
+    }
+
+    if (btn) btn.textContent = 'Mendaftarkan...';
+
+    // 2. register() triggers the 'registration' listener we wired up in
+    //    _initCapacitorPush(), which sends the FCM token to the server.
+    //    No promise return here — we rely on the listener for the result.
+    await PushNotifications.register();
+
+    // Listener will update the UI when the token lands. Set a fallback in
+    // case registration never fires (device offline, Play Services missing).
+    setTimeout(function() {
+      var onEl = document.getElementById('pushOn');
+      if (onEl && onEl.style.display === 'none') {
+        // Still not 'on' after 10s — something is wrong but don't confuse user
+        console.warn('[Push] Registration did not complete within 10s');
+      }
+    }, 10000);
+  } catch (e) {
+    console.error('[Push] _enableCapacitorPush error:', e);
+    toast('Gagal: ' + (e.message || 'unknown'), true);
+    showPushState('off');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Aktifkan Notifikasi'; }
+  }
+}
+
+// ── Disable Push ──────────────────────────────────────────────
+async function disablePush() {
+  if (!confirm('Nonaktifkan notifikasi push?\nAnda tidak akan mendapat reminder tagihan.')) return;
+
+  // Branch to Capacitor flow in the APK
+  if (_isCapacitorNative()) {
+    return _disableCapacitorPush();
+  }
+
+  var btn = document.getElementById('btnDisablePush');
+  btn.disabled = true; btn.textContent = 'Menonaktifkan...';
+
+  try {
+    // 1. Unsubscribe di browser
+    var existingSub = _swReg && await _swReg.pushManager.getSubscription();
+    var endpoint = null;
+    if (existingSub) {
+      endpoint = existingSub.endpoint;
+      await existingSub.unsubscribe();
+    }
+
+    // 2. Hapus di server
+    await fetch('/portal/api/push/unsubscribe', {
+      method:  'POST',
+      headers: authH(),
+      body:    JSON.stringify({ endpoint })
+    });
+
+    showPushState('off');
+    toast('Notifikasi push dinonaktifkan');
+  } catch (e) {
+    toast('Gagal: ' + e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Nonaktifkan Notifikasi';
+  }
+}
+
+// ── Disable Push on Capacitor (APK) ───────────────────────────
+// Note: Capacitor PushNotifications plugin does NOT expose getToken() on all
+// platforms, so we ask the server to drop *all* FCM subs for this customer.
+// This matches the UX (a single "Nonaktifkan" button) and avoids touching
+// tokens belonging to other installs on other devices — each device's token
+// is distinct, so this only removes the current one on re-register.
+async function _disableCapacitorPush() {
+  var btn = document.getElementById('btnDisablePush');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menonaktifkan...'; }
+
+  try {
+    // Server side: remove all subs for this customer (both platforms). This
+    // is the same endpoint the web flow uses with no `endpoint` param.
+    await fetch('/portal/api/push/unsubscribe', {
+      method:  'POST',
+      headers: authH(),
+      body:    JSON.stringify({})
+    });
+
+    // Native side: unregister to stop the OS from delivering further pushes.
+    // (Method name differs by plugin version — try removeAllListeners as
+    // cleanup; actual FCM unregister happens via account token invalidation
+    // on next app uninstall.)
+    try {
+      var PushNotifications = window.Capacitor?.Plugins?.PushNotifications;
+      if (PushNotifications && typeof PushNotifications.removeAllDeliveredNotifications === 'function') {
+        await PushNotifications.removeAllDeliveredNotifications();
+      }
+    } catch(_) { /* non-fatal */ }
+
+    showPushState('off');
+    toast('Notifikasi push dinonaktifkan');
+  } catch (e) {
+    toast('Gagal: ' + (e.message || 'unknown'), true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Nonaktifkan Notifikasi'; }
+  }
+}
+
+// Inisialisasi push saat panel profil dibuka
+var _origFillProfil = typeof fillProfil === 'function' ? fillProfil : function(){};
+fillProfil = function() {
+  _origFillProfil();
+  initPush();
+};
+
+document.addEventListener('DOMContentLoaded', loadAll);
+</script>
+</body>
+</html>

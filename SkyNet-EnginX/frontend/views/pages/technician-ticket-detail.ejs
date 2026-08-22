@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <meta name="theme-color" content="#1e40af">
+  <title><%= typeof title !== 'undefined' ? title : 'Detail Ticket' %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    :root{
+      --font:'Plus Jakarta Sans',sans-serif;
+      --nv:#2563eb;--nv2:#1d4ed8;--nv3:#1e40af;
+      --teal:#06b6d4;--green:#10b981;--amber:#f59e0b;--red:#ef4444;
+      --bg:#f1f5f9;--card:#fff;--border:#e2e8f0;
+      --text:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{height:100%;}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;-webkit-tap-highlight-color:transparent;}
+    button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+    a{color:inherit;text-decoration:none;}
+    ::-webkit-scrollbar{width:6px;height:6px;}
+    ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+
+    /* ═══ LAYOUT ═══ */
+    .page{max-width:1200px;margin:0 auto;padding:20px 24px 100px;}
+    @media(max-width:640px){.page{padding:0 0 100px;}}
+
+    /* ═══ MOBILE HEADER ═══ */
+    .m-header{
+      background:#020e2e;
+      padding:14px 18px;color:#fff;position:relative;
+      display:none;
+    }
+    .m-hdr-row{display:flex;align-items:center;gap:12px;position:relative;z-index:1;}
+    .m-hdr-left{display:flex;align-items:center;gap:12px;}
+    .m-back{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+    .m-back svg{width:16px;height:16px;}
+    .m-hdr-title{font-size:15px;font-weight:700;}
+    .m-hdr-sub{font-size:10.5px;color:rgba(255,255,255,.6);margin-top:1px;font-family:ui-monospace,monospace;letter-spacing:.3px;}
+    @media(max-width:640px){.m-header{display:block;}}
+
+    /* ═══ BACK BUTTON (desktop) ═══ */
+    .back-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+    .back-btn{
+      display:inline-flex;align-items:center;gap:7px;padding:9px 16px;
+      border-radius:10px;background:#fff;border:1px solid var(--border);
+      font-size:13px;font-weight:700;color:var(--muted);transition:all .18s;
+    }
+    .back-btn:hover{background:var(--border);color:var(--text);}
+    .back-btn svg{width:15px;height:15px;}
+    @media(max-width:640px){.back-row{display:none;}}
+
+    /* ═══ HEADER CARD ═══ */
+    .ticket-header-card{
+      background:linear-gradient(135deg,var(--nv3) 0%,var(--nv) 55%,#0284c7 100%);
+      color:#fff;padding:26px 30px;border-radius:16px;margin-bottom:18px;
+      box-shadow:0 10px 36px rgba(37,99,235,.3);position:relative;overflow:hidden;
+    }
+    .ticket-number{font-size:11px;opacity:.8;font-weight:700;margin-bottom:5px;letter-spacing:.08em;text-transform:uppercase;}
+    .ticket-title{font-size:22px;font-weight:800;margin-bottom:14px;line-height:1.3;letter-spacing:-.3px;}
+    .ticket-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    .meta-item{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;color:#fff;}
+    @media(max-width:640px){
+      .ticket-header-card{padding:20px 18px;border-radius:14px;margin:14px 14px 14px;}
+      .ticket-title{font-size:17px;margin-bottom:10px;}
+    }
+
+    /* ═══ DETAIL GRID ═══ */
+    .detail-grid{display:grid;grid-template-columns:1fr 360px;gap:18px;}
+    @media(max-width:1000px){.detail-grid{grid-template-columns:1fr;}}
+    @media(max-width:640px){.detail-grid{padding:14px;gap:14px;}}
+
+    /* ═══ CARDS ═══ */
+    .card-modern{background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #f0f0f0;margin-bottom:16px;overflow:hidden;}
+    .info-section{padding:22px 26px;border-bottom:1px solid #f0f0f0;}
+    .info-section:last-child{border-bottom:none;}
+    .section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+    .section-title svg{color:var(--nv);flex-shrink:0;width:16px;height:16px;}
+    .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
+    .info-item{padding:13px;background:var(--bg);border-radius:10px;border:1px solid var(--border);}
+    .info-label{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+    .info-value{font-size:13.5px;font-weight:600;color:var(--text);word-break:break-word;}
+    .info-value a{color:var(--nv);text-decoration:none;}
+    .desc-box{padding:16px;background:var(--bg);border-radius:10px;line-height:1.7;color:#475569;font-size:13.5px;border:1px solid var(--border);}
+    @media(max-width:640px){
+      .info-section{padding:16px 18px;}
+      .info-grid{grid-template-columns:1fr 1fr;}
+    }
+
+    /* ═══ MAP ═══ */
+    #map{height:350px;border-radius:10px;overflow:hidden;margin-top:12px;box-shadow:0 4px 14px rgba(0,0,0,.08);border:2px solid var(--border);}
+    .map-buttons{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+    .map-layer-control{position:absolute;top:10px;right:10px;z-index:1000;background:white;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.2);overflow:hidden;display:flex;}
+    .map-layer-btn{padding:6px 12px;border:none;background:white;cursor:pointer;font-size:11px;font-weight:600;color:#4a5568;display:flex;align-items:center;gap:4px;transition:all .2s;border-right:1px solid var(--border);}
+    .map-layer-btn:last-child{border-right:none;}
+    .map-layer-btn:hover{background:var(--bg);}
+    .map-layer-btn.active{background:var(--nv);color:white;}
+    .map-layer-btn svg{width:14px;height:14px;flex-shrink:0;}
+    /* Pulse markers */
+    @keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.7);}50%{box-shadow:0 0 0 15px rgba(239,68,68,0);}}
+    @keyframes pb{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.7);}50%{box-shadow:0 0 0 15px rgba(37,99,235,0);}}
+    @keyframes po{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.7);}50%{box-shadow:0 0 0 15px rgba(245,158,11,0);}}
+    @keyframes pg2{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.7);}50%{box-shadow:0 0 0 15px rgba(16,185,129,0);}}
+    .pulse-red{animation:pr 2s infinite;} .pulse-blue{animation:pb 2s infinite;}
+    .pulse-orange{animation:po 2s infinite;} .pulse-green{animation:pg2 2s infinite;}
+    .custom-marker{position:relative;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:3px solid #fff;transition:transform .3s;}
+    .custom-marker svg{width:18px;height:18px;color:#fff;z-index:2;}
+    .custom-marker:hover{transform:scale(1.1);}
+    .leaflet-popup-content-wrapper{border-radius:12px;padding:0;overflow:hidden;box-shadow:0 8px 25px rgba(0,0,0,.15);border:none;}
+    .leaflet-popup-content{margin:0;width:240px!important;font-family:var(--font);}
+    .popup-header{background:linear-gradient(135deg,var(--nv3),var(--nv));color:#fff;padding:12px 15px;text-align:center;}
+    .popup-header h3{margin:0;font-size:14px;font-weight:700;}
+    .popup-body{padding:12px 15px;background:#fff;}
+    .popup-info-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;gap:8px;}
+    .popup-info-item:last-child{border-bottom:none;}
+    .popup-label{font-size:11px;color:var(--muted);font-weight:500;flex-shrink:0;}
+    .popup-value{font-size:11px;color:var(--text);font-weight:600;text-align:right;word-break:break-word;}
+    .popup-value a{color:var(--nv);text-decoration:none;}
+    .popup-footer{padding:8px 12px;background:var(--bg);border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+    .popup-footer a{display:flex;align-items:center;justify-content:center;gap:4px;padding:7px;color:#fff;text-decoration:none;border-radius:8px;font-size:11px;font-weight:700;transition:all .2s;}
+
+    /* ═══ TIMELINE ═══ */
+    .timeline-container{max-height:500px;overflow-y:auto;padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--border);}
+    .timeline-item{
+      padding:14px 16px;margin-bottom:10px;background:#fff;
+      border-radius:10px;border:1px solid var(--border);
+      box-shadow:0 1px 4px rgba(0,0,0,.03);transition:all .2s;
+    }
+    .timeline-item:hover{box-shadow:0 3px 10px rgba(0,0,0,.07);}
+    .timeline-item:last-child{margin-bottom:0;}
+    .timeline-foto{max-width:180px;max-height:120px;border-radius:8px;margin-top:8px;cursor:pointer;border:1px solid var(--border);transition:all .2s;object-fit:cover;}
+    .timeline-foto:hover{transform:scale(1.03);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+    .tl-avatar{width:30px;height:30px;border-radius:50%;background:var(--nv);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+
+    /* ═══ ADD COMMENT ═══ */
+    .comment-box{padding:18px 22px;background:var(--bg);border-radius:12px;border:1px solid var(--border);}
+    .comment-box textarea{
+      width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
+      font-size:13.5px;font-family:inherit;resize:vertical;transition:all .2s;background:#fff;box-sizing:border-box;min-height:90px;
+    }
+    .comment-box textarea:focus{outline:none;border-color:var(--nv);box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+    .comment-box label{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-weight:700;color:#475569;font-size:13px;}
+    .comment-box label svg{color:var(--nv);}
+    .comment-upload-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;}
+    .comment-upload-row small{color:var(--muted);font-size:11px;}
+    .file-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+    .file-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:20px;font-size:11px;font-weight:700;color:var(--nv);}
+    .file-tag button{background:none;border:none;cursor:pointer;color:var(--nv);font-size:12px;line-height:1;padding:0 2px;}
+
+    /* ═══ SIDEBAR ═══ */
+    .sidebar-card{background:#fff;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:22px;margin-bottom:16px;border:1px solid #f0f0f0;}
+    .sidebar-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+    .sidebar-title svg{color:var(--nv);flex-shrink:0;width:16px;height:16px;}
+
+    /* SLA Gauge */
+    .sla-gauge-wrap{display:flex;align-items:center;gap:14px;padding:4px 0;}
+    #slaGaugeChart{flex-shrink:0;}
+    .sla-stats{flex:1;display:flex;flex-direction:column;gap:8px;}
+    .sla-stat-row{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:8px;}
+    .sla-stat-lbl{font-size:11px;font-weight:600;color:var(--muted);}
+    .sla-stat-val{font-size:13px;font-weight:800;color:var(--text);}
+    .sla-due-row{font-size:10px;color:var(--muted2);text-align:center;margin-top:4px;}
+
+    /* Resolution time banner — muncul saat tiket resolved/closed */
+    .resolution-time{
+      display:none;
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:12px;
+      background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);
+      border:1px solid #a7f3d0;
+      position:relative;
+      overflow:hidden;
+    }
+    .resolution-time.show{display:block;animation:resIn .35s cubic-bezier(.4,0,.2,1);}
+    @keyframes resIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .resolution-time::before{
+      content:'';
+      position:absolute;top:-20px;right:-20px;
+      width:80px;height:80px;border-radius:50%;
+      background:radial-gradient(circle,rgba(16,185,129,.12),transparent 70%);
+      pointer-events:none;
+    }
+    .rt-head{
+      display:flex;align-items:center;gap:8px;
+      font-size:10.5px;font-weight:700;color:#047857;
+      text-transform:uppercase;letter-spacing:.4px;
+      margin-bottom:6px;position:relative;
+    }
+    .rt-head svg{width:13px;height:13px;flex-shrink:0;}
+    .rt-duration{
+      font-size:16px;font-weight:800;color:#065f46;
+      letter-spacing:-.3px;line-height:1.25;
+      position:relative;
+    }
+    .rt-sub{
+      font-size:10.5px;color:#059669;
+      margin-top:4px;font-weight:500;
+      position:relative;
+    }
+    .rt-badge{
+      display:inline-flex;align-items:center;gap:3px;
+      margin-left:6px;padding:1px 7px;border-radius:20px;
+      font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;
+      vertical-align:middle;
+    }
+    .rt-badge.ontime{background:#10b981;color:#fff;}
+    .rt-badge.late{background:#ef4444;color:#fff;}
+
+    /* Status Progress */
+    .sflow{display:flex;flex-direction:column;gap:6px;}
+    .sfi{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg);transition:.2s;}
+    .sfi.done{border-color:#bbf7d0;background:#f0fdf4;}
+    .sfi.active{border-color:var(--nv);background:#dbeafe;box-shadow:0 0 0 3px rgba(37,99,235,.08);}
+    .sfi-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--border);color:var(--muted);padding:5px;}
+    .sfi-dot svg{width:100%;height:100%;display:block;}
+    .sfi.done .sfi-dot{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff;}
+    .sfi.active .sfi-dot{background:linear-gradient(135deg,var(--nv3),var(--nv));color:#fff;}
+    .sfi-lbl{flex:1;font-size:12px;font-weight:700;color:#4b5563;}
+    .sfi-sub{font-size:10px;font-weight:500;color:var(--muted2);}
+    .sfi.done .sfi-lbl{color:#15803d;}
+    .sfi.active .sfi-lbl{color:var(--nv);}
+    .sfi-chip{font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;background:var(--nv);color:#fff;letter-spacing:.03em;}
+
+    /* Quick Action Buttons */
+    .qa-list{display:flex;flex-direction:column;gap:8px;}
+    .qab{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.2s;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.07);width:100%;}
+    .qab:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12);}
+    .qab svg{flex-shrink:0;width:14px;height:14px;}
+    .qab-status{background:linear-gradient(135deg,var(--nv3),var(--nv));color:#fff;}
+    .qab-success{background:linear-gradient(135deg,#14532d,#16a34a);color:#fff;}
+    .qab-warning{background:linear-gradient(135deg,#92400e,#d97706);color:#fff;}
+    .qab-gray{background:#f3f4f6;color:#374151;border:1.5px solid var(--border);box-shadow:none;}
+
+    /* Buttons */
+    .btn{padding:10px 18px;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:13px;transition:all .2s;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(0,0,0,.1);font-family:inherit;text-decoration:none;justify-content:center;width:100%;margin-bottom:8px;}
+    .btn svg{flex-shrink:0;width:14px;height:14px;}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.15);}
+    .btn-primary{background:linear-gradient(135deg,var(--nv3),var(--nv));color:#fff;}
+    .btn-success{background:linear-gradient(135deg,#14532d,#16a34a);color:#fff;}
+
+    /* Status modal */
+    .mover{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+    .mover.show{display:flex;}
+    .mbox{background:#fff;border-radius:16px;width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:mIn .25s ease-out;max-height:90vh;overflow-y:auto;}
+    @keyframes mIn{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+    .mhd{background:linear-gradient(135deg,var(--nv3),var(--nv));color:#fff;padding:18px 22px;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;}
+    .mhd h3{margin:0;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;}
+    .mcls{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;line-height:1;}
+    .mcls:hover{background:rgba(255,255,255,.35);transform:rotate(90deg);}
+    .mbdy{padding:20px 22px;}
+    .fg{margin-bottom:14px;}
+    .fl{display:block;margin-bottom:6px;font-size:11px;font-weight:700;color:#4b5563;text-transform:uppercase;letter-spacing:.4px;}
+    .fc{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--text);transition:.2s;}
+    .fc:focus{outline:none;border-color:var(--nv);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff;}
+    .stgrid{display:flex;flex-direction:column;gap:6px;}
+    .stop{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:9px;border:2px solid var(--border);cursor:pointer;transition:.2s;background:var(--bg);text-align:left;width:100%;}
+    .stop:hover{border-color:var(--nv);background:#dbeafe;}
+    .stop.sel{border-color:var(--nv);background:#dbeafe;}
+    .stop-ico{width:32px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--border);padding:6px;color:var(--muted);transition:.2s;}
+    .stop-ico svg{width:100%;height:100%;display:block;}
+    .stop.sel .stop-ico,.stop:hover .stop-ico{background:#bfdbfe;color:var(--nv);}
+    .stop-txt{flex:1;}
+    .stop-lbl{font-size:13px;font-weight:700;color:var(--text);}
+    .stop-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+
+    /* Badges */
+    .sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:7px;font-size:11px;font-weight:700;}
+    .s-open{background:#fef3c7;color:#92400e;} .s-prog{background:#dbeafe;color:var(--nv3);}
+    .s-pend{background:#ede9fe;color:#4c1d95;} .s-res{background:#dcfce7;color:#14532d;}
+    .s-cls{background:#f3f4f6;color:#374151;}
+
+    /* Lightbox */
+    .lb{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.95);align-items:center;justify-content:center;}
+    .lb.show{display:flex;}
+    .lb img{max-width:90%;max-height:90%;border-radius:12px;}
+    .lbx{position:absolute;top:18px;right:28px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:all .2s;}
+    .lbx:hover{background:rgba(255,255,255,.3);transform:rotate(90deg);}
+
+    /* Loading */
+    .loading-wrap{display:flex;align-items:center;justify-content:center;min-height:60vh;}
+    .loading-inner{text-align:center;color:var(--muted);}
+    .spinner-svg{width:40px;height:40px;color:var(--nv);margin-bottom:12px;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:768px){.ticket-title{font-size:17px;}}
+
+    /* Bottom nav (mobile) */
+    .btm-nav{
+      display:none;position:fixed;bottom:0;left:0;right:0;
+      background:#fff;border-top:1px solid var(--border);
+      padding:8px 12px 14px;z-index:50;box-shadow:0 -4px 20px rgba(0,0,0,.05);
+    }
+    .btm-nav-inner{display:flex;justify-content:space-around;max-width:480px;margin:0 auto;}
+    .bn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:10px;color:var(--muted2);font-size:10.5px;font-weight:700;transition:all .18s;flex:1;}
+    .bn svg{width:20px;height:20px;}
+    .bn.active{color:var(--nv);}
+    .bn-fab{
+      position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+      width:54px;height:54px;border-radius:50%;
+      background:linear-gradient(135deg,var(--nv),var(--nv2));
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 10px 24px rgba(37,99,235,.45);border:4px solid #fff;
+    }
+    .bn-fab svg{width:22px;height:22px;}
+    @media(max-width:640px){.btm-nav{display:block;}}
+  </style>
+</head>
+<body>
+
+<!-- Mobile header -->
+<div class="m-header">
+  <div class="m-hdr-row">
+    <div class="m-hdr-left">
+      <a class="m-back" href="/technician?tab=tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </a>
+      <div>
+        <div class="m-hdr-title">Detail Tiket</div>
+        <div class="m-hdr-sub" id="mhNum">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <!-- Desktop back -->
+  <div class="back-row">
+    <a href="/technician?tab=tickets" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Kembali ke Daftar Tiket
+    </a>
+  </div>
+
+  <!-- Loading -->
+  <div id="loadingDiv" class="loading-wrap">
+    <div class="loading-inner">
+      <svg class="spinner-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      <div style="font-weight:600;">Memuat detail ticket...</div>
+    </div>
+  </div>
+
+  <!-- Main content (hidden until loaded) -->
+  <main id="mainContent" style="display:none;">
+
+    <!-- Ticket Header -->
+    <div class="ticket-header-card">
+      <div class="ticket-number" id="hNum">—</div>
+      <div class="ticket-title" id="hTitle">—</div>
+      <div class="ticket-meta" id="hMeta"></div>
+    </div>
+
+    <div class="detail-grid">
+      <!-- LEFT -->
+      <div>
+        <!-- Customer -->
+        <div class="card-modern" id="custCard" style="display:none;">
+          <div class="info-section">
+            <h4 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Informasi Pelanggan</h4>
+            <div class="info-grid" id="custGrid"></div>
+          </div>
+        </div>
+
+        <!-- Ticket detail -->
+        <div class="card-modern">
+          <div class="info-section">
+            <h4 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg> Detail Ticket</h4>
+            <div class="info-grid" id="detailGrid"></div>
+          </div>
+          <div class="info-section" id="descSection" style="display:none;">
+            <h4 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="13" y1="18" x2="3" y2="18"/></svg> Keterangan</h4>
+            <div class="desc-box" id="descBox"></div>
+          </div>
+        </div>
+
+        <!-- Map -->
+        <div class="card-modern" id="mapCard" style="display:none;">
+          <div class="info-section">
+            <h4 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Lokasi</h4>
+            <div id="map"></div>
+            <div class="map-buttons" id="mapBtns"></div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card-modern">
+          <div class="info-section">
+            <h4 class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Timeline &amp; Update</h4>
+            <div class="timeline-container" id="tlContainer">
+              <p style="text-align:center;color:var(--muted);padding:20px;">Memuat timeline...</p>
+            </div>
+          </div>
+          <!-- Add comment -->
+          <div class="info-section">
+            <h4 class="section-title" style="margin-bottom:14px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Tambah Update</h4>
+            <div class="comment-box">
+              <textarea id="commentText" rows="3" placeholder="Tulis komentar atau update progress..."></textarea>
+              <div class="file-preview" id="filePreview"></div>
+              <div class="comment-upload-row">
+                <label style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#fff;border:1.5px solid var(--border);border-radius:9px;font-size:12px;font-weight:700;color:var(--muted);transition:all .18s;margin:0;" onmouseover="this.style.borderColor='var(--nv)';this.style.color='var(--nv)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  Upload Foto
+                  <input type="file" id="commentFile" accept="image/*,.pdf" multiple style="display:none;">
+                </label>
+                <small>Max 5MB · JPG, PNG, GIF · Ctrl+Enter kirim</small>
+                <button class="btn btn-primary" style="margin-left:auto;width:auto;margin-bottom:0;padding:9px 18px;" id="sendBtn" onclick="sendComment()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Sidebar -->
+      <div>
+        <!-- SLA Gauge -->
+        <div class="sidebar-card">
+          <h4 class="sidebar-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            SLA Tracker
+            <span id="slaBadge" class="sbadge s-prog" style="font-size:10px;margin-left:auto;"></span>
+          </h4>
+          <div class="sla-gauge-wrap">
+            <div id="slaGaugeChart"></div>
+            <div class="sla-stats">
+              <div class="sla-stat-row"><span class="sla-stat-lbl">Target</span><span class="sla-stat-val" id="slaTgt">—</span></div>
+              <div class="sla-stat-row"><span class="sla-stat-lbl">Tersisa</span><span class="sla-stat-val" id="slaRem">—</span></div>
+            </div>
+          </div>
+          <div class="sla-due-row" id="slaDue"></div>
+          <!-- Resolution time banner (muncul saat tiket selesai) -->
+          <div class="resolution-time" id="resolutionTime">
+            <div class="rt-head">
+              Completion Duration
+              <span class="rt-badge" id="rtBadge">On-Time</span>
+            </div>
+            <div class="rt-duration" id="rtDuration">—</div>
+            <div class="rt-sub" id="rtSub">—</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions (teknisi version) -->
+        <div class="sidebar-card">
+          <h4 class="sidebar-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Quick Actions
+          </h4>
+          <div class="qa-list" id="qaList"></div>
+        </div>
+
+        <!-- Status Progress -->
+        <div class="sidebar-card">
+          <h4 class="sidebar-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Status Progress
+          </h4>
+          <div class="sflow" id="sflow"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Lightbox -->
+<div class="lb" id="lb" onclick="this.classList.remove('show')">
+  <button class="lbx" onclick="event.stopPropagation();$('lb').classList.remove('show')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <img id="lbi" src="" alt="">
+</div>
+
+<!-- Modal: Update Status -->
+<div class="mover" id="mStatus">
+  <div class="mbox">
+    <div class="mhd">
+      <h3><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Update Status</h3>
+      <button class="mcls" onclick="closeM('mStatus')">×</button>
+    </div>
+    <div class="mbdy">
+      <p style="font-size:12px;color:var(--muted);margin:0 0 14px;">Pilih status baru untuk ticket ini:</p>
+      <div class="stgrid" id="statusGrid"></div>
+      <div class="fg" style="margin-top:14px;">
+        <label class="fl">Catatan (opsional)</label>
+        <textarea id="statusNote" class="fc" rows="3" placeholder="Catatan untuk update status..."></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-bottom:0;" onclick="submitStatus()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Simpan Status
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="btm-nav">
+  <div class="btm-nav-inner">
+    <a class="bn" href="/technician"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Home</span></a>
+    <a class="bn active" href="/technician?tab=tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/></svg><span>Tiket</span></a>
+    <a class="bn" href="/technician-tracking" style="position:relative;">
+      <div class="bn-fab"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <span style="margin-top:28px;">GPS</span>
+    </a>
+    <a class="bn" href="/technician?tab=workorders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><rect x="9" y="2" width="6" height="13" rx="2"/></svg><span>WO</span></a>
+    <a class="bn" href="/technician?tab=profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profil</span></a>
+  </div>
+</nav>
+
+<script>const TID='<%= ticketId %>';</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+let tkData=null,leafMap=null,selFiles=[],selStatus=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fd=d=>d?new Date(d).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+const fd2=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):'—';
+
+function getToken(){const ls=localStorage.getItem('token');if(ls)return ls;const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/);return m?decodeURIComponent(m[1]):null;}
+function authFetch(url,opts={}){
+  const t=getToken();
+  const h=opts.headers||{};
+  if(t)h['Authorization']='Bearer '+t;
+  return fetch(url,{...opts,headers:h,credentials:'include'});
+}
+
+const TC={gangguan:'#dc2626',request:'#2563eb',installation:'#16a34a',maintenance:'#d97706'};
+const TL={gangguan:'Gangguan',request:'Request',installation:'Instalasi',maintenance:'Maintenance'};
+const PL={critical:'Critical',high:'Tinggi',medium:'Sedang',low:'Rendah'};
+const SL={open:'Open',in_progress:'In Progress',pending:'Pending',resolved:'Resolved',closed:'Closed'};
+const SC={open:'s-open',in_progress:'s-prog',pending:'s-pend',resolved:'s-res',closed:'s-cls'};
+const SI={open:'',in_progress:'',pending:'',resolved:'',closed:''};
+const SD={open:'Menunggu penanganan',in_progress:'Sedang ditangani',pending:'Menunggu / on hold',resolved:'Masalah diselesaikan',closed:'Ticket ditutup'};
+
+document.addEventListener('DOMContentLoaded',()=>{loadTicket();});
+
+async function loadTicket(){
+  try{
+    const j=await authFetch('/api/tickets/'+TID).then(r=>r.json());
+    if(!j.success){$('loadingDiv').innerHTML=`<div class="loading-inner"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><div style="font-weight:700;color:var(--red);">Ticket tidak ditemukan</div><a href="/technician?tab=tickets" style="color:var(--nv);font-weight:700;margin-top:8px;display:inline-block;">← Kembali</a></div>`;return;}
+    tkData=j.data;renderTicket(tkData);
+    $('loadingDiv').style.display='none';$('mainContent').style.display='block';
+  }catch(e){$('loadingDiv').innerHTML=`<div class="loading-inner" style="color:var(--red);">Error: ${e.message}</div>`;}
+}
+
+function renderTicket(t){
+  $('hNum').textContent=t.ticket_number||'Ticket #'+String(t.id).padStart(4,'0');
+  $('hTitle').textContent=t.title;
+  const mhN=$('mhNum'); if(mhN) mhN.textContent=t.ticket_number||'#'+t.id;
+  const tc=TC[t.type]||'#666';
+  const PC2={'critical':'#ef4444','high':'#f97316','medium':'#eab308','low':'#22c55e'};
+  const SC2={'open':'#f59e0b','in_progress':'#3b82f6','pending':'#8b5cf6','resolved':'#22c55e','closed':'#9ca3af'};
+  const pc=PC2[t.priority]||'rgba(255,255,255,.3)',sc=SC2[t.status]||'rgba(255,255,255,.3)';
+  const dateStr=fd2(t.created_at);
+  $('hMeta').innerHTML=`
+    ${dateStr&&dateStr!=='—'?`<span class="meta-item">${dateStr}</span>`:''}
+    <span class="meta-item" style="background:${tc}28;border-color:${tc}50;">${TL[t.type]||t.type}</span>
+    <span class="meta-item" style="background:${pc}28;border-color:${pc}55;">${PL[t.priority]||t.priority}</span>
+    <span class="meta-item" style="background:${sc}28;border-color:${sc}55;">${SI[t.status]||''} ${SL[t.status]||t.status}</span>`;
+
+  // Customer
+  if(t.customer){
+    const c=t.customer;$('custCard').style.display='block';
+    $('custGrid').innerHTML=`
+      <div class="info-item"><div class="info-label">NAMA</div><div class="info-value">${esc(c.name)}</div></div>
+      <div class="info-item"><div class="info-label">WHATSAPP</div><div class="info-value"><a href="https://wa.me/62${(c.phone||'').replace(/^0/,'')}" target="_blank">📱 ${esc(c.phone||'—')}</a></div></div>
+      <div class="info-item"><div class="info-label">EMAIL</div><div class="info-value">${esc(c.email||'—')}</div></div>
+      <div class="info-item" style="grid-column:1/-1;"><div class="info-label">ALAMAT</div><div class="info-value">${esc(c.address||'—')}</div></div>`;
+  }
+
+  // Detail grid
+  $('detailGrid').innerHTML=`
+    <div class="info-item"><div class="info-label">KATEGORI</div><div class="info-value">${TL[t.type]||t.type}</div></div>
+    <div class="info-item"><div class="info-label">PRIORITAS</div><div class="info-value">${PL[t.priority]||t.priority}</div></div>
+    <div class="info-item"><div class="info-label">STATUS</div><div class="info-value">${SI[t.status]||''} ${SL[t.status]||t.status}</div></div>
+    <div class="info-item"><div class="info-label">TEKNISI</div><div class="info-value">${t.assignee?esc(t.assignee.name):'<span style="color:#ea580c;">Belum ditugaskan</span>'}</div></div>
+    <div class="info-item"><div class="info-label">DIBUAT</div><div class="info-value">${fd(getCreatedAt(t))}</div></div>
+    <div class="info-item"><div class="info-label">DEADLINE</div><div class="info-value">${t.due_at?fd(t.due_at):'—'}</div></div>
+    ${t.resolved_at?`<div class="info-item"><div class="info-label">DISELESAIKAN</div><div class="info-value">${fd(t.resolved_at)}</div></div>`:''}
+    ${t.closed_at?`<div class="info-item"><div class="info-label">DITUTUP</div><div class="info-value">${fd(t.closed_at)}</div></div>`:''}
+    ${t.location_note?`<div class="info-item" style="grid-column:1/-1;"><div class="info-label">LOKASI</div><div class="info-value">${esc(t.location_note)}</div></div>`:''}`;
+  if(t.description){$('descSection').style.display='block';$('descBox').textContent=t.description;}
+
+  // Quick actions (teknisi)
+  let qa='';
+  if(!['resolved','closed'].includes(t.status)){
+    qa+=`<button class="qab qab-status" onclick="openStatusModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Update Status</button>`;
+    qa+=`<button class="qab qab-success" onclick="quickResolve()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Tandai Selesai</button>`;
+  }
+  if(!t.assigned_to){
+    qa+=`<button class="qab qab-warning" onclick="claimTicket()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg>Ambil Tiket Ini</button>`;
+  }
+  qa+=`<button class="qab qab-status" onclick="startGps()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Mulai GPS Tracking</button>`;
+  qa+=`<hr style="border:none;border-top:1px solid #f0f0f0;margin:2px 0;">`;
+  qa+=`<a href="/technician?tab=tickets" class="qab qab-gray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Kembali</a>`;
+  $('qaList').innerHTML=qa;
+
+  renderSLA(t);
+  renderStatusFlow(t.status);
+
+  // Map
+  const lat=parseFloat(t.latitude||t.customer?.latitude);
+  const lng=parseFloat(t.longitude||t.customer?.longitude);
+  if(!isNaN(lat)&&!isNaN(lng)){
+    $('mapCard').style.display='block';
+    setTimeout(()=>initMap(lat,lng,t),300);
+    const c=t.customer;
+    if(c){
+      $('mapBtns').innerHTML=`<a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-primary" style="width:auto;margin-bottom:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Maps</a>${c.phone?`<a href="https://wa.me/62${(c.phone).replace(/^0/,'')}" target="_blank" class="btn btn-success" style="width:auto;margin-bottom:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Hubungi</a>`:''}`;
+    }
+  }
+
+  renderTimeline(t.timelines||[]);
+}
+
+/* ═══ SLA ═══ */
+let slaChart=null;
+
+/* Ambil created_at dengan fallback lengkap
+   — field camelCase / snake_case / timestamp pertama dari timeline */
+function getCreatedAt(t){
+  if(!t) return null;
+  return t.created_at
+      || t.createdAt
+      || t.created
+      || (Array.isArray(t.timelines) && t.timelines.length
+            ? (t.timelines[0].created_at || t.timelines[0].createdAt)
+            : null);
+}
+
+/* Format durasi ms → teks Indonesia yang natural
+   Contoh: "1 jam 30 menit", "2 hari 3 jam", "45 menit", "30 detik" */
+function fmtResolutionTime(ms){
+  if(ms < 0) ms = 0;
+  const s = Math.floor(ms / 1000);
+  if(s < 60) return s + ' detik';
+
+  const m = Math.floor(s / 60);
+  if(m < 60){
+    return m + ' menit';
+  }
+
+  const h = Math.floor(m / 60);
+  const rm = m % 60;
+  if(h < 24){
+    return rm > 0 ? h + ' jam ' + rm + ' menit' : h + ' jam';
+  }
+
+  const d = Math.floor(h / 24);
+  const rh = h % 24;
+  if(d < 7){
+    return rh > 0 ? d + ' hari ' + rh + ' jam' : d + ' hari';
+  }
+
+  // ≥ 7 hari, tampilkan minggu + hari
+  const w = Math.floor(d / 7);
+  const rd = d % 7;
+  return rd > 0 ? w + ' minggu ' + rd + ' hari' : w + ' minggu';
+}
+
+/* Build text "Dibuat Xxx → Selesai Yyy" untuk sub-label */
+function buildResolutionSub(t, endAt){
+  const createdRaw = getCreatedAt(t);
+  const created = new Date(createdRaw);
+  const ended = new Date(endAt);
+  const fmtShort = (d) => {
+    const sameDay = created.toDateString() === ended.toDateString();
+    if(sameDay){
+      return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' +
+           d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  };
+  return fmtShort(created) + ' → ' + fmtShort(ended);
+}
+
+function renderSLA(t){
+  const done=['resolved','closed'].includes(t.status);
+  $('slaBadge').textContent=done?(t.status==='closed'?'Ditutup':'Selesai'):'Aktif';
+  $('slaBadge').className='sbadge '+(done?'s-res':'s-prog');
+  let pct=0,color='#16a34a',remText='—',tgtText=(t.sla_hours||24)+'h',dueText='';
+  if(done){pct=100;remText=t.status==='closed'?'Ditutup':'Selesai';}
+  else if(t.due_at){
+    const cr=new Date(t.created_at).getTime(),due=new Date(t.due_at).getTime(),now=Date.now();
+    const total=due-cr;pct=total>0?Math.min(100,Math.max(0,(now-cr)/total*100)):0;
+    if(isNaN(pct))pct=0;
+    const rem=due-now,over=rem<0;
+    const h=Math.floor(Math.abs(rem)/3600000),m=Math.floor((Math.abs(rem)%3600000)/60000);
+    const rs=h>24?`${Math.floor(h/24)}h ${h%24}j`:h>0?`${h}j ${m}m`:`${m} menit`;
+    color=over?'#dc2626':pct>80?'#ea580c':pct>60?'#d97706':'#16a34a';
+    remText=over?`${rs}`:rs;dueText='Due: '+fd(t.due_at);
+  }
+  $('slaTgt').textContent=tgtText;$('slaRem').textContent=remText;$('slaRem').style.color=color;$('slaDue').textContent=dueText;
+
+  // ── Resolution-time panel (hanya tampil kalau tiket sudah selesai) ──
+  const rtPanel = document.getElementById('resolutionTime');
+  if(rtPanel){
+    const endAt = t.resolved_at || t.closed_at;
+    const createdAt = getCreatedAt(t);
+    if(done && createdAt && endAt){
+      const ms = new Date(endAt) - new Date(createdAt);
+      if(ms >= 0){
+        const duration = fmtResolutionTime(ms);
+        const onTime = t.due_at ? (new Date(endAt) <= new Date(t.due_at)) : null;
+
+        document.getElementById('rtDuration').textContent = 'Terselesaikan dalam ' + duration;
+        document.getElementById('rtSub').textContent = buildResolutionSub(t, endAt);
+
+        const badge = document.getElementById('rtBadge');
+        if(onTime === true){
+          badge.className = 'rt-badge ontime';
+          badge.textContent = 'On-Time';
+          badge.style.display = '';
+          rtPanel.style.background = 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)';
+          rtPanel.style.borderColor = '#a7f3d0';
+          document.querySelector('#resolutionTime .rt-head').style.color = '#047857';
+          document.getElementById('rtDuration').style.color = '#065f46';
+          document.getElementById('rtSub').style.color = '#059669';
+        } else if(onTime === false){
+          badge.className = 'rt-badge late';
+          badge.textContent = 'Over SLA';
+          badge.style.display = '';
+          rtPanel.style.background = 'linear-gradient(135deg,#fef2f2 0%,#fee2e2 100%)';
+          rtPanel.style.borderColor = '#fecaca';
+          document.querySelector('#resolutionTime .rt-head').style.color = '#b91c1c';
+          document.getElementById('rtDuration').style.color = '#7f1d1d';
+          document.getElementById('rtSub').style.color = '#dc2626';
+        } else {
+          badge.style.display = 'none';
+          rtPanel.style.background = 'linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%)';
+          rtPanel.style.borderColor = '#a7f3d0';
+        }
+        rtPanel.classList.add('show');
+      } else {
+        rtPanel.classList.remove('show');
+      }
+    } else if(done && endAt){
+      // Fallback: created_at tidak tersedia sama sekali — tetap tampilkan info minimal
+      document.getElementById('rtDuration').textContent = 'Diselesaikan ' + new Date(endAt).toLocaleString('id-ID', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+      document.getElementById('rtSub').textContent = 'Durasi tidak tersedia (data pembuatan tiket hilang)';
+      const badge = document.getElementById('rtBadge');
+      if(badge) badge.style.display = 'none';
+      rtPanel.style.background = '#f8fafc';
+      rtPanel.style.borderColor = '#e2e8f0';
+      document.querySelector('#resolutionTime .rt-head').style.color = '#64748b';
+      document.getElementById('rtDuration').style.color = '#334155';
+      document.getElementById('rtSub').style.color = '#94a3b8';
+      rtPanel.classList.add('show');
+    } else {
+      rtPanel.classList.remove('show');
+    }
+  }
+
+  const safePct=isNaN(pct)?0:Math.round(pct);
+  const gaugeOpts={series:[safePct],chart:{type:'radialBar',height:130,width:120,sparkline:{enabled:true}},plotOptions:{radialBar:{startAngle:-135,endAngle:135,hollow:{size:'55%'},track:{background:'#f0f0f0',strokeWidth:'97%',margin:4},dataLabels:{name:{show:true,offsetY:16,color:'#9ca3af',fontSize:'9px',fontWeight:700,fontFamily:'Plus Jakarta Sans',formatter:()=>'SLA'},value:{offsetY:-10,color:color,fontSize:'18px',fontWeight:800,fontFamily:'Plus Jakarta Sans',formatter:v=>v+'%'}}}},fill:{type:'gradient',gradient:{shade:'dark',type:'horizontal',gradientToColors:[color],stops:[0,100],colorStops:[{offset:0,color:done?'#22c55e':pct>80?'#f97316':pct>60?'#facc15':'#4ade80',opacity:1},{offset:100,color:color,opacity:1}]}},stroke:{lineCap:'round'},labels:['SLA']};
+  if(slaChart){slaChart.updateOptions(gaugeOpts,true,true);}
+  else{const el=$('slaGaugeChart');if(el&&window.ApexCharts){slaChart=new ApexCharts(el,gaugeOpts);slaChart.render();}}
+}
+
+/* ═══ STATUS FLOW ═══ */
+const SSTEPS=[
+  {key:'open',lbl:'Open',desc:'Ticket dibuka',ico:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`},
+  {key:'in_progress',lbl:'In Progress',desc:'Sedang ditangani',ico:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>`},
+  {key:'pending',lbl:'Pending',desc:'Menunggu / hold',ico:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`},
+  {key:'resolved',lbl:'Resolved',desc:'Masalah selesai',ico:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`},
+  {key:'closed',lbl:'Closed',desc:'Ticket ditutup',ico:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`},
+];
+const DONE_ICO=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+function renderStatusFlow(cur){
+  const ci=SSTEPS.findIndex(s=>s.key===cur);
+  $('sflow').innerHTML=SSTEPS.map((s,i)=>`<div class="sfi ${i<ci?'done':''} ${i===ci?'active':''}">
+    <div class="sfi-dot">${i<ci?DONE_ICO:s.ico}</div>
+    <div class="sfi-lbl">${s.lbl}<br><span class="sfi-sub">${s.desc}</span></div>
+    ${i===ci?'<span class="sfi-chip">Aktif</span>':''}
+  </div>`).join('');
+}
+
+/* ═══ TIMELINE ═══ */
+function renderTimeline(items){
+  const c=$('tlContainer');
+  if(!items.length){c.innerHTML='<p style="text-align:center;color:var(--muted);padding:20px;">Belum ada aktivitas</p>';return;}
+  const ICON={
+    created:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+    assigned:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+    assignment:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+    status_change:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>',
+    status_changed:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/></svg>',
+    comment:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+    photo:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    resolution:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+    system:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33"/></svg>',
+  };
+  c.innerHTML=[...items].reverse().map(tl=>{
+    const un=tl.user?.name||'Sistem',ui=un.charAt(0).toUpperCase();
+    const tlDate=tl.created_at||tl.createdAt;
+    const dt=tlDate?new Date(tlDate).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const icon=ICON[tl.type]||ICON.comment;
+    let body=tl.content?`<p style="margin:6px 0 0;color:#475569;line-height:1.6;font-size:13.5px;">${esc(tl.content)}</p>`:'';
+    if(tl.attachments?.length){
+      const imgs=tl.attachments.filter(a=>/\.(jpg|jpeg|png|gif|webp)$/i.test(a.url));
+      const files=tl.attachments.filter(a=>!/\.(jpg|jpeg|png|gif|webp)$/i.test(a.url));
+      if(imgs.length)body+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">${imgs.map(a=>`<img src="${a.url}" class="timeline-foto" onclick="openLb('${a.url}')" alt="">`).join('')}</div>`;
+      if(files.length)body+=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${files.map(a=>`<a href="${a.url}" target="_blank" class="file-tag">📄 ${esc(a.filename||'File')}</a>`).join('')}</div>`;
+    }
+    return`<div class="timeline-item ${tl.type}"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;"><div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="tl-avatar">${ui}</span>
+        <div><strong style="color:var(--text);font-size:13.5px;display:flex;align-items:center;gap:5px;">${icon} ${esc(un)}</strong>${tl.user?.role?`<small style="color:var(--muted);font-size:10.5px;display:block;text-transform:uppercase;letter-spacing:.5px;">${esc(typeof tl.user.role==='object'?tl.user.role.display_name||tl.user.role.name:tl.user.role)}</small>`:''}</div>
+      </div>${body}</div>
+      <small style="color:var(--muted2);white-space:nowrap;font-size:10.5px;">${dt}</small>
+    </div></div>`;
+  }).join('');
+}
+
+/* ═══ SEND COMMENT ═══ */
+async function sendComment(){
+  const txt=$('commentText').value.trim();
+  if(!txt&&selFiles.length===0){$('commentText').focus();return;}
+  const btn=$('sendBtn');btn.disabled=true;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg> Mengirim...';
+  try{
+    const fdata=new FormData();
+    fdata.append('content',txt);fdata.append('type',selFiles.length>0&&!txt?'photo':'comment');
+    selFiles.forEach(f=>fdata.append('attachments',f));
+    const token=getToken();
+    const j=await fetch('/api/tickets/'+TID+'/timeline',{
+      method:'POST',
+      headers:token?{'Authorization':'Bearer '+token}:{},
+      credentials:'include',
+      body:fdata
+    }).then(r=>r.json());
+    if(j.success){$('commentText').value='';selFiles=[];$('filePreview').innerHTML='';$('commentFile').value='';showToast('Update berhasil dikirim','success');await loadTicket();}
+    else showToast(j.message||'Error','error');
+  }catch(e){showToast(e.message,'error');}
+  btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Kirim Update';
+}
+$('commentFile')?.addEventListener('change',function(){
+  selFiles=[...selFiles,...Array.from(this.files)];
+  $('filePreview').innerHTML=selFiles.map((f,i)=>`<span class="file-tag">${f.type.startsWith('image/')?'🖼':'📄'} ${f.name.substring(0,20)}<button onclick="selFiles.splice(${i},1);this.parentNode.remove()">×</button></span>`).join('');
+});
+
+/* ═══ MAP ═══ */
+function initMap(lat,lng,t){
+  if(leafMap){leafMap.remove();leafMap=null;}
+  leafMap=L.map('map').setView([lat,lng],15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(leafMap);
+  const tc=TC[t.type]||'#ef4444';
+  const pulse={gangguan:'pulse-red',request:'pulse-blue',installation:'pulse-green',maintenance:'pulse-orange'}[t.type]||'pulse-blue';
+  const ico={gangguan:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>',request:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/>',installation:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',maintenance:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'}[t.type]||'<circle cx="12" cy="10" r="3"/>';
+  const mkI=L.divIcon({html:`<div class="custom-marker ${pulse}" style="background:${tc};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">${ico}</svg></div>`,className:'',iconSize:[40,40],iconAnchor:[20,20]});
+  const c=t.customer;
+  const ph=c?`<div class="leaflet-popup-content"><div class="popup-header"><h3>${esc(c.name)}</h3></div><div class="popup-body"><div class="popup-info-item"><span class="popup-label">Kategori</span><span class="popup-value" style="color:${tc};">${TL[t.type]||t.type}</span></div><div class="popup-info-item"><span class="popup-label">WhatsApp</span><span class="popup-value"><a href="https://wa.me/62${(c.phone||'').replace(/^0/,'')}">${esc(c.phone||'—')}</a></span></div><div class="popup-info-item"><span class="popup-label">Alamat</span><span class="popup-value">${esc(c.address||'—')}</span></div></div><div class="popup-footer"><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="background:linear-gradient(135deg,var(--nv3),var(--nv));">Maps</a><a href="https://wa.me/62${(c.phone||'').replace(/^0/,'')}" target="_blank" style="background:linear-gradient(135deg,#25d366,#128c7e);">Hubungi</a></div></div>`:'<div style="padding:12px;font-size:13px;">Lokasi Ticket</div>';
+  L.marker([lat,lng],{icon:mkI}).addTo(leafMap).bindPopup(ph,{maxWidth:260}).openPopup();
+}
+
+/* ═══ STATUS MODAL ═══ */
+function openStatusModal(){
+  if(!tkData)return;selStatus=tkData.status;$('statusNote').value='';
+  $('statusGrid').innerHTML=SSTEPS.map(s=>`<button class="stop ${s.key===tkData.status?'sel':''}" onclick="pickStatus('${s.key}',this)"><div class="stop-ico">${s.ico}</div><div class="stop-txt"><div class="stop-lbl">${s.lbl}</div><div class="stop-desc">${SD[s.key]||''}</div></div></button>`).join('');
+  openM('mStatus');
+}
+function pickStatus(key,el){selStatus=key;document.querySelectorAll('.stop').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');}
+async function submitStatus(){
+  if(!selStatus||selStatus===tkData.status){showToast('Pilih status yang berbeda','warn');return;}
+  try{
+    const note=$('statusNote').value.trim();
+    const j=await authFetch('/api/tickets/'+TID,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:selStatus})}).then(r=>r.json());
+    if(j.success){
+      if(note)await authFetch('/api/tickets/'+TID+'/timeline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:note,type:'comment'})});
+      closeM('mStatus');showToast('Status berhasil diupdate!','success');await loadTicket();
+    }else showToast(j.message||'Error','error');
+  }catch(e){showToast(e.message,'error');}
+}
+
+/* ═══ QUICK ACTIONS ═══ */
+async function quickResolve(){
+  if(!confirm('Tandai tiket ini selesai?'))return;
+  try{
+    const j=await authFetch('/api/tickets/'+TID,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'resolved',resolved_at:new Date().toISOString()})}).then(r=>r.json());
+    if(j.success){showToast('Tiket ditandai selesai!','success');await loadTicket();}
+    else showToast(j.message||'Error','error');
+  }catch(e){showToast(e.message,'error');}
+}
+async function claimTicket(){
+  if(!confirm('Ambil tiket ini dan tugaskan ke Anda?'))return;
+  try{
+    // Get current user id
+    const me=await authFetch('/api/auth/profile').then(r=>r.json());
+    const uid=me?.data?.id;
+    if(!uid){showToast('Tidak dapat mengidentifikasi user','error');return;}
+    const j=await authFetch('/api/tickets/'+TID,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({assigned_to:uid,status:'in_progress'})}).then(r=>r.json());
+    if(j.success){showToast('Tiket berhasil diambil!','success');await loadTicket();}
+    else showToast(j.message||'Error','error');
+  }catch(e){showToast(e.message,'error');}
+}
+function startGps(){
+  sessionStorage.setItem('tracking_ticket_id',TID);
+  location.href='/technician-tracking?ticket='+TID;
+}
+
+/* ═══ UTIL ═══ */
+function showToast(msg,type='info'){
+  const COL={success:'#15803d',error:'#dc2626',warn:'#d97706',info:'#2563eb'};
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:99999;padding:11px 18px;border-radius:10px;background:${COL[type]||'#2563eb'};color:#fff;font-size:13px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.25);animation:mIn .25s ease-out;max-width:300px;font-family:var(--font);`;
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3000);
+}
+function openLb(src){$('lbi').src=src;$('lb').classList.add('show');}
+function openM(id){$(id).classList.add('show');}
+function closeM(id){$(id).classList.remove('show');}
+document.querySelectorAll('.mover').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){['mStatus'].forEach(closeM);$('lb').classList.remove('show');}
+  if(e.ctrlKey&&e.key==='Enter')sendComment();
+});
+</script>
+</body>
+</html>

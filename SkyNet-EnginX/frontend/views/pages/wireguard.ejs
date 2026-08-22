@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --wg-p:#7c3aed; --wg-p-l:#f5f3ff;
+      --wg-green:#16a34a; --wg-green-l:#f0fdf4;
+      --wg-red:#dc2626; --wg-red-l:#fef2f2;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .wg { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    .wg-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .wg-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .wg-hdr-l p { font-size:13px; color:var(--muted); margin:0; }
+    .wg-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-primary { background:var(--wg-p); border-color:var(--wg-p); color:#fff; }
+    .btn-primary:hover { background:#6d28d9; }
+    .btn-red { background:var(--wg-red); border-color:var(--wg-red); color:#fff; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    .wg-warn { display:flex; gap:10px; align-items:flex-start; background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:12px 14px; margin-bottom:18px; font-size:12.5px; color:#92400e; }
+    .wg-warn svg { width:18px; height:18px; flex-shrink:0; margin-top:1px; }
+
+    .iface-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; margin-bottom:22px; }
+    .iface-card { background:#fff; border:1.5px solid var(--border); border-radius:14px; padding:16px 18px; }
+    .iface-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .iface-name { font-size:15px; font-weight:800; color:var(--text); font-family:monospace; }
+    .iface-sub { font-size:11.5px; color:var(--faint); margin-top:2px; }
+    .iface-body { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#475569; margin:10px 0; }
+    .iface-body .row { display:flex; justify-content:space-between; gap:8px; }
+    .iface-body .row b { color:var(--text); font-family:monospace; font-weight:600; }
+    .iface-ftr { display:flex; gap:8px; margin-top:12px; }
+
+    .status-pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .status-pill .dot { width:6px; height:6px; border-radius:50%; }
+    .status-on  { background:var(--wg-green-l); color:var(--wg-green); }
+    .status-on .dot { background:var(--wg-green); box-shadow:0 0 0 3px #16a34a22; }
+    .status-off { background:#f1f5f9; color:var(--muted); }
+    .status-off .dot { background:var(--faint); }
+
+    .wg-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; margin-bottom:20px; }
+    .wg-tbl-hdr { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .wg-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .wg-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    table.wg-table { width:100%; border-collapse:collapse; }
+    .wg-table thead tr { background:#f8fafc; }
+    .wg-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .wg-table tbody tr { border-bottom:1px solid #f8fafc; }
+    .wg-table tbody tr:hover { background:#f8fafc; }
+    .wg-table tbody tr:last-child { border-bottom:none; }
+    .wg-table td { padding:11px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+    .mono { font-family:monospace; font-size:12px; }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-purple { background:var(--wg-p-l); color:var(--wg-p); }
+    .badge-gray  { background:#f1f5f9; color:var(--muted); }
+    .row-actions { display:flex; gap:6px; justify-content:flex-end; }
+    .icon-btn { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:pointer; color:#64748b; }
+    .icon-btn:hover { background:#f8fafc; color:#0f172a; }
+    .icon-btn svg { width:14px; height:14px; }
+    .icon-btn.danger:hover { background:var(--wg-red-l); color:var(--wg-red); border-color:#fecaca; }
+
+    .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
+    .tbl-empty svg { width:34px; height:34px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { margin:0; font-size:13px; }
+
+    .toggle { position:relative; display:inline-block; width:36px; height:20px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-track { position:absolute; inset:0; background:#cbd5e1; border-radius:20px; cursor:pointer; transition:.15s; }
+    .toggle-track:before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; }
+    .toggle input:checked + .toggle-track { background:var(--wg-green); }
+    .toggle input:checked + .toggle-track:before { transform:translateX(16px); }
+
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    .modal-box.wide { max-width:560px; }
+    .modal-hdr { padding:18px 22px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; }
+    .modal-hdr h3 { margin:0; font-size:15px; font-weight:700; }
+    .modal-close { cursor:pointer; color:var(--faint); background:none; border:none; padding:4px; }
+    .modal-body { padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .modal-ftr { padding:16px 22px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; outline:none; background:#f8fafc; color:var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--wg-p); background:#fff; box-shadow:0 0 0 3px #7c3aed14; }
+    .field-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+    .result-qr { text-align:center; padding:10px 0; }
+    .result-qr img { width:220px; height:220px; border:1.5px solid var(--border); border-radius:12px; padding:8px; }
+    .result-conf { background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px; font-family:monospace; font-size:11.5px; white-space:pre-wrap; word-break:break-all; max-height:200px; overflow-y:auto; }
+  </style>
+</head>
+<body>
+<div class="app-layout wg">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="wg-hdr">
+        <div class="wg-hdr-l">
+          <h1>WireGuard VPN</h1>
+          <p>Kelola interface & peer WireGuard — buat peer otomatis lengkap dengan QR/config siap pakai</p>
+        </div>
+        <div class="wg-hdr-r">
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnAddIface">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Interface Baru
+          </button>
+          <button class="btn btn-primary btn-sm" id="btnAutoPeer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Auto Create Peer
+          </button>
+        </div>
+      </div>
+
+      <div class="wg-warn" id="wgUnavailableWarn" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+        <div>Perintah <code>wg</code> tidak ditemukan di server ini. Data peer/interface tetap tersimpan di database, tapi tunnel tidak akan benar-benar aktif sampai paket <code>wireguard-tools</code> terpasang di host (mis. <code>apt install wireguard-tools</code>).</div>
+      </div>
+
+      <div class="iface-grid" id="ifaceGrid">
+        <div class="tbl-empty" style="grid-column:1/-1"><p>Memuat interface...</p></div>
+      </div>
+
+      <div class="wg-tbl-wrap">
+        <div class="wg-tbl-hdr">
+          <div class="wg-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--wg-p)" stroke-width="2.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+            Peers <span class="wg-count" id="peersCount">0</span>
+          </div>
+          <select id="filterIface" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:#f8fafc;font-family:inherit;">
+            <option value="">Semua Interface</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="wg-table">
+            <thead><tr><th>Nama</th><th>Pelanggan</th><th>IP Tunnel</th><th>Status</th><th>Handshake Terakhir</th><th>RX / TX</th><th style="text-align:right">Aksi</th></tr></thead>
+            <tbody id="peersTbody"><tr><td colspan="7"><div class="tbl-empty"><p>Memuat...</p></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Interface -->
+<div class="modal-overlay" id="ifaceModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Interface WireGuard Baru</h3><button class="modal-close" onclick="closeModal('ifaceModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nama Interface</label><input type="text" id="ifaceName" placeholder="wg0" class="mono"><div class="field-hint">Huruf/angka/-/_, maks 15 karakter</div></div>
+      <div class="field-row">
+        <div class="field"><label>Subnet Tunnel (CIDR)</label><input type="text" id="ifaceCidr" placeholder="10.66.66.1/24" class="mono"></div>
+        <div class="field"><label>Listen Port</label><input type="text" id="ifacePort" placeholder="51820"></div>
+      </div>
+      <div class="field"><label>Endpoint Host (untuk client)</label><input type="text" id="ifaceEndpoint" placeholder="vpn.domainanda.com atau IP publik"></div>
+      <div class="field-row">
+        <div class="field"><label>DNS untuk Client</label><input type="text" id="ifaceDns" placeholder="1.1.1.1"></div>
+        <div class="field"><label>MTU (opsional)</label><input type="text" id="ifaceMtu" placeholder="1420"></div>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('ifaceModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveIface">Buat Interface</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Auto Create Peer -->
+<div class="modal-overlay" id="autoPeerModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Auto Create Peer</h3><button class="modal-close" onclick="closeModal('autoPeerModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Interface</label><select id="autoPeerIface"></select></div>
+      <div class="field"><label>Nama Peer</label><input type="text" id="autoPeerName" placeholder="Laptop Teknisi Andi"></div>
+      <div class="field"><label>Link ke Pelanggan (opsional)</label><input type="text" id="autoPeerCustomerId" placeholder="Customer ID (angka)"></div>
+      <div class="field"><label>Allowed IPs untuk Client (opsional)</label><input type="text" id="autoPeerAllowedIps" placeholder="Default: subnet interface. Isi 0.0.0.0/0 untuk full-tunnel" class="mono"></div>
+      <div class="field-hint">Key pair & IP tunnel di-generate otomatis. QR + file konfigurasi langsung tersedia setelah dibuat.</div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('autoPeerModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnCreateAutoPeer">Buat Peer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Peer Result (QR + config) -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal-box wide">
+    <div class="modal-hdr"><h3 id="resultTitle">Peer Dibuat</h3><button class="modal-close" onclick="closeModal('resultModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="result-qr"><img id="resultQrImg" src="" alt="QR config"></div>
+      <div class="result-conf" id="resultConfText"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" id="btnCopyConfig">Salin Config</button>
+      <button class="btn btn-primary btn-sm" id="btnDownloadConfig">Download .conf</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Peer -->
+<div class="modal-overlay" id="editPeerModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Edit Peer</h3><button class="modal-close" onclick="closeModal('editPeerModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="editPeerId">
+      <div class="field"><label>Nama</label><input type="text" id="editPeerName"></div>
+      <div class="field"><label>Allowed IPs (Client)</label><input type="text" id="editPeerAllowedIps" class="mono"></div>
+      <div class="field-row">
+        <div class="field"><label>Persistent Keepalive (detik)</label><input type="text" id="editPeerKeepalive"></div>
+        <div class="field"><label>Endpoint (site-to-site, opsional)</label><input type="text" id="editPeerEndpoint"></div>
+      </div>
+      <div class="field"><label>Catatan</label><textarea id="editPeerNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('editPeerModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveEditPeer">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/wireguard.js"></script>
+</body>
+</html>

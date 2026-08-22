@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .hris-page { font-family:'DM Sans',sans-serif; background:#eef2f9 !important; }
+    .pr-layout { display:grid; grid-template-columns:300px 1fr; gap:16px; }
+    @media(max-width:900px){ .pr-layout{ grid-template-columns:1fr; } }
+    .panel { background:#fff; border:1px solid #e8eaed; border-radius:16px; padding:18px; }
+    .panel h3 { margin:0 0 14px; font-size:15px; font-weight:700; }
+    .batch-item { padding:11px 12px; border:1.5px solid #e8eaed; border-radius:11px; margin-bottom:8px; cursor:pointer; }
+    .batch-item.active { border-color:#2563eb; background:#eff6ff; }
+    .batch-item .p1 { font-weight:700; font-size:14px; }
+    .batch-item .p2 { font-size:11.5px; color:#94a3b8; margin-top:2px; }
+    .b-pill { padding:1px 8px; border-radius:100px; font-size:10.5px; font-weight:700; }
+    .bp-draft{background:#f1f5f9;color:#64748b;} .bp-final{background:#dbeafe;color:#1d4ed8;} .bp-paid{background:#dcfce7;color:#16a34a;}
+    .h-input { padding:9px 12px; border:1.5px solid #e0e7f3; border-radius:9px; font-size:13.5px; font-family:inherit; width:100%; }
+    table.pr-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .pr-table th { text-align:left; padding:10px 12px; background:#f8fafc; color:#64748b; font-weight:600; font-size:11.5px; text-transform:uppercase; }
+    .pr-table td { padding:10px 12px; border-top:1px solid #f1f5f9; }
+    .send-pill { padding:1px 7px; border-radius:100px; font-size:10.5px; font-weight:700; }
+    .sp-sent{background:#dcfce7;color:#16a34a;} .sp-pending{background:#f1f5f9;color:#64748b;} .sp-failed{background:#fee2e2;color:#dc2626;}
+    .act-link { color:#2563eb; font-weight:600; font-size:12px; cursor:pointer; text-decoration:none; }
+    .toolbar-actions { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+    .toast{ position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px; color:#fff; font-weight:600; z-index:2500; display:none; }
+  </style>
+</head>
+<body>
+<div class="app-layout hris-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:22px;font-weight:800;color:#0d1b3e">Penggajian (Payroll)</div>
+        <div style="font-size:13px;color:#6b7fa8;margin-top:2px">Hitung gaji dari absensi & kirim slip via email + WhatsApp</div>
+      </div>
+
+      <div class="pr-layout">
+        <!-- LEFT: batch list + create -->
+        <div>
+          <div class="panel" style="margin-bottom:14px">
+            <h3>Buat Periode</h3>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <input class="h-input" id="p_start" type="date" title="Mulai">
+              <input class="h-input" id="p_end" type="date" title="Selesai">
+              <input class="h-input" id="p_label" placeholder="Label (mis. Juli 2026)">
+              <button class="btn-blue" onclick="createBatch()">+ Buat Batch</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Periode Payroll</h3>
+            <div id="batchList"><div style="color:#94a3b8;font-size:13px">Memuat…</div></div>
+          </div>
+        </div>
+
+        <!-- RIGHT: detail -->
+        <div class="panel" id="detailPanel">
+          <div style="color:#94a3b8;font-size:14px;text-align:center;padding:40px">Pilih periode payroll di kiri</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}` });
+const fmtRp = v => 'Rp '+(parseFloat(v)||0).toLocaleString('id-ID');
+function toast(m,ok=true){ const t=document.getElementById('toast'); t.textContent=m; t.style.background=ok?'#16a34a':'#dc2626'; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+let batches=[], currentId=null;
+
+async function loadBatches(){
+  const r=await fetch(API+'/hris/payrolls',{headers:authH()}); const j=await r.json();
+  batches=j.data||[];
+  const box=document.getElementById('batchList');
+  if(!batches.length){ box.innerHTML='<div style="color:#94a3b8;font-size:13px">Belum ada periode</div>'; return; }
+  const pill=s=>({draft:'bp-draft',finalized:'bp-final',paid:'bp-paid'}[s]||'bp-draft');
+  box.innerHTML=batches.map(b=>`
+    <div class="batch-item ${b.id===currentId?'active':''}" onclick="openBatch(${b.id})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="p1">${b.period_label}</div><span class="b-pill ${pill(b.status)}">${b.status}</span>
+      </div>
+      <div class="p2">${b.employee_count} karyawan · ${fmtRp(b.total_amount)}</div>
+    </div>`).join('');
+}
+
+async function createBatch(){
+  const period_start=document.getElementById('p_start').value, period_end=document.getElementById('p_end').value;
+  const period_label=document.getElementById('p_label').value;
+  if(!period_start||!period_end){ toast('Tanggal periode wajib', false); return; }
+  const r=await fetch(API+'/hris/payrolls',{method:'POST',headers:authH(),body:JSON.stringify({period_start,period_end,period_label})});
+  const j=await r.json(); if(j.success){ toast('Batch dibuat'); currentId=j.data.id; await loadBatches(); openBatch(j.data.id); } else toast(j.message,false);
+}
+
+async function openBatch(id){
+  currentId=id; loadBatches();
+  const r=await fetch(API+'/hris/payrolls/'+id,{headers:authH()}); const j=await r.json();
+  if(!j.success){ toast(j.message,false); return; }
+  const b=j.data; const items=b.items||[];
+  const isDraft=b.status==='draft';
+  const sendPill=s=>({sent:'sp-sent',pending:'sp-pending',failed:'sp-failed',skipped:'sp-pending'}[s]||'sp-pending');
+  document.getElementById('detailPanel').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:6px">
+      <div><div style="font-size:17px;font-weight:800">${b.period_label}</div>
+        <div style="font-size:12.5px;color:#94a3b8">${b.period_start} – ${b.period_end} · <b>${fmtRp(b.total_amount)}</b> untuk ${b.employee_count} karyawan</div></div>
+      <span class="b-pill ${b.status==='draft'?'bp-draft':b.status==='finalized'?'bp-final':'bp-paid'}" style="font-size:12px">${b.status}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn-outline" onclick="calcBatch(${id})">🧮 Hitung dari Absensi</button>
+      ${isDraft?`<button class="btn-blue" onclick="finalizeBatch(${id})">✓ Finalisasi</button>`:''}
+      ${!isDraft?`<button class="btn-blue" onclick="sendAll(${id})">✉ Kirim Semua Slip</button>`:''}
+    </div>
+    <div style="overflow:auto">
+    <table class="pr-table">
+      <thead><tr><th>Karyawan</th><th>Hadir</th><th>Telat</th><th>Pokok</th><th>Tunjangan</th><th>Potongan</th><th>Gaji Bersih</th><th>Email</th><th>WA</th><th></th></tr></thead>
+      <tbody>${items.length?items.map(it=>`
+        <tr>
+          <td><div style="font-weight:600">${it.employee?.full_name||'?'}</div><div style="font-size:11px;color:#94a3b8">${it.employee?.employee_no||''}</div></td>
+          <td>${it.present_days}h${it.absent_days?` <span style="color:#dc2626">/${it.absent_days}a</span>`:''}</td>
+          <td>${it.late_count||0}x</td>
+          <td>${fmtRp(it.base_salary)}</td>
+          <td>${fmtRp(it.total_allowances)}</td>
+          <td>${fmtRp(it.total_deductions)}</td>
+          <td style="font-weight:700">${fmtRp(it.net_salary)}</td>
+          <td><span class="send-pill ${sendPill(it.email_status)}">${it.email_status}</span></td>
+          <td><span class="send-pill ${sendPill(it.wa_status)}">${it.wa_status}</span></td>
+          <td style="white-space:nowrap">
+            <a class="act-link" href="${API}/hris/payrolls/items/${it.id}/slip.pdf" target="_blank">Slip</a>
+            ${!isDraft?` · <a class="act-link" onclick="sendOne(${it.id})">Kirim</a>`:''}
+          </td>
+        </tr>`).join(''):'<tr><td colspan="10" style="text-align:center;padding:30px;color:#94a3b8">Belum ada item — klik "Hitung dari Absensi"</td></tr>'}
+      </tbody>
+    </table></div>`;
+}
+
+async function calcBatch(id){
+  toast('Menghitung…'); const r=await fetch(API+'/hris/payrolls/'+id+'/calculate',{method:'POST',headers:authH(),body:'{}'});
+  const j=await r.json(); if(j.success){ toast(`Dihitung: ${j.data.count} karyawan`); openBatch(id); } else toast(j.message,false);
+}
+async function finalizeBatch(id){ if(!confirm('Finalisasi payroll? Setelah ini siap kirim slip.'))return;
+  const r=await fetch(API+'/hris/payrolls/'+id+'/finalize',{method:'POST',headers:authH()}); const j=await r.json();
+  if(j.success){ toast('Difinalisasi'); openBatch(id); } else toast(j.message,false);
+}
+async function sendOne(itemId){ toast('Mengirim slip…');
+  const r=await fetch(API+'/hris/payrolls/items/'+itemId+'/send',{method:'POST',headers:authH()}); const j=await r.json();
+  if(j.success){ toast(`Email: ${j.data.email}, WA: ${j.data.wa}`); openBatch(currentId); } else toast(j.message,false);
+}
+async function sendAll(id){ if(!confirm('Kirim slip ke SEMUA karyawan via email & WhatsApp?'))return;
+  const r=await fetch(API+'/hris/payrolls/'+id+'/send-all',{method:'POST',headers:authH()}); const j=await r.json();
+  if(j.success){ toast('Pengiriman dimulai di latar belakang'); } else toast(j.message,false);
+}
+
+// realtime: refresh saat batch selesai kirim
+if(window.io){ try{ const s=io(); s.on('hris:payroll-sent',(d)=>{ toast(`Slip terkirim: ${d.email_sent} email, ${d.wa_sent} WA`); if(currentId) openBatch(currentId); }); }catch(e){} }
+
+loadBatches();
+</script>
+</body>
+</html>

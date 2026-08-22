@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+  <style>
+    .page-content { padding: 0 !important; height: calc(100vh - 60px); overflow: hidden; }
+    #map-wrapper { position: relative; height: 100%; width: 100%; }
+    #infraMap { height: 100%; width: 100%; }
+
+    /* ── Map top bar: satu baris, kiri-kanan ── */
+    /* ── Map overlay wrapper ── */
+    .map-topbar-wrap {
+      position: absolute; top: 12px; left: 12px; right: 12px; z-index: 800;
+      display: flex; flex-direction: column; gap: 6px; pointer-events: none;
+    }
+    .map-topbar-wrap > * { pointer-events: all; }
+
+    /* Baris 1: tile + tombol aksi + spacer + filter (desktop) */
+    .map-topbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+    }
+
+    /* Tile switcher */
+    .tile-switcher {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px 5px; display: flex; gap: 2px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.13); flex-shrink: 0;
+    }
+    .tile-btn {
+      padding: 6px 12px; border-radius: 7px; border: none;
+      background: transparent; font-size: 12px; font-weight: 600;
+      color: var(--text-secondary); cursor: pointer; transition: all .15s;
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+    }
+    .tile-btn.active { background: var(--primary); color: #fff; }
+    .tile-btn:not(.active):hover { background: var(--bg-secondary); }
+    .tile-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* Spacer — dorong filter ke kanan (desktop only) */
+    .map-topbar-spacer { flex: 1; }
+
+    /* Action buttons */
+    .map-add-btn {
+      background: var(--primary); color: #fff; border: none;
+      border-radius: 10px; padding: 8px 15px; font-size: 12px;
+      font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 2px 10px rgba(59,130,246,0.35);
+      transition: transform .15s, box-shadow .15s; white-space: nowrap; flex-shrink: 0;
+    }
+    .map-add-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(59,130,246,0.4); }
+    .map-add-btn svg { width: 14px; height: 14px; }
+
+    /* Filter chips */
+    .filter-chips {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px 6px; display: flex;
+      gap: 4px; align-items: center; flex-wrap: nowrap;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.13); flex-shrink: 0;
+    }
+    .chip {
+      padding: 4px 10px; border-radius: 20px; border: 1.5px solid;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: all .15s; display: flex; align-items: center; gap: 4px;
+      white-space: nowrap; line-height: 1;
+    }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .chip-all     { border-color:#64748b; color:#64748b; background:transparent; }
+    .chip-all.active     { background:#64748b; color:#fff; }
+    .chip-odc     { border-color:#1d4ed8; color:#1d4ed8; background:transparent; }
+    .chip-odc.active     { background:#1d4ed8; color:#fff; }
+    .chip-odp     { border-color:#104396; color:#0d4296; background:transparent; }
+    .chip-odp.active     { background:#0c45a1; color:#fff; }
+    .chip-tower   { border-color:#64748b; color:#475569; background:transparent; }
+    .chip-tower.active   { background:#475569; color:#fff; }
+    .chip-customer{ border-color:#f97316; color:#f97316; background:transparent; }
+    .chip-customer.active{ background:#f97316; color:#fff; }
+    .chip-pop     { border-color:#ef4444; color:#ef4444; background:transparent; }
+    .chip-pop.active     { background:#ef4444; color:#fff; }
+
+    /* ── Responsive mobile ── */
+    @media (max-width: 768px) {
+      /* Search bar muncul paling atas — dorong toolbar ke bawahnya */
+      .map-topbar-wrap { top: 60px; left: 8px; right: 8px; gap: 5px; }
+
+      /* Baris 1: tile + tombol icon only */
+      .map-topbar { gap: 5px; }
+      .map-topbar-spacer { display: none; }
+
+      /* Sembunyikan label teks tombol di mobile, icon saja */
+      .map-add-btn .btn-label,
+      .map-draw-btn .btn-label { display: none; }
+      .map-add-btn { padding: 8px 10px; }
+      .map-add-btn svg { width: 15px; height: 15px; }
+      .map-draw-btn svg { width: 15px; height: 15px; }
+      .tile-btn { padding: 5px 9px; font-size: 11px; }
+
+      /* Baris 2: filter scrollable penuh */
+      .filter-chips {
+        flex-shrink: 1; width: 100%;
+        overflow-x: auto; overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .filter-chips::-webkit-scrollbar { display: none; }
+      .chip { padding: 4px 10px; font-size: 11px; }
+    }
+
+    /* Stats bar — pill kecil di samping zoom control */
+    .map-stats {
+      display: inline-flex; gap: 0; align-items: center;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+      font-size: 11px; white-space: nowrap;
+      overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      max-width: calc(100vw - 80px);
+    }
+    .map-stats::-webkit-scrollbar { display: none; }
+    .stat-item {
+      display: flex; align-items: center; gap: 4px;
+      padding: 0 8px; border-right: 1px solid var(--border); flex-shrink: 0;
+    }
+    .stat-item:first-child { padding-left: 0; }
+    .stat-item:last-child  { padding-right: 0; border-right: none; }
+    .stat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .stat-val { font-weight: 700; color: var(--text-primary); font-size: 11px; }
+    .stat-lbl { color: var(--text-secondary); font-size: 11px; }
+
+    /* Zoom + stats: baris horizontal di kiri bawah */
+    .leaflet-bottom.leaflet-left {
+      bottom: 12px; left: 12px;
+      display: flex; flex-direction: row;
+      align-items: center; gap: 8px;
+    }
+    .leaflet-control-zoom {
+      border-radius: 10px !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12) !important;
+      overflow: hidden; margin: 0 !important; flex-shrink: 0;
+    }
+    .leaflet-control-zoom a {
+      background: var(--bg-card) !important;
+      color: var(--text-primary) !important;
+      border-bottom-color: var(--border) !important;
+      font-size: 16px !important;
+      width: 32px !important; height: 32px !important; line-height: 32px !important;
+    }
+    .leaflet-control-zoom a:hover { background: var(--bg-secondary) !important; }
+
+    /* Place/draw mode bar */
+    .place-mode-bar {
+      position: absolute; top: 62px; left: 50%; transform: translateX(-50%);
+      z-index: 810; background: rgba(0, 0, 0, 0.95); color: #fff;
+      border-radius: 10px; padding: 9px 18px; font-size: 13px; font-weight: 600;
+      display: none; align-items: center; gap: 10px;
+      box-shadow: 0 4px 20px rgba(59,130,246,0.4); white-space: nowrap;
+    }
+    .place-mode-bar.active { display: flex; }
+    .place-cancel {
+      background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 8px; color: #fff; padding: 3px 10px; font-size: 11px; cursor: pointer;
+    }
+    #infraMap.place-mode { cursor: crosshair !important; }
+
+    /* Desktop: tampilkan filter di baris 1, sembunyikan baris 2 */
+    .map-filter-mobile { display: none; }
+    .map-filter-desktop { display: flex; }
+
+    @media (max-width: 768px) {
+      /* Mobile: sembunyikan filter baris 1, tampilkan baris 2 */
+      .map-filter-desktop { display: none !important; }
+      .map-filter-mobile {
+        display: flex;
+        overflow-x: auto; overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        width: 100%;
+      }
+      .map-filter-mobile::-webkit-scrollbar { display: none; }
+    }
+
+    .modal { max-width: 520px; }
+    .modal-tabs {
+      display: flex; gap: 2px; padding: 0 20px;
+      border-bottom: 1px solid var(--border); margin-top: -4px;
+    }
+    .modal-tab {
+      padding: 8px 14px; font-size: 12px; font-weight: 600; border: none;
+      background: transparent; color: var(--text-secondary); cursor: pointer;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .modal-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .coord-preview {
+      background: var(--bg-secondary); border-radius: 8px; padding: 8px 12px;
+      font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .coord-preview svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Anti tile-grid ── */
+    .leaflet-tile {
+      border: none !important;
+      outline: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+    }
+    .leaflet-container {
+      background: #e8e0d8;
+    }
+    .customer-search-wrap { position: relative; }
+    .customer-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 8px; max-height: 200px; overflow-y: auto;
+      z-index: 1100; box-shadow: 0 4px 16px rgba(0,0,0,0.12); display: none;
+    }
+    .customer-dropdown.open { display: block; }
+    .cust-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+    .cust-item:hover { background: var(--bg-secondary); }
+    .cust-item strong { display: block; font-weight: 600; }
+    .cust-item span { font-size: 11px; color: var(--text-secondary); }
+
+    /* Animated line tooltip */
+    .infra-line-tooltip {
+      background: rgba(15,15,20,0.85) !important;
+      border: none !important;
+      border-radius: 8px !important;
+      color: #fff !important;
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: 12px !important;
+      padding: 4px 10px !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+      white-space: nowrap;
+    }
+    .infra-line-tooltip::before { display: none !important; }
+
+    /* Flowing dot */
+    .flow-dot { transition: none !important; }
+
+    /* ── Customer popup redesign ── */
+    .cp-popup-wrap .leaflet-popup-content-wrapper {
+      padding: 0 !important;
+      border-radius: 14px !important;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22) !important;
+      border: none !important;
+      min-width: 290px;
+    }
+    .cp-popup-wrap .leaflet-popup-content { margin: 0 !important; width: auto !important; }
+    /* Ekor segitiga lancip menunjuk ke marker. Tip bawaan Leaflet disembunyikan,
+       diganti segitiga CSS murni. Diletakkan pada .leaflet-popup (elemen luar,
+       TANPA overflow:hidden) supaya tidak ter-clip oleh content-wrapper yang
+       memang overflow:hidden demi membulatkan sudut header. Selalu putih,
+       tepat di tengah bawah, menyatu dengan body popup. */
+    .cp-popup-wrap .leaflet-popup-tip-container { display: none; }
+    .cp-popup-wrap.leaflet-popup::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      transform: translateX(-50%) rotate(45deg);
+      border-bottom-right-radius: 3px;
+      box-shadow: 4px 4px 12px rgba(0,0,0,0.10);
+      z-index: -1;
+    }
+    .cp-popup-wrap .leaflet-popup-close-button {
+      color: rgba(255,255,255,0.7) !important;
+      font-size: 18px !important;
+      top: 10px !important;
+      right: 12px !important;
+      z-index: 10;
+    }
+    .cp-popup-wrap .leaflet-popup-close-button:hover { color: #fff !important; }
+
+    .cp-popup { font-family: 'DM Sans', sans-serif; width: 290px; }
+    .cp-header {
+      background: #1e3a8a;
+      color: #fff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      /* Reserve ruang utk tombol close × yg diabsolute-kan oleh Leaflet */
+      position: relative;
+    }
+    .cp-body { background: #fff; padding: 4px 0 0; }
+    .cp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 13px;
+    }
+    .cp-row:last-child { border-bottom: none; }
+    .cp-lbl { color: #94a3b8; font-weight: 500; flex-shrink: 0; }
+    .cp-val { color: #1e293b; font-weight: 600; text-align: right; max-width: 170px; word-break: break-word; }
+
+    .cp-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-top: 1px solid #f1f5f9;
+    }
+    .cp-actions-3 { grid-template-columns: 1.1fr 0.9fr 0.9fr; }
+    .cp-btn {
+      padding: 11px 4px;
+      border: none;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: opacity .15s;
+      font-family: 'DM Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .cp-btn:hover { opacity: 0.85; }
+    .cp-nav {
+      background: #1e3a8a;
+      color: #fff;
+      border-radius: 0 0 0 14px;
+    }
+    .cp-edit {
+      background: #f1f5f9;
+      color: #334155;
+      border-left: 1px solid #e2e8f0;
+    }
+    /* 2-button mode: edit ada di kanan, jadi pojok kanan-bawah membulat */
+    .cp-actions:not(.cp-actions-3) .cp-edit { border-radius: 0 0 14px 0; }
+    .cp-del {
+      background: #fff5f5;
+      color: #dc2626;
+      border-left: 1px solid #fee2e2;
+      border-radius: 0 0 14px 0;
+    }
+    .cp-del:hover { background: #fee2e2; opacity: 1; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       MODERN MODAL — selaras dengan halaman customers / billing / dll
+       Design tokens (--d-*) di-scope lokal untuk halaman ini supaya tidak
+       konflik dengan token global lain.
+       ═══════════════════════════════════════════════════════════════════ */
+    .infra-root {
+      --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3;
+      --d-text:#0d1b3e; --d-muted:#6b7fa8;
+      --d-blue1:#1a6ef5; --d-blue2:#0047cc;
+      --d-green:#00c896; --d-red:#f5365c; --d-orange:#fb8c00;
+    }
+
+    /* Override base .modal-overlay untuk halaman infrastructure */
+    body .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(13, 27, 62, .55);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      align-items: flex-end;     /* mobile: dock bottom */
+      justify-content: center;
+      padding: 0;
+    }
+    body .modal-overlay.active {
+      display: flex;
+      animation: infraModalOvIn .2s ease;
+    }
+    @keyframes infraModalOvIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Override base .modal */
+    body .modal-overlay .modal {
+      background: #fff;
+      width: 100%; max-width: 600px;
+      border-radius: 22px 22px 0 0;
+      max-height: 92vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, .15);
+      animation: infraModalSheetUp .26s cubic-bezier(.32, 1.24, .5, 1);
+      padding: 0;
+      font-family: 'DM Sans', sans-serif;
+    }
+    @keyframes infraModalSheetUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    /* Desktop ≥ 600px → centered modal */
+    @media (min-width: 600px) {
+      body .modal-overlay { align-items: center; padding: 16px; }
+      body .modal-overlay .modal {
+        border-radius: 22px;
+        max-height: 88vh;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
+        animation: infraModalScaleIn .22s cubic-bezier(.32, 1.24, .5, 1);
+      }
+      @keyframes infraModalScaleIn {
+        from { transform: scale(.94); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+      }
+    }
+
+    /* Header — sticky */
+    body .modal-overlay .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #f0f0f5;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    body .modal-overlay .modal-header h2 {
+      font-size: 16px; font-weight: 800; color: #0d1b3e;
+      margin: 0; letter-spacing: -.2px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    body .modal-overlay .modal-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #eef2f9; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #6b7fa8;
+      transition: background .15s, color .15s;
+      flex-shrink: 0;
+      position: static; top: auto; right: auto;
+      padding: 0;
+    }
+    body .modal-overlay .modal-close:hover {
+      background: #e0e7f3; color: #0d1b3e;
+    }
+    body .modal-overlay .modal-close svg {
+      width: 16px; height: 16px;
+    }
+
+    /* Modal tabs — pakai pill style modern */
+    body .modal-overlay .modal-tabs {
+      display: flex; gap: 4px;
+      padding: 12px 22px 0;
+      border-bottom: 1px solid #f0f0f5;
+      margin-top: 0;
+      flex-shrink: 0;
+      background: #fff;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    body .modal-overlay .modal-tabs::-webkit-scrollbar { display: none; }
+    body .modal-overlay .modal-tab {
+      padding: 9px 16px;
+      font-size: 12.5px; font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #6b7fa8;
+      cursor: pointer;
+      border-bottom: 2.5px solid transparent;
+      margin-bottom: -1px;
+      border-radius: 8px 8px 0 0;
+      transition: all .15s;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: .01em;
+      white-space: nowrap;
+    }
+    body .modal-overlay .modal-tab:hover {
+      color: #0d1b3e; background: #f7faff;
+    }
+    body .modal-overlay .modal-tab.active {
+      color: #1a6ef5;
+      border-bottom-color: #1a6ef5;
+      background: #f0f5ff;
+    }
+
+    /* Body — scrollable */
+    body .modal-overlay .modal-body {
+      padding: 18px 22px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1; min-height: 0;
+      background: #fff;
+    }
+
+    /* Footer — sticky */
+    body .modal-overlay .modal-footer {
+      padding: 14px 22px;
+      border-top: 1px solid #f0f0f5;
+      display: flex; gap: 10px; justify-content: flex-end;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
+    /* Form controls inside modal — clean modern style */
+    body .modal-overlay .form-label,
+    body .modal-overlay .form-group label {
+      display: block;
+      font-size: 11.5px; font-weight: 700;
+      color: #6b7fa8; margin-bottom: 6px;
+      letter-spacing: .04em; text-transform: uppercase;
+      font-family: 'DM Sans', sans-serif;
+    }
+    body .modal-overlay .form-control,
+    body .modal-overlay input[type="text"]:not([type="hidden"]),
+    body .modal-overlay input[type="number"],
+    body .modal-overlay input[type="email"],
+    body .modal-overlay input[type="tel"],
+    body .modal-overlay select,
+    body .modal-overlay textarea {
+      width: 100%; box-sizing: border-box;
+      padding: 10px 13px;
+      border: 1.5px solid #e0e7f3; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 13.5px;
+      color: #0d1b3e; outline: none; background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    body .modal-overlay .form-control:focus,
+    body .modal-overlay input:focus,
+    body .modal-overlay select:focus,
+    body .modal-overlay textarea:focus {
+      border-color: #1a6ef5;
+      box-shadow: 0 0 0 3px rgba(26, 110, 245, .1);
+    }
+    body .modal-overlay input::placeholder,
+    body .modal-overlay textarea::placeholder { color: #b0bcdc; }
+    body .modal-overlay textarea { resize: vertical; min-height: 70px; }
+    body .modal-overlay .form-group { margin-bottom: 14px; }
+
+    /* Buttons inside modal */
+    body .modal-overlay .btn {
+      padding: 10px 18px;
+      border-radius: 11px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    body .modal-overlay .btn-primary {
+      background: #1a6ef5; color: #fff;
+      box-shadow: 0 4px 14px rgba(26,110,245,.3);
+    }
+    body .modal-overlay .btn-primary:hover {
+      background: #0047cc;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(26,110,245,.4);
+    }
+    body .modal-overlay .btn-secondary {
+      background: #fff; color: #0d1b3e;
+      border: 1.5px solid #e0e7f3;
+    }
+    body .modal-overlay .btn-secondary:hover {
+      border-color: #1a6ef5; color: #1a6ef5; background: #f0f5ff;
+    }
+    body .modal-overlay .btn-danger {
+      background: #fff4f5; color: #f5365c;
+      border: 1.5px solid #fecdd3;
+    }
+    body .modal-overlay .btn-danger:hover {
+      background: #f5365c; color: #fff; border-color: #f5365c;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SEARCH BAR — desktop: tengah atas peta; mobile: dock bawah
+       ═══════════════════════════════════════════════════════════════════ */
+    .map-search-wrap {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 850;
+      width: 380px;
+      max-width: calc(100vw - 24px);
+      pointer-events: all;
+      font-family: 'DM Sans', sans-serif;
+    }
+    /* Tablet — search bar shrink supaya tidak tabrakan dgn toolbar */
+    @media (max-width: 1100px) and (min-width: 769px) {
+      .map-search-wrap { width: 300px; }
+    }
+    /* Mobile — search bar di paling atas (toolbar di-shift ke bawahnya).
+       Posisi tetap di atas supaya gampang dijangkau & dropdown punya ruang
+       turun di atas peta tanpa terhalang bottom-nav app. */
+    @media (max-width: 768px) {
+      .map-search-wrap {
+        top: 8px;
+        bottom: auto;
+        left: 8px; right: 8px;
+        transform: none;
+        width: auto;
+      }
+    }
+    .map-search-input-wrap {
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(13, 27, 62, .12), 0 1px 3px rgba(13, 27, 62, .06);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .map-search-input-wrap:focus-within {
+      box-shadow: 0 8px 24px rgba(26, 110, 245, .25), 0 0 0 3px rgba(26, 110, 245, .12);
+    }
+    .map-search-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #6b7fa8;
+      pointer-events: none;
+    }
+    .map-search-input {
+      width: 100%; box-sizing: border-box;
+      padding: 11px 38px 11px 42px;
+      border: none;
+      background: transparent;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px; font-weight: 500;
+      color: #0d1b3e; outline: none;
+    }
+    .map-search-input::placeholder {
+      color: #94a3b8; font-weight: 400;
+    }
+    .map-search-clear {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #eef2f9; color: #6b7fa8;
+      border: none; cursor: pointer;
+      display: none;
+      align-items: center; justify-content: center;
+      font-size: 14px; line-height: 1;
+      transition: background .15s;
+    }
+    .map-search-clear:hover { background: #e0e7f3; color: #0d1b3e; }
+    .map-search-input-wrap.has-value .map-search-clear { display: flex; }
+
+    /* Dropdown */
+    .map-search-dropdown {
+      position: absolute;
+      top: calc(100% + 6px); left: 0; right: 0;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 12px 32px rgba(13, 27, 62, .15), 0 2px 6px rgba(13, 27, 62, .06);
+      max-height: 60vh;
+      overflow-y: auto;
+      display: none;
+    }
+    .map-search-dropdown.open { display: block; }
+    .map-search-group {
+      padding: 4px 0;
+    }
+    .map-search-group + .map-search-group {
+      border-top: 1px solid #f0f0f5;
+    }
+    .map-search-group-label {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 14px 6px;
+      font-size: 10.5px; font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #6b7fa8;
+    }
+    .map-search-group-label .group-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .map-search-item {
+      padding: 9px 14px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      transition: background .12s;
+    }
+    .map-search-item:hover,
+    .map-search-item.highlighted {
+      background: #f0f5ff;
+    }
+    .map-search-item .item-icon {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .map-search-item .item-text {
+      flex: 1; min-width: 0;
+    }
+    .map-search-item .item-name {
+      font-size: 13px; font-weight: 600;
+      color: #0d1b3e;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .map-search-item .item-meta {
+      font-size: 11px; color: #6b7fa8;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .map-search-item .item-name mark {
+      background: #fef08a; color: #0d1b3e; padding: 0 1px; border-radius: 2px;
+    }
+    .map-search-empty {
+      padding: 18px 14px;
+      text-align: center;
+      font-size: 12.5px; color: #6b7fa8;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       CUSTOM CONFIRM DIALOG (ganti native confirm())
+       ═══════════════════════════════════════════════════════════════════ */
+    .confirm-ov {
+      display: none; position: fixed; inset: 0;
+      background: rgba(13, 27, 62, .55);
+      backdrop-filter: blur(6px);
+      z-index: 10000;
+      align-items: center; justify-content: center;
+      padding: 16px;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .confirm-ov.active { display: flex; animation: infraModalOvIn .2s ease; }
+    .confirm-bx {
+      background: #fff;
+      width: 100%; max-width: 380px;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, .25);
+      animation: infraModalScaleIn .22s cubic-bezier(.32, 1.24, .5, 1);
+      text-align: center;
+    }
+    .confirm-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .confirm-icon.danger { background: #fff4f5; color: #f5365c; }
+    .confirm-icon.warning { background: #fffbeb; color: #f59e0b; }
+    .confirm-icon.info { background: #eef3ff; color: #1a6ef5; }
+    .confirm-ttl {
+      font-size: 17px; font-weight: 700; color: #0d1b3e;
+      margin-bottom: 6px;
+    }
+    .confirm-msg {
+      font-size: 13.5px; color: #6b7fa8;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .confirm-actions {
+      display: flex; gap: 10px;
+    }
+    .confirm-actions button {
+      flex: 1;
+      padding: 11px 16px;
+      border-radius: 11px;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13.5px; font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .confirm-cancel {
+      background: #fff; color: #0d1b3e;
+      border: 1.5px solid #e0e7f3!important;
+    }
+    .confirm-cancel:hover { border-color: #1a6ef5!important; color: #1a6ef5; background: #f0f5ff; }
+    .confirm-ok {
+      background: #1a6ef5; color: #fff;
+      box-shadow: 0 4px 14px rgba(26,110,245,.3);
+    }
+    .confirm-ok.danger {
+      background: #f5365c;
+      box-shadow: 0 4px 14px rgba(245,54,92,.35);
+    }
+    .confirm-ok:hover { transform: translateY(-1px); }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       SEARCH TARGET HIGHLIGHT RING — pulse animation saat user pilih dari
+       hasil pencarian. Dipasang sebagai overlay marker non-interactive.
+       ═══════════════════════════════════════════════════════════════════ */
+    .search-target-icon-wrapper {
+      background: transparent !important;
+      border: none !important;
+      pointer-events: none;
+    }
+    .search-target-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 32px; height: 32px;
+      margin-top: -16px; margin-left: -16px;
+      border-radius: 50%;
+      border: 3px solid #1a6ef5;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.6), 0 0 24px rgba(26,110,245,.5);
+      animation: searchRingPulse 1.6s ease-out infinite;
+      pointer-events: none;
+    }
+    .search-target-ring.delay {
+      animation-delay: .8s;
+    }
+    @keyframes searchRingPulse {
+      0%   { transform: scale(.4); opacity: 1; }
+      80%  { transform: scale(2.2); opacity: 0; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* ── Marker cluster (pelanggan) — tema navy/blue, anti purple ── */
+    .marker-cluster-small,
+    .marker-cluster-medium,
+    .marker-cluster-large { background: transparent; }
+    .marker-cluster-small div,
+    .marker-cluster-medium div,
+    .marker-cluster-large div { background: transparent; }
+    .infra-cluster {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', sans-serif; font-weight: 800;
+      box-shadow: 0 4px 12px rgba(29,78,216,.45), 0 0 0 4px rgba(37,99,235,.18);
+      border: 2px solid rgba(255,255,255,.9);
+    }
+    .infra-cluster.ic-md { background: linear-gradient(135deg, #1d4ed8, #1e3a8a); }
+    .infra-cluster.ic-lg { background: linear-gradient(135deg, #1e3a8a, #172554);
+      box-shadow: 0 5px 16px rgba(23,37,84,.5), 0 0 0 5px rgba(30,58,138,.2); }
+    .infra-cluster b { font-size: 13px; line-height: 1; }
+    .infra-cluster small { font-size: 8.5px; opacity: .85; font-weight: 600; margin-top: 1px; }
+  </style>
+</head>
+<body class="infra-root">
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+      <div id="map-wrapper">
+        <div id="infraMap"></div>
+
+        <!-- Top bar wrapper: baris 1 = tile+aksi, baris 2 = filter -->
+        <div class="map-topbar-wrap">
+
+          <!-- Baris 1: tile switcher | Tambah Titik | Draw Link | spacer | filter (desktop) -->
+          <div class="map-topbar">
+            <div class="tile-switcher">
+              <button class="tile-btn active" data-tile="streets" onclick="switchTile('streets',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2 1,6"/></svg>
+                <span class="btn-label">Map</span>
+              </button>
+              <button class="tile-btn" data-tile="satellite" onclick="switchTile('satellite',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+                <span class="btn-label">Satelite</span>
+              </button>
+              <button class="tile-btn" data-tile="dark" onclick="switchTile('dark',this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                <span class="btn-label">Dark</span>
+              </button>
+            </div>
+
+            <button class="map-add-btn" onclick="openAddModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span class="btn-label">Tambah Titik</span>
+            </button>
+
+            <button class="map-draw-btn" id="drawBtn" onclick="toggleDrawMode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+              <span class="btn-label">Draw Link</span>
+            </button>
+
+            <!-- Spacer: dorong filter ke kanan di desktop -->
+            <div class="map-topbar-spacer"></div>
+
+            <!-- Filter: tampil di baris 1 pada desktop -->
+            <div class="filter-chips map-filter-desktop">
+              <div class="chip chip-all active" data-type="" onclick="setFilter('',this)"><span class="chip-dot" style="background:#64748b"></span>Semua</div>
+              <div class="chip chip-odc" data-type="odc" onclick="setFilter('odc',this)"><span class="chip-dot" style="background:#1d4ed8"></span>ODC</div>
+              <div class="chip chip-odp" data-type="odp" onclick="setFilter('odp',this)"><span class="chip-dot" style="background:#3b82f6"></span>ODP</div>
+              <div class="chip chip-tower" data-type="tower" onclick="setFilter('tower',this)"><span class="chip-dot" style="background:#475569"></span>Tiang</div>
+              <div class="chip chip-customer" data-type="customer" onclick="setFilter('customer',this)"><span class="chip-dot" style="background:#f97316"></span>Pelanggan</div>
+              <div class="chip chip-pop" data-type="pop" onclick="setFilter('pop',this)"><span class="chip-dot" style="background:#ef4444"></span>POP</div>
+            </div>
+          </div>
+
+          <!-- Baris 2: filter (mobile only) -->
+          <div class="filter-chips map-filter-mobile">
+            <div class="chip chip-all active" data-type="" onclick="setFilter('',this)"><span class="chip-dot" style="background:#64748b"></span>Semua</div>
+            <div class="chip chip-odc" data-type="odc" onclick="setFilter('odc',this)"><span class="chip-dot" style="background:#1d4ed8"></span>ODC</div>
+            <div class="chip chip-odp" data-type="odp" onclick="setFilter('odp',this)"><span class="chip-dot" style="background:#3b82f6"></span>ODP</div>
+            <div class="chip chip-tower" data-type="tower" onclick="setFilter('tower',this)"><span class="chip-dot" style="background:#475569"></span>Tiang</div>
+            <div class="chip chip-customer" data-type="customer" onclick="setFilter('customer',this)"><span class="chip-dot" style="background:#f97316"></span>Pelanggan</div>
+            <div class="chip chip-pop" data-type="pop" onclick="setFilter('pop',this)"><span class="chip-dot" style="background:#ef4444"></span>POP</div>
+          </div>
+
+        </div>
+
+        <!-- ═══════════ Search bar (kanan atas, Google-Maps-style) ═══════════ -->
+        <div class="map-search-wrap" id="mapSearchWrap">
+          <div class="map-search-input-wrap" id="mapSearchInputWrap">
+            <svg class="map-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="20" y1="20" x2="16.5" y2="16.5"/>
+            </svg>
+            <input type="text" class="map-search-input" id="mapSearchInput"
+                   placeholder="Cari customer, ODP, ODC, POP, tiang…"
+                   autocomplete="off" spellcheck="false">
+            <button type="button" class="map-search-clear" id="mapSearchClear" onclick="clearMapSearch()" aria-label="Bersihkan">✕</button>
+          </div>
+          <div class="map-search-dropdown" id="mapSearchDropdown"></div>
+        </div>
+
+        <!-- Place mode bar -->
+        <div class="place-mode-bar" id="placeModeBar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="placeModeText">Klik peta untuk memilih lokasi</span>
+          <button class="place-cancel" onclick="cancelPlaceMode()">Batal</button>
+        </div>
+
+        <!-- Draw mode bar -->
+        <div id="drawModeBar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><line x1="7.5" y1="12" x2="16.5" y2="12" stroke-dasharray="3 2"/></svg>
+          <span id="drawModeText">Klik titik PERTAMA — lalu klik peta untuk belokkan kabel</span>
+          <button class="draw-cancel" onclick="cancelDrawMode()">Batal</button>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="map-stats">
+          <div class="stat-item"><div class="stat-dot" style="background:#22c55e;box-shadow:0 0 5px rgba(34,197,94,.6)"></div><span class="stat-val" id="st-online" style="color:#22c55e">0</span><span class="stat-lbl">Online</span></div>
+          <div class="stat-item"><div class="stat-dot" style="background:#1d4ed8"></div><span class="stat-val" id="st-odc">0</span><span class="stat-lbl">ODC</span></div>
+          <div class="stat-item"><div class="stat-dot" style="background:#3b82f6"></div><span class="stat-val" id="st-odp">0</span><span class="stat-lbl">ODP</span></div>
+          <div class="stat-item"><div class="stat-dot" style="background:#475569"></div><span class="stat-val" id="st-tower">0</span><span class="stat-lbl">Tiang</span></div>
+          <div class="stat-item"><div class="stat-dot" style="background:#f97316"></div><span class="stat-val" id="st-cust">0</span><span class="stat-lbl">Pelanggan</span></div>
+          <div class="stat-item"><div class="stat-dot" style="background:#ef4444"></div><span class="stat-val" id="st-pop">0</span><span class="stat-lbl">POP</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="infraModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Tambah Titik Infrastruktur</h2>
+      <button class="modal-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-tabs" id="modalTabs">
+      <button class="modal-tab active" data-tab="odc" onclick="switchTab('odc',this)">ODC</button>
+      <button class="modal-tab" data-tab="odp" onclick="switchTab('odp',this)">ODP</button>
+      <button class="modal-tab" data-tab="tower" onclick="switchTab('tower',this)">Tiang</button>
+      <button class="modal-tab" data-tab="pop" onclick="switchTab('pop',this)">POP</button>
+      <button class="modal-tab" data-tab="customer" onclick="switchTab('customer',this)">Pelanggan</button>
+    </div>
+    <div class="modal-body">
+      <!-- ── Koordinat Section ── -->
+      <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 14px;margin-bottom:14px;border:1.5px solid var(--border)">
+        <!-- Header row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text-primary)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Lokasi
+          </div>
+          <div style="display:flex;gap:6px">
+            <!-- Toggle manual input -->
+            <button type="button" id="coordManualToggle" onclick="toggleManualCoord()"
+              style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;border:1.5px solid var(--border);background:var(--bg-card);color:var(--text-secondary);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
+              Input Manual
+            </button>
+            <!-- Pilih dari peta -->
+            <button type="button" id="rePickBtn" onclick="rePick()"
+              style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;border:1.5px solid var(--primary);background:#eff6ff;color:var(--primary);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Pilih di Peta
+            </button>
+          </div>
+        </div>
+
+        <!-- Koordinat display -->
+        <div id="coordPreviewWrap" style="display:flex;align-items:center;gap:8px">
+          <div id="coordDot" style="width:8px;height:8px;border-radius:50%;background:#e2e8f0;flex-shrink:0"></div>
+          <span id="coordPreview" style="font-size:12px;color:var(--text-secondary)">Belum dipilih — klik tombol di atas</span>
+        </div>
+
+        <!-- Manual input (hidden by default) -->
+        <div id="coordManualWrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:10px;font-weight:600;color:var(--text-secondary);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px">Latitude</label>
+              <input type="number" id="manualLat" step="0.000001" placeholder="-6.391581"
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg-card);font-size:12px;font-family:monospace;color:var(--text-primary);outline:none"
+                oninput="applyManualCoord()">
+            </div>
+            <div>
+              <label style="font-size:10px;font-weight:600;color:var(--text-secondary);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px">Longitude</label>
+              <input type="number" id="manualLng" step="0.000001" placeholder="106.457346"
+                style="width:100%;padding:7px 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg-card);font-size:12px;font-family:monospace;color:var(--text-primary);outline:none"
+                oninput="applyManualCoord()">
+            </div>
+          </div>
+          <!-- Paste koordinat (format: lat,lng atau lat lng) -->
+          <div style="margin-top:8px">
+            <label style="font-size:10px;font-weight:600;color:var(--text-secondary);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:4px">Paste Koordinat</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="pasteCoord" placeholder="-6.391581, 106.457346 atau dari Google Maps"
+                style="flex:1;padding:7px 10px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg-card);font-size:11px;color:var(--text-primary);outline:none;font-family:monospace"
+                onkeydown="if(event.key==='Enter')parseCoordPaste()">
+              <button type="button" onclick="parseCoordPaste()"
+                style="padding:7px 12px;border-radius:7px;border:none;background:var(--primary);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+                Terapkan
+              </button>
+            </div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:4px">Mendukung format: Google Maps, decimal, atau DMS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ODC -->
+      <div class="tab-panel active" id="tab-odc">
+        <div class="form-group"><label class="form-label">Nama ODC *</label><input type="text" class="form-control" id="odc-name" placeholder="mis. ODC-BGR-001"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Kapasitas Port</label><input type="number" class="form-control" id="odc-capacity" placeholder="144" min="1"></div>
+          <div class="form-group"><label class="form-label">Port Terpakai</label><input type="number" class="form-control" id="odc-used" placeholder="0" min="0"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent (ODC atau POP) <span style="color:#94a3b8;text-transform:none;letter-spacing:0;font-weight:500;font-size:11px">— opsional, otomatis terisi saat Draw Link</span></label>
+          <select class="form-control" id="odc-parent"><option value="">-- Tidak ada --</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-control" id="odc-address" placeholder="Alamat lokasi ODC"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="odc-status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="maintenance">Maintenance</option></select></div>
+        <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" id="odc-notes" rows="2" placeholder="Catatan..."></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Foto ODC</label>
+          <div id="odc-photo-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <input type="file" id="odc-photo-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+            <button type="button" id="odc-upload-btn"
+              style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#eff6ff;color:#0c399b;border:1.5px dashed #93c5fd;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Foto
+            </button>
+            <img id="odc-photo-preview" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;cursor:zoom-in">
+            <button type="button" id="odc-photo-remove" style="display:none;padding:4px 10px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Hapus</button>
+          </div>
+          <input type="hidden" id="odc-photo-url" value="">
+        </div>
+      </div>
+
+      <!-- ODP -->
+      <div class="tab-panel" id="tab-odp">
+        <div class="form-group"><label class="form-label">Nama ODP *</label><input type="text" class="form-control" id="odp-name" placeholder="mis. ODP-BGR-001-A"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Kapasitas Port</label><input type="number" class="form-control" id="odp-capacity" placeholder="8" min="1"></div>
+          <div class="form-group"><label class="form-label">Port Terpakai</label><input type="number" class="form-control" id="odp-used" placeholder="0" min="0"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent ODC <span style="color:#94a3b8;text-transform:none;letter-spacing:0;font-weight:500;font-size:11px">— opsional, otomatis terisi saat Draw Link</span></label>
+          <select class="form-control" id="odp-parent"><option value="">-- Tidak ada --</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-control" id="odp-address" placeholder="Alamat lokasi ODP"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="odp-status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="maintenance">Maintenance</option></select></div>
+        <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" id="odp-notes" rows="2" placeholder="Catatan..."></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Foto ODP</label>
+          <div id="odp-photo-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <!-- Input file di luar label, trigger via JS -->
+            <input type="file" id="odp-photo-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+            <button type="button" id="odp-upload-btn"
+              style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#eff6ff;color:#0c399b;border:1.5px dashed #93c5fd;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Foto
+            </button>
+            <img id="odp-photo-preview" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;cursor:zoom-in">
+            <button type="button" id="odp-photo-remove" style="display:none;padding:4px 10px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Hapus</button>
+          </div>
+          <input type="hidden" id="odp-photo-url" value="">
+        </div>
+      </div>
+
+      <!-- Tiang -->
+      <div class="tab-panel" id="tab-tower">
+        <div class="form-group"><label class="form-label">Nama Tiang *</label><input type="text" class="form-control" id="tower-name" placeholder="mis. Tiang-BGR-001"></div>
+        <div class="form-group"><label class="form-label">Alamat / Keterangan Lokasi</label><input type="text" class="form-control" id="tower-address" placeholder="mis. Depan warung, RT 03"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="tower-status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="maintenance">Maintenance</option></select></div>
+        <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" id="tower-notes" rows="2" placeholder="Catatan..."></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Foto Tiang</label>
+          <div id="tower-photo-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <input type="file" id="tower-photo-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+            <button type="button" id="tower-upload-btn"
+              style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#eff6ff;color:#0c399b;border:1.5px dashed #93c5fd;border-radius:9px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Foto
+            </button>
+            <img id="tower-photo-preview" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;cursor:zoom-in">
+            <button type="button" id="tower-photo-remove" style="display:none;padding:4px 10px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Hapus</button>
+          </div>
+          <input type="hidden" id="tower-photo-url" value="">
+        </div>
+      </div>
+
+      <!-- POP -->
+      <div class="tab-panel" id="tab-pop">
+        <div class="form-group"><label class="form-label">Nama POP *</label><input type="text" class="form-control" id="pop-name" placeholder="mis. POP-BGR-CENTRAL"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Tipe POP</label><select class="form-control" id="pop-pop-type"><option value="olt">OLT (Optical Line Terminal)</option><option value="mdf">MDF (Main Distribution Frame)</option><option value="datacenter">Datacenter</option><option value="other">Lainnya</option></select></div>
+          <div class="form-group"><label class="form-label">Kapasitas Output (ke ODC)</label><input type="number" class="form-control" id="pop-capacity" placeholder="mis. 16" min="1"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Output Terpakai</label><input type="number" class="form-control" id="pop-used" placeholder="0" min="0"></div>
+        <div class="form-group"><label class="form-label">Alamat</label><input type="text" class="form-control" id="pop-address" placeholder="Alamat lokasi POP"></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control" id="pop-status"><option value="active">Active</option><option value="inactive">Inactive</option><option value="maintenance">Maintenance</option></select></div>
+        <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" id="pop-notes" rows="2" placeholder="Catatan..."></textarea></div>
+        <div class="form-group">
+          <label class="form-label">Foto POP</label>
+          <div id="pop-photo-wrap" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <input type="file" id="pop-photo-input" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+            <button type="button" id="pop-upload-btn"
+              style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;color:#1d4ed8;border:1.5px solid #c7d2fe;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit"
+              onclick="document.getElementById('pop-photo-input').click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Foto
+            </button>
+            <img id="pop-photo-preview" src="" alt="" style="display:none;width:64px;height:64px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;cursor:zoom-in">
+            <button type="button" id="pop-photo-remove" style="display:none;padding:4px 10px;background:#fff5f5;color:#dc2626;border:1px solid #fecaca;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Hapus</button>
+          </div>
+          <input type="hidden" id="pop-photo-url" value="">
+        </div>
+      </div>
+
+      <!-- Pelanggan -->
+      <div class="tab-panel" id="tab-customer">
+        <div class="form-group" id="custSearchGroup">
+          <label class="form-label">Cari & Pilih Pelanggan *</label>
+          <div class="customer-search-wrap">
+            <input type="text" class="form-control" id="cust-search" placeholder="Ketik nama atau ID pelanggan..." autocomplete="off" oninput="searchCustomer(this.value)">
+            <div class="customer-dropdown" id="custDropdown"></div>
+          </div>
+        </div>
+        <div id="custSelected" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="width:32px;height:32px;background:#1d4ed8;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700;color:#1e3a8a" id="custSelName"></div>
+              <div style="font-size:11px;color:#3b5998;margin-top:2px" id="custSelDetail"></div>
+            </div>
+            <button type="button" id="custChangeBtn" onclick="changeCustomerSelection()"
+              style="background:#fff;border:1px solid #bfdbfe;color:#1d4ed8;font-size:11px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;font-family:inherit;flex-shrink:0;display:none">
+              Ganti
+            </button>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">Alamat Pemasangan</label><input type="text" class="form-control" id="cust-address" placeholder="Alamat pemasangan"></div>
+        <div class="form-group">
+          <label class="form-label">Parent ODP <span style="color:#94a3b8;text-transform:none;letter-spacing:0;font-weight:500;font-size:11px">— opsional, otomatis terisi saat Draw Link</span></label>
+          <select class="form-control" id="cust-parent"><option value="">-- Tidak ada --</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" id="cust-notes" rows="2" placeholder="Catatan..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="savePoint()" id="saveBtn">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LINK MODAL ===== -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>Buat Link Koneksi</h2>
+      <button class="modal-close" onclick="closeLinkModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Connection preview -->
+      <div style="background:var(--bg-secondary);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:3px;">DARI</div>
+          <div style="font-weight:700;font-size:13px;" id="lm-from">—</div>
+        </div>
+        <div style="color:#22c55e;font-size:20px;">⟶</div>
+        <div style="flex:1;text-align:center;">
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:3px;">KE</div>
+          <div style="font-weight:700;font-size:13px;" id="lm-to">—</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipe Kabel</label>
+          <select class="form-control" id="lm-type">
+            <option value="fiber">Fiber Optic</option>
+            <option value="trunk">Trunk / Backbone</option>
+            <option value="wireless">Wireless</option>
+            <option value="copper">Copper</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Panjang Kabel (meter)</label>
+          <input type="number" class="form-control" id="lm-dist" placeholder="mis. 150" min="0">
+          <div id="lm-waypoints" style="font-size:11px;color:var(--text-secondary);margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catatan</label>
+        <input type="text" class="form-control" id="lm-notes" placeholder="Catatan tambahan...">
+      </div>
+
+      <!-- Color preview -->
+      <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-secondary);padding:8px 0 0;">
+        <div id="lm-color-bar" style="width:60px;height:4px;border-radius:2px;background:#22c55e;"></div>
+        <span id="lm-color-label">Fiber Optic — garis hijau berpendar</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeLinkModal()">Batal</button>
+      <button class="btn btn-primary" onclick="saveLink()" id="saveLinkBtn">Simpan Link</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Update color preview when type changes
+document.getElementById('lm-type').addEventListener('change', function() {
+  const map_c = { fiber:'#22c55e', trunk:'#f59e0b', wireless:'#06b6d4', copper:'#94a3b8' };
+  const map_l = {
+    fiber:    'Fiber Optic — garis hijau berpendar',
+    trunk:    'Trunk / Backbone — garis kuning',
+    wireless: 'Wireless — garis biru cyan',
+    copper:   'Copper — garis abu-abu'
+  };
+  document.getElementById('lm-color-bar').style.background = map_c[this.value] || '#22c55e';
+  document.getElementById('lm-color-label').textContent     = map_l[this.value] || '';
+});
+</script>
+
+<!-- ═════════ Custom Confirm Dialog (ganti native confirm()) ═════════ -->
+<div class="confirm-ov" id="customConfirmOv">
+  <div class="confirm-bx">
+    <div class="confirm-icon" id="confirmIcon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div class="confirm-ttl" id="confirmTitle">Konfirmasi</div>
+    <div class="confirm-msg" id="confirmMsg">Apakah Anda yakin?</div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="confirmCancelBtn">Batal</button>
+      <button class="confirm-ok" id="confirmOkBtn">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═════════ Global customConfirm({title, message, variant, okText, cancelText}) → Promise<boolean> ═════════
+// Ganti native confirm() dengan dialog modern yang konsisten dengan tema halaman.
+window.customConfirm = function(opts) {
+  opts = opts || {};
+  const ov     = document.getElementById('customConfirmOv');
+  const icon   = document.getElementById('confirmIcon');
+  const title  = document.getElementById('confirmTitle');
+  const msg    = document.getElementById('confirmMsg');
+  const okBtn  = document.getElementById('confirmOkBtn');
+  const canBtn = document.getElementById('confirmCancelBtn');
+
+  title.textContent = opts.title   || 'Konfirmasi';
+  msg.textContent   = opts.message || 'Apakah Anda yakin?';
+  okBtn.textContent  = opts.okText     || 'OK';
+  canBtn.textContent = opts.cancelText || 'Batal';
+
+  const variant = opts.variant || 'danger'; // danger | warning | info
+  icon.className  = 'confirm-icon ' + variant;
+  okBtn.className = 'confirm-ok '   + (variant === 'danger' ? 'danger' : '');
+
+  // Swap icon SVG sesuai variant
+  let iconSvg = '';
+  if (variant === 'danger') {
+    iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+  } else if (variant === 'warning') {
+    iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+  } else {
+    iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+  }
+  icon.innerHTML = iconSvg;
+
+  ov.classList.add('active');
+
+  return new Promise(resolve => {
+    function close(result) {
+      ov.classList.remove('active');
+      okBtn.removeEventListener('click', onOk);
+      canBtn.removeEventListener('click', onCancel);
+      ov.removeEventListener('click', onBgClick);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    }
+    function onOk()       { close(true);  }
+    function onCancel()   { close(false); }
+    function onBgClick(e) { if (e.target === ov) close(false); }
+    function onKey(e)     {
+      if (e.key === 'Escape') close(false);
+      else if (e.key === 'Enter') close(true);
+    }
+    okBtn.addEventListener('click', onOk);
+    canBtn.addEventListener('click', onCancel);
+    ov.addEventListener('click', onBgClick);
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => okBtn.focus(), 50);
+  });
+};
+</script>
+
+<script>
+// ═════════ Search bar di peta — searchable index + dropdown + auto-zoom ═════════
+// Strategi:
+//   - Bangun index gabungan dari allInfraPoints (ODC/ODP/POP/Tiang/Customer-InfraPoint)
+//     + dari /customers/map (customer raw, untuk yang sudah ada lat/lng tapi
+//     mungkin belum sinkron sebagai InfrastructurePoint).
+//   - Match nama (case-insensitive). Untuk customer juga match customer_id & phone.
+//   - Dropdown grouped per type (Customer/ODP/ODC/POP/Tiang).
+//   - Klik item → pan + zoom ke titik + buka popup.
+(function() {
+  let searchIndex = [];              // [{id, name, type, lat, lng, meta, marker?}]
+  let searchHighlightIdx = -1;       // untuk keyboard navigation
+  let _searchIndexBuiltAt = 0;
+
+  const TYPE_META = {
+    customer: { label: 'Pelanggan', color: '#f97316', order: 1 },
+    odp:      { label: 'ODP',       color: '#3b82f6', order: 2 },
+    odc:      { label: 'ODC',       color: '#1d4ed8', order: 3 },
+    pop:      { label: 'POP',       color: '#ef4444', order: 4 },
+    tower:    { label: 'Tiang',     color: '#475569', order: 5 },
+  };
+
+  // Bangun index dari marker yang BENAR-BENAR sedang ada di peta.
+  // Sumber: window.markersById (InfrastructurePoint) + window.customerMarkersById (customer raw).
+  // Ini menjamin search hanya memunculkan titik yang user lihat — tidak ada
+  // "ghost result" untuk customer tanpa koord, atau untuk titik yang sudah
+  // ke-filter keluar.
+  function buildSearchIndex() {
+    searchIndex = [];
+
+    // 1. InfrastructurePoint markers (ODC, ODP, POP, Tiang, dan Customer-as-point)
+    const infraMarkers = window.markersById || {};
+    Object.keys(infraMarkers).forEach(idStr => {
+      const marker = infraMarkers[idStr];
+      if (!marker) return;
+      const pt = marker._infraPt;
+      if (!pt || pt.latitude == null || pt.longitude == null) return;
+      // Hanya masuk index kalau marker masih attached ke map
+      if (typeof marker._map === 'undefined' || marker._map === null) return;
+      searchIndex.push({
+        key:  `infra-${pt.id}`,
+        ref:  'infra',
+        id:   pt.id,
+        name: pt.name || '(Tanpa nama)',
+        type: pt.type || 'other',
+        lat:  +pt.latitude,
+        lng:  +pt.longitude,
+        meta: pt.address || (pt.parent_id ? `Parent #${pt.parent_id}` : '') || '',
+      });
+    });
+
+    // 2. Customer markers (yang dirender via addCustomerMarker, biasanya
+    // sudah punya InfrastructurePoint pasangannya tapi di-mark sebagai pelanggan
+    // dengan icon rumah). Hindari duplikat — kalau Customer.id sudah masuk
+    // via InfrastructurePoint (metadata.customer_id), skip.
+    const linkedCustIds = new Set();
+    searchIndex.forEach(it => {
+      if (it.type !== 'customer') return;
+      // pt.metadata.customer_id dipakai untuk mapping
+      const marker = infraMarkers[it.id];
+      if (!marker || !marker._infraPt) return;
+      let meta = marker._infraPt.metadata;
+      if (typeof meta === 'string') {
+        try { meta = JSON.parse(meta); } catch (_) { meta = null; }
+      }
+      if (meta && meta.customer_id != null) linkedCustIds.add(Number(meta.customer_id));
+    });
+
+    const custMarkers = window.customerMarkersById || {};
+    Object.keys(custMarkers).forEach(idStr => {
+      const marker = custMarkers[idStr];
+      if (!marker) return;
+      const c = marker._custData;
+      if (!c || c.latitude == null || c.longitude == null) return;
+      // Skip kalau marker tidak attached
+      if (typeof marker._map === 'undefined' || marker._map === null) return;
+      // Skip kalau sudah ke-cover via InfrastructurePoint
+      if (linkedCustIds.has(Number(c.id))) return;
+      searchIndex.push({
+        key:  `cust-${c.id}`,
+        ref:  'customer',
+        id:   c.id,
+        name: c.name || '(Tanpa nama)',
+        type: 'customer',
+        lat:  +c.latitude,
+        lng:  +c.longitude,
+        meta: c.customer_id || c.phone || c.address || '',
+        customerId: c.customer_id,
+        phone: c.phone,
+      });
+    });
+
+    _searchIndexBuiltAt = Date.now();
+  }
+
+  // Highlight substring di nama untuk feedback visual
+  function highlightMatch(text, query) {
+    if (!query) return _escHtml(text);
+    const lowText = text.toLowerCase();
+    const lowQ    = query.toLowerCase();
+    const idx = lowText.indexOf(lowQ);
+    if (idx === -1) return _escHtml(text);
+    return _escHtml(text.slice(0, idx))
+         + '<mark>' + _escHtml(text.slice(idx, idx + query.length)) + '</mark>'
+         + _escHtml(text.slice(idx + query.length));
+  }
+
+  function _escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  // Filter index berdasarkan query
+  function filterSearch(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return searchIndex.filter(it => {
+      if (it.name && it.name.toLowerCase().includes(q)) return true;
+      if (it.customerId && String(it.customerId).toLowerCase().includes(q)) return true;
+      if (it.phone && String(it.phone).includes(q)) return true;
+      if (it.meta && String(it.meta).toLowerCase().includes(q)) return true;
+      return false;
+    });
+  }
+
+  // Group by type lalu render dropdown
+  function renderDropdown(results, query) {
+    const dd = document.getElementById('mapSearchDropdown');
+    if (!results.length) {
+      dd.innerHTML = '<div class="map-search-empty">Tidak ada hasil untuk "' + _escHtml(query) + '"</div>';
+      dd.classList.add('open');
+      return;
+    }
+
+    // Group
+    const groups = {};
+    results.forEach(r => {
+      if (!groups[r.type]) groups[r.type] = [];
+      groups[r.type].push(r);
+    });
+
+    // Sort group berdasarkan TYPE_META.order, sort item dalam group alfabetis
+    const sortedTypes = Object.keys(groups).sort((a, b) => {
+      const oa = TYPE_META[a]?.order || 99;
+      const ob = TYPE_META[b]?.order || 99;
+      return oa - ob;
+    });
+
+    let html = '';
+    let globalIdx = 0;
+    sortedTypes.forEach(t => {
+      const meta = TYPE_META[t] || { label: t.toUpperCase(), color: '#94a3b8' };
+      groups[t].sort((a, b) => a.name.localeCompare(b.name));
+      const items = groups[t].slice(0, 15); // batasi 15 per group
+
+      html += '<div class="map-search-group">';
+      html += '<div class="map-search-group-label">';
+      html += '<span class="group-dot" style="background:' + meta.color + '"></span>';
+      html += meta.label + ' <span style="opacity:.6;font-weight:600">(' + groups[t].length + ')</span>';
+      html += '</div>';
+
+      items.forEach(it => {
+        html += '<div class="map-search-item" data-idx="' + globalIdx + '" '
+              + 'onclick="window._mapSearchPick(' + globalIdx + ')">';
+        html += '<div class="item-icon" style="background:' + meta.color + '">';
+        html += _typeIconSvg(t);
+        html += '</div>';
+        html += '<div class="item-text">';
+        html += '<div class="item-name">' + highlightMatch(it.name, query) + '</div>';
+        if (it.meta) {
+          html += '<div class="item-meta">' + _escHtml(String(it.meta)) + '</div>';
+        }
+        html += '</div></div>';
+        // Simpan ref ke globalIdx → item
+        results._flatRef = results._flatRef || {};
+        results._flatRef[globalIdx] = it;
+        globalIdx++;
+      });
+
+      if (groups[t].length > 15) {
+        html += '<div class="map-search-empty" style="padding:6px 14px;font-size:11px">'
+              + '+ ' + (groups[t].length - 15) + ' lagi — persempit pencarian'
+              + '</div>';
+      }
+      html += '</div>';
+    });
+
+    // Save current results for keyboard nav
+    window._mapSearchCurrentResults = results;
+    dd.innerHTML = html;
+    dd.classList.add('open');
+    searchHighlightIdx = -1;
+  }
+
+  function _typeIconSvg(t) {
+    const common = 'width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"';
+    if (t === 'customer') return '<svg ' + common + '><path d="M3 9.5L12 3l9 6.5V21a1 1 0 01-1 1h-5v-7h-6v7H4a1 1 0 01-1-1z"/></svg>';
+    if (t === 'odp')      return '<svg ' + common + '><rect x="5" y="9" width="14" height="11" rx="1.5"/><path d="M9 9V6a3 3 0 016 0v3"/></svg>';
+    if (t === 'odc')      return '<svg ' + common + '><rect x="4" y="5" width="16" height="14" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>';
+    if (t === 'pop')      return '<svg ' + common + '><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>';
+    if (t === 'tower')    return '<svg ' + common + '><line x1="12" y1="3" x2="12" y2="21"/><path d="M5 10c0-4 3-7 7-7s7 3 7 7"/><path d="M8 13c0-2 2-4 4-4s4 2 4 4"/></svg>';
+    return '<svg ' + common + '><circle cx="12" cy="12" r="9"/></svg>';
+  }
+
+  // Klik / pilih hasil → pan + zoom + open popup
+  window._mapSearchPick = function(globalIdx) {
+    const results = window._mapSearchCurrentResults;
+    if (!results || !results._flatRef) return;
+    const item = results._flatRef[globalIdx];
+    if (!item) return;
+    // Tutup dropdown DULU supaya tidak menutupi marker tujuan saat fly,
+    // lalu blur input agar keyboard mobile sembunyi & user fokus ke peta.
+    closeMapSearch();
+    const inp = document.getElementById('mapSearchInput');
+    if (inp) inp.blur();
+    // Jeda 1 frame supaya UI sempat update sebelum mulai animasi
+    requestAnimationFrame(() => navigateToMapPoint(item));
+  };
+
+  // Zoom level optimal per tipe — biar landing-nya selalu nyaman untuk lihat
+  // detail titik tujuan. Customer & ODP perlu lebih zoom (titik kecil),
+  // ODC/POP boleh sedikit lebih jauh karena biasanya area cakupannya luas.
+  const ZOOM_BY_TYPE = {
+    customer: 19,
+    odp:      19,
+    tower:    18,
+    odc:      18,
+    pop:      17,
+  };
+
+  // Pan & zoom ke titik dengan animasi cinematic mirip Google Maps.
+  // Strategi:
+  //   1. flyTo dengan duration agak panjang (1.2s) supaya transisi halus
+  //      tidak abrupt. Easing rendah (0.18) → gerakan terasa natural,
+  //      bukan linear.
+  //   2. Set zoom yang nyaman per tipe — bukan sekedar Math.max(zoom, X),
+  //      tapi paksa ke level yang tepat untuk lihat detail. Kalau user
+  //      sudah zoom lebih dalam dari target, hormati pilihannya.
+  //   3. Setelah landing, render "highlight ring" pulse di marker tujuan
+  //      selama beberapa detik agar mudah ditemukan secara visual.
+  //   4. Buka popup setelah view settle (1300ms) — beri jeda 100ms ekstra
+  //      dari durasi fly supaya popup tidak loncat-loncat saat animasi.
+  let _searchHighlightRing = null;
+  let _searchHighlightTimer = null;
+
+  window.navigateToMapPoint = function(item) {
+    // Akses 'map' sebagai bare identifier — top-level `let map` di
+    // infrastructure.js ada di global scope tapi BUKAN window.map (let/const
+    // tidak di-attach ke window seperti var). Inilah bug yang bikin klik
+    // dari dropdown sebelumnya tidak ada respons.
+    if (typeof map === 'undefined' || !map || !item) {
+      console.warn('[search] map belum siap atau item kosong');
+      return;
+    }
+    const ll = [item.lat, item.lng];
+
+    const targetZoom  = ZOOM_BY_TYPE[item.type] || 18;
+    const currentZoom = map.getZoom();
+    const finalZoom = Math.max(targetZoom, Math.min(currentZoom, 20));
+
+    map.flyTo(ll, finalZoom, {
+      animate: true,
+      duration: 1.2,
+      easeLinearity: 0.18,
+    });
+
+    if (_searchHighlightRing) {
+      try { map.removeLayer(_searchHighlightRing); } catch (_) {}
+      _searchHighlightRing = null;
+    }
+    if (_searchHighlightTimer) {
+      clearTimeout(_searchHighlightTimer);
+      _searchHighlightTimer = null;
+    }
+
+    setTimeout(() => {
+      const ringHtml = '<div class="search-target-ring"></div>'
+                     + '<div class="search-target-ring delay"></div>';
+      _searchHighlightRing = L.marker(ll, {
+        icon: L.divIcon({
+          html: ringHtml,
+          className: 'search-target-icon-wrapper',
+          iconSize: [80, 80],
+          iconAnchor: [40, 40],
+        }),
+        interactive: false,
+        zIndexOffset: -1000,
+      }).addTo(map);
+
+      let marker = null;
+      if (item.ref === 'infra' && window.markersById) {
+        marker = window.markersById[item.id];
+      }
+      if (!marker && item.ref === 'customer' && window.customerMarkersById) {
+        marker = window.customerMarkersById[item.id];
+      }
+      if (marker && typeof marker.openPopup === 'function') {
+        marker.openPopup();
+      }
+
+      _searchHighlightTimer = setTimeout(() => {
+        if (_searchHighlightRing) {
+          try { map.removeLayer(_searchHighlightRing); } catch (_) {}
+          _searchHighlightRing = null;
+        }
+        _searchHighlightTimer = null;
+      }, 4000);
+    }, 1250);
+  };
+
+  // Tutup dropdown
+  window.closeMapSearch = function() {
+    const dd = document.getElementById('mapSearchDropdown');
+    if (dd) dd.classList.remove('open');
+    searchHighlightIdx = -1;
+  };
+
+  // Bersihkan input
+  window.clearMapSearch = function() {
+    const inp  = document.getElementById('mapSearchInput');
+    const wrap = document.getElementById('mapSearchInputWrap');
+    if (inp)  inp.value = '';
+    if (wrap) wrap.classList.remove('has-value');
+    closeMapSearch();
+    inp && inp.focus();
+  };
+
+  // Public: tandai bahwa data peta sudah ter-load supaya search index siap
+  // Dipanggil oleh loadInfraData() setelah selesai render.
+  window.refreshMapSearchIndex = function() {
+    buildSearchIndex();
+  };
+
+  // Init listener saat DOM ready
+  document.addEventListener('DOMContentLoaded', function() {
+    const inp  = document.getElementById('mapSearchInput');
+    const wrap = document.getElementById('mapSearchInputWrap');
+    const dd   = document.getElementById('mapSearchDropdown');
+    if (!inp || !dd) return;
+
+    // Debounce input
+    let debounceTimer = null;
+    inp.addEventListener('input', function() {
+      const q = this.value;
+      if (wrap) {
+        if (q && q.length > 0) wrap.classList.add('has-value');
+        else wrap.classList.remove('has-value');
+      }
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!q.trim()) { closeMapSearch(); return; }
+        // Rebuild index kalau lebih dari 30 detik (data berubah)
+        if (Date.now() - _searchIndexBuiltAt > 30000) buildSearchIndex();
+        renderDropdown(filterSearch(q), q);
+      }, 120);
+    });
+
+    inp.addEventListener('focus', function() {
+      if (this.value.trim()) {
+        if (Date.now() - _searchIndexBuiltAt > 30000) buildSearchIndex();
+        renderDropdown(filterSearch(this.value), this.value);
+      }
+    });
+
+    // Keyboard navigation
+    inp.addEventListener('keydown', function(e) {
+      const items = dd.querySelectorAll('.map-search-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        searchHighlightIdx = Math.min(searchHighlightIdx + 1, items.length - 1);
+        updateHighlight(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        searchHighlightIdx = Math.max(searchHighlightIdx - 1, 0);
+        updateHighlight(items);
+      } else if (e.key === 'Enter') {
+        if (searchHighlightIdx >= 0 && items[searchHighlightIdx]) {
+          e.preventDefault();
+          const idx = parseInt(items[searchHighlightIdx].getAttribute('data-idx'));
+          window._mapSearchPick(idx);
+        } else if (items.length > 0) {
+          // Default: pilih hasil pertama
+          e.preventDefault();
+          const idx = parseInt(items[0].getAttribute('data-idx'));
+          window._mapSearchPick(idx);
+        }
+      } else if (e.key === 'Escape') {
+        closeMapSearch();
+        this.blur();
+      }
+    });
+
+    function updateHighlight(items) {
+      items.forEach((el, i) => {
+        el.classList.toggle('highlighted', i === searchHighlightIdx);
+        if (i === searchHighlightIdx) el.scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    // Tutup dropdown kalau klik di luar
+    document.addEventListener('click', function(e) {
+      const wrapEl = document.getElementById('mapSearchWrap');
+      if (wrapEl && !wrapEl.contains(e.target)) closeMapSearch();
+    });
+  });
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="/js/infrastructure.js?v=1781702500"></script>
+</body>
+</html>

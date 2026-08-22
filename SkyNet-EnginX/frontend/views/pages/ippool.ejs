@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --ip-blue:#2563eb;  --ip-blue-d:#1d4ed8; --ip-blue-l:#eff6ff;
+      --ip-green:#16a34a; --ip-green-d:#15803d; --ip-green-l:#f0fdf4;
+      --ip-red:#dc2626;   --ip-red-d:#b91c1c;   --ip-red-l:#fef2f2;
+      --ip-amber:#d97706; --ip-amber-d:#b45309; --ip-amber-l:#fffbeb;
+      --ip-teal:#0891b2;  --ip-teal-l:#ecfeff;
+      --ip-orange:#ea580c;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .ip { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .ip-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .ip-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .ip-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .ip-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+
+    /* ── STAT CARDS ── */
+    /* ── STAT CARDS — single strip with dividers ── */
+    .ip-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .ip-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .ip-card:last-child { border-right: none; }
+    .ip-card:hover { background: #fafbff; }
+
+    /* Active — biru solid */
+    .ip-card.ipc-active { background: #2563eb; border-color: #2563eb; }
+    .ip-card.ipc-active:hover { background: #1d4ed8; }
+    .ip-card.ipc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .ip-card.ipc-active .card-val  { color: #fff; }
+    .ip-card.ipc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .ip-card.ipc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .ip-card.ipc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .ip-card.ipc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .ip-card.ipc-active .sp-dot    { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    /* body */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    /* meta */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .pill-teal   { background:#cffafe; color:#0e7490; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    /* responsive */
+    @media(max-width:700px) {
+      .ip-cards { grid-template-columns:repeat(2,1fr); }
+      .ip-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .ip-card:nth-child(odd)  { border-right: 1px solid #e8eaed; }
+      .ip-card:nth-child(even) { border-right: none; }
+      .ip-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .ip-cards { grid-template-columns:1fr; }
+      .ip-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .ip-card:last-child { border-bottom: none; }
+    }
+
+    /* ── POOL CARDS SECTION ── */
+    .ip-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; margin-bottom:20px; }
+    .ip-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .ip-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .ip-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    /* Pool cards grid inside panel */
+    .pool-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; padding:16px 20px; }
+
+    .pool-card { background:#f8fafc; border:1.5px solid var(--border); border-radius:12px; padding:16px 18px; }
+    .pool-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+    .pool-name  { font-size:14px; font-weight:700; color:var(--text); }
+    .pool-range { font-size:11px; color:var(--faint); font-family:monospace; margin-top:2px; }
+    .pool-pct   { font-size:20px; font-weight:800; }
+    .pct-low    { color:var(--ip-green); }
+    .pct-med    { color:var(--ip-amber); }
+    .pct-high   { color:var(--ip-red); }
+
+    .usage-bar  { width:100%; height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin:10px 0 8px; }
+    .usage-fill { height:100%; border-radius:3px; transition:width .5s ease; }
+    .fill-low  { background:var(--ip-green); }
+    .fill-med  { background:var(--ip-amber); }
+    .fill-high { background:var(--ip-red); }
+
+    .pool-nums { display:flex; gap:12px; font-size:11.5px; font-weight:600; flex-wrap:wrap; }
+    .pool-num-item { display:flex; align-items:center; gap:4px; }
+    .pool-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+    .pool-toggle { margin-top:10px; font-size:12px; font-weight:600; color:var(--ip-blue); cursor:pointer; background:none; border:none; font-family:inherit; padding:0; display:flex; align-items:center; gap:4px; }
+    .pool-toggle:hover { text-decoration:underline; }
+    .pool-ips { margin-top:10px; padding-top:10px; border-top:1px solid #f1f5f9; display:none; }
+    .pool-ips.open { display:block; }
+    .ip-chips { display:flex; flex-wrap:wrap; gap:5px; max-height:120px; overflow-y:auto; }
+    .ip-chip { font-size:11px; font-family:monospace; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:3px 8px; color:#334155; }
+    .ip-chip-owner { font-size:10px; color:var(--faint); display:block; }
+
+    /* ── LEASED IPs TABLE ── */
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:220px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--ip-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .ip-tbl-hdr select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .ip-tbl-hdr select:focus { border-color:var(--ip-blue); }
+
+    .ip-table { width:100%; border-collapse:collapse; }
+    .ip-table thead tr { background:#f8fafc; }
+    .ip-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .ip-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; }
+    .ip-table tbody tr:hover { background:#f8fafc; }
+    .ip-table tbody tr:last-child { border-bottom:none; }
+    .ip-table td { padding:11px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell  { color:var(--faint); font-size:12px; font-weight:600; }
+    .ip-badge  { font-family:monospace; font-size:12px; font-weight:700; background:#f1f5f9; color:#334155; padding:4px 9px; border-radius:6px; display:inline-block; border:1px solid #e2e8f0; }
+    .pool-badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; background:var(--ip-blue-l); color:var(--ip-blue); border:1px solid #bfdbfe; }
+    .owner-cell { font-weight:600; color:var(--text); }
+    .info-cell  { font-size:11.5px; color:var(--faint); font-family:monospace; }
+
+    /* Empty */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    @media(max-width:768px) {
+      .search-wrap input { width:160px; }
+      .ip-table th:nth-child(5),.ip-table td:nth-child(5) { display:none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout ip">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="ip-hdr">
+        <div class="ip-hdr-l">
+          <h1>
+            IP Pool Usage
+          </h1>
+          <p>Monitor penggunaan IP pool dari Mikrotik secara real-time</p>
+        </div>
+        <div class="ip-hdr-r">
+          <div id="mtSelectorMount"></div>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="ip-cards">
+
+        <div class="ip-card ipc-active" id="ipc-pools" data-filter="pools" onclick="ipcClick(this)">
+          <div class="card-lbl">Total Pools</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statPools">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="ip-pill-pools">—</span>
+                <span class="card-sub">IP pool aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-pools" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-pools-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-pools-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-pools-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ip-card" id="ipc-used" data-filter="used" onclick="ipcClick(this)">
+          <div class="card-lbl">IP Terpakai</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statUsed">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="ip-pill-used">—</span>
+                <span class="card-sub">Dari total pool</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-used" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-used-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-used-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-used-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ip-card" id="ipc-free" data-filter="free" onclick="ipcClick(this)">
+          <div class="card-lbl">IP Tersedia</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statFree">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="ip-pill-free">—</span>
+                <span class="card-sub">IP masih kosong</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-free" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-free-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-free-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-free-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="ip-card" id="ipc-util" data-filter="util" onclick="ipcClick(this)">
+          <div class="card-lbl">Utilisasi</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statUtil">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="ip-pill-util">—</span>
+                <span class="card-sub">Rata-rata semua pool</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-util" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-util-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-util-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-util-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pool cards -->
+      <div class="ip-tbl-wrap">
+        <div class="ip-tbl-hdr">
+          <div class="ip-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ip-blue)" stroke-width="2.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+            Daftar Pool
+            <span class="ip-count" id="poolCount">0 pool</span>
+          </div>
+        </div>
+        <div class="pool-grid" id="poolGrid">
+          <div class="tbl-empty" style="grid-column:1/-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+            <p>Memuat pool...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leased IPs table -->
+      <div class="ip-tbl-wrap">
+        <div class="ip-tbl-hdr">
+          <div class="ip-tbl-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ip-blue)" stroke-width="2.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+            IP Terpakai
+            <span class="ip-count" id="usedCount">0 IP</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="searchUsed" placeholder="Cari IP atau owner...">
+            </div>
+            <select id="filterPool">
+              <option value="">All Pools</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="ip-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>IP Address</th>
+                <th>Pool</th>
+                <th>Owner</th>
+                <th>Info</th>
+              </tr>
+            </thead>
+            <tbody id="usedTbody">
+              <tr><td colspan="5">
+                <div class="tbl-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                  <p>Memuat data...</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/mikrotik-selector.js"></script>
+<script src="/js/ippool.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={pools:[],used:[],free:[],util:[]};
+  const COLORS={pools:'#2563eb',used:'#dc2626',free:'#16a34a',util:'#d97706'};
+  function sparkPath(vals){
+    if(!vals||vals.length<2)return null;
+    const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W,H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1],fp=pts[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function drawSpark(id,vals){
+    const sp=sparkPath(vals); if(!sp)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',sp.fill);
+    if(l)l.setAttribute('d',sp.d);
+    if(d){d.setAttribute('cx',sp.dot[0].toFixed(1));d.setAttribute('cy',sp.dot[1].toFixed(1));}
+  }
+  function readNum(id){const el=document.getElementById(id);return el?parseFloat(el.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function updateAll(){
+    const vals={pools:readNum('statPools'),used:readNum('statUsed'),free:readNum('statFree'),util:readNum('statUtil')};
+    Object.keys(vals).forEach(k=>{
+      hist[k].push(vals[k]);
+      if(hist[k].length>MAX)hist[k].shift();
+      drawSpark('sp-'+k,hist[k]);
+      const p=document.getElementById('ip-pill-'+k);
+      if(p)p.textContent=vals[k]+(k==='util'?'%':'');
+    });
+  }
+  window._ipUpdateCards=updateAll;
+  ['statPools','statUsed','statFree','statUtil'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)new MutationObserver(()=>setTimeout(updateAll,50)).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+  document.addEventListener('DOMContentLoaded',updateAll);
+})();
+function ipcClick(el){
+  const cards=document.querySelectorAll('.ip-card[data-filter]');
+  const wasActive=el.classList.contains('ipc-active');
+  const COLORS={pools:'#2563eb',used:'#dc2626',free:'#16a34a',util:'#d97706'};
+  cards.forEach(c=>{
+    c.classList.remove('ipc-active');
+    const col=COLORS[c.dataset.filter]||'#64748b';
+    const line=c.querySelector('.sp-line'),fill=c.querySelector('.sp-fill'),dot=c.querySelector('.sp-dot');
+    if(line)line.style.stroke=col;
+    if(fill)fill.style.fill=col;
+    if(dot)dot.style.fill=col;
+  });
+  if(!wasActive){
+    el.classList.add('ipc-active');
+    const line=el.querySelector('.sp-line'),fill=el.querySelector('.sp-fill'),dot=el.querySelector('.sp-dot');
+    if(line)line.style.stroke='rgba(255,255,255,.70)';
+    if(fill)fill.style.fill='rgba(255,255,255,.12)';
+    if(dot)dot.style.fill='#fff';
+  }
+}
+</script>
+</body>
+</html>

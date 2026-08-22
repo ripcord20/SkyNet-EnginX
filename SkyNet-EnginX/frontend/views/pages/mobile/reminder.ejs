@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    .rm-chart{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 16px;margin-bottom:14px;box-shadow:0 8px 20px -15px rgba(30,60,120,.26);}
+    .rmc-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+    .rmc-title{font-size:12.5px;font-weight:800;color:#3a4a68;}
+    .rmc-total{font-size:11px;color:var(--muted);font-weight:600;}
+    .rmc-total b{color:#d13b42;font-weight:800;}
+    .rmc-row{margin-bottom:11px;}
+    .rmc-row:last-child{margin-bottom:0;}
+    .rmc-rt{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px;}
+    .rmc-rt .k{font-weight:700;color:#5a6885;display:flex;align-items:center;gap:6px;}
+    .rmc-rt .k i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+    .rmc-rt .v{font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+    .rmc-track{height:8px;border-radius:100px;background:#eef1f5;overflow:hidden;}
+    .rmc-fill{height:100%;border-radius:100px;transition:width .8s cubic-bezier(.22,.61,.36,1);}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .money{font-variant-numeric:tabular-nums;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .content{padding:4px 16px 20px;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+    .anim{opacity:0;animation:fadeUp .45s cubic-bezier(.22,.61,.36,1) forwards;}
+    /* Segment tabs */
+    .seg{display:flex;gap:6px;background:#fff;border-radius:14px;padding:5px;margin-bottom:16px;box-shadow:0 5px 14px -9px rgba(30,60,120,.16);}
+    .seg-btn{flex:1;padding:10px 4px;border:none;background:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;color:#6b7a97;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;}
+    .seg-btn.sel{background:var(--blue);color:#fff;}
+    .seg-cnt{font-size:15px;font-weight:800;}
+    /* Select bar */
+    .sel-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #eef1f6;border-radius:15px;padding:11px 14px;margin-bottom:14px;}
+    .sel-all{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:#3a4a68;cursor:pointer;user-select:none;}
+    .sel-all input{display:none;}
+    .sel-box{width:20px;height:20px;border-radius:6px;border:2px solid #cdd6e4;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;}
+    .sel-all input:checked + .sel-box{background:var(--blue);border-color:var(--blue);}
+    .sel-all input:checked + .sel-box::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-2px;}
+    .sel-all input:indeterminate + .sel-box{background:var(--blue);border-color:var(--blue);}
+    .sel-all input:indeterminate + .sel-box::after{content:'';width:9px;height:2.5px;background:#fff;border-radius:2px;}
+    .bcast-btn{padding:10px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#1fa855,#158c45);color:#fff;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:opacity .15s;}
+    .bcast-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .bcast-btn svg{width:16px;height:16px;}
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .rm{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1px solid #eef1f6;border-radius:15px;padding:13px 14px;transition:border .12s,background .12s;}
+    .rm.checked{border-color:#bcd0f7;background:#f7faff;}
+    .rm-check{flex-shrink:0;margin-top:2px;cursor:pointer;}
+    .rm-check input{display:none;}
+    .rm-cbox{width:20px;height:20px;border-radius:6px;border:2px solid #cdd6e4;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;}
+    .rm-check input:checked + .rm-cbox{background:var(--blue);border-color:var(--blue);}
+    .rm-check input:checked + .rm-cbox::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-2px;}
+    .rm-av{width:40px;height:40px;border-radius:12px;background:#f5f7fb;color:#3a4a68;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+    .rm-body{flex:1;min-width:0;}
+    .rm-t{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .rm-info{font-size:11.5px;color:#6b7a97;margin-top:4px;line-height:1.5;}
+    .rm-info .lbl{color:#b3bdd0;}
+    .rm-due{font-size:11px;font-weight:700;margin-top:5px;display:flex;align-items:center;gap:5px;}
+    .rm-due svg{width:13px;height:13px;}
+    .rm-day{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:100px;}
+    .d-today{background:#fef1db;color:#c67d0a;} .d-soon{background:#e0f2fe;color:#0ea5e9;} .d-past{background:#fde5e6;color:#d13b42;}
+    .rm-send{flex-shrink:0;align-self:center;padding:9px 13px;border:none;border-radius:11px;background:linear-gradient(135deg,#25d366,#1fae54);color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:transform .1s,opacity .15s;white-space:nowrap;}
+    .rm-send:active{transform:scale(.95);} .rm-send svg{width:16px;height:16px;flex-shrink:0;}
+    .rm-send.done{background:#e8f6ee;color:#1fae54;} .rm-send:disabled{opacity:.55;cursor:not-allowed;}
+    .rm-send.nowa{background:#f0f3f9;color:#7c93a0;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{width:44px;height:44px;color:#c7d0e0;margin-bottom:12px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;max-width:90vw;text-align:center;pointer-events:none;}
+    .toast.show{opacity:1;} .toast.ok{background:#12946f;} .toast.err{background:#d13b42;}
+    /* Confirm modal */
+    .cf-overlay{position:fixed;inset:0;z-index:600;background:rgba(15,27,74,.5);opacity:0;visibility:hidden;transition:opacity .25s;display:flex;align-items:center;justify-content:center;padding:24px;}
+    .cf-overlay.open{opacity:1;visibility:visible;}
+    .cf{background:#fff;border-radius:22px;padding:24px;max-width:340px;width:100%;text-align:center;transform:scale(.9);transition:transform .25s;}
+    .cf-overlay.open .cf{transform:scale(1);}
+    .cf-ic{width:60px;height:60px;border-radius:18px;background:#eafaf0;color:#1fa855;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+    .cf-ic svg{width:30px;height:30px;}
+    .cf h3{font-size:17px;font-weight:800;margin-bottom:8px;}
+    .cf p{font-size:13px;color:#5a6885;margin-bottom:20px;line-height:1.5;}
+    .cf-btns{display:flex;gap:10px;}
+    .cf-btns button{flex:1;padding:13px;border-radius:13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+    .cf-cancel{background:#f0f3f9;color:#5a6885;} .cf-ok{background:linear-gradient(135deg,#1fa855,#158c45);color:#fff;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div class="htitle">Reminder Tagihan</div>
+      <div class="hsub">Ingatkan pelanggan yang jatuh tempo via WhatsApp</div>
+    </div>
+    <div class="content">
+      <div class="seg anim" id="segTabs">
+        <button class="seg-btn sel" data-b="due_today"><span class="seg-cnt" id="cntToday">–</span>Hari Ini</button>
+        <button class="seg-btn" data-b="due_3days"><span class="seg-cnt" id="cntSoon">–</span>Akan Datang</button>
+        <button class="seg-btn" data-b="past_due"><span class="seg-cnt" id="cntPast">–</span>Lewat Tempo</button>
+      </div>
+
+      <div class="rm-chart" id="rmChart">
+        <div class="rmc-head"><span class="rmc-title">Distribusi Jatuh Tempo</span><span class="rmc-total" id="rmcTotal">Total <b>–</b></span></div>
+        <div class="rmc-row">
+          <div class="rmc-rt"><span class="k"><i style="background:#f5a623;"></i>Hari Ini</span><span class="v" id="rmcToday">–</span></div>
+          <div class="rmc-track"><div class="rmc-fill" id="rmcTodayBar" style="width:0%;background:#f5a623;"></div></div>
+        </div>
+        <div class="rmc-row">
+          <div class="rmc-rt"><span class="k"><i style="background:#0ea5e9;"></i>Akan Datang</span><span class="v" id="rmcSoon">–</span></div>
+          <div class="rmc-track"><div class="rmc-fill" id="rmcSoonBar" style="width:0%;background:#0ea5e9;"></div></div>
+        </div>
+        <div class="rmc-row">
+          <div class="rmc-rt"><span class="k"><i style="background:#f2545b;"></i>Lewat Tempo</span><span class="v" id="rmcPast">–</span></div>
+          <div class="rmc-track"><div class="rmc-fill" id="rmcPastBar" style="width:0%;background:#f2545b;"></div></div>
+        </div>
+      </div>
+
+      <div class="sel-bar anim">
+        <label class="sel-all">
+          <input type="checkbox" id="selAll" onchange="toggleAll(this)">
+          <span class="sel-box"></span>
+          <span id="selAllLbl">Pilih semua</span>
+        </label>
+        <button class="bcast-btn" id="bcastBtn" onclick="confirmBroadcast()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          <span id="bcastLbl">Broadcast</span>
+        </button>
+      </div>
+
+      <div class="list" id="rmList">
+        <div class="rm"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="rm-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+        <div class="rm"><div class="skel" style="width:42px;height:42px;border-radius:13px;"></div><div class="rm-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm broadcast -->
+  <div class="cf-overlay" id="cfOverlay">
+    <div class="cf">
+      <div class="cf-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+      <h3>Kirim Broadcast?</h3>
+      <p id="cfText">Reminder tagihan akan dikirim ke semua pelanggan di daftar ini via WhatsApp.</p>
+      <div class="cf-btns">
+        <button class="cf-cancel" onclick="closeConfirm()">Batal</button>
+        <button class="cf-ok" id="cfOkBtn" onclick="doBroadcast()">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,opts){ opts=opts||{}; const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}, opts.headers||{}); try{ const r=await fetch(url,Object.assign({credentials:'include',headers},opts)); if(r.status===401){location.href='/login';return null;} const x=await r.text(); let d=null; try{d=x?JSON.parse(x):null;}catch(_){}; return {status:r.status,data:d}; }catch(e){return {status:0,data:null};} }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function fmtRp(n){ n=Number(n)||0; return 'Rp '+n.toLocaleString('id-ID'); }
+    function fmtRpShort(n){ n=Number(n)||0; if(n>=1000000)return 'Rp '+(n/1000000).toFixed(1).replace('.0','')+'jt'; if(n>=1000)return 'Rp '+Math.round(n/1000)+'rb'; return 'Rp '+n.toLocaleString('id-ID'); }
+    function bucketSum(arr){ return (arr||[]).reduce((a,b)=>a+(Number(b.package_price)||0),0); }
+    function renderReminderChart(){
+      const t=_buckets.due_today.length, s=_buckets.due_3days.length, p=_buckets.past_due.length;
+      const max=Math.max(t,s,p,1);
+      document.getElementById('rmcToday').textContent=t;
+      document.getElementById('rmcSoon').textContent=s;
+      document.getElementById('rmcPast').textContent=p;
+      document.getElementById('rmcTodayBar').style.width=Math.round(t/max*100)+'%';
+      document.getElementById('rmcSoonBar').style.width=Math.round(s/max*100)+'%';
+      document.getElementById('rmcPastBar').style.width=Math.round(p/max*100)+'%';
+      // Total nilai tagihan yang lewat tempo (paling penting)
+      const totalPast=bucketSum(_buckets.past_due);
+      document.querySelector('#rmcTotal b').textContent=fmtRpShort(totalPast);
+    }
+    function toast(m,t){ const el=document.getElementById('toast'); el.textContent=m; el.className='toast show'+(t?' '+t:''); setTimeout(()=>el.classList.remove('show'),2600); }
+
+    let _buckets={due_today:[],due_3days:[],past_due:[]}, _cur='due_today', _selected={};
+    const MONTHS=['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    function dayTag(days,bucket){
+      if(bucket==='past_due'){ return '<span class="rm-day d-past">'+Math.abs(days)+' hari lewat</span>'; }
+      if(days===0){ return '<span class="rm-day d-today">Hari ini</span>'; }
+      return '<span class="rm-day d-soon">'+days+' hari lagi</span>';
+    }
+    function fmtDate(s){ if(!s)return'-'; const d=new Date(s); if(isNaN(d))return String(s).slice(0,10); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+    function rmCard(r,bucket){
+      const nm=r.customer_name||'Pelanggan'; const init=(nm[0]||'?').toUpperCase();
+      const phone=(r.customer_phone||'').replace(/[^0-9]/g,'');
+      const hasWa=!!phone;
+      const done=!!r.last_wa_reminder_at;
+      const checked=!!_selected[r.invoice_id];
+      const waLogo='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.06 2.87 1.21 3.07.15.2 2.09 3.2 5.07 4.49.71.31 1.26.49 1.69.62.71.23 1.36.19 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.5h-.02a9.5 9.5 0 0 1-4.83-1.32l-.35-.21-3.59.94.96-3.5-.23-.36a9.46 9.46 0 0 1-1.45-5.05c0-5.24 4.27-9.5 9.52-9.5 2.54 0 4.93.99 6.73 2.79a9.44 9.44 0 0 1 2.78 6.72c0 5.24-4.27 9.5-9.5 9.5zM20.5 3.49A11.8 11.8 0 0 0 12.04 0C5.46 0 .1 5.35.1 11.92c0 2.1.55 4.15 1.59 5.96L0 24l6.3-1.65a11.9 11.9 0 0 0 5.73 1.46h.01c6.58 0 11.94-5.35 11.94-11.92 0-3.19-1.24-6.19-3.49-8.44z"/></svg>';
+      let btnInner, btnCls='rm-send';
+      if(!hasWa){ btnCls+=' nowa'; btnInner=waLogo+'<span>—</span>'; }
+      else if(done){ btnCls+=' done'; btnInner='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>Terkirim</span>'; }
+      else { btnInner=waLogo+'<span>Kirim</span>'; }
+
+      const pkg=r.package_name||'-';
+      const price=(r.package_price!=null)?fmtRp(r.package_price):'-';
+      const inv=r.invoice_number||('#'+r.invoice_id);
+      const periode=(r.period_month&&r.period_year)?(MONTHS[r.period_month]+' '+r.period_year):'-';
+      const lastPay=r.last_payment_date?fmtDate(r.last_payment_date):'Belum pernah';
+
+      return '<div class="rm'+(checked?' checked':'')+'" data-inv="'+r.invoice_id+'">'+
+        (hasWa?('<label class="rm-check"><input type="checkbox" '+(checked?'checked':'')+' onchange="toggleOne('+r.invoice_id+',this)"><span class="rm-cbox"></span></label>'):'<span class="rm-check" style="width:20px;"></span>')+
+        '<div class="rm-av">'+esc(init)+'</div>'+
+        '<div class="rm-body">'+
+          '<div class="rm-t">'+esc(nm)+' '+dayTag(r.days,bucket)+'</div>'+
+          '<div class="rm-info">'+esc(pkg)+' · <b>'+price+'</b><br><span class="lbl">'+esc(inv)+' · Periode '+periode+'</span><br><span class="lbl">Bayar terakhir:</span> '+esc(lastPay)+'</div>'+
+          '<div class="rm-due" style="color:'+(bucket==="past_due"?"#d13b42":"#c67d0a")+';"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Jatuh tempo '+fmtDate(r.due_date)+'</div>'+
+        '</div>'+
+        '<button class="'+btnCls+'" '+(hasWa?'':'disabled')+' onclick="sendOne('+r.invoice_id+',this)">'+btnInner+'</button>'+
+      '</div>';
+    }
+    function selectableRows(){ return (_buckets[_cur]||[]).filter(r=>(r.customer_phone||'').replace(/[^0-9]/g,'')); }
+    function updateSelUI(){
+      const rows=selectableRows(); const total=rows.length;
+      const sel=rows.filter(r=>_selected[r.invoice_id]).length;
+      const all=document.getElementById('selAll');
+      all.checked=(total>0 && sel===total);
+      all.indeterminate=(sel>0 && sel<total);
+      document.getElementById('selAllLbl').textContent=sel>0?('Terpilih '+sel):'Pilih semua';
+      document.getElementById('bcastBtn').disabled=(sel===0);
+      document.getElementById('bcastLbl').textContent=sel>0?('Broadcast ('+sel+')'):'Broadcast';
+    }
+    function toggleOne(invId,cb){
+      if(cb.checked) _selected[invId]=true; else delete _selected[invId];
+      const card=document.querySelector('.rm[data-inv="'+invId+'"]'); if(card)card.classList.toggle('checked',cb.checked);
+      updateSelUI();
+    }
+    function toggleAll(cb){
+      const rows=selectableRows();
+      if(cb.checked){ rows.forEach(r=>_selected[r.invoice_id]=true); } else { rows.forEach(r=>delete _selected[r.invoice_id]); }
+      renderBucket();
+    }
+    function renderBucket(){
+      const rows=_buckets[_cur]||[];
+      const list=document.getElementById('rmList');
+      if(rows.length){ list.innerHTML=rows.map(r=>rmCard(r,_cur)).join(''); }
+      else{ list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg><div>Tidak ada tagihan di kategori ini</div></div>'; }
+      updateSelUI();
+    }
+    async function loadReminders(){
+      const r=await api('/api/billing/due-date-lists?limit=50');
+      if(r.data&&r.data.success&&r.data.data){
+        const d=r.data.data;
+        _buckets.due_today=d.due_today||[]; _buckets.due_3days=d.due_3days||[]; _buckets.past_due=d.past_due||[];
+        document.getElementById('cntToday').textContent=_buckets.due_today.length;
+        document.getElementById('cntSoon').textContent=_buckets.due_3days.length;
+        document.getElementById('cntPast').textContent=_buckets.past_due.length;
+        renderReminderChart();
+        renderBucket();
+      } else { document.getElementById('rmList').innerHTML='<div class="empty">Gagal memuat data</div>'; }
+    }
+
+    document.getElementById('segTabs').addEventListener('click',function(e){
+      const b=e.target.closest('.seg-btn'); if(!b)return;
+      this.querySelectorAll('.seg-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); _cur=b.dataset.b; _selected={}; renderBucket();
+    });
+
+    // Kirim 1 pelanggan
+    async function sendOne(invId,btn){
+      if(btn.disabled)return; btn.disabled=true;
+      const span=btn.querySelector('span'); const oldLabel=span?span.textContent:''; if(span)span.textContent='…';
+      const r=await api('/api/billing/invoices/'+invId+'/reminder',{method:'POST'});
+      if(r.data&&r.data.success){
+        btn.classList.add('done');
+        btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>Terkirim</span>';
+        toast('Reminder terkirim','ok');
+        const row=(_buckets[_cur]||[]).find(x=>x.invoice_id===invId); if(row) row.last_wa_reminder_at=new Date().toISOString();
+      } else { toast((r.data&&r.data.message)||'Gagal mengirim reminder','err'); btn.disabled=false; if(span)span.textContent=oldLabel; }
+    }
+
+    // Broadcast (hanya yang dipilih)
+    function selectedIds(){ return Object.keys(_selected).map(Number).filter(id=>_selected[id]); }
+    function confirmBroadcast(){
+      const ids=selectedIds(); if(!ids.length)return;
+      document.getElementById('cfText').textContent='Reminder tagihan akan dikirim ke '+ids.length+' pelanggan terpilih via WhatsApp.';
+      document.getElementById('cfOverlay').classList.add('open');
+    }
+    function closeConfirm(){ document.getElementById('cfOverlay').classList.remove('open'); }
+    async function doBroadcast(){
+      const ids=selectedIds(); if(!ids.length)return;
+      const okBtn=document.getElementById('cfOkBtn'); okBtn.disabled=true; okBtn.textContent='Mengirim…';
+      const r=await api('/api/billing/bulk-reminder',{method:'POST',body:JSON.stringify({invoice_ids:ids})});
+      okBtn.disabled=false; okBtn.textContent='Kirim';
+      closeConfirm();
+      if(r.data&&r.data.success){
+        const sent=(r.data.sent!=null?r.data.sent:(r.data.data&&r.data.data.sent)); const failed=(r.data.failed!=null?r.data.failed:(r.data.data&&r.data.data.failed));
+        toast('Broadcast terkirim'+(sent!=null?(' ('+sent+' berhasil'+(failed?(', '+failed+' gagal'):'')+')'):''),'ok');
+        const idset={}; ids.forEach(id=>idset[id]=true);
+        (_buckets[_cur]||[]).forEach(x=>{ if(idset[x.invoice_id]) x.last_wa_reminder_at=new Date().toISOString(); });
+        _selected={};
+        renderBucket();
+      } else { toast((r.data&&r.data.message)||'Broadcast gagal','err'); }
+    }
+    document.getElementById('cfOverlay').addEventListener('click',function(e){ if(e.target===this) closeConfirm(); });
+
+    loadReminders();
+  </script>
+</body>
+</html>

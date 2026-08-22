@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3;
+      --d-text:#0d1b3e; --d-muted:#6b7fa8;
+      --d-blue1:#1a6ef5; --d-blue2:#0047cc;
+      --d-green:#00c896; --d-red:#f5365c; --d-orange:#fb8c00;
+    }
+    .todo-page { font-family:'DM Sans',sans-serif; background:var(--d-bg) !important; }
+
+    /* ── Fin-cards (identik dengan customers/packages) ── */
+    /* ── STAT CARDS — single strip ── */
+    .td-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .td-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .td-card::before, .td-card::after { display:none !important; content:none !important; }
+    .td-card:last-child { border-right: none; }
+    .td-card:hover { background: #fafbff; }
+    .td-card.xc-active { background: #2563eb; border-color: #2563eb; }
+    .td-card.xc-active:hover { background: #1d4ed8; }
+    .td-card.xc-active .xc-lbl  { color: rgba(255,255,255,.70); }
+    .td-card.xc-active .xc-val  { color: #fff; }
+    .td-card.xc-active .xc-sub  { color: rgba(255,255,255,.60); }
+    .td-card.xc-active .xc-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .td-card.xc-active .sp-line { stroke: rgba(255,255,255,.70) !important; }
+    .td-card.xc-active .sp-fill { fill: rgba(255,255,255,.12) !important; }
+    .td-card.xc-active .sp-dot  { fill: #fff !important; }
+    .xc-lbl  { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .xc-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .xc-left { display:flex; flex-direction:column; min-width:0; }
+    .xc-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .xc-val { font-size:26px; } }
+    .xc-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .xc-pill { display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .xc-blue   { background:#dbeafe; color:#1d4ed8; }
+    .xc-green  { background:#dcfce7; color:#16a34a; }
+    .xc-red    { background:#fee2e2; color:#dc2626; }
+    .xc-amber  { background:#fef3c7; color:#b45309; }
+    .xc-slate  { background:#f1f5f9; color:#475569; }
+    .xc-teal   { background:#cffafe; color:#0e7490; }
+    .xc-cyan   { background:#cffafe; color:#0e7490; }
+    .xc-orange { background:#ffedd5; color:#c2410c; }
+    .xc-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .xc-spark { flex-shrink:0; width:72px; height:36px; }
+    .xc-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .td-grid { grid-template-columns:repeat(2,1fr); }
+      .td-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .td-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .td-card:nth-child(even) { border-right:none; }
+      .td-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .td-grid { grid-template-columns:1fr; }
+      .td-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .td-card:last-child { border-bottom:none; }
+    }
+        .w-card { background:var(--d-card);border:1px solid var(--d-border);border-radius:22px;box-shadow:0 2px 12px rgba(26,110,245,.05); }
+
+    /* ── Buttons ── */
+    .btn-fin { padding:9px 18px;border-radius:11px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px; }
+    .btn-primary-fin { background:var(--d-blue1);color:#fff;box-shadow:0 4px 14px rgba(26,110,245,.3); }
+    .btn-primary-fin:hover { background:var(--d-blue2);transform:translateY(-1px);box-shadow:0 6px 18px rgba(26,110,245,.4); }
+    .btn-ghost { background:var(--d-card);color:var(--d-text);border:1.5px solid var(--d-border); }
+    .btn-ghost:hover { border-color:var(--d-blue1);color:var(--d-blue1);background:#f0f5ff; }
+
+    /* ── Kanban Board ── */
+    .kanban-board { display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start; }
+    @media(max-width:900px) { .kanban-board { grid-template-columns:1fr; } }
+
+    .kanban-col {
+      background:#f4f7ff; border:1.5px solid var(--d-border); border-radius:18px;
+      overflow:hidden; min-height:300px;
+    }
+    .kanban-col-header {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 16px; border-bottom:1.5px solid var(--d-border); background:#fff;
+    }
+    .kanban-col-title { display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--d-text); }
+    .kanban-dot { width:9px;height:9px;border-radius:50%;flex-shrink:0; }
+    .dot-todo     { background:#94a3b8; }
+    .dot-progress { background:var(--d-orange); }
+    .dot-done     { background:var(--d-green); }
+    .kanban-count {
+      min-width:22px;height:22px;border-radius:20px;background:#e0e7f3;
+      font-size:11px;font-weight:800;color:var(--d-muted);
+      display:flex;align-items:center;justify-content:center;padding:0 6px;
+    }
+    .kanban-add-btn {
+      width:28px;height:28px;border-radius:8px;border:none;background:#f0f4ff;
+      color:var(--d-blue1);cursor:pointer;display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:400;line-height:1;transition:all .15s;
+    }
+    .kanban-add-btn:hover { background:#dce8ff; }
+
+    .kanban-cards { padding:12px;display:flex;flex-direction:column;gap:10px;min-height:200px; }
+
+    /* ── Task Card ── */
+    .task-card {
+      background:#fff;border:1.5px solid var(--d-border);border-radius:14px;
+      padding:14px 16px;cursor:pointer;transition:all .2s;position:relative;
+      box-shadow:0 1px 6px rgba(26,110,245,.05);
+    }
+    .task-card:hover { border-color:#bcd0ff;box-shadow:0 5px 18px rgba(26,110,245,.12);transform:translateY(-2px); }
+    .task-card.dragging { opacity:.5;transform:rotate(1.5deg); }
+    .task-card.drag-over { border-color:var(--d-blue1);background:#f0f6ff; }
+
+    .task-card-top { display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px; }
+    .task-title { font-size:13.5px;font-weight:700;color:var(--d-text);line-height:1.4;flex:1; }
+    .task-desc  { font-size:12px;color:var(--d-muted);margin-bottom:10px;line-height:1.5;
+                  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+
+    .task-meta  { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px; }
+    .task-meta-left { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+
+    /* Priority badges */
+    .prio { font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:6px;text-transform:uppercase; }
+    .prio-low      { background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0; }
+    .prio-medium   { background:#fffbeb;color:#d97706;border:1px solid #fde68a; }
+    .prio-high     { background:#fff7ed;color:#ea580c;border:1px solid #fed7aa; }
+    .prio-critical { background:#fff0f2;color:var(--d-red);border:1px solid #fecdd3; }
+
+    /* Due date */
+    .task-due { font-size:11px;font-weight:600;color:var(--d-muted);display:flex;align-items:center;gap:4px; }
+    .task-due.overdue { color:var(--d-red); }
+    .task-due.soon    { color:var(--d-orange); }
+
+    /* Assignee avatar */
+    .task-avatar {
+      width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#1a6ef5,#0047cc);
+      display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;
+      flex-shrink:0;
+    }
+    .task-avatar.unassigned { background:#e0e7f3;color:var(--d-muted); }
+
+    /* Task actions (shown on hover) */
+    .task-actions {
+      display:flex;gap:4px;opacity:0;transition:opacity .15s;
+    }
+    .task-card:hover .task-actions { opacity:1; }
+    .ta-btn {
+      width:24px;height:24px;border-radius:6px;border:none;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:all .15s;
+    }
+    .ta-edit { background:#f0f4ff;color:var(--d-blue1); }
+    .ta-edit:hover { background:#dce8ff; }
+    .ta-del  { background:#fff0f0;color:#dc2626; }
+    .ta-del:hover { background:#fecaca; }
+
+    /* Empty column state */
+    .kanban-empty {
+      text-align:center;padding:32px 16px;color:var(--d-muted);opacity:.6;
+      font-size:12.5px;line-height:1.6;
+    }
+    .kanban-empty svg { display:block;margin:0 auto 10px;opacity:.4; }
+
+    /* ── Filter bar ── */
+    .filter-select { padding:8px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--d-text);background:#fff;cursor:pointer;outline:none;transition:border-color .15s; }
+    .filter-select:focus { border-color:var(--d-blue1); }
+
+    /* ── Modal ── */
+    .modal-ov { display:none;position:fixed;inset:0;background:rgba(13,27,62,.55);z-index:9999;align-items:flex-start;justify-content:center;overflow-y:auto;padding:28px 16px;backdrop-filter:blur(3px); }
+    .modal-ov.active { display:flex; }
+    .modal-bx { background:#fff;border-radius:22px;width:560px;max-width:100%;padding:30px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.18); }
+    .modal-ttl { font-size:17px;font-weight:800;color:var(--d-text);margin:0 0 20px; }
+    .modal-cls { position:absolute;top:18px;right:18px;background:var(--d-bg);border:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--d-muted);font-size:16px;transition:background .15s; }
+    .modal-cls:hover { background:var(--d-border); }
+
+    /* ── Form ── */
+    .flbl { display:block;font-size:11.5px;font-weight:700;color:var(--d-muted);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase; }
+    .flbl .req { color:var(--d-red); }
+    .finput { width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);outline:none;transition:border-color .15s,box-shadow .15s;background:#fff; }
+    .finput:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .finput::placeholder { color:#b0bcdc; }
+    textarea.finput { resize:vertical; }
+
+    /* Toast */
+    .toast-ok  { background:#e6fff7;border:1px solid #a7f3d0;color:#00875a;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+    .toast-err { background:#fff0f2;border:1px solid #fecdd3;color:var(--d-red);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+
+    /* Delete confirm */
+    .del-body { text-align:center;padding:10px 0 22px; }
+    .del-icon-ring { width:68px;height:68px;border-radius:50%;background:#fff0f2;margin:0 auto 16px;display:flex;align-items:center;justify-content:center; }
+    .del-icon-ring svg { color:var(--d-red); }
+
+    /* Animations */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .a1{animation:fadeUp .45s ease both} .a2{animation:fadeUp .45s .07s ease both}
+    .a3{animation:fadeUp .45s .14s ease both} .a4{animation:fadeUp .45s .21s ease both}
+    .a5{animation:fadeUp .45s .28s ease both}
+    @media(max-width:1100px) { .fin-grid-4{grid-template-columns:repeat(2,1fr)!important;} }
+  </style>
+</head>
+<body>
+<div class="app-layout todo-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Toast -->
+      <div id="toastOk"  class="toast-ok  a1" style="display:none"></div>
+      <div id="toastErr" class="toast-err a1" style="display:none"></div>
+
+      <!-- PAGE HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px" class="a1">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--d-text)">To Do List</div>
+          <div style="font-size:13px;color:var(--d-muted);margin-top:2px" id="todoHeaderSub">Buat jadwal dan kelola pekerjaan tim</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <select id="filterAssignee" class="filter-select">
+            <option value="">Semua Assignee</option>
+          </select>
+          <select id="filterPriority" class="filter-select">
+            <option value="">Semua Prioritas</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <button onclick="openAdd('todo')" class="btn-fin btn-primary-fin">
+            <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Tambah Task</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 FIN-CARDS -->
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0" class="td-grid">
+        <div class="td-card xc-active" id="tdc-all" data-filter="all" onclick="tdCardClick(this)">
+          <div class="xc-lbl">Total Tasks</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scTotal">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-blue" id="td-pill-all">—</span>
+                <span class="xc-sub">Semua status</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-all" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-all-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-all-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-all-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="td-card" id="tdc-todo" data-filter="todo" onclick="tdCardClick(this)">
+          <div class="xc-lbl">To Do</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scTodo">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-amber" id="td-pill-todo">—</span>
+                <span class="xc-sub">Belum dikerjakan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-todo" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-todo-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-todo-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-todo-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="td-card" id="tdc-progress" data-filter="progress" onclick="tdCardClick(this)">
+          <div class="xc-lbl">In Progress</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scProgress">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-teal" id="td-pill-progress">—</span>
+                <span class="xc-sub">Sedang dikerjakan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-progress" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-progress-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-progress-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-progress-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="td-card" id="tdc-done" data-filter="done" onclick="tdCardClick(this)">
+          <div class="xc-lbl">Done</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scDone">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-green" id="td-pill-done">—</span>
+                <span class="xc-sub">Selesai dikerjakan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-done" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-done-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-done-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-done-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        </div>
+
+      <!-- KANBAN BOARD -->
+      <div class="w-card a5">
+        <div style="padding:18px 20px 16px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font-size:14px;font-weight:700;color:var(--d-text)">Board</div>
+          <div style="font-size:12.5px;color:var(--d-muted)" id="boardFilterLabel"></div>
+          <button onclick="clearFilter()" id="clearFilterBtn" style="display:none" class="btn-fin btn-ghost" style="padding:5px 12px;font-size:12px">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Reset Filter
+          </button>
+          <div style="margin-left:auto;font-size:12px;color:var(--d-muted);font-weight:600" id="totalTasksLbl"></div>
+        </div>
+        <div style="padding:18px">
+          <div class="kanban-board">
+
+            <!-- Column: To Do -->
+            <div class="kanban-col" id="col-todo" ondragover="onDragOver(event,'todo')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'todo')">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-dot dot-todo"></span>
+                  To Do List
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="kanban-count" id="count-todo">0</span>
+                  <button class="kanban-add-btn" onclick="openAdd('todo')" title="Tambah task">+</button>
+                </div>
+              </div>
+              <div class="kanban-cards" id="cards-todo">
+                <!-- cards injected by JS -->
+              </div>
+            </div>
+
+            <!-- Column: In Progress -->
+            <div class="kanban-col" id="col-in_progress" ondragover="onDragOver(event,'in_progress')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'in_progress')">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-dot dot-progress"></span>
+                  In Work
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="kanban-count" id="count-in_progress">0</span>
+                  <button class="kanban-add-btn" onclick="openAdd('in_progress')" title="Tambah task">+</button>
+                </div>
+              </div>
+              <div class="kanban-cards" id="cards-in_progress">
+              </div>
+            </div>
+
+            <!-- Column: Done -->
+            <div class="kanban-col" id="col-done" ondragover="onDragOver(event,'done')" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'done')">
+              <div class="kanban-col-header">
+                <div class="kanban-col-title">
+                  <span class="kanban-dot dot-done"></span>
+                  Done
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="kanban-count" id="count-done">0</span>
+                  <button class="kanban-add-btn" onclick="openAdd('done')" title="Tambah task">+</button>
+                </div>
+              </div>
+              <div class="kanban-cards" id="cards-done">
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════ MODAL Tambah/Edit Task ════ -->
+<div id="todoModal" class="modal-ov">
+  <div class="modal-bx">
+    <button onclick="closeModal()" class="modal-cls">✕</button>
+    <div class="modal-ttl" id="modalTitle">Tambah Task Baru</div>
+    <div style="overflow-y:auto;max-height:72vh">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="grid-column:1/-1">
+          <label class="flbl">Judul Task <span class="req">*</span></label>
+          <input type="text" class="finput" id="f_title" placeholder="Masukkan judul pekerjaan…">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="flbl">Deskripsi</label>
+          <textarea class="finput" id="f_description" rows="2" placeholder="Detail pekerjaan (opsional)…"></textarea>
+        </div>
+        <div>
+          <label class="flbl">Status</label>
+          <select class="finput" id="f_status">
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Work</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Prioritas</label>
+          <select class="finput" id="f_priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Tanggal Deadline</label>
+          <input type="date" class="finput" id="f_due_date">
+        </div>
+        <div>
+          <label class="flbl">Assign To</label>
+          <select class="finput" id="f_assigned_to">
+            <option value="">— Unassigned —</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:22px">
+        <button onclick="saveTask()" class="btn-fin btn-primary-fin" id="btnSaveTask" style="flex:1;justify-content:center;padding:11px">
+          <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span id="btnSaveTxt">Simpan Task</span>
+        </button>
+        <button onclick="closeModal()" class="btn-fin btn-ghost" style="padding:11px 22px">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL Delete Confirm ════ -->
+<div id="delModal" class="modal-ov">
+  <div class="modal-bx" style="max-width:420px">
+    <button onclick="closeDelModal()" class="modal-cls">✕</button>
+    <div class="del-body">
+      <div class="del-icon-ring">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--d-text);margin-bottom:8px">Hapus Task?</div>
+      <div style="font-size:13px;color:var(--d-muted)" id="delMsg">Task ini akan dihapus permanen.</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;padding-bottom:4px">
+      <button onclick="closeDelModal()" class="btn-fin btn-ghost" style="min-width:110px">Batal</button>
+      <button onclick="confirmDelete()" class="btn-fin" style="min-width:110px;background:#f43f5e;color:#fff;border:none;box-shadow:0 4px 14px rgba(244,63,94,.3)">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/todos.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'all':'#2563eb','todo':'#d97706','progress':'#0891b2','done':'#16a34a'},IDS={'all':'scTotal','todo':'scTodo','progress':'scProgress','done':'scDone'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(C).forEach(k=>{
+      const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      const p=document.getElementById('td-pill-'+k);if(p)p.textContent=v;
+    });
+  }
+  window._tdUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',upd);
+})();
+function tdCardClick(el){
+  // Also call original filter
+  const filterMap={'all':'','todo':'todo','progress':'in_progress','done':'done'};
+  if(typeof filterByStatus==='function') filterByStatus(filterMap[el.dataset.filter]||'');
+  const all=document.querySelectorAll('.td-card[data-filter]');
+  const was=el.classList.contains('xc-active');
+  const C={'all':'#2563eb','todo':'#d97706','progress':'#0891b2','done':'#16a34a'};
+  all.forEach(c=>{
+    c.classList.remove('xc-active');
+    const col=C[c.dataset.filter]||'#64748b';
+    const l=c.querySelector('.sp-line'),f=c.querySelector('.sp-fill'),d=c.querySelector('.sp-dot');
+    if(l)l.style.stroke=col;if(f)f.style.fill=col;if(d)d.style.fill=col;
+  });
+  
+  if(!was){
+    el.classList.add('xc-active');
+    const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+    if(l)l.style.stroke='rgba(255,255,255,.70)';
+    if(f)f.style.fill='rgba(255,255,255,.12)';
+    if(d)d.style.fill='#fff';
+    
+  } else {
+    
+  }
+}
+</script>
+</body>
+</html>

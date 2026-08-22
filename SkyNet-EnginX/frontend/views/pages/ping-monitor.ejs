@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --pm-blue:#2563eb; --pm-blue-d:#1d4ed8; --pm-blue-l:#eff6ff;
+      --pm-green:#16a34a; --pm-green-d:#15803d; --pm-green-l:#f0fdf4;
+      --pm-red:#dc2626; --pm-red-d:#b91c1c; --pm-red-l:#fef2f2;
+      --pm-amber:#d97706; --pm-amber-d:#b45309; --pm-amber-l:#fffbeb;
+      --pm-teal:#0891b2; --pm-teal-l:#ecfeff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    .pm { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .pm-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .pm-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .pm-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .pm-hdr-r    { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { flex-shrink:0; }
+    .btn-outline  { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue     { background:var(--pm-blue); border-color:var(--pm-blue); color:#fff; }
+    .btn-blue:hover { background:var(--pm-blue-d); }
+    .btn-green    { background:var(--pm-green); border-color:var(--pm-green); color:#fff; }
+    .btn-green:hover { background:var(--pm-green-d); }
+    .btn-teal     { background:var(--pm-teal); border-color:var(--pm-teal); color:#fff; }
+    .btn-teal:hover { background:#0e7490; }
+    .btn-sm       { padding:6px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; }
+    .chip-idle     { background:#f1f5f9; border:1px solid var(--border); color:var(--muted); }
+    .chip-scanning { background:var(--pm-blue-l); border:1px solid #bfdbfe; color:var(--pm-blue); }
+    .chip-live     { background:var(--pm-green-l); border:1px solid #bbf7d0; color:var(--pm-green); }
+    .live-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .chip-idle     .live-dot { background:var(--faint); }
+    .chip-scanning .live-dot { background:var(--pm-blue); animation:pulse .8s ease-in-out infinite; }
+    .chip-live     .live-dot { background:var(--pm-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS ── */
+    /* ── STAT CARDS — single strip with dividers ── */
+    .pm-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .pm-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .pm-card:last-child { border-right: none; }
+    .pm-card:hover { background: #fafbff; }
+
+    /* Active — biru solid */
+    .pm-card.pmc-active { background: #2563eb; border-color: #2563eb; }
+    .pm-card.pmc-active:hover { background: #1d4ed8; }
+    .pm-card.pmc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .pm-card.pmc-active .card-val  { color: #fff; }
+    .pm-card.pmc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .pm-card.pmc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .pm-card.pmc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .pm-card.pmc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .pm-card.pmc-active .sp-dot    { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    /* body */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    /* meta */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    /* responsive */
+    @media(max-width:700px) {
+      .pm-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .pm-card:nth-child(odd)  { border-right: 1px solid #e8eaed; }
+      .pm-card:nth-child(even) { border-right: none; }
+      .pm-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .pm-cards { grid-template-columns:1fr; }
+      .pm-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .pm-card:last-child { border-bottom: none; }
+    }
+
+    .prog-bar-fill { height:100%; background:linear-gradient(90deg,var(--pm-blue),#38bdf8); border-radius:4px; transition:width .3s ease; }
+    .prog-text { font-size:12px; font-weight:600; color:#374151; white-space:nowrap; }
+    .prog-pct  { font-size:12px; font-weight:800; color:var(--pm-blue); min-width:36px; text-align:right; }
+
+    /* ── CONTROLS ── */
+    .pm-ctrl { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); padding:14px 20px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:200px; max-width:300px; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:15px; height:15px; }
+    .search-wrap input { width:100%; padding:9px 12px 9px 34px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; box-sizing:border-box; background:#f8fafc; font-family:inherit; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--pm-blue); background:#fff; box-shadow:0 0 0 3px #2563eb15; }
+    .pm-ctrl select { padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .pm-ctrl select:focus { border-color:var(--pm-blue); }
+    .ctrl-r { margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .cnt-info { font-size:12px; color:var(--muted); font-weight:600; }
+    .interval-wrap { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+    .interval-wrap select { padding:5px 9px; border:1.5px solid var(--border); border-radius:8px; font-size:12px; font-family:inherit; background:#f8fafc; outline:none; }
+
+    /* ── TABLE ── */
+    .pm-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .pm-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; gap:8px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; }
+    .pm-tbl-hdr-t { font-size:14px; font-weight:700; color:var(--text); }
+    .pm-tbl-note { font-size:11px; color:var(--faint); margin-left:auto; }
+
+    .pm-table { width:100%; border-collapse:collapse; }
+    .pm-table thead tr { background:#f8fafc; }
+    .pm-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .pm-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; }
+    .pm-table tbody tr:hover { background:#f8fafc; }
+    .pm-table tbody tr:last-child { border-bottom:none; }
+    .pm-table td { padding:12px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    /* Cells */
+    .cust-name { font-size:13px; font-weight:700; color:var(--text); line-height:1.3; }
+    .cust-meta { font-size:11px; color:var(--faint); margin-top:2px; }
+    .ip-badge  { font-family:monospace; font-size:12px; font-weight:700; background:#f1f5f9; color:#334155; padding:4px 9px; border-radius:6px; display:inline-block; }
+    .ip-badge.ip-empty { background:#fef3c7; color:#92400e; font-weight:600; font-style:italic; }
+    .ip-src    { display:inline-block; font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:8px; background:#dbeafe; color:#1d4ed8; text-transform:uppercase; letter-spacing:.04em; margin-left:4px; vertical-align:middle; }
+
+    /* Status pills */
+    .pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:700; white-space:nowrap; }
+    .sdot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .pill-up      { background:var(--pm-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .pill-up .sdot { background:#22c55e; animation:pingRing 2s ease-in-out infinite; }
+    .pill-down    { background:var(--pm-red-l); color:#b91c1c; border:1px solid #fecaca; }
+    .pill-down .sdot { background:#ef4444; }
+    .pill-unknown { background:#f8fafc; color:var(--muted); border:1px solid var(--border); }
+    .pill-unknown .sdot { background:var(--faint); }
+    .pill-checking { background:var(--pm-blue-l); color:#1d4ed8; border:1px solid #bfdbfe; }
+    .pill-checking .sdot { background:var(--pm-blue); animation:pulse .8s ease-in-out infinite; }
+    @keyframes pingRing { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 4px rgba(34,197,94,0)} }
+
+    /* Latency */
+    .lat { font-size:12px; font-weight:700; padding:3px 8px; border-radius:6px; font-family:monospace; }
+    .lat-good { background:#dcfce7; color:#15803d; }
+    .lat-ok   { background:#fef9c3; color:#854d0e; }
+    .lat-bad  { background:#fee2e2; color:#b91c1c; }
+    .lat-na   { background:#f1f5f9; color:var(--faint); }
+
+    /* Loss bar */
+    .loss-wrap { display:flex; align-items:center; gap:8px; }
+    .loss-bar  { flex:1; min-width:60px; max-width:80px; height:5px; background:#f1f5f9; border-radius:3px; overflow:hidden; }
+    .loss-fill { height:100%; border-radius:3px; transition:width .5s; }
+    .loss-0  .loss-fill { background:#22c55e; }
+    .loss-lo .loss-fill { background:#f59e0b; }
+    .loss-hi .loss-fill { background:#ef4444; }
+    .loss-pct { font-size:11.5px; font-weight:700; min-width:28px; }
+
+    /* Action btn */
+    .act-btn { padding:5px 10px; border-radius:7px; font-size:11.5px; font-weight:600; background:var(--pm-blue-l); color:var(--pm-blue); border:1px solid #bfdbfe; cursor:pointer; font-family:inherit; transition:all .15s; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+    .act-btn:hover { background:var(--pm-blue); color:#fff; border-color:var(--pm-blue); }
+    .act-btn:disabled { opacity:.5; cursor:not-allowed; }
+    .act-btn svg { width:12px; height:12px; }
+    .act-btn-danger { background:#fef2f2; color:#dc2626; border-color:#fecaca; padding:5px 8px; }
+    .act-btn-danger:hover { background:#dc2626; color:#fff; border-color:#dc2626; }
+
+    /* ── ASSIGN IP MODAL ── */
+    .overlay { position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:400; display:none; align-items:center; justify-content:center; padding:16px; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:16px; width:100%; max-width:700px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+    .modal-hdr { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .modal-hdr h2 { font-size:17px; font-weight:800; color:var(--text); }
+    .modal-close { width:32px; height:32px; border-radius:8px; background:#f1f5f9; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:16px; font-family:inherit; }
+    .modal-close:hover { background:#e2e8f0; }
+    .modal-body { flex:1; overflow-y:auto; padding:16px 24px; }
+    .modal-note { font-size:12.5px; color:var(--muted); margin-bottom:14px; background:#f8fafc; border-radius:8px; padding:10px 14px; border-left:3px solid #bfdbfe; }
+    .assign-search { margin-bottom:12px; }
+    .assign-search input { width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; }
+    .assign-search input:focus { border-color:var(--pm-blue); box-shadow:0 0 0 3px #2563eb15; }
+    .assign-list { display:flex; flex-direction:column; gap:6px; }
+    .assign-row { display:flex; align-items:center; gap:10px; background:#f8fafc; border:1.5px solid var(--border); border-radius:10px; padding:10px 14px; transition:all .1s; }
+    .assign-row:hover { border-color:#bfdbfe; background:var(--pm-blue-l); }
+    .assign-row.has-ip { border-color:#bbf7d0; background:var(--pm-green-l); }
+    .ar-info { flex:1; min-width:0; }
+    .ar-name { font-size:13px; font-weight:700; color:var(--text); }
+    .ar-meta { font-size:11px; color:var(--faint); }
+    .ar-ip-input { width:145px; padding:7px 10px; border:1.5px solid var(--border); border-radius:8px; font-size:12.5px; font-family:monospace; outline:none; background:#fff; }
+    .ar-ip-input:focus { border-color:var(--pm-blue); }
+    .ar-save { padding:6px 12px; border-radius:8px; font-size:12px; font-weight:700; background:var(--pm-blue); color:#fff; border:none; cursor:pointer; font-family:inherit; }
+    .ar-save:hover { background:var(--pm-blue-d); }
+
+    /* ── ADD MANUAL MODAL ── */
+    .am-field { margin-bottom:14px; }
+    .am-label { display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px; }
+    .am-label .req { color:#dc2626; }
+    .am-input, .am-select { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; outline:none; box-sizing:border-box; background:#fff; transition:border-color .15s; }
+    .am-input:focus, .am-select:focus { border-color:var(--pm-blue); box-shadow:0 0 0 3px #2563eb15; }
+    .am-input:disabled, .am-select:disabled { background:#f8fafc; color:#94a3b8; cursor:not-allowed; }
+    .am-help { font-size:11.5px; color:var(--faint); margin-top:5px; }
+    .am-search-wrap { position:relative; }
+    .am-search-results { position:absolute; top:100%; left:0; right:0; margin-top:4px; background:#fff; border:1.5px solid var(--border); border-radius:10px; max-height:240px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,.08); z-index:10; display:none; }
+    .am-search-results.open { display:block; }
+    .am-search-item { padding:10px 14px; cursor:pointer; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; gap:10px; transition:background .1s; }
+    .am-search-item:hover { background:#f8fafc; }
+    .am-search-item:last-child { border-bottom:none; }
+    .am-avatar { width:32px; height:32px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#475569; flex-shrink:0; }
+    .am-search-info { flex:1; min-width:0; }
+    .am-search-name { font-size:13px; font-weight:600; color:var(--text); }
+    .am-search-meta { font-size:11px; color:var(--faint); margin-top:2px; }
+    .am-selected-card { background:var(--pm-blue-l); border:1.5px solid #bfdbfe; border-radius:10px; padding:10px 14px; display:flex; align-items:center; gap:10px; }
+    .am-selected-card .am-avatar { background:#fff; }
+    .am-clear-btn { width:26px; height:26px; border-radius:6px; background:#fff; border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; color:#64748b; }
+    .am-clear-btn:hover { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+    .am-source-badge { display:inline-block; font-size:9.5px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; vertical-align:middle; }
+    .am-src-active   { background:#dcfce7; color:#15803d; }
+    .am-src-offline  { background:#fee2e2; color:#b91c1c; }
+    .am-src-queue    { background:#fef3c7; color:#92400e; }
+    .am-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:14px; border-top:1px solid var(--border); margin-top:8px; }
+    .am-btn { padding:9px 16px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; border:1.5px solid transparent; }
+    .am-btn-primary { background:var(--pm-blue); color:#fff; border-color:var(--pm-blue); }
+    .am-btn-primary:hover { background:var(--pm-blue-d); border-color:var(--pm-blue-d); }
+    .am-btn-primary:disabled { background:#cbd5e1; border-color:#cbd5e1; cursor:not-allowed; }
+    .am-btn-secondary { background:#fff; color:#475569; border-color:var(--border); }
+    .am-btn-secondary:hover { background:#f8fafc; }
+
+    /* Empty & skeleton */
+    .pm-empty { text-align:center; padding:56px 20px; color:var(--faint); }
+    .pm-empty svg { width:44px; height:44px; margin-bottom:12px; stroke:#cbd5e1; }
+    .pm-empty strong { display:block; font-size:14px; color:var(--muted); margin-bottom:6px; }
+    .pm-empty p { font-size:13px; }
+    .skeleton { background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:6px; display:block; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* Toast */
+    .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+    .toast-item { background:#fff; border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,.13); display:flex; align-items:center; gap:8px; opacity:0; transform:translateY(10px); transition:all .25s; pointer-events:auto; max-width:320px; }
+    .toast-item.show { opacity:1; transform:translateY(0); }
+    .toast-success { border-left:4px solid #22c55e; color:#15803d; }
+    .toast-error   { border-left:4px solid #ef4444; color:#b91c1c; }
+    .toast-info    { border-left:4px solid var(--pm-blue); color:var(--pm-blue); }
+
+    @media(max-width:768px){
+      .pm-table th:nth-child(6),.pm-table td:nth-child(6),
+      .pm-table th:nth-child(7),.pm-table td:nth-child(7) { display:none; }
+    }
+    @media(max-width:560px){
+      .pm-table th:nth-child(5),.pm-table td:nth-child(5) { display:none; }
+    }
+    @keyframes _spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <div class="page-content pm">
+
+      <!-- HEADER -->
+      <div class="pm-hdr">
+        <div class="pm-hdr-l">
+          <h1>
+            Ping Monitor
+          </h1>
+          <p>Monitoring konektivitas ICMP real-time IP pelanggan via MikroTik</p>
+        </div>
+        <div class="pm-hdr-r">
+          <!-- MikroTik device selector — render via /js/mikrotik-selector.js -->
+          <div id="mtSelectorMount"></div>
+
+          <span class="live-chip chip-idle" id="liveChip">
+            <span class="live-dot"></span>
+            <span id="liveChipTxt">Idle</span>
+          </span>
+          <button class="btn btn-outline btn-sm" onclick="openAssignModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Assign IP
+          </button>
+          <button class="btn btn-blue btn-sm" onclick="openAddManualModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Manual
+          </button>
+          <button class="btn btn-teal btn-sm" id="syncBtn" onclick="syncFromMikrotik()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+            Sync dari MikroTik
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
+          <button class="btn btn-outline btn-sm" id="refreshBtn" onclick="refreshNow()" title="Refresh data tanpa reload halaman">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-blue btn-sm" id="scanBtn" onclick="startFullScan()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            Scan Semua
+          </button>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="pm-cards">
+
+        <!-- Total Dipantau -->
+        <div class="pm-card pmc-active" id="pmc-total" data-filter="all" onclick="pmcClick(this)">
+          <div class="card-lbl">Total Dipantau</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sTotal">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="pm-pill-total">– host</span>
+                <span class="card-sub">IP pelanggan aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status UP -->
+        <div class="pm-card" id="pmc-up" data-filter="up" onclick="pmcClick(this)">
+          <div class="card-lbl">Status UP</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sUp">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="pm-pill-up">– host</span>
+                <span class="card-sub" id="sUpPct">Terkoneksi</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-up" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-up-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-up-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-up-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status DOWN -->
+        <div class="pm-card" id="pmc-down" data-filter="down" onclick="pmcClick(this)">
+          <div class="card-lbl">Status DOWN</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sDown">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="pm-pill-down">– host</span>
+                <span class="card-sub" id="sDownPct">Tidak terjangkau</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-down" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-down-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-down-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-down-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Avg Latency -->
+        <div class="pm-card" id="pmc-lat" data-filter="lat" onclick="pmcClick(this)">
+          <div class="card-lbl">Avg Latency</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sAvgLat">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="pm-pill-lat">ms</span>
+                <span class="card-sub">Rata-rata (host UP)</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-lat" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-lat-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-lat-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-lat-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SYNC RESULT -->
+      <div class="sync-result" id="syncResult"></div>
+
+      <!-- SCAN PROGRESS -->
+      <div class="pm-prog" id="progBar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83"/></svg>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progFill" style="width:0%"></div></div>
+        <span class="prog-text" id="progTxt">Memulai scan...</span>
+        <span class="prog-pct" id="progPct">0%</span>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="pm-ctrl">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchIn" placeholder="Cari nama, IP, PPPoE..." oninput="renderTable()">
+        </div>
+        <select id="pingFilter" onchange="renderTable()">
+          <option value="">Semua Status Ping</option>
+          <option value="up">UP saja</option>
+          <option value="down">DOWN saja</option>
+          <option value="unknown">Belum dicek</option>
+          <option value="no_ip">Belum ada IP</option>
+        </select>
+        <select id="accFilter" onchange="renderTable()">
+          <option value="">Semua Status Akun</option>
+          <option value="active">Active</option>
+          <option value="isolated">Isolated</option>
+        </select>
+        <div class="ctrl-r">
+          <div class="interval-wrap">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Auto:
+            <select id="autoSel" onchange="setAuto(this.value)">
+              <option value="0">Off</option>
+              <option value="30">30d</option>
+              <option value="60" selected>1 mnt</option>
+              <option value="120">2 mnt</option>
+              <option value="300">5 mnt</option>
+            </select>
+          </div>
+          <span class="cnt-info" id="cntInfo">–</span>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="pm-tbl-wrap">
+        <div class="pm-tbl-hdr">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span class="pm-tbl-hdr-t">Daftar IP Pelanggan</span>
+          <span class="pm-tbl-note" id="lastUpdNote">–</span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="pm-table">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Pelanggan</th>
+                <th>IP Address</th>
+                <th>Status Ping</th>
+                <th>Latency</th>
+                <th>Packet Loss</th>
+                <th>Paket</th>
+                <th>Terakhir Dicek</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="9"><span class="skeleton" style="height:16px;width:100%;margin:14px 0;display:block"></span></td></tr>
+              <tr><td colspan="9"><span class="skeleton" style="height:16px;width:80%;margin:14px 0;display:block"></span></td></tr>
+              <tr><td colspan="9"><span class="skeleton" style="height:16px;width:90%;margin:14px 0;display:block"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div>
+
+  <!-- ASSIGN IP MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-hdr">
+        <h2>Assign IP Pelanggan</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-note">
+          Masukkan static IP untuk setiap pelanggan, atau gunakan <strong>Sync dari MikroTik</strong> untuk mengisi otomatis dari PPPoE active sessions / Simple Queue.
+        </div>
+        <div class="assign-search">
+          <input type="text" id="assignSearch" placeholder="Cari pelanggan..." oninput="renderAssignList()">
+        </div>
+        <div class="assign-list" id="assignList">
+          <span class="skeleton" style="height:52px;width:100%;display:block;border-radius:10px;"></span>
+          <span class="skeleton" style="height:52px;width:100%;display:block;border-radius:10px;"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD MANUAL MODAL -->
+  <div class="overlay" id="addManualOverlay">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-hdr">
+        <h2>Tambah Data Ping Manual</h2>
+        <button class="modal-close" onclick="closeAddManualModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-note">
+          Pilih router, lalu cari pelanggan dan tentukan IP / PPPoE yang aktif pada router tersebut. Data akan langsung muncul di tabel monitoring.
+        </div>
+
+        <!-- 1. Pilih Router -->
+        <div class="am-field">
+          <label class="am-label">1. Pilih Router <span class="req">*</span></label>
+          <select id="amRouter" class="am-select" onchange="amOnRouterChange()">
+            <option value="">— Memuat daftar router —</option>
+          </select>
+          <div class="am-help">Sumber IP / PPPoE akan diambil dari router ini.</div>
+        </div>
+
+        <!-- 2. Pilih Pelanggan -->
+        <div class="am-field">
+          <label class="am-label">2. Pilih Pelanggan <span class="req">*</span></label>
+          <div id="amCustomerSearchWrap" class="am-search-wrap">
+            <input type="text" id="amCustomerSearch" class="am-input" placeholder="Ketik nama / ID pelanggan / PPPoE username..." oninput="amSearchCustomers()" autocomplete="off">
+            <div id="amCustomerResults" class="am-search-results"></div>
+          </div>
+          <div id="amCustomerSelected" style="display:none"></div>
+          <div class="am-help">Ketik minimal 2 karakter untuk mencari.</div>
+        </div>
+
+        <!-- 3. Pilih IP / PPPoE -->
+        <div class="am-field">
+          <label class="am-label">3. IP / PPPoE <span class="req">*</span></label>
+          <select id="amSource" class="am-select" disabled>
+            <option value="">— Pilih router & pelanggan dulu —</option>
+          </select>
+          <div class="am-help" id="amSourceHelp">Dropdown ini auto-detect dari sesi PPPoE aktif, secret, dan simple queue pada router terpilih.</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="am-actions">
+          <button class="am-btn am-btn-secondary" onclick="closeAddManualModal()">Batal</button>
+          <button class="am-btn am-btn-primary" id="amSaveBtn" disabled onclick="amSubmit()">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/mikrotik-selector.js"></script>
+  <script>
+  /* ══════════════════════════════════════════════════════
+     Ping Monitor Frontend
+  ══════════════════════════════════════════════════════ */
+  let customers = [];       // pelanggan dengan IP
+  let allCusts  = [];       // semua pelanggan (untuk modal assign)
+  let isScanning = false;
+  let autoTimer  = null;
+  const BATCH = 15;
+
+  // ── Reset state saat user pilih device lain ─────────────
+  // Hentikan polling, clear data, lalu reload untuk device baru.
+  async function resetForDevice() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    isScanning = false;
+    customers  = [];
+    allCusts   = [];
+    // Reset stat cards & filter chip + tabel ke loading state
+    updateCards();
+    renderTable();
+    // Reload data untuk device baru — autoSync supaya PPPoE/queue di-sync
+    // ulang ke MikroTik device baru
+    await loadCustomers({ autoSync: true });
+    if (customers.length > 0) setTimeout(() => backgroundScan(false), 400);
+    // Resume auto-refresh dengan interval yang dipilih
+    setAuto(document.getElementById('autoSel').value);
+    toast('Beralih ke device baru', 'info');
+  }
+
+  // ── Init ────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.MikrotikSelector) {
+      // Init dengan MikrotikSelector — onReady aman untuk initial load
+      // (selector sudah resolve device, withDevice() akan return URL yang benar)
+      window.MikrotikSelector.init({
+        mountId:  'mtSelectorMount',
+        selectId: 'mikrotikSelector',
+        onReady:  async () => {
+          // First load: minta backend auto-sync dari MikroTik (throttled di backend 60s).
+          await loadCustomers({ autoSync: true });
+          if (customers.length > 0) setTimeout(() => backgroundScan(false), 400);
+          setAuto(document.getElementById('autoSel').value);
+        },
+        onChange: () => {
+          // User pilih device lain → reset state lalu load ulang
+          resetForDevice();
+        }
+      });
+    } else {
+      // Fallback kalau selector script gagal load — pakai device primary
+      (async () => {
+        await loadCustomers({ autoSync: true });
+        if (customers.length > 0) setTimeout(() => backgroundScan(false), 400);
+        setAuto(document.getElementById('autoSel').value);
+      })();
+    }
+  });
+
+  /* ─────────────────────────────────────────────────────────
+     STRATEGI RENDER: in-place DOM update (tanpa rebuild tabel)
+     - renderTable()      : full rebuild, hanya dipakai saat init / filter berubah
+     - patchRows(results) : update hanya cell yang berubah — zero flicker
+     ───────────────────────────────────────────────────────── */
+
+  // ── Load customers with IP ───────────────────────────────
+  async function loadCustomers({ autoSync = false } = {}) {
+    try {
+      const url = '/api/ping-monitor/customers' + (autoSync ? '?autoSync=1' : '');
+      const r = await api(url);
+      if (r.success) {
+        customers = r.data;
+        updateCards();
+        renderTable();   // full rebuild hanya di sini
+      } else {
+        toast('Gagal: ' + (r.message || 'Unknown error'), 'error');
+      }
+    } catch(e) {
+      toast('Gagal memuat pelanggan: ' + e.message, 'error');
+    }
+  }
+
+  // ── Background scan (no flicker) ────────────────────────
+  // Dipanggil oleh auto-interval dan tombol Refresh.
+  // Tidak rebuild tabel — hanya patch cell yang berubah.
+  async function backgroundScan(showToastOnDone = false) {
+    if (isScanning) return;
+    if (customers.length === 0) return;
+
+    isScanning = true;
+    setChip('scanning');
+    showProg(true);
+
+    // Hanya ping IP yang valid (skip customer yang masih belum punya IP — biasanya
+    // PPPoE offline yang belum dapat IP). Customer no-IP tetap tampil di tabel
+    // sebagai "Belum ada IP".
+    const ips = customers.filter(c => c.has_ip && c.ip).map(c => c.ip);
+    const total = ips.length;
+    if (total === 0) {
+      isScanning = false;
+      setChip('idle');
+      showProg(false);
+      return;
+    }
+    let done = 0;
+    updateProg(0, total);
+
+    for (let i = 0; i < ips.length; i += BATCH) {
+      const chunk = ips.slice(i, i + BATCH);
+      try {
+        const r = await api('/api/ping-monitor/ping-batch', 'POST', { ips: chunk });
+        if (r.success) {
+          // Update data model
+          customers.forEach(c => { if (r.results[c.ip]) c.ping = r.results[c.ip]; });
+          // Patch hanya baris yang ada di DOM — tidak rebuild
+          patchRows(r.results);
+          updateCards();
+        }
+      } catch(_) {}
+      done += chunk.length;
+      updateProg(done, total);
+    }
+
+    isScanning = false;
+    setChip('live');
+    showProg(false);
+    document.getElementById('lastUpdNote').textContent = 'Update: ' + fmtTime(new Date());
+    if (showToastOnDone) toast(`Refresh selesai — ${total} IP dicek`, 'success');
+    updateSidebarBadge();
+  }
+
+  // ── Tombol "Scan Semua" (manual, full rebuild) ───────────
+  async function startFullScan() {
+    if (isScanning) return;
+    if (customers.length === 0) {
+      await loadCustomers();
+      if (customers.length === 0) {
+        toast('Tidak ada pelanggan dengan static IP. Gunakan "Assign IP" atau "Sync dari MikroTik".', 'info');
+        return;
+      }
+    }
+    document.getElementById('scanBtn').disabled = true;
+    await backgroundScan(true);
+    document.getElementById('scanBtn').disabled = false;
+  }
+
+  // ── Tombol "Refresh" (manual background, no flicker) ────
+  async function refreshNow() {
+    if (isScanning) return;
+    if (customers.length === 0) { await loadCustomers(); return; }
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    await backgroundScan(true);
+    btn.disabled = false;
+  }
+
+  // ── Patch rows in-place (zero flicker) ──────────────────
+  // Hanya update cell Status, Latency, Loss, Paket, Waktu
+  // pada baris yang sudah ada di DOM. Baris baru / filter berubah
+  // tetap melalui renderTable().
+  function patchRows(results) {
+    const tbody = document.getElementById('tbody');
+    // Jika tbody masih skeleton / empty-state, lakukan full render
+    if (!tbody.querySelector('tr[data-ip]')) { renderTable(); return; }
+
+    Object.entries(results).forEach(([ip, ping]) => {
+      const row = tbody.querySelector(`tr[data-ip="${ip}"]`);
+      if (!row) return;  // baris tidak visible (filter aktif) — skip
+
+      const st  = ping.status  || 'unknown';
+      const lat = ping.latency || 0;
+      const los = ping.loss    ?? 0;
+      const chk = ping.lastCheck ? fmtTime(new Date(ping.lastCheck)) : '–';
+
+      // Update atribut data untuk konsistensi filter
+      row.dataset.pingStatus = st;
+
+      // Cell index (0-based): 0=no, 1=nama, 2=ip, 3=status, 4=lat, 5=loss, 6=paket, 7=waktu, 8=aksi
+      const cells = row.cells;
+      if (cells[3]) cells[3].innerHTML = pillHtml(st);
+      if (cells[4]) cells[4].innerHTML = latHtml(st, lat);
+      if (cells[5]) cells[5].innerHTML = lossHtml(st, los);
+      if (cells[6]) cells[6].textContent = st === 'unknown' ? '–' : `${ping.received||0}/${ping.sent||0}`;
+      if (cells[7]) cells[7].textContent = chk;
+    });
+  }
+
+  // ── Ping single ──────────────────────────────────────────
+  async function pingSingle(ip, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const r = await api('/api/ping-monitor/ping-single', 'POST', { ip });
+      if (r.success) {
+        const ping = { status: r.status, latency: r.latency, loss: r.loss,
+                       lastCheck: r.lastCheck, sent: r.sent, received: r.received };
+        const c = customers.find(x => x.ip === ip);
+        if (c) c.ping = ping;
+        // Patch hanya baris ini — no flicker
+        patchRows({ [ip]: ping });
+        updateCards();
+        updateSidebarBadge();
+      }
+    } catch(e) { toast('Gagal ping ' + ip, 'error'); }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3"/></svg> Ping';
+    }
+  }
+
+  // ── Sync from MikroTik ───────────────────────────────────
+  async function syncFromMikrotik() {
+    const btn = document.getElementById('syncBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:_spin 1s linear infinite"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sinkronisasi...';
+    try {
+      const r = await api('/api/ping-monitor/sync-from-mikrotik', 'POST', {});
+      const el = document.getElementById('syncResult');
+      if (r.success) {
+        el.style.cssText = 'display:block;background:#f0fdf4;border-left-color:#22c55e;color:#166534;';
+        el.innerHTML = `<strong>✓ ${r.message}</strong><br><span style="font-size:12px;font-weight:400;">${(r.sources||[]).join(' · ')}</span>`;
+        await loadCustomers();
+        toast(r.message, 'success');
+        if (allCusts.length) await loadAllCustomers();
+      } else {
+        el.style.cssText = 'display:block;background:#fef2f2;border-left-color:#ef4444;color:#b91c1c;';
+        el.textContent = '✕ ' + (r.message || 'Gagal sinkronisasi');
+      }
+      setTimeout(() => { el.style.display = 'none'; }, 6000);
+    } catch(e) { toast('Sync gagal: ' + e.message, 'error'); }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><polyline points="1,20 1,14 7,14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sync dari MikroTik';
+  }
+
+  // ── Full render tabel (dipakai saat init & filter berubah) ─
+  function renderTable() {
+    const search = document.getElementById('searchIn').value.toLowerCase();
+    const pingF  = document.getElementById('pingFilter').value;
+    const accF   = document.getElementById('accFilter').value;
+
+    let filtered = customers.filter(c => {
+      const ps = c.ping?.status || 'unknown';
+      return (!search || c.name.toLowerCase().includes(search) || c.ip.includes(search)
+                      || c.pppoe.toLowerCase().includes(search) || c.customer_id.toLowerCase().includes(search))
+          && (!pingF || ps === pingF)
+          && (!accF  || c.status === accF);
+    });
+
+    document.getElementById('cntInfo').textContent = `${filtered.length} dari ${customers.length}`;
+
+    if (filtered.length === 0) {
+      document.getElementById('tbody').innerHTML = `<tr><td colspan="9">
+        <div class="pm-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3M12 2v3m0 14v3"/></svg>
+          <strong>${customers.length === 0 ? 'Belum ada IP yang dikonfigurasi' : 'Tidak ada yang cocok'}</strong>
+          <p>${customers.length === 0
+            ? 'Klik <b>Assign IP</b> untuk input manual atau <b>Sync dari MikroTik</b> untuk otomatis.'
+            : 'Coba ubah filter pencarian'}</p>
+        </div>
+      </td></tr>`;
+      return;
+    }
+
+    // Sort: DOWN first, UP second, unknown last, no_ip terakhir
+    filtered.sort((a, b) =>
+      ({ down:0, up:1, unknown:2, no_ip:3 }[a.ping?.status||'unknown'] || 2) -
+      ({ down:0, up:1, unknown:2, no_ip:3 }[b.ping?.status||'unknown'] || 2)
+    );
+
+    document.getElementById('tbody').innerHTML = filtered.map((c, i) => {
+      const p  = c.ping || {};
+      const st = p.status || 'unknown';
+      // Kolom IP: kalau no_ip, tampilkan placeholder + PPPoE username sebagai petunjuk
+      const ipCell = c.has_ip
+        ? `<span class="ip-badge">${esc(c.ip)}</span>`
+            + (c.ip_source === 'pppoe' ? ' <span class="ip-src" title="IP diperoleh dari sesi PPPoE aktif">via PPPoE</span>' : '')
+        : `<span class="ip-badge ip-empty" title="Customer punya PPPoE tapi belum online / belum dapat IP">— belum ada IP —</span>`;
+      const actionBtn = c.has_ip
+        ? `<button class="act-btn" onclick="pingSingle('${esc(c.ip)}',this)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12h3m14 0h3"/></svg>
+            Ping
+          </button>`
+        : `<button class="act-btn" disabled title="Belum ada IP — pelanggan PPPoE harus online atau assign Static IP manual">Tidak bisa ping</button>`;
+      const delBtn = `<button class="act-btn act-btn-danger" onclick="deletePing(${c.id}, '${esc(c.name)}', this)" title="Hapus data ping pelanggan ini">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>`;
+      return `<tr data-ip="${esc(c.ip)}" data-ping-status="${st}">
+        <td style="color:var(--faint);font-size:12px;font-weight:600">${i+1}</td>
+        <td>
+          <div class="cust-name">${esc(c.name)}</div>
+          <div class="cust-meta">${esc(c.customer_id)}${c.pppoe !== '-' ? ' · '+esc(c.pppoe) : ''}</div>
+        </td>
+        <td>${ipCell}</td>
+        <td>${pillHtml(st)}</td>
+        <td>${latHtml(st, p.latency||0)}</td>
+        <td>${lossHtml(st, p.loss??0)}</td>
+        <td style="font-size:12px;color:var(--faint)">${st==='unknown'||st==='no_ip'?'–':`${p.received||0}/${p.sent||0}`}</td>
+        <td style="font-size:11.5px;color:var(--faint)">${p.lastCheck ? fmtTime(new Date(p.lastCheck)) : '–'}</td>
+        <td><div style="display:flex;gap:6px;align-items:center">${actionBtn}${delBtn}</div></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Update stat cards ─────────────────────────────────────
+  function updateCards() {
+    // "Total Dipantau" = customer yang punya IP siap di-ping.
+    // Customer no_ip tidak dihitung supaya angka UP/DOWN tidak bias.
+    const pingable = customers.filter(c => c.has_ip);
+    const tot  = pingable.length;
+    const up   = pingable.filter(c => c.ping?.status === 'up').length;
+    const down = pingable.filter(c => c.ping?.status === 'down').length;
+    const lats = pingable.filter(c => c.ping?.status === 'up' && (c.ping?.latency||0) > 0).map(c => c.ping.latency);
+    const avg  = lats.length ? (lats.reduce((a,b)=>a+b,0)/lats.length).toFixed(1) : '–';
+    const upP  = tot ? Math.round(up/tot*100) : 0;
+    const dnP  = tot ? Math.round(down/tot*100) : 0;
+    document.getElementById('sTotal').textContent  = tot;
+    document.getElementById('sUp').textContent     = up;
+    document.getElementById('sDown').textContent   = down;
+    document.getElementById('sAvgLat').textContent = avg;
+    document.getElementById('sUpPct').textContent  = `${upP}% dari total`;
+    document.getElementById('sDownPct').textContent= `${dnP}% dari total`;
+    const _bUp=document.getElementById('barUp'); if(_bUp) _bUp.style.width=upP+'%';
+    const _bDn=document.getElementById('barDown'); if(_bDn) _bDn.style.width=dnP+'%';
+  }
+
+  // ── Assign IP Modal ──────────────────────────────────────
+  async function openAssignModal() {
+    document.getElementById('overlay').classList.add('open');
+    if (!allCusts.length) await loadAllCustomers();
+    renderAssignList();
+  }
+  function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  });
+
+  async function loadAllCustomers() {
+    try {
+      const r = await api('/api/ping-monitor/all-customers');
+      if (r.success) allCusts = r.data;
+    } catch(e) { toast('Gagal muat semua customer', 'error'); }
+  }
+
+  function renderAssignList() {
+    const s = document.getElementById('assignSearch').value.toLowerCase();
+    const filtered = allCusts.filter(c => !s
+      || c.name.toLowerCase().includes(s)
+      || c.customer_id.toLowerCase().includes(s)
+      || c.pppoe.toLowerCase().includes(s));
+    if (filtered.length === 0) {
+      document.getElementById('assignList').innerHTML = '<div style="text-align:center;padding:24px;color:var(--faint);font-size:13px">Tidak ada pelanggan</div>';
+      return;
+    }
+    document.getElementById('assignList').innerHTML = filtered.map(c => `
+      <div class="assign-row ${c.hasIP ? 'has-ip' : ''}" id="ar-${c.id}">
+        <div class="ar-info">
+          <div class="ar-name">${esc(c.name)} <span style="font-size:11px;color:var(--faint);font-weight:400">${esc(c.customer_id)}</span></div>
+          <div class="ar-meta">${c.pppoe ? 'PPPoE: '+esc(c.pppoe) : 'No PPPoE'} · ${c.status}</div>
+        </div>
+        <input class="ar-ip-input" id="ip-${c.id}" type="text" value="${esc(c.ip)}" placeholder="10.x.x.x">
+        <button class="ar-save" onclick="saveIP(${c.id})">Simpan</button>
+      </div>`).join('');
+  }
+
+  async function saveIP(id) {
+    const ip = document.getElementById(`ip-${id}`).value.trim();
+    if (!ip) { toast('IP tidak boleh kosong', 'error'); return; }
+    try {
+      const r = await api('/api/ping-monitor/set-ip', 'POST', { customerId: id, ip });
+      if (r.success) {
+        toast(r.message, 'success');
+        const c = allCusts.find(x => x.id === id);
+        if (c) { c.ip = ip; c.hasIP = true; }
+        document.getElementById(`ar-${id}`)?.classList.add('has-ip');
+        await loadCustomers();
+      } else {
+        toast(r.message || 'Gagal menyimpan', 'error');
+      }
+    } catch(e) { toast('Error: ' + e.message, 'error'); }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  function pillHtml(st) {
+    return { up:       `<span class="pill pill-up"><span class="sdot"></span>UP</span>`,
+             down:     `<span class="pill pill-down"><span class="sdot"></span>DOWN</span>`,
+             unknown:  `<span class="pill pill-unknown"><span class="sdot"></span>Belum dicek</span>`,
+             checking: `<span class="pill pill-checking"><span class="sdot"></span>Checking...</span>`,
+             no_ip:    `<span class="pill pill-unknown"><span class="sdot"></span>Belum ada IP</span>` }[st]
+        || `<span class="pill pill-unknown"><span class="sdot"></span>Belum dicek</span>`;
+  }
+  function latHtml(st, lat) {
+    if (st !== 'up') return `<span class="lat lat-na">–</span>`;
+    return `<span class="lat ${lat<20?'lat-good':lat<100?'lat-ok':'lat-bad'}">${lat.toFixed(1)} ms</span>`;
+  }
+  function lossHtml(st, loss) {
+    if (st === 'unknown') return `<div class="loss-wrap"><span class="loss-pct" style="color:var(--faint)">–</span></div>`;
+    const cls = loss===0 ? 'loss-0' : loss<50 ? 'loss-lo' : 'loss-hi';
+    return `<div class="loss-wrap ${cls}"><div class="loss-bar"><div class="loss-fill" style="width:${loss}%"></div></div><span class="loss-pct">${loss}%</span></div>`;
+  }
+
+  function setChip(state) {
+    const map = { scanning:'chip-scanning', live:'chip-live', idle:'chip-idle' };
+    const txt = { scanning:'Scanning...', live:'Updated', idle:'Idle' };
+    document.getElementById('liveChip').className = 'live-chip ' + (map[state]||'chip-idle');
+    document.getElementById('liveChipTxt').textContent = txt[state] || 'Idle';
+  }
+  function showProg(show) { document.getElementById('progBar').classList.toggle('show', show); }
+  function updateProg(done, total) {
+    const pct = total ? Math.round(done/total*100) : 0;
+    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progTxt').textContent  = `Mengecek ${done} / ${total} IP...`;
+    document.getElementById('progPct').textContent  = pct + '%';
+  }
+  function fmtTime(d) { return d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── Auto interval (background, no flicker) ───────────────
+  function setAuto(val) {
+    if (autoTimer) clearInterval(autoTimer);
+    const sec = parseInt(val) || 0;
+    if (sec > 0) autoTimer = setInterval(() => backgroundScan(false), sec * 1000);
+  }
+
+  function updateSidebarBadge() {
+    const n = customers.filter(c => c.ping?.status === 'down').length;
+    const b = document.getElementById('ping-down-badge');
+    if (b) { b.style.display = n > 0 ? 'inline' : 'none'; b.textContent = n; }
+  }
+
+  function exportCSV() {
+    if (!customers.length) { toast('Tidak ada data', 'info'); return; }
+    const hdr = ['No','Nama','Customer ID','IP','Status Ping','Latency(ms)','Loss(%)','PPPoE','Status Akun','Terakhir Dicek'];
+    const rows = customers.map((c,i) => [
+      i+1, c.name, c.customer_id, c.ip,
+      c.ping?.status||'unknown', (c.ping?.latency||0).toFixed(1), c.ping?.loss??'',
+      c.pppoe, c.status, c.ping?.lastCheck ? new Date(c.ping.lastCheck).toLocaleString('id-ID') : ''
+    ]);
+    const csv = [hdr,...rows].map(r => r.map(v=>`"${v}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = `ping-monitor-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    toast('CSV diekspor', 'success');
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // DELETE PING — hapus data ping pelanggan dari monitoring
+  // ──────────────────────────────────────────────────────────
+  async function deletePing(customerId, customerName, btn) {
+    if (!confirm(`Hapus data ping untuk "${customerName}"?\n\nIP & router assignment akan di-release. Pelanggan tidak akan muncul di Ping Monitor sampai di-assign ulang.\n\nData pelanggan TIDAK dihapus, hanya data monitoring ping.`)) return;
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '...';
+    try {
+      const r = await api('/api/ping-monitor/delete-ping', 'POST', { customerId });
+      if (r.success) {
+        toast(r.message || 'Data ping dihapus', 'success');
+        // Hapus dari array lokal & re-render — tanpa reload full
+        customers = customers.filter(c => c.id !== customerId);
+        updateCards();
+        renderTable();
+        updateSidebarBadge();
+      } else {
+        toast(r.message || 'Gagal menghapus', 'error');
+        btn.innerHTML = oldHtml;
+        btn.disabled = false;
+      }
+    } catch (e) {
+      toast('Gagal menghapus: ' + e.message, 'error');
+      btn.innerHTML = oldHtml;
+      btn.disabled = false;
+    }
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ADD MANUAL MODAL — pilih router → cari pelanggan → pilih IP/PPPoE
+  // ══════════════════════════════════════════════════════════
+  const amState = {
+    routers:    [],
+    routerId:   null,
+    customer:   null,        // { id, customer_id, name, pppoe_username, static_ip }
+    sources:    null,        // { pppoeActive, pppoeSecrets, simpleQueues }
+    searchT:    null,
+  };
+
+  async function openAddManualModal() {
+    document.getElementById('addManualOverlay').classList.add('open');
+    // Reset form
+    amState.routerId = null;
+    amState.customer = null;
+    amState.sources  = null;
+    document.getElementById('amCustomerSearch').value = '';
+    document.getElementById('amCustomerSearch').style.display = '';
+    document.getElementById('amCustomerSelected').style.display = 'none';
+    document.getElementById('amCustomerSelected').innerHTML = '';
+    document.getElementById('amCustomerResults').classList.remove('open');
+    document.getElementById('amSource').innerHTML = '<option value="">— Pilih router & pelanggan dulu —</option>';
+    document.getElementById('amSource').disabled = true;
+    document.getElementById('amSaveBtn').disabled = true;
+
+    // Load router list (dari MikrotikSelector kalau ada, atau fetch langsung)
+    await amLoadRouters();
+  }
+
+  function closeAddManualModal() {
+    document.getElementById('addManualOverlay').classList.remove('open');
+  }
+
+  async function amLoadRouters() {
+    const sel = document.getElementById('amRouter');
+    try {
+      const r = await fetch('/api/devices/mikrotik-list', { credentials: 'include' });
+      const j = await r.json();
+      if (!j.success || !j.data?.length) {
+        sel.innerHTML = '<option value="">Tidak ada router terdaftar</option>';
+        return;
+      }
+      amState.routers = j.data;
+      // Default = router yang sedang dipilih di MikrotikSelector kalau ada
+      const currentDevId = (window.MikrotikSelector && typeof window.MikrotikSelector.getDeviceId === 'function')
+        ? window.MikrotikSelector.getDeviceId() : null;
+      sel.innerHTML = '<option value="">— Pilih router —</option>' +
+        j.data.map(d => `<option value="${d.id}" ${d.id == currentDevId ? 'selected' : ''}>${escapeHtml(d.name)}${d.is_primary ? ' (primary)' : ''}</option>`).join('');
+      if (currentDevId) {
+        amState.routerId = parseInt(currentDevId);
+        amOnRouterChange();
+      }
+    } catch (e) {
+      sel.innerHTML = '<option value="">Gagal memuat router</option>';
+      toast('Gagal load router: ' + e.message, 'error');
+    }
+  }
+
+  async function amOnRouterChange() {
+    const id = document.getElementById('amRouter').value;
+    amState.routerId = id ? parseInt(id) : null;
+    amState.sources  = null;
+    const srcSel = document.getElementById('amSource');
+    srcSel.innerHTML = '<option value="">Loading sumber data dari router...</option>';
+    srcSel.disabled = true;
+
+    if (!amState.routerId) {
+      srcSel.innerHTML = '<option value="">— Pilih router dulu —</option>';
+      amUpdateSubmitState();
+      return;
+    }
+
+    // Fetch sumber data PPPoE/Queue dari router terpilih
+    try {
+      const r = await fetch(`/api/ping-monitor/router-sources?device_id=${amState.routerId}`, { credentials: 'include' });
+      const j = await r.json();
+      if (!j.success) throw new Error(j.message || 'Gagal load');
+      amState.sources = j;
+      amBuildSourceDropdown();
+    } catch (e) {
+      srcSel.innerHTML = `<option value="">Router tidak terjangkau: ${escapeHtml(e.message)}</option>`;
+      toast('Gagal load data router: ' + e.message, 'error');
+    }
+    amUpdateSubmitState();
+  }
+
+  function amBuildSourceDropdown() {
+    const srcSel = document.getElementById('amSource');
+    const s = amState.sources;
+    if (!s) return;
+
+    const opts = ['<option value="">— Pilih IP / PPPoE —</option>'];
+
+    // Group 1: PPPoE active (online)
+    if (s.pppoeActive?.length) {
+      opts.push(`<optgroup label="🟢 PPPoE Aktif (${s.pppoeActive.length})">`);
+      s.pppoeActive.forEach(p => {
+        opts.push(`<option value='${JSON.stringify({type:'pppoe', value:p.username, ip:p.ip}).replace(/'/g,"&apos;")}'>${escapeHtml(p.username)} → ${escapeHtml(p.ip)}</option>`);
+      });
+      opts.push('</optgroup>');
+    }
+
+    // Group 2: PPPoE secrets (offline / semua user)
+    const offlineSecrets = (s.pppoeSecrets || []).filter(p => !p.online && !p.disabled);
+    if (offlineSecrets.length) {
+      opts.push(`<optgroup label="⚪ PPPoE Offline / Belum Login (${offlineSecrets.length})">`);
+      offlineSecrets.forEach(p => {
+        opts.push(`<option value='${JSON.stringify({type:'pppoe', value:p.username}).replace(/'/g,"&apos;")}'>${escapeHtml(p.username)}${p.profile?` (${escapeHtml(p.profile)})`:''}</option>`);
+      });
+      opts.push('</optgroup>');
+    }
+
+    // Group 3: Simple Queue (Static IP)
+    if (s.simpleQueues?.length) {
+      opts.push(`<optgroup label="🟡 Simple Queue / Static IP (${s.simpleQueues.length})">`);
+      s.simpleQueues.forEach(q => {
+        const label = q.name ? `${escapeHtml(q.name)} → ${escapeHtml(q.ip)}` : escapeHtml(q.ip);
+        opts.push(`<option value='${JSON.stringify({type:'ip', value:q.ip}).replace(/'/g,"&apos;")}'>${label}</option>`);
+      });
+      opts.push('</optgroup>');
+    }
+
+    if (opts.length === 1) {
+      // Tidak ada sumber data
+      srcSel.innerHTML = '<option value="">Router tidak punya PPPoE / Queue aktif</option>';
+      srcSel.disabled = true;
+    } else {
+      srcSel.innerHTML = opts.join('');
+      srcSel.disabled  = false;
+
+      // Auto-pilih kalau customer sudah dipilih & PPPoE username-nya match
+      if (amState.customer?.pppoe_username) {
+        const target = amState.customer.pppoe_username.toLowerCase();
+        for (const opt of srcSel.options) {
+          if (!opt.value) continue;
+          try {
+            const v = JSON.parse(opt.value.replace(/&apos;/g, "'"));
+            if (v.type === 'pppoe' && v.value.toLowerCase() === target) {
+              srcSel.value = opt.value;
+              break;
+            }
+          } catch (_) {}
+        }
+      }
+    }
+    srcSel.onchange = amUpdateSubmitState;
+  }
+
+  function amSearchCustomers() {
+    clearTimeout(amState.searchT);
+    amState.searchT = setTimeout(async () => {
+      const q = document.getElementById('amCustomerSearch').value.trim();
+      const resultsEl = document.getElementById('amCustomerResults');
+      if (q.length < 2) { resultsEl.classList.remove('open'); return; }
+      try {
+        const r = await fetch(`/api/ping-monitor/search-customers?q=${encodeURIComponent(q)}`, { credentials: 'include' });
+        const j = await r.json();
+        if (!j.success || !j.data?.length) {
+          resultsEl.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:#94a3b8;text-align:center">Tidak ditemukan</div>';
+          resultsEl.classList.add('open');
+          return;
+        }
+        resultsEl.innerHTML = j.data.map(c => {
+          const hasAssign = c.mikrotik_id ? ` <span class="am-source-badge am-src-queue">tagged router #${c.mikrotik_id}</span>` : '';
+          const initial = (c.name || '?')[0].toUpperCase();
+          // Escape JSON untuk onclick (single-quote attribute)
+          const payload = JSON.stringify(c).replace(/"/g, '&quot;');
+          return `<div class="am-search-item" onclick='amSelectCustomer(${payload})'>
+            <div class="am-avatar">${initial}</div>
+            <div class="am-search-info">
+              <div class="am-search-name">${escapeHtml(c.name)}${hasAssign}</div>
+              <div class="am-search-meta">${escapeHtml(c.customer_id)}${c.pppoe_username?' · PPPoE: '+escapeHtml(c.pppoe_username):''}${c.static_ip?' · '+escapeHtml(c.static_ip):''}</div>
+            </div>
+          </div>`;
+        }).join('');
+        resultsEl.classList.add('open');
+      } catch (e) {
+        toast('Gagal cari pelanggan: ' + e.message, 'error');
+      }
+    }, 300);
+  }
+
+  function amSelectCustomer(c) {
+    amState.customer = c;
+    const initial = (c.name || '?')[0].toUpperCase();
+    document.getElementById('amCustomerSearch').style.display = 'none';
+    document.getElementById('amCustomerResults').classList.remove('open');
+    const sel = document.getElementById('amCustomerSelected');
+    sel.style.display = '';
+    sel.innerHTML = `<div class="am-selected-card">
+      <div class="am-avatar">${initial}</div>
+      <div class="am-search-info">
+        <div class="am-search-name">${escapeHtml(c.name)}</div>
+        <div class="am-search-meta">${escapeHtml(c.customer_id)}${c.pppoe_username?' · PPPoE: '+escapeHtml(c.pppoe_username):''}</div>
+      </div>
+      <button class="am-clear-btn" onclick="amClearCustomer()" title="Ganti pelanggan">✕</button>
+    </div>`;
+    // Auto-pilih PPPoE option kalau dropdown sumber sudah ke-load
+    if (amState.sources) amBuildSourceDropdown();
+    amUpdateSubmitState();
+  }
+
+  function amClearCustomer() {
+    amState.customer = null;
+    document.getElementById('amCustomerSearch').style.display = '';
+    document.getElementById('amCustomerSearch').value = '';
+    document.getElementById('amCustomerSelected').style.display = 'none';
+    document.getElementById('amCustomerSelected').innerHTML = '';
+    amUpdateSubmitState();
+  }
+
+  function amUpdateSubmitState() {
+    const ok = !!(amState.routerId && amState.customer && document.getElementById('amSource').value);
+    document.getElementById('amSaveBtn').disabled = !ok;
+  }
+
+  async function amSubmit() {
+    const srcSelVal = document.getElementById('amSource').value;
+    if (!srcSelVal || !amState.customer || !amState.routerId) return;
+    let parsed;
+    try { parsed = JSON.parse(srcSelVal.replace(/&apos;/g, "'")); }
+    catch (_) { toast('Sumber data invalid', 'error'); return; }
+
+    const btn = document.getElementById('amSaveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+      const r = await fetch('/api/ping-monitor/assign', {
+        method:  'POST',
+        headers: {'Content-Type':'application/json'},
+        credentials: 'include',
+        body: JSON.stringify({
+          customerId: amState.customer.id,
+          deviceId:   amState.routerId,
+          type:       parsed.type,
+          value:      parsed.value,
+        }),
+      });
+      const j = await r.json();
+      if (j.success) {
+        toast(j.message || 'Berhasil disimpan', 'success');
+        closeAddManualModal();
+        // Reload data — pakai autoSync supaya IP terbaru ke-fetch
+        await loadCustomers({ autoSync: false });
+        if (customers.length > 0) setTimeout(() => backgroundScan(false), 400);
+      } else {
+        toast(j.message || 'Gagal menyimpan', 'error');
+      }
+    } catch (e) {
+      toast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Simpan';
+    }
+  }
+
+  // Helper escape (re-use existing esc if available, fallback inline)
+  function escapeHtml(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('amCustomerSearchWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('amCustomerResults')?.classList.remove('open');
+    }
+  });
+
+  // ── API wrapper ──────────────────────────────────────────
+  // Otomatis append ?device_id=N kalau MikrotikSelector aktif — supaya
+  // semua call hit MikroTik device yang dipilih user (bukan default primary).
+  function _withDev(url) {
+    return (window.MikrotikSelector && typeof window.MikrotikSelector.withDevice === 'function')
+      ? window.MikrotikSelector.withDevice(url)
+      : url;
+  }
+  async function api(url, method='GET', body=null) {
+    const opts = { method, headers:{'Content-Type':'application/json'}, credentials:'include' };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(_withDev(url), opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  // ── Toast ────────────────────────────────────────────────
+  function toast(msg, type='info') {
+    const c = document.getElementById('toastWrap');
+    const el = document.createElement('div');
+    el.className = `toast-item toast-${type}`;
+    const ico = { success:'<path d="M20 6L9 17l-5-5"/>',
+                  error:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+                  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' };
+    el.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">${ico[type]||ico.info}</svg>${msg}`;
+    c.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3500);
+  }
+  </script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={total:[],up:[],down:[],lat:[]};
+  const COLORS={total:'#2563eb',up:'#16a34a',down:'#dc2626',lat:'#d97706'};
+
+  function sparkPath(vals){
+    if(!vals||vals.length<2)return null;
+    const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W,H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1],fp=pts[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+
+  function drawSpark(id,vals){
+    const sp=sparkPath(vals); if(!sp)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',sp.fill);
+    if(l)l.setAttribute('d',sp.d);
+    if(d){d.setAttribute('cx',sp.dot[0].toFixed(1));d.setAttribute('cy',sp.dot[1].toFixed(1));}
+  }
+
+  function readNum(id){
+    const el=document.getElementById(id);
+    if(!el)return 0;
+    return parseFloat(el.textContent.replace(/[^\d.]/g,''))||0;
+  }
+
+  function updateAll(){
+    const vals={
+      total: readNum('sTotal'),
+      up:    readNum('sUp'),
+      down:  readNum('sDown'),
+      lat:   readNum('sAvgLat'),
+    };
+    Object.keys(vals).forEach(k=>{
+      hist[k].push(vals[k]);
+      if(hist[k].length>MAX)hist[k].shift();
+      drawSpark('sp-'+k,hist[k]);
+      const pill=document.getElementById('pm-pill-'+k);
+      if(!pill)return;
+      if(k==='lat') pill.textContent=(vals[k]||'–')+' ms';
+      else pill.textContent=vals[k]+' host';
+    });
+  }
+
+  window._pmUpdateCards=updateAll;
+
+  ['sTotal','sUp','sDown','sAvgLat'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)new MutationObserver(()=>setTimeout(updateAll,50)).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+
+  document.addEventListener('DOMContentLoaded',updateAll);
+})();
+
+function pmcClick(el){
+  const cards=document.querySelectorAll('.pm-card[data-filter]');
+  const wasActive=el.classList.contains('pmc-active');
+  const COLORS={total:'#2563eb',up:'#16a34a',down:'#dc2626',lat:'#d97706'};
+
+  cards.forEach(c=>{
+    c.classList.remove('pmc-active');
+    const col=COLORS[c.dataset.filter]||'#64748b';
+    const line=c.querySelector('.sp-line'),fill=c.querySelector('.sp-fill'),dot=c.querySelector('.sp-dot');
+    if(line)line.style.stroke=col;
+    if(fill)fill.style.fill=col;
+    if(dot)dot.style.fill=col;
+  });
+
+  if(!wasActive){
+    el.classList.add('pmc-active');
+    const line=el.querySelector('.sp-line'),fill=el.querySelector('.sp-fill'),dot=el.querySelector('.sp-dot');
+    if(line)line.style.stroke='rgba(255,255,255,.70)';
+    if(fill)fill.style.fill='rgba(255,255,255,.12)';
+    if(dot)dot.style.fill='#fff';
+    // Sync filter dropdown
+    const filter=el.dataset.filter;
+    const sel=document.getElementById('pingFilter');
+    if(sel){
+      if(filter==='up')   sel.value='up';
+      else if(filter==='down') sel.value='down';
+      else sel.value='';
+      sel.dispatchEvent(new Event('change'));
+      // Trigger renderTable jika ada
+      if(typeof renderTable==='function') renderTable();
+    }
+  } else {
+    const sel=document.getElementById('pingFilter');
+    if(sel){sel.value='';sel.dispatchEvent(new Event('change'));}
+    if(typeof renderTable==='function') renderTable();
+  }
+}
+</script>
+</body>
+</html>

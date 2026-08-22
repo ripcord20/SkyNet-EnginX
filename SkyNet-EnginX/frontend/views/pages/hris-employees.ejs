@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .hris-page { font-family:'DM Sans',sans-serif; background:#eef2f9 !important; }
+    .h-toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+    .h-input { padding:9px 13px; border:1.5px solid #e0e7f3; border-radius:10px; font-size:13px; font-family:inherit; background:#fff; }
+    .h-table-wrap { background:#fff; border:1px solid #e8eaed; border-radius:16px; overflow:hidden; }
+    table.h-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+    .h-table th { text-align:left; padding:13px 16px; background:#f8fafc; color:#64748b; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.3px; }
+    .h-table td { padding:12px 16px; border-top:1px solid #f1f5f9; color:#0f172a; }
+    .h-table tr:hover td { background:#fafbff; }
+    .h-avatar { width:36px; height:36px; border-radius:50%; background:#e0e7ff; color:#4338ca; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; }
+    .h-pill { padding:2px 9px; border-radius:100px; font-size:11px; font-weight:700; }
+    .p-green{background:#dcfce7;color:#16a34a;} .p-gray{background:#f1f5f9;color:#64748b;} .p-red{background:#fee2e2;color:#dc2626;}
+    .h-actbtn { border:none; background:#f1f5f9; color:#475569; width:30px; height:30px; border-radius:8px; cursor:pointer; font-size:14px; }
+    .h-actbtn:hover { background:#e2e8f0; }
+    /* modal */
+    .h-modal-bg { position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .h-modal-bg.show { display:flex; }
+    .h-modal { background:#fff; border-radius:16px; width:100%; max-width:640px; max-height:90vh; overflow:auto; padding:24px; }
+    .h-modal h3 { margin:0 0 18px; font-size:18px; font-weight:800; color:#0f172a; }
+    .h-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:640px){ .h-form-grid{ grid-template-columns:1fr;} }
+    .h-field { display:flex; flex-direction:column; gap:5px; }
+    .h-field.full { grid-column:1/-1; }
+    .h-field label { font-size:12px; font-weight:600; color:#475569; }
+    .h-field input, .h-field select, .h-field textarea { padding:9px 12px; border:1.5px solid #e0e7f3; border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .h-modal-foot { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+    .toast { position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px; color:#fff; font-size:14px; font-weight:600; z-index:2000; display:none; }
+  </style>
+</head>
+<body>
+<div class="app-layout hris-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:#0d1b3e">Data Karyawan</div>
+          <div style="font-size:13px;color:#6b7fa8;margin-top:2px" id="empCount">Memuat…</div>
+        </div>
+        <button class="btn-blue" onclick="openModal()">+ Tambah Karyawan</button>
+      </div>
+
+      <div class="h-toolbar">
+        <input class="h-input" id="searchInp" placeholder="Cari nama / no. karyawan / telp…" style="min-width:280px" oninput="debouncedLoad()">
+        <select class="h-input" id="statusFilter" onchange="loadEmployees()">
+          <option value="">Semua status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Non-aktif</option>
+          <option value="resigned">Resign</option>
+        </select>
+      </div>
+
+      <div class="h-table-wrap">
+        <table class="h-table">
+          <thead>
+            <tr><th>Karyawan</th><th>Jabatan</th><th>Departemen</th><th>Lokasi/Shift</th><th>Gaji Pokok</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="empBody">
+            <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8">Memuat data…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="h-modal-bg" id="modalBg">
+  <div class="h-modal">
+    <h3 id="modalTitle">Tambah Karyawan</h3>
+    <div class="h-form-grid">
+      <div class="h-field"><label>No. Karyawan</label><input id="f_employee_no" placeholder="Otomatis bila kosong"></div>
+      <div class="h-field"><label>Nama Lengkap *</label><input id="f_full_name"></div>
+      <div class="h-field"><label>Email</label><input id="f_email" type="email"></div>
+      <div class="h-field"><label>No. WhatsApp</label><input id="f_phone" placeholder="08xxx"></div>
+      <div class="h-field"><label>Jabatan</label><input id="f_position"></div>
+      <div class="h-field"><label>Departemen</label><input id="f_department"></div>
+      <div class="h-field"><label>Tipe Kepegawaian</label>
+        <select id="f_employment_type"><option value="tetap">Tetap</option><option value="kontrak">Kontrak</option><option value="harian">Harian</option><option value="magang">Magang</option><option value="freelance">Freelance</option></select></div>
+      <div class="h-field"><label>Tanggal Masuk</label><input id="f_join_date" type="date"></div>
+      <div class="h-field"><label>Lokasi Kerja Default</label><select id="f_work_location_id"></select></div>
+      <div class="h-field"><label>Shift Default</label><select id="f_shift_id"></select></div>
+      <div class="h-field"><label>Gaji Pokok (Rp)</label><input id="f_base_salary" type="number" value="0"></div>
+      <div class="h-field"><label>Tipe Gaji</label><select id="f_salary_type"><option value="bulanan">Bulanan</option><option value="harian">Harian</option><option value="per_jam">Per Jam</option></select></div>
+      <div class="h-field"><label>Bank</label><input id="f_bank_name"></div>
+      <div class="h-field"><label>No. Rekening</label><input id="f_bank_account"></div>
+      <div class="h-field"><label>Link Akun Login (User ID)</label><input id="f_user_id" type="number" placeholder="Opsional"></div>
+      <div class="h-field"><label>Status</label><select id="f_status"><option value="active">Aktif</option><option value="inactive">Non-aktif</option><option value="resigned">Resign</option></select></div>
+      <div class="h-field full"><label>Alamat</label><textarea id="f_address" rows="2"></textarea></div>
+    </div>
+    <div class="h-modal-foot">
+      <button class="btn-outline" onclick="closeModal()">Batal</button>
+      <button class="btn-blue" id="saveBtn" onclick="saveEmployee()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}` });
+const fmtRp = v => 'Rp ' + (parseFloat(v)||0).toLocaleString('id-ID');
+let editingId = null;
+let shifts = [], locations = [];
+
+function toast(msg, ok=true){ const t=document.getElementById('toast'); t.textContent=msg; t.style.background=ok?'#16a34a':'#dc2626'; t.style.display='block'; setTimeout(()=>t.style.display='none',2800); }
+
+let _deb;
+function debouncedLoad(){ clearTimeout(_deb); _deb=setTimeout(loadEmployees, 350); }
+
+async function loadMasters(){
+  try {
+    const [sr, lr] = await Promise.all([
+      fetch(API+'/hris/shifts',{headers:authH()}).then(r=>r.json()),
+      fetch(API+'/hris/locations',{headers:authH()}).then(r=>r.json())
+    ]);
+    shifts = sr.data || []; locations = lr.data || [];
+    const sSel = document.getElementById('f_shift_id');
+    const lSel = document.getElementById('f_work_location_id');
+    sSel.innerHTML = '<option value="">— tidak ada —</option>' + shifts.map(s=>`<option value="${s.id}">${s.name} (${s.start_time?.slice(0,5)}–${s.end_time?.slice(0,5)})</option>`).join('');
+    lSel.innerHTML = '<option value="">— tidak ada —</option>' + locations.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  } catch(e){ console.error(e); }
+}
+
+async function loadEmployees(){
+  const search = document.getElementById('searchInp').value.trim();
+  const status = document.getElementById('statusFilter').value;
+  const qs = new URLSearchParams(); if(search) qs.set('search',search); if(status) qs.set('status',status); qs.set('limit','200');
+  try {
+    const r = await fetch(API+'/hris/employees?'+qs, {headers:authH()});
+    const j = await r.json();
+    const body = document.getElementById('empBody');
+    document.getElementById('empCount').textContent = (j.total||0)+' karyawan terdaftar';
+    if(!j.data || !j.data.length){ body.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8">Belum ada karyawan</td></tr>'; return; }
+    body.innerHTML = j.data.map(e=>{
+      const ini=(e.full_name||'?').split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();
+      const st = e.status==='active'?'p-green':(e.status==='resigned'?'p-red':'p-gray');
+      const loc = e.work_location?.name || '–';
+      const sh = e.shift?.name || '–';
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:11px"><div class="h-avatar">${ini}</div>
+          <div><div style="font-weight:600">${e.full_name}</div><div style="font-size:11.5px;color:#94a3b8">${e.employee_no}${e.phone?' · '+e.phone:''}</div></div></div></td>
+        <td>${e.position||'–'}</td>
+        <td>${e.department||'–'}</td>
+        <td><div style="font-size:12.5px">${loc}</div><div style="font-size:11px;color:#94a3b8">${sh}</div></td>
+        <td>${fmtRp(e.base_salary)}</td>
+        <td><span class="h-pill ${st}">${e.status}</span></td>
+        <td style="white-space:nowrap">
+          <button class="h-actbtn" title="Edit" onclick='editEmployee(${JSON.stringify(e)})'>✎</button>
+          <button class="h-actbtn" title="Hapus" onclick="delEmployee(${e.id}, '${(e.full_name||'').replace(/'/g,"")}')">🗑</button>
+        </td></tr>`;
+    }).join('');
+  } catch(e){ console.error(e); toast('Gagal memuat data', false); }
+}
+
+function openModal(){ editingId=null; document.getElementById('modalTitle').textContent='Tambah Karyawan';
+  ['employee_no','full_name','email','phone','position','department','join_date','base_salary','bank_name','bank_account','user_id','address'].forEach(k=>{ const el=document.getElementById('f_'+k); if(el) el.value = (k==='base_salary'?'0':''); });
+  document.getElementById('f_employment_type').value='tetap'; document.getElementById('f_salary_type').value='bulanan';
+  document.getElementById('f_status').value='active'; document.getElementById('f_shift_id').value=''; document.getElementById('f_work_location_id').value='';
+  document.getElementById('modalBg').classList.add('show');
+}
+function editEmployee(e){ editingId=e.id; document.getElementById('modalTitle').textContent='Edit Karyawan';
+  const set=(k,v)=>{ const el=document.getElementById('f_'+k); if(el) el.value = v==null?'':v; };
+  set('employee_no',e.employee_no); set('full_name',e.full_name); set('email',e.email); set('phone',e.phone);
+  set('position',e.position); set('department',e.department); set('employment_type',e.employment_type);
+  set('join_date',e.join_date); set('work_location_id',e.work_location_id); set('shift_id',e.shift_id);
+  set('base_salary',e.base_salary); set('salary_type',e.salary_type); set('bank_name',e.bank_name);
+  set('bank_account',e.bank_account); set('user_id',e.user_id); set('status',e.status); set('address',e.address);
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+
+async function saveEmployee(){
+  const g = k => { const el=document.getElementById('f_'+k); return el ? el.value : ''; };
+  const payload = {
+    employee_no:g('employee_no'), full_name:g('full_name'), email:g('email'), phone:g('phone'),
+    position:g('position'), department:g('department'), employment_type:g('employment_type'),
+    join_date:g('join_date')||null, work_location_id:g('work_location_id')||null, shift_id:g('shift_id')||null,
+    base_salary:g('base_salary')||0, salary_type:g('salary_type'), bank_name:g('bank_name'),
+    bank_account:g('bank_account'), user_id:g('user_id')||null, status:g('status'), address:g('address')
+  };
+  if(!payload.full_name){ toast('Nama wajib diisi', false); return; }
+  const btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='Menyimpan…';
+  try {
+    const url = editingId ? API+'/hris/employees/'+editingId : API+'/hris/employees';
+    const method = editingId ? 'PUT' : 'POST';
+    const r = await fetch(url,{method,headers:authH(),body:JSON.stringify(payload)});
+    const j = await r.json();
+    if(j.success){ toast(j.message||'Tersimpan'); closeModal(); loadEmployees(); }
+    else toast(j.message||'Gagal', false);
+  } catch(e){ toast('Gagal menyimpan', false); }
+  finally { btn.disabled=false; btn.textContent='Simpan'; }
+}
+
+async function delEmployee(id, name){
+  if(!confirm('Hapus karyawan '+name+'?')) return;
+  try { const r=await fetch(API+'/hris/employees/'+id,{method:'DELETE',headers:authH()}); const j=await r.json();
+    if(j.success){ toast('Karyawan dihapus'); loadEmployees(); } else toast(j.message||'Gagal', false);
+  } catch(e){ toast('Gagal menghapus', false); }
+}
+
+loadMasters().then(loadEmployees);
+</script>
+</body>
+</html>

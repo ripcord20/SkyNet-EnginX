@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light" id="nocHtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    :root {
+      --nc-bg:#f0f4f8; --nc-card:#ffffff; --nc-border:#e2e8f0;
+      --nc-text:#1e293b; --nc-muted:#64748b; --nc-panel:#f8fafc; --nc-accent:#1e78ff;
+    }
+    .dark-mode {
+      --nc-bg:#0f1117; --nc-card:#1a1d27; --nc-border:#2a2d3e;
+      --nc-text:#e2e8f0; --nc-muted:#8892a4; --nc-panel:#141720; --nc-accent:#3b82f6;
+    }
+    body, .main-content, .page-content {
+      background:var(--nc-bg) !important; color:var(--nc-text);
+      transition:background .2s, color .2s; font-family:'DM Sans', sans-serif;
+    }
+    .page-content { padding:20px 24px; }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .nc-header {
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:10px;
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:14px; padding:14px 20px; margin-bottom:14px;
+      box-shadow:0 1px 4px rgba(0,0,0,.04);
+    }
+    .dark-mode .nc-header { box-shadow:0 2px 12px rgba(0,0,0,.25); }
+    .nc-header-left { display:flex; align-items:center; gap:12px; min-width:0; }
+    .nc-header-icon {
+      width:40px; height:40px; border-radius:10px;
+      background:linear-gradient(135deg,#1e78ff,#0052cc);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      box-shadow:0 4px 12px rgba(30,120,255,.3);
+    }
+    .nc-header-icon svg { stroke:#fff; fill:none; stroke-width:2; width:20px; height:20px; }
+    .nc-header-text { min-width:0; }
+    .nc-header-text h1 { font-size:16px; font-weight:800; margin:0 0 2px; letter-spacing:-.3px; }
+    .nc-header-text p  { font-size:11px; color:var(--nc-muted); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .nc-header-right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    /* Router selector — sama style dengan device-monitor */
+    .nc-router-select {
+      padding:7px 12px; border:1.5px solid var(--nc-border);
+      border-radius:8px; font-size:13px; font-weight:600;
+      background:var(--nc-card); color:var(--nc-text);
+      cursor:pointer; min-width:200px; max-width:280px; outline:none;
+      font-family:inherit; transition:border-color .15s;
+    }
+    .nc-router-select:focus { border-color:#1e78ff; }
+    .nc-router-select option { background:var(--nc-card); color:var(--nc-text); }
+
+    .nc-int-btns { display:flex; gap:2px; background:var(--nc-panel); border-radius:8px; padding:3px; border:1px solid var(--nc-border); }
+    .nc-int-btn { padding:5px 11px; border:none; background:transparent; border-radius:6px; font-size:11px; font-weight:700; color:var(--nc-muted); cursor:pointer; transition:all .15s; font-family:inherit; }
+    .nc-int-btn.active { background:#1e78ff; color:#fff; box-shadow:0 2px 6px rgba(30,120,255,.3); }
+
+    .nc-theme-btn, .nc-refresh-btn {
+      width:34px; height:34px; border-radius:8px;
+      border:1.5px solid var(--nc-border); background:var(--nc-card);
+      color:var(--nc-muted); cursor:pointer; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; transition:all .15s;
+    }
+    .nc-theme-btn:hover, .nc-refresh-btn:hover { border-color:#1e78ff; color:#1e78ff; }
+    .nc-refresh-btn.spin svg { animation:nc-spin 1s linear infinite; }
+    @keyframes nc-spin { to { transform:rotate(360deg); } }
+
+    .nc-live { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:#22c55e; padding:0 8px; }
+    .nc-live.off { color:#94a3b8; }
+    .nc-live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:ncPulse 1.5s infinite; }
+    .nc-live.off .nc-live-dot { background:#94a3b8; animation:none; }
+    @keyframes ncPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+
+    /* ── Status bar — modern card layout (Apple Health / fintech style) ─── */
+    .nc-status-bar {
+      display:grid;
+      grid-template-columns:1.4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap:12px; align-items:stretch;
+      background:transparent; border:none;
+      border-radius:0; padding:0;
+      margin-bottom:14px;
+    }
+    @media (max-width:1400px){
+      .nc-status-bar { grid-template-columns:1.4fr 1fr 1fr 1fr 1fr; }
+    }
+    @media (max-width:900px){
+      .nc-status-bar { grid-template-columns:repeat(3,1fr); }
+    }
+    @media (max-width:520px){
+      .nc-status-bar { grid-template-columns:repeat(2,1fr); }
+    }
+
+    .nc-stat-cell{
+      display:flex; flex-direction:column; justify-content:space-between;
+      gap:14px; min-height:118px;
+      padding:16px 18px; min-width:0;
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:16px;
+      transition:border-color .15s, transform .15s, box-shadow .15s;
+      position:relative;
+    }
+    .nc-stat-cell:hover{
+      border-color:var(--nc-accent);
+      transform:translateY(-1px);
+      box-shadow:0 8px 20px -10px rgba(13,30,80,.12);
+    }
+    .dark-mode .nc-stat-cell:hover{ box-shadow:0 10px 24px -10px rgba(0,0,0,.5); }
+
+    /* Clickable stat card — cursor pointer + hint "→" muncul saat hover */
+    .nc-stat-clickable {
+      cursor: pointer;
+      user-select: none;
+    }
+    .nc-stat-clickable:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px -10px rgba(13,30,80,.18);
+    }
+    .dark-mode .nc-stat-clickable:hover { box-shadow: 0 14px 28px -10px rgba(0,0,0,.6); }
+    .nc-stat-clickable:active {
+      transform: translateY(0);
+      transition: transform .05s;
+    }
+    /* Arrow indicator di pojok kanan-bawah saat hover — supaya tidak overlap
+     * dengan icon SVG yang ada di pojok kanan-atas .nc-stat-top */
+    .nc-stat-clickable::after {
+      content: '↗';
+      position: absolute;
+      bottom: 10px; right: 12px;
+      font-size: 14px; font-weight: 700;
+      color: var(--nc-muted);
+      opacity: 0;
+      transition: opacity .15s, transform .15s;
+      pointer-events: none;
+    }
+    .nc-stat-clickable:hover::after {
+      opacity: .8;
+      transform: translate(2px, -2px);
+    }
+
+    /* Header row: label (kiri, dominan) + icon (kanan pojok) */
+    .nc-stat-top{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:10px; min-width:0;
+    }
+    .nc-stat-lbl{
+      font-size:12.5px; font-weight:600; color:var(--nc-text);
+      letter-spacing:-.008em; min-width:0;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      padding-top:1px; /* align vertikal dengan icon center */
+    }
+
+    .nc-stat-cell .ic{
+      width:30px; height:30px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .nc-stat-cell .ic svg{ width:13px; height:13px; stroke-width:2.2; }
+    .nc-stat-cell.t-blue   .ic{ background:rgba(59,130,246,.12);  color:#3b82f6; }
+    .nc-stat-cell.t-green  .ic{ background:rgba(34,197,94,.13);   color:#16a34a; }
+    .nc-stat-cell.t-red    .ic{ background:rgba(239,68,68,.12);   color:#ef4444; }
+    .nc-stat-cell.t-amber  .ic{ background:rgba(245,158,11,.13);  color:#d97706; }
+    .nc-stat-cell.t-teal   .ic{ background:rgba(20,184,166,.13);  color:#0d9488; }
+    .nc-stat-cell.t-slate  .ic{ background:rgba(100,116,139,.14); color:#64748b; }
+
+    /* Body row: big value + (opsional) unit kecil + (opsional) sub-info */
+    .nc-stat-body{
+      display:flex; flex-direction:column; gap:2px; min-width:0;
+    }
+    .nc-stat-val{
+      font-size:26px; font-weight:800; line-height:1;
+      font-family:'JetBrains Mono',monospace;
+      color:var(--nc-text); letter-spacing:-.024em;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .nc-stat-val.small{ font-size:18px; line-height:1.1; }
+    .nc-stat-val.t-blue  { color:#3b82f6; }
+    .nc-stat-val.t-green { color:#16a34a; }
+    .nc-stat-val.t-red   { color:#ef4444; }
+    .nc-stat-val.t-amber { color:#d97706; }
+
+    .nc-stat-unit{
+      font-size:11px; font-weight:600; color:var(--nc-muted);
+      margin-left:5px; font-family:'DM Sans',sans-serif;
+      letter-spacing:0;
+    }
+
+    .nc-stat-sub-info{
+      font-size:11px; color:var(--nc-muted); font-weight:500;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      margin-top:2px;
+    }
+
+    /* Router-info card — gradient biru dominan (active state) */
+    .nc-stat-cell.router-info{
+      background:linear-gradient(135deg, #2563eb 0%, #1e40af 60%, #0e7490 100%);
+      border-color:transparent;
+      color:#ffffff;
+      box-shadow:0 8px 20px -10px rgba(37,99,235,.5);
+    }
+    .nc-stat-cell.router-info:hover{
+      border-color:transparent;
+      box-shadow:0 12px 28px -10px rgba(37,99,235,.55);
+    }
+    /* Override text color di dalam router-info card supaya kontras dengan
+       background biru gelap */
+    .nc-stat-cell.router-info .nc-stat-lbl{
+      color:rgba(255,255,255,.85);
+    }
+    .nc-stat-cell.router-info .nc-stat-val{
+      color:#ffffff;
+    }
+    .nc-stat-cell.router-info .nc-stat-sub-info{
+      color:rgba(255,255,255,.7);
+    }
+    /* Icon di router-info: glass effect putih translucent */
+    .nc-stat-cell.router-info .ic{
+      background:rgba(255,255,255,.18);
+      color:#ffffff;
+      backdrop-filter:blur(4px);
+    }
+    .dark-mode .nc-stat-cell.router-info{
+      background:linear-gradient(135deg, #1e40af 0%, #1e3a8a 60%, #155e75 100%);
+      box-shadow:0 8px 24px -10px rgba(30,64,175,.6);
+    }
+
+    /* ── Empty state (no router selected) ───────────────── */
+    .nc-empty-state {
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:14px; padding:60px 24px; text-align:center;
+      margin-bottom:14px;
+    }
+    .nc-empty-state .ic {
+      width:64px; height:64px; border-radius:18px; margin:0 auto 14px;
+      background:rgba(30,120,255,.10); color:#1e78ff;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .nc-empty-state .ic svg { width:30px; height:30px; }
+    .nc-empty-state h2 { font-size:17px; font-weight:800; margin:0 0 6px; }
+    .nc-empty-state p { font-size:13px; color:var(--nc-muted); margin:0 0 18px; }
+    .nc-router-cards {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+      gap:10px; max-width:780px; margin:0 auto;
+    }
+    .nc-router-card {
+      padding:14px; border-radius:11px;
+      background:var(--nc-panel); border:1.5px solid var(--nc-border);
+      cursor:pointer; transition:all .15s; text-align:left;
+      font-family:inherit;
+    }
+    .nc-router-card:hover { border-color:#1e78ff; background:var(--nc-card); transform:translateY(-2px); box-shadow:0 8px 16px -8px rgba(30,120,255,.25); }
+    .nc-router-card .rc-name {
+      font-size:13.5px; font-weight:700; color:var(--nc-text); margin-bottom:4px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nc-router-card .rc-name .pri {
+      font-size:9px; font-weight:800; padding:1px 6px; border-radius:4px;
+      background:rgba(30,120,255,.14); color:#1e78ff; letter-spacing:.04em;
+    }
+    .nc-router-card .rc-ip {
+      font-size:11px; color:var(--nc-muted); font-family:'JetBrains Mono',monospace;
+    }
+    .nc-router-card .rc-status {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:10px; font-weight:700; margin-top:6px;
+      padding:2px 7px; border-radius:5px;
+    }
+    .nc-router-card .rc-status.online  { background:rgba(34,197,94,.12);  color:#22c55e; }
+    .nc-router-card .rc-status.offline { background:rgba(239,68,68,.12);  color:#ef4444; }
+    .nc-router-card .rc-status .d { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+    /* ── Grids ──────────────────────────────────────────── */
+    .nc-grid-top    { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:14px; }
+    .nc-grid-mid    { display:grid; grid-template-columns:2fr 1fr;       gap:14px; margin-bottom:14px; }
+    .nc-grid-bot    { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+    .nc-grid-ticket { display:grid; grid-template-columns:1fr 1fr 2fr;   gap:14px; margin-bottom:14px; }
+
+    @media (max-width:1100px) {
+      .nc-grid-top    { grid-template-columns:repeat(2,1fr); }
+      .nc-grid-mid    { grid-template-columns:1fr; }
+      .nc-grid-bot    { grid-template-columns:1fr; }
+      .nc-grid-ticket { grid-template-columns:1fr; }
+    }
+    @media (max-width:500px) { .nc-grid-top { grid-template-columns:1fr 1fr; } }
+
+    /* ── Panel ──────────────────────────────────────────── */
+    .nc-panel {
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:12px; padding:16px 18px;
+      position:relative;
+      transition:background .2s, border-color .2s;
+    }
+    .nc-panel:hover { border-color:var(--nc-accent); }
+    .nc-panel-title {
+      font-size:11px; font-weight:700; color:var(--nc-muted);
+      text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px;
+      display:flex; align-items:center; gap:6px;
+    }
+    .nc-panel-title svg { opacity:.6; width:13px; height:13px; }
+
+    .nc-gauge-sub { font-size:11px; color:var(--nc-muted); margin-top:3px; text-align:center; font-family:'JetBrains Mono',monospace; }
+
+    .clr-ok { color:#22c55e; } .clr-warn { color:#f59e0b; } .clr-danger { color:#ef4444; }
+    .clr-blue { color:#3b82f6; } .clr-orange { color:#f97316; } .clr-cyan { color:#06b6d4; }
+
+    .nc-stat-big { font-size:32px; font-weight:800; font-family:'JetBrains Mono',monospace; line-height:1.1; letter-spacing:-.02em; }
+    .nc-stat-sub { font-size:11px; color:var(--nc-muted); font-weight:600; margin-top:4px; }
+    .nc-stat-row { display:flex; justify-content:space-between; align-items:flex-end; }
+    .nc-mini-chart { margin-top:6px; min-height:54px; }
+
+    /* Router info badges di status bar */
+    .nc-router-meta {
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;
+      font-size:11px; color:var(--nc-muted);
+    }
+    .nc-router-meta .badge {
+      padding:2px 8px; border-radius:5px;
+      background:var(--nc-panel); font-family:'JetBrains Mono',monospace;
+    }
+
+    /* Error state inline */
+    .nc-error-banner {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 14px; border-radius:10px;
+      background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.25);
+      color:#dc2626; font-size:12.5px; font-weight:600;
+      margin-bottom:14px;
+    }
+    .dark-mode .nc-error-banner { color:#fca5a5; background:rgba(239,68,68,.10); }
+    .nc-error-banner svg { width:16px; height:16px; flex-shrink:0; }
+
+    /* ── Interface selector (Bandwidth panel) ─────────── */
+    .nc-iface-wrap{ position:relative; flex-shrink:0; }
+    .nc-iface-trigger{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:8px;
+      background:var(--nc-panel); border:1px solid var(--nc-border);
+      color:var(--nc-text); font-size:11px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+      text-transform:none; letter-spacing:0;
+      max-width:240px;
+    }
+    .nc-iface-trigger:hover{ border-color:var(--nc-accent); }
+    .nc-iface-trigger svg{ width:13px; height:13px; opacity:.7; flex-shrink:0; }
+    .nc-iface-trigger span{
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      min-width:0; font-family:'JetBrains Mono',monospace; font-size:11px;
+    }
+
+    .nc-iface-panel{
+      display:none;
+      position:absolute; top:calc(100% + 6px); right:0;
+      width:280px; max-height:380px; overflow:hidden;
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:11px; z-index:60;
+      box-shadow:0 18px 38px -14px rgba(13,30,80,.30);
+      flex-direction:column;
+    }
+    .dark-mode .nc-iface-panel{ box-shadow:0 20px 40px -16px rgba(0,0,0,.55); }
+    .nc-iface-panel.show{ display:flex; }
+    .nc-iface-panel-head{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 12px; border-bottom:1px solid var(--nc-border);
+      flex-shrink:0;
+    }
+    .nc-iface-tag{
+      padding:3px 8px; border-radius:6px;
+      background:transparent; border:1px solid var(--nc-border);
+      color:var(--nc-muted); font-size:10px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+      text-transform:none; letter-spacing:0;
+    }
+    .nc-iface-tag:hover{ border-color:var(--nc-accent); color:var(--nc-accent); }
+    .nc-iface-list{
+      overflow-y:auto; padding:4px;
+      max-height:300px;
+    }
+    .nc-iface-list::-webkit-scrollbar{ width:6px; }
+    .nc-iface-list::-webkit-scrollbar-thumb{ background:var(--nc-border); border-radius:99px; }
+    .nc-iface-row{
+      display:flex; align-items:center; gap:9px;
+      padding:8px 10px; border-radius:8px; cursor:pointer;
+      transition:background .12s; user-select:none;
+    }
+    .nc-iface-row:hover{ background:var(--nc-panel); }
+    .nc-iface-row input{
+      width:15px; height:15px; cursor:pointer; flex-shrink:0;
+      accent-color:#1e78ff;
+    }
+    .nc-iface-row.disabled{ opacity:.55; cursor:not-allowed; }
+    .nc-iface-row.disabled:hover{ background:transparent; }
+    .nc-iface-info{ flex:1; min-width:0; line-height:1.3; }
+    .nc-iface-name{
+      font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+      color:var(--nc-text);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .nc-iface-comment{
+      font-size:10.5px; color:var(--nc-muted); font-weight:500;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .nc-iface-state{
+      width:6px; height:6px; border-radius:50%; flex-shrink:0;
+    }
+    .nc-iface-state.running{ background:#22c55e; box-shadow:0 0 0 2px rgba(34,197,94,.18); }
+    .nc-iface-state.down   { background:#94a3b8; }
+
+    /* ── Monitor section (Bandwidth Monitor grid) ──────── */
+    .nc-monitor-section-head{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:12px; margin-bottom:12px; flex-wrap:wrap;
+    }
+    .nc-monitor-section-title{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:14px; font-weight:800; color:var(--nc-text);
+      letter-spacing:-.018em;
+    }
+    .nc-monitor-section-title svg{ width:16px; height:16px; color:var(--nc-accent); }
+    .nc-monitor-section-sub{
+      font-size:11.5px; color:var(--nc-muted); font-weight:500; margin-top:2px;
+      max-width:480px;
+    }
+    .nc-monitor-add-btn{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 14px; border-radius:9px;
+      background:#1e78ff; color:#fff; border:none;
+      font-family:inherit; font-size:12.5px; font-weight:700;
+      cursor:pointer; transition:all .15s;
+      box-shadow:0 6px 14px -6px rgba(30,120,255,.5);
+      flex-shrink:0;
+    }
+    .nc-monitor-add-btn:hover{ background:#1565d8; transform:translateY(-1px); }
+    .nc-monitor-add-btn:active{ transform:translateY(0); }
+
+    .nc-monitor-grid{
+      display:grid; grid-template-columns:1fr; gap:12px;
+    }
+
+    /* Empty state */
+    .nc-monitor-empty{
+      background:var(--nc-card); border:1.5px dashed var(--nc-border);
+      border-radius:14px; padding:42px 24px; text-align:center;
+    }
+    .nc-monitor-empty .ic{
+      width:50px; height:50px; border-radius:14px; margin:0 auto 12px;
+      background:rgba(30,120,255,.10); color:#1e78ff;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .nc-monitor-empty .ic svg{ width:22px; height:22px; }
+    .nc-monitor-empty .t{ font-size:14px; font-weight:700; color:var(--nc-text); margin-bottom:4px; }
+    .nc-monitor-empty p{ font-size:12.5px; color:var(--nc-muted); margin:0; line-height:1.5; }
+
+    /* Individual monitor card */
+    .nc-mon-card{
+      background:var(--nc-card); border:1px solid var(--nc-border);
+      border-radius:12px; padding:14px 16px;
+      transition:border-color .15s;
+    }
+    .nc-mon-card:hover{ border-color:var(--nc-accent); }
+    .nc-mon-card-head{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px; margin-bottom:10px;
+    }
+    .nc-mon-name{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:13px; font-weight:700; color:var(--nc-text);
+      letter-spacing:-.018em; min-width:0; flex:1;
+    }
+    .nc-mon-name .dot{
+      width:8px; height:8px; border-radius:50%; flex-shrink:0;
+    }
+    .nc-mon-name .lbl{
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .nc-mon-meta{
+      font-size:10.5px; color:var(--nc-muted); font-weight:500;
+      font-family:'JetBrains Mono',monospace;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width:240px;
+    }
+    .nc-mon-actions{
+      display:flex; gap:4px; flex-shrink:0;
+    }
+    .nc-mon-act-btn{
+      width:26px; height:26px; border-radius:7px;
+      background:transparent; border:1px solid var(--nc-border);
+      color:var(--nc-muted); cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:all .15s;
+    }
+    .nc-mon-act-btn:hover{ background:var(--nc-panel); color:var(--nc-accent); border-color:var(--nc-accent); }
+    .nc-mon-act-btn.danger:hover{ color:#ef4444; border-color:#ef4444; background:rgba(239,68,68,.06); }
+    .nc-mon-act-btn svg{ width:12px; height:12px; }
+    .nc-mon-now{
+      display:flex; gap:14px; margin-bottom:10px; align-items:center;
+    }
+    .nc-mon-now-item{ display:flex; flex-direction:column; }
+    .nc-mon-now-lbl{
+      font-size:9.5px; font-weight:700; letter-spacing:.06em;
+      text-transform:uppercase;
+    }
+    .nc-mon-now-val{
+      font-size:18px; font-weight:800; font-family:'JetBrains Mono',monospace;
+      line-height:1; letter-spacing:-.02em;
+    }
+    .nc-mon-chart-wrap{ min-height:170px; }
+
+    /* ── Modal ──────────────────────────────────────────── */
+    .nc-modal-overlay{
+      display:none;
+      position:fixed; inset:0;
+      background:rgba(13,30,80,.45);
+      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+      align-items:center; justify-content:center;
+      z-index:1000; padding:20px;
+      opacity:0; transition:opacity .2s;
+    }
+    .nc-modal-overlay.show{ display:flex; opacity:1; }
+    .nc-modal{
+      background:var(--nc-card); border-radius:16px;
+      max-width:520px; width:100%; max-height:88vh;
+      box-shadow:0 30px 80px -20px rgba(13,30,80,.45);
+      display:flex; flex-direction:column;
+      transform:translateY(16px); opacity:0;
+      transition:transform .25s cubic-bezier(.2,.8,.2,1), opacity .2s;
+      overflow:hidden;
+    }
+    .nc-modal-overlay.show .nc-modal{ transform:translateY(0); opacity:1; }
+    .nc-modal-head{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:10px; padding:18px 20px; border-bottom:1px solid var(--nc-border);
+    }
+    .nc-modal-head h3{
+      font-size:15px; font-weight:800; color:var(--nc-text);
+      margin:0 0 2px; letter-spacing:-.022em;
+    }
+    .nc-modal-sub{
+      font-size:11.5px; color:var(--nc-muted); font-weight:500;
+    }
+    .nc-modal-close{
+      width:30px; height:30px; border-radius:8px;
+      background:var(--nc-panel); border:none; color:var(--nc-muted);
+      cursor:pointer; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      transition:all .15s;
+    }
+    .nc-modal-close:hover{ background:var(--nc-border); color:var(--nc-text); }
+    .nc-modal-close svg{ width:14px; height:14px; }
+    .nc-modal-body{
+      flex:1; overflow-y:auto;
+      padding:18px 20px;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .nc-modal-foot{
+      display:flex; gap:8px; justify-content:flex-end;
+      padding:14px 20px; border-top:1px solid var(--nc-border);
+      background:var(--nc-panel);
+    }
+    .nc-modal-btn{
+      padding:9px 18px; border-radius:9px;
+      font-size:12.5px; font-weight:700; font-family:inherit;
+      border:none; cursor:pointer; transition:all .15s;
+    }
+    .nc-modal-btn.ghost{
+      background:var(--nc-card); color:var(--nc-text);
+      border:1px solid var(--nc-border);
+    }
+    .nc-modal-btn.ghost:hover{ background:var(--nc-panel); }
+    .nc-modal-btn.primary{
+      background:#1e78ff; color:#fff;
+      box-shadow:0 6px 14px -6px rgba(30,120,255,.45);
+    }
+    .nc-modal-btn.primary:hover{ background:#1565d8; transform:translateY(-1px); }
+    .nc-modal-btn:disabled{ opacity:.6; cursor:wait; transform:none; }
+
+    .nc-field{ display:flex; flex-direction:column; gap:6px; }
+    .nc-field label{
+      font-size:11px; font-weight:700; color:var(--nc-text);
+      letter-spacing:.02em;
+    }
+    .nc-field input[type=text],
+    .nc-field select{
+      padding:10px 12px; border-radius:9px;
+      border:1px solid var(--nc-border); background:var(--nc-card);
+      color:var(--nc-text); font-family:inherit; font-size:13px;
+      outline:none; transition:border-color .15s, box-shadow .15s;
+    }
+    .nc-field input[type=text]:focus,
+    .nc-field select:focus{
+      border-color:#1e78ff;
+      box-shadow:0 0 0 3px rgba(30,120,255,.10);
+    }
+    .nc-field input[type=color]{
+      width:100%; height:38px; padding:3px; border-radius:9px;
+      border:1px solid var(--nc-border); background:var(--nc-card); cursor:pointer;
+    }
+    .nc-field-row{ display:flex; gap:10px; }
+
+    .nc-modal-iface-list{
+      max-height:240px; overflow-y:auto;
+      border:1px solid var(--nc-border); border-radius:9px;
+      background:var(--nc-panel);
+    }
+    .nc-modal-iface-list::-webkit-scrollbar{ width:6px; }
+    .nc-modal-iface-list::-webkit-scrollbar-thumb{ background:var(--nc-border); border-radius:99px; }
+    .nc-modal-iface-list .nc-iface-row{
+      padding:9px 12px; border-radius:0;
+    }
+    .nc-modal-iface-list .nc-iface-row + .nc-iface-row{
+      border-top:1px solid var(--nc-border);
+    }
+
+    /* ── Ticket list ────────────────────────────────────── */
+    .nc-ticket-list { max-height:340px; overflow-y:auto; margin:0 -6px; padding:0 6px; }
+    .nc-ticket-list::-webkit-scrollbar { width:6px; }
+    .nc-ticket-list::-webkit-scrollbar-thumb { background:var(--nc-border); border-radius:99px; }
+    .nc-tk-item {
+      display:flex; align-items:flex-start; gap:11px;
+      padding:10px 11px; border-radius:9px;
+      transition:background .12s; text-decoration:none; color:inherit;
+    }
+    .nc-tk-item + .nc-tk-item { border-top:1px solid var(--nc-border); }
+    .nc-tk-item:hover { background:var(--nc-panel); }
+    .nc-tk-pri { width:6px; align-self:stretch; border-radius:3px; flex-shrink:0; }
+    .nc-tk-pri.critical { background:#ef4444; }
+    .nc-tk-pri.high     { background:#f97316; }
+    .nc-tk-pri.medium   { background:#eab308; }
+    .nc-tk-pri.low      { background:#94a3b8; }
+    .nc-tk-body { flex:1; min-width:0; }
+    .nc-tk-no    { font-size:10.5px; font-weight:700; color:var(--nc-muted); font-family:'JetBrains Mono',monospace; }
+    .nc-tk-title { font-size:13px; font-weight:600; color:var(--nc-text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+    .nc-tk-meta { display:flex; gap:6px; margin-top:5px; flex-wrap:wrap; font-size:10.5px; color:var(--nc-muted); align-items:center; }
+    .nc-tk-badge {
+      padding:1px 7px; border-radius:5px; font-size:9.5px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.04em;
+      background:var(--nc-panel); color:var(--nc-muted);
+    }
+    /* 5 status mengikuti enum tabel tickets + warna konsisten dengan /tickets page */
+    .nc-tk-badge.open         { background:rgba(8,145,178,.14);  color:#0891b2; }
+    .nc-tk-badge.in_progress  { background:rgba(22,163,74,.14);  color:#16a34a; }
+    .nc-tk-badge.pending      { background:rgba(245,158,11,.14); color:#d97706; }
+    .nc-tk-badge.resolved     { background:rgba(59,130,246,.14); color:#3b82f6; }
+    .nc-tk-badge.closed       { background:rgba(234,88,12,.14);  color:#ea580c; }
+
+    /* ── Alert feed ─────────────────────────────────────── */
+    .nc-alert-list { max-height:340px; overflow-y:auto; margin:0 -6px; padding:0 6px; }
+    .nc-alert-list::-webkit-scrollbar { width:6px; }
+    .nc-alert-list::-webkit-scrollbar-thumb { background:var(--nc-border); border-radius:99px; }
+    .nc-alert-item { display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:8px; }
+    .nc-alert-item + .nc-alert-item { border-top:1px solid var(--nc-border); }
+    .nc-alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:6px; }
+    .nc-alert-dot.danger  { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.18); }
+    .nc-alert-dot.warning { background:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,.18); }
+    .nc-alert-dot.info    { background:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,.18); }
+    .nc-alert-dot.success { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.18); }
+    .nc-alert-body { flex:1; min-width:0; line-height:1.4; }
+    .nc-alert-msg { font-size:12px; color:var(--nc-text); font-weight:500; }
+    .nc-alert-meta { font-size:10.5px; color:var(--nc-muted); margin-top:2px; display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+
+    /* ── Empty / skeleton ──────────────────────────────── */
+    .nc-empty { text-align:center; padding:34px 14px; color:var(--nc-muted); font-size:12px; }
+    .nc-empty .ic {
+      width:42px; height:42px; border-radius:13px; margin:0 auto 10px;
+      background:var(--nc-panel); color:var(--nc-muted);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .nc-empty .ic svg { width:20px; height:20px; }
+    .nc-empty .t { color:var(--nc-text); font-weight:700; margin-bottom:3px; font-size:13px; }
+    .nc-skel {
+      display:inline-block;
+      background:linear-gradient(90deg, var(--nc-border) 25%, var(--nc-panel) 50%, var(--nc-border) 75%);
+      background-size:200% 100%; border-radius:5px;
+      animation:nc-skel 1.4s ease-in-out infinite;
+    }
+    @keyframes nc-skel { 0%{ background-position:200% 0;} 100%{ background-position:-200% 0;} }
+
+    /* ── Quick access ───────────────────────────────────── */
+    .nc-qa-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    @media (max-width:900px){ .nc-qa-grid { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:500px){ .nc-qa-grid { grid-template-columns:1fr; } }
+    .nc-qa-item {
+      display:flex; align-items:center; gap:9px;
+      padding:10px 12px; border-radius:9px;
+      background:var(--nc-panel); border:1px solid var(--nc-border);
+      color:var(--nc-text); font-size:12px; font-weight:600;
+      text-decoration:none; transition:all .15s;
+    }
+    .nc-qa-item:hover { border-color:var(--nc-accent); background:var(--nc-card); transform:translateY(-1px); }
+    .nc-qa-item .ic {
+      width:28px; height:28px; border-radius:7px; flex-shrink:0;
+      background:rgba(59,130,246,.12); color:var(--nc-accent);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .nc-qa-item .ic svg { width:14px; height:14px; }
+
+    /* ════════════════════════════════════════════════════════
+       MOBILE REDESIGN — tablet & phone (≤768px) + phone (≤480px)
+       Tujuan: rapi, tanpa horizontal-scroll, tap-target nyaman.
+       Hanya menimpa di breakpoint kecil; desktop tidak terpengaruh.
+       ════════════════════════════════════════════════════════ */
+    @media (max-width:768px) {
+      .page-content { padding:12px 12px 28px; overflow-x:hidden; }
+
+      /* Header → stack vertikal, kontrol jadi baris penuh */
+      .nc-header { padding:12px 14px; border-radius:14px; gap:12px; flex-direction:column; align-items:stretch; }
+      .nc-header-left { gap:10px; }
+      .nc-header-icon { width:36px; height:36px; }
+      .nc-header-text h1 { font-size:15px; }
+      .nc-header-text p { white-space:normal; font-size:10.5px; line-height:1.4; }
+      .nc-header-right { width:100%; gap:8px; align-items:center; }
+      /* Router selector full-width di barisnya sendiri */
+      .nc-router-select { order:-1; flex:1 1 100%; min-width:0; max-width:none; width:100%; }
+      .nc-int-btns { flex:1 1 auto; justify-content:space-between; }
+      .nc-int-btn { flex:1; text-align:center; padding:7px 8px; }
+      .nc-live { order:2; }
+      .nc-theme-btn, .nc-refresh-btn { width:38px; height:38px; }
+      /* "Updated …" timestamp disembunyikan di mobile biar tidak penuh */
+      #ncUpdated { display:none; }
+
+      /* Status bar → 2 kolom kartu kompak */
+      .nc-status-bar { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .nc-stat-cell { min-height:auto; padding:13px 14px; gap:10px; border-radius:14px; }
+      .nc-stat-val { font-size:22px; }
+      .nc-stat-val.small { font-size:15px; }
+      .nc-stat-big { font-size:26px; }
+
+      /* Semua grid → 1 kolom */
+      .nc-grid-top, .nc-grid-mid, .nc-grid-bot, .nc-grid-ticket { grid-template-columns:1fr; gap:12px; margin-bottom:12px; }
+
+      /* Panel & chart anti-overflow */
+      .nc-panel { padding:14px; border-radius:14px; max-width:100%; overflow:hidden; }
+      .nc-panel .apexcharts-canvas,
+      .nc-mon-chart-wrap .apexcharts-canvas,
+      .nc-mini-chart .apexcharts-canvas { max-width:100% !important; }
+      .apexcharts-canvas, .apexcharts-svg { max-width:100% !important; }
+
+      /* Interface Monitor section */
+      .nc-monitor-section-head { gap:10px; }
+      .nc-monitor-section-sub { max-width:100%; }
+      .nc-monitor-add-btn { width:100%; justify-content:center; padding:11px 14px; font-size:13px; }
+      .nc-mon-card { padding:13px 14px; border-radius:14px; }
+      .nc-mon-card-head { flex-wrap:wrap; gap:6px; }
+      .nc-mon-meta { max-width:100%; flex:1 1 100%; order:3; }
+      .nc-mon-chart-wrap { min-height:150px; }
+
+      /* Traffic summary → donut di atas, list di bawah, center rapi.
+         Ukuran donut diatur oleh .ts-donut-col (aspect-ratio responsif) di
+         bawah, jadi di sini cukup atur layout kolom. */
+      .ts-content { flex-direction:column; gap:14px; align-items:stretch; }
+      .ts-list { min-width:0; width:100%; }
+      /* Header summary (judul + koneksi + toggle) → stack */
+      #tsSub { display:block; }
+      /* Panel-title yang pakai space-between (mis. header traffic summary) → stack */
+      .nc-panel-title[style*="space-between"] { flex-direction:column; align-items:flex-start !important; gap:8px; }
+      .nc-panel-title[style*="space-between"] > span:last-child { width:100%; flex-wrap:wrap; justify-content:flex-start; }
+      .ts-toggle { flex-wrap:wrap; }
+
+      /* Interface dropdown panel jangan keluar layar */
+      .nc-iface-panel { width:calc(100vw - 32px); right:auto; left:0; max-width:320px; }
+      .nc-iface-trigger { max-width:200px; }
+
+      /* Quick access → 1 kolom tap besar */
+      .nc-qa-item { padding:12px 14px; font-size:13px; }
+
+      /* Modal lebih pas di layar kecil */
+      .nc-modal-overlay { padding:12px; }
+    }
+
+    @media (max-width:480px) {
+      .page-content { padding:10px 10px 26px; }
+      /* Status bar tetap 2 kolom tapi lebih ringkas */
+      .nc-status-bar { gap:8px; }
+      .nc-stat-cell { padding:12px; }
+      .nc-stat-val { font-size:20px; }
+      .nc-stat-lbl { font-size:10px; }
+      .nc-stat-cell .ic { width:26px; height:26px; }
+
+      .nc-header-text h1 { font-size:14px; }
+      .nc-int-btn { font-size:10.5px; padding:7px 4px; }
+
+      /* Donut ukuran diatur oleh .ts-donut-col responsif (aspect-ratio) */
+      .ts-tab { padding:5px 9px; font-size:10px; }
+      .ts-toggle { flex-wrap:wrap; }
+
+      .nc-mon-now-val { font-size:16px; }
+      .nc-monitor-section-title { font-size:13px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- ═══ HEADER ═══ -->
+      <header class="nc-header">
+        <div class="nc-header-left">
+          <div class="nc-header-text">
+            <h1>NOC Dashboard</h1>
+            <p id="ncSubTitle">Network Operations Center · Pilih router untuk lihat monitoring real-time</p>
+          </div>
+        </div>
+        <div class="nc-header-right">
+          <span class="nc-live off" id="ncLive"><span class="nc-live-dot"></span>OFFLINE</span>
+          <span style="font-size:11px;color:var(--nc-muted);font-family:'JetBrains Mono',monospace;" id="ncUpdated">—</span>
+          <select class="nc-router-select" id="ncRouterSelect" onchange="ncSelectRouter(this.value)">
+            <option value="">— Pilih Router —</option>
+          </select>
+          <div class="nc-int-btns" id="ncIntBtns">
+            <button class="nc-int-btn" data-int="5">5s</button>
+            <button class="nc-int-btn active" data-int="10">10s</button>
+            <button class="nc-int-btn" data-int="30">30s</button>
+            <button class="nc-int-btn" data-int="0">off</button>
+          </div>
+          <button class="nc-refresh-btn" id="ncRefresh" title="Refresh sekarang" aria-label="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </button>
+          <button class="nc-theme-btn" id="ncThemeBtn" title="Toggle theme" aria-label="Theme">
+            <svg id="ncThemeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- ═══ ERROR BANNER (kalau gagal connect ke router) ═══ -->
+      <div id="ncErrorBanner" class="nc-error-banner" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5"/></svg>
+        <span id="ncErrorText">—</span>
+      </div>
+
+      <!-- ═══ EMPTY STATE — belum pilih router ═══ -->
+      <div id="ncEmptyState" class="nc-empty-state">
+        <div class="ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="3" y1="16" x2="21" y2="16"/><line x1="8" y1="20" x2="16" y2="20"/></svg>
+        </div>
+        <h2>Pilih Router untuk Mulai Monitoring</h2>
+        <p>Data CPU, memory, PPPoE, dan bandwidth akan ditarik real-time via MikroTik API.</p>
+        <div class="nc-router-cards" id="ncRouterCards">
+          <div class="nc-router-card" style="cursor:default;">
+            <span class="nc-skel" style="width:120px;height:14px;display:block;"></span>
+            <span class="nc-skel" style="width:80px;height:11px;display:block;margin-top:4px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ DASHBOARD CONTENT — visible setelah pilih router ═══ -->
+      <div id="ncDashboard" style="display:none;">
+
+        <!-- Router info & global stats — clean modern card layout -->
+        <div class="nc-status-bar">
+          <!-- Router identity (lebar 1.4fr, gradient subtle biar standout) -->
+          <div class="nc-stat-cell router-info t-blue">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Router Aktif</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="9" rx="2"/><path d="M12 11V7a4 4 0 014-4 4 4 0 014 4M8 11V7a4 4 0 00-4-4"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val small" id="sRouter">—</div>
+              <div class="nc-stat-sub-info" id="sRouterIp">—</div>
+            </div>
+          </div>
+
+          <!-- Uptime -->
+          <div class="nc-stat-cell t-slate">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Uptime</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val small" id="sUptime">—</div>
+            </div>
+          </div>
+
+          <!-- PPPoE Aktif → klik ke /monitoring/pppoe tab sessions -->
+          <div class="nc-stat-cell t-blue nc-stat-clickable" onclick="window.location.href='/monitoring/pppoe?tab=sessions'" title="Lihat sesi PPPoE aktif">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">PPPoE Aktif</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-blue" id="sPPPoE">—<span class="nc-stat-unit">sesi</span></div>
+            </div>
+          </div>
+
+          <!-- ONT Online → klik ke /genieacs filter online -->
+          <div class="nc-stat-cell t-green nc-stat-clickable" onclick="window.location.href='/genieacs?filter=online'" title="Lihat ONT online">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">ONT Online</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-green" id="sOntOnline">—</div>
+            </div>
+          </div>
+
+          <!-- ONT Offline → klik ke /genieacs filter offline -->
+          <div class="nc-stat-cell t-red nc-stat-clickable" onclick="window.location.href='/genieacs?filter=offline'" title="Lihat ONT offline">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">ONT Offline</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.58 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-red" id="sOntOffline">—</div>
+            </div>
+          </div>
+
+          <!-- Pelanggan Isolir → klik ke /isolir (halaman isolir management) -->
+          <div class="nc-stat-cell t-amber nc-stat-clickable" onclick="window.location.href='/isolir'" title="Buka halaman Isolir Management">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Pelanggan Isolir</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-amber" id="sIsolated">—</div>
+            </div>
+          </div>
+
+          <!-- Tiket Terbuka → klik ke /tickets filter open -->
+          <div class="nc-stat-cell t-amber nc-stat-clickable" onclick="window.location.href='/tickets?status=open'" title="Lihat tiket terbuka">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Tiket Terbuka</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-amber" id="sTickets">—</div>
+            </div>
+          </div>
+
+          <!-- Pelanggan Aktif → klik ke /customers filter active -->
+          <div class="nc-stat-cell t-green nc-stat-clickable" onclick="window.location.href='/customers?status=active'" title="Lihat pelanggan aktif">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Pelanggan Aktif</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val t-green" id="sCustomers">—</div>
+            </div>
+          </div>
+
+          <!-- Aset Infra → klik ke /infrastructure -->
+          <div class="nc-stat-cell t-teal nc-stat-clickable" onclick="window.location.href='/infrastructure'" title="Lihat aset infrastruktur">
+            <div class="nc-stat-top">
+              <span class="nc-stat-lbl">Aset Infra</span>
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+            </div>
+            <div class="nc-stat-body">
+              <div class="nc-stat-val" id="sInfra">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 1: Resource gauges -->
+        <div class="nc-grid-top">
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+              CPU Load
+            </div>
+            <div id="chartCpuGauge"></div>
+            <div class="nc-gauge-sub" id="cpuSub">—</div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6.01" y2="10"/><line x1="10" y1="10" x2="18" y2="10"/></svg>
+              Memory
+            </div>
+            <div id="chartMemGauge"></div>
+            <div class="nc-gauge-sub" id="memSub">—</div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              PPPoE Sessions
+            </div>
+            <div class="nc-stat-row">
+              <div>
+                <div class="nc-stat-big clr-blue" id="kPPPoEval">—</div>
+                <div class="nc-stat-sub">sesi aktif di router ini</div>
+              </div>
+            </div>
+            <div id="chartPppoeSpark" class="nc-mini-chart"></div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+              Bandwidth Now
+            </div>
+            <div class="nc-stat-row">
+              <div>
+                <div style="font-size:11px;color:#3b82f6;font-weight:700;letter-spacing:.04em;">RX</div>
+                <div class="nc-stat-big clr-blue" id="kRxMbps" style="font-size:22px;">—</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#06b6d4;font-weight:700;letter-spacing:.04em;">TX</div>
+                <div class="nc-stat-big clr-cyan" id="kTxMbps" style="font-size:22px;">—</div>
+              </div>
+            </div>
+            <div id="chartBwSpark" class="nc-mini-chart"></div>
+            <div class="nc-stat-sub" id="bwSub">— interface aktif</div>
+          </div>
+
+        </div>
+
+        <!-- Row 2: Bandwidth Monitors (grid of cards) + Live Alerts side -->
+        <div class="nc-grid-mid">
+
+          <div>
+            <!-- Section header: title + Add button -->
+            <div class="nc-monitor-section-head">
+              <div>
+                <div class="nc-monitor-section-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+                  Interface Monitor
+                </div>
+                <div class="nc-monitor-section-sub">Buat monitor untuk setiap interface (WAN, distribusi, dll) supaya bisa pantau real-time</div>
+              </div>
+              <button type="button" class="nc-monitor-add-btn" onclick="ncOpenMonitorModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah Interface
+              </button>
+            </div>
+
+            <!-- Dynamic monitor cards akan dimasukkan di sini -->
+            <div class="nc-monitor-grid" id="ncMonitorGrid">
+              <div class="nc-monitor-empty" id="ncMonitorEmpty">
+                <div class="ic">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+                </div>
+                <div class="t">Belum ada monitor</div>
+                <p>Klik <strong>Tambah Interface</strong> untuk membuat panel bandwidth pertama. Kamu bisa buat satu untuk tiap interface yang perlu dipantau.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title" style="justify-content:space-between;display:flex;width:100%;">
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r=".5"/></svg>
+                Live Alerts
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:10px;">
+                <span style="font-size:10px;font-weight:700;color:var(--nc-muted);" id="ncAlertCount">— alert</span>
+                <button id="ncAlertClear" onclick="ncClearAlerts()" title="Hapus semua alert dari list"
+                        style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:transparent;border:1px solid var(--nc-border, #e2e8f0);border-radius:6px;font-size:10.5px;font-weight:600;color:var(--nc-muted, #64748b);cursor:pointer;font-family:inherit;transition:all .15s;">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14H7L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
+                  Clear
+                </button>
+              </span>
+            </div>
+            <div class="nc-alert-list" id="ncAlertList">
+              <div class="nc-empty">
+                <div class="ic"><span class="nc-skel" style="width:20px;height:20px;border-radius:50%;"></span></div>
+                <div class="t">Memuat alerts…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Summary Traffic per Provider/CDN (connection tracking MikroTik) -->
+          <div class="nc-panel" style="grid-column:1 / -1;">
+            <div class="nc-panel-title" style="justify-content:space-between;display:flex;width:100%;">
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+                Summary Traffic per Provider
+              </span>
+              <span style="display:inline-flex;align-items:center;gap:8px;">
+                <span style="font-size:10px;font-weight:700;color:var(--nc-muted);" id="tsSub"></span>
+                <span class="ts-toggle">
+                  <button id="tsTabProvider" class="ts-tab active" onclick="tsSetMode('provider')">Provider</button>
+                  <button id="tsTabCategory" class="ts-tab" onclick="tsSetMode('category')">Kategori</button>
+                  <button id="tsTabWeb" class="ts-tab" onclick="tsSetMode('web')">Web</button>
+                </span>
+              </span>
+            </div>
+            <div style="font-size:11px;color:var(--nc-muted,#64748b);margin:-4px 0 12px;line-height:1.4;">
+              Proporsi traffic ke tiap penyedia konten (Google, Meta, Cloudflare, dll), dicocokkan dari blok IP provider. Snapshot dari koneksi aktif router.
+            </div>
+            <div class="ts-wrap" id="tsWrap">
+              <div class="td-empty" id="tsEmpty">Pilih router untuk melihat summary traffic</div>
+              <div class="ts-content" id="tsContent" style="display:none;">
+                <div class="ts-donut-col">
+                  <div id="tsDonut"></div>
+                  <div class="ts-donut-center" id="tsDonutCenter">
+                    <div class="ts-dc-val" id="tsTotalVal">—</div>
+                    <div class="ts-dc-lbl">total</div>
+                  </div>
+                </div>
+                <div class="ts-list" id="tsList"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <style>
+          .ts-toggle { display:inline-flex; background:var(--nc-border,#eef2f9); border-radius:8px; padding:2px; }
+          .ts-tab { border:none; background:transparent; font-family:inherit; font-size:10.5px; font-weight:700; color:var(--nc-muted,#64748b); padding:4px 11px; border-radius:6px; cursor:pointer; transition:all .15s; }
+          .ts-tab.active { background:#fff; color:var(--nc-accent,#1a6ef5); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+          .ts-wrap { min-height:120px; }
+          .ts-content { display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+          /* Donut container: kotak responsif. width = height (aspect-ratio 1)
+             supaya donut selalu proporsional & tidak terpotong di layar sempit.
+             Di mobile mengecil mengikuti lebar layar (min dari 220px / 70vw). */
+          .ts-donut-col { position:relative; flex-shrink:0; width:220px; max-width:100%; aspect-ratio:1 / 1; display:flex; align-items:center; justify-content:center; margin:0 auto; }
+          .ts-donut-col > div:first-child { width:100%; }
+          /* Pastikan SVG donut mengisi kotak tanpa meluap/terpotong */
+          .ts-donut-col .apexcharts-canvas { width:100% !important; margin:0 auto; }
+          .ts-donut-col .apexcharts-svg { width:100% !important; height:auto !important; overflow:visible; }
+          @media (max-width:640px){ .ts-donut-col{ width:min(220px, 70vw); } }
+          .ts-donut-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+          .ts-dc-val { font-size:18px; font-weight:800; color:var(--nc-text,#0d1b3e); font-family:'DM Mono',monospace; line-height:1.1; }
+          .ts-dc-lbl { font-size:10px; color:var(--nc-muted,#94a3b8); text-transform:uppercase; letter-spacing:.5px; margin-top:2px; }
+          .ts-list { flex:1; min-width:240px; display:flex; flex-direction:column; gap:3px; }
+          .ts-row { display:flex; align-items:center; gap:10px; padding:7px 6px; border-radius:8px; transition:background .15s; }
+          .ts-row:hover { background:var(--nc-hover,#f7faff); }
+          .ts-dot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+          .ts-name { flex:1; min-width:0; font-size:12.5px; font-weight:600; color:var(--nc-text,#0d1b3e); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+          .ts-cat { font-size:10px; color:var(--nc-muted,#94a3b8); }
+          .ts-pct { font-size:12px; font-weight:800; color:var(--nc-text,#0d1b3e); font-family:'DM Mono',monospace; min-width:46px; text-align:right; }
+          .ts-bytes { font-size:11px; color:var(--nc-muted,#94a3b8); font-family:'DM Mono',monospace; min-width:64px; text-align:right; }
+          .td-empty { padding:24px 12px; text-align:center; font-size:12.5px; color:var(--nc-muted,#64748b); }
+        </style>
+
+        <!-- Monitor Create/Edit Modal -->
+        <div class="nc-modal-overlay" id="ncMonitorModal" onclick="ncCloseMonitorModal(event)">
+          <div class="nc-modal" onclick="event.stopPropagation();">
+            <div class="nc-modal-head">
+              <div>
+                <h3 id="ncMonitorModalTitle">Tambah Interface</h3>
+                <div class="nc-modal-sub">Pilih router dan interface untuk dipantau</div>
+              </div>
+              <button class="nc-modal-close" onclick="ncCloseMonitorModal()" aria-label="Tutup">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="nc-modal-body">
+              <div class="nc-field">
+                <label>Nama monitor <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="ncMonitorName" placeholder="cth: WAN 1, Distribusi Bandung" maxlength="80">
+              </div>
+              <div class="nc-field-row">
+                <div class="nc-field" style="flex:1;">
+                  <label>Router <span style="color:#ef4444;">*</span></label>
+                  <select id="ncMonitorRouter" onchange="ncMonitorRouterChanged()">
+                    <option value="">— Pilih Router —</option>
+                  </select>
+                </div>
+                <div class="nc-field" style="width:90px;">
+                  <label>Warna</label>
+                  <input type="color" id="ncMonitorColor" value="#3b82f6">
+                </div>
+              </div>
+              <div class="nc-field">
+                <label>Interface <span style="color:#ef4444;">*</span> · <span id="ncMonitorIfacesCount" style="color:var(--nc-muted);font-weight:500;">0 dipilih</span></label>
+                <div class="nc-modal-iface-list" id="ncMonitorIfaceList">
+                  <div class="nc-empty" style="padding:24px;">
+                    <div style="color:var(--nc-muted);font-size:12px;">Pilih router dulu untuk lihat daftar interface</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="nc-modal-foot">
+              <button type="button" class="nc-modal-btn ghost" onclick="ncCloseMonitorModal()">Batal</button>
+              <button type="button" class="nc-modal-btn primary" id="ncMonitorSaveBtn" onclick="ncSaveMonitor()">Simpan</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 3: CPU / Memory / PPPoE timelines -->
+        <div class="nc-grid-bot">
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 17 9 11 13 15 21 7"/></svg>
+              CPU Load Timeline (%)
+            </div>
+            <div id="chartCpuTL" style="min-height:160px;"></div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+              Memory Timeline (%)
+            </div>
+            <div id="chartMemTL" style="min-height:160px;"></div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              PPPoE Sessions Trend
+            </div>
+            <div id="chartPppoeTL" style="min-height:160px;"></div>
+          </div>
+
+        </div>
+
+        <!-- Row 4: TICKETING -->
+        <div class="nc-grid-ticket">
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/></svg>
+              Tiket — Status
+            </div>
+            <div id="chartTicketStatus"></div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+              Tiket — Prioritas
+            </div>
+            <div id="chartTicketPriority" style="min-height:200px;"></div>
+          </div>
+
+          <div class="nc-panel">
+            <div class="nc-panel-title" style="display:flex;justify-content:space-between;width:100%;">
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg>
+                Tiket Terbaru
+              </span>
+              <a href="/tickets" style="font-size:10px;font-weight:700;color:var(--nc-accent);text-decoration:none;text-transform:none;letter-spacing:0;">
+                Semua tiket →
+              </a>
+            </div>
+            <div class="nc-ticket-list" id="ncTicketList">
+              <div class="nc-empty">
+                <div class="ic"><span class="nc-skel" style="width:20px;height:20px;border-radius:50%;"></span></div>
+                <div class="t">Memuat tiket…</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Row 5: PPPoE Connected & Offline Users -->
+        <div class="nc-panels-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+
+          <!-- ── PPPoE Active / Connected ── -->
+          <div class="nc-panel">
+            <div class="nc-panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
+                PPPoE Online
+              </span>
+              <span id="ncPppOnlineCount" style="font-size:11px;font-weight:700;color:#10b981;background:rgba(16,185,129,.12);padding:3px 9px;border-radius:9px;">—</span>
+            </div>
+            <div id="ncPppOnlineList" style="max-height:340px;overflow-y:auto;padding:4px 0;">
+              <div class="nc-empty">
+                <div class="ic"><span class="nc-skel" style="width:20px;height:20px;border-radius:50%;"></span></div>
+                <div class="t">Memuat user online…</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PPPoE Offline / Disconnected ── -->
+          <div class="nc-panel">
+            <div class="nc-panel-title" style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="display:inline-flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>
+                PPPoE Offline
+              </span>
+              <span id="ncPppOfflineCount" style="font-size:11px;font-weight:700;color:#ef4444;background:rgba(239,68,68,.12);padding:3px 9px;border-radius:9px;">—</span>
+            </div>
+            <div id="ncPppOfflineList" style="max-height:340px;overflow-y:auto;padding:4px 0;">
+              <div class="nc-empty">
+                <div class="ic"><span class="nc-skel" style="width:20px;height:20px;border-radius:50%;"></span></div>
+                <div class="t">Memuat user offline…</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <style>
+          /* PPPoE list item style */
+          .nc-pu-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--nc-border);
+            font-size: 12px;
+            transition: background .12s;
+          }
+          .nc-pu-item:last-child { border-bottom: none; }
+          .nc-pu-item:hover { background: rgba(0,0,0,.025); }
+          .nc-dark .nc-pu-item:hover { background: rgba(255,255,255,.04); }
+          .nc-pu-dot {
+            width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+            box-shadow: 0 0 0 2px currentColor; opacity: .25;
+          }
+          .nc-pu-dot.online {
+            background: #10b981; color: #10b981;
+            animation: ncPuPulseOnline 2s infinite;
+          }
+          .nc-pu-dot.offline {
+            background: #ef4444; color: #ef4444;
+            animation: ncPuPulseOffline 2.5s infinite;
+          }
+          @keyframes ncPuPulseOnline {
+            0%,100% { box-shadow: 0 0 0 2px rgba(16,185,129,.25); }
+            50%     { box-shadow: 0 0 0 4px rgba(16,185,129,.12); }
+          }
+          @keyframes ncPuPulseOffline {
+            0%,100% { box-shadow: 0 0 0 2px rgba(239,68,68,.30); opacity: 1; }
+            50%     { box-shadow: 0 0 0 5px rgba(239,68,68,.10); opacity: .6; }
+          }
+          .nc-pu-info {
+            flex: 1; min-width: 0;
+            display: flex; flex-direction: column;
+            gap: 1px;
+          }
+          .nc-pu-name {
+            font-weight: 600; color: var(--nc-text);
+            font-size: 12px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          }
+          .nc-pu-sub {
+            font-size: 10.5px;
+            color: var(--nc-muted);
+            font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          }
+          .nc-pu-meta {
+            font-size: 10.5px; color: var(--nc-muted);
+            font-weight: 500;
+            white-space: nowrap;
+          }
+          .nc-pu-uptime {
+            font-size: 10.5px; color: #10b981; font-weight: 700;
+            white-space: nowrap;
+          }
+          .nc-pu-empty {
+            padding: 30px 14px; text-align: center;
+            color: var(--nc-muted); font-size: 12px;
+          }
+          @media (max-width: 768px) {
+            .nc-panels-grid-2 { grid-template-columns: 1fr !important; }
+          }
+        </style>
+
+      </div><!-- /#ncDashboard -->
+
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ─── Helpers ─────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const fmtNum  = (n) => (Number(n)||0).toLocaleString('id-ID');
+  const fmtBytes = (n) => {
+    n = Number(n) || 0;
+    if (n >= 1e9) return (n/1e9).toFixed(2) + ' GB';
+    if (n >= 1e6) return (n/1e6).toFixed(1) + ' MB';
+    if (n >= 1e3) return (n/1e3).toFixed(1) + ' KB';
+    return n + ' B';
+  };
+  const escHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const timeAgo = (d) => {
+    if (!d) return '';
+    const diff = Math.max(0, Date.now() - new Date(d).getTime());
+    const s = Math.floor(diff/1000);
+    if (s < 60)    return s + 'd lalu';
+    if (s < 3600)  return Math.floor(s/60) + 'm lalu';
+    if (s < 86400) return Math.floor(s/3600) + 'j lalu';
+    return Math.floor(s/86400) + 'h lalu';
+  };
+  async function api(url) {
+    try { const r = await fetch(url, { credentials:'same-origin' }); return await r.json(); }
+    catch (_) { return null; }
+  }
+
+  // ─── State ───────────────────────────────────────────
+  let selectedRouterId = null;
+  let routers = [];
+
+  // Monitor presets (per user, per router) untuk panel bandwidth dinamis
+  let monitors = [];          // [{ id, name, router_id, ifaces, color, position }]
+  let monitorCharts = {};     // monitorId -> ApexCharts instance (chart utama timeline)
+
+  // Interface cache per router untuk dipakai di modal
+  let modalIfaceCache = {};   // routerId -> [{name, type, comment, running, disabled}]
+  let modalSelectedIfaces = new Set(); // working set saat modal dibuka
+  let editingMonitorId = null;
+
+  // ─── Theme toggle (sync dengan device-monitor key dm_theme) ───
+  const html = document.documentElement;
+  const themeBtn = $('ncThemeBtn');
+  const themeIcon = $('ncThemeIcon');
+  const SUN  = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  const MOON = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+
+  function applyTheme(mode) {
+    if (mode === 'dark') { html.classList.add('dark-mode');    themeIcon.innerHTML = SUN; }
+    else                  { html.classList.remove('dark-mode'); themeIcon.innerHTML = MOON; }
+    setTimeout(() => { try { updateAllChartsTheme(); } catch(_){} }, 50);
+  }
+  const savedTheme = localStorage.getItem('noc_theme') || localStorage.getItem('dm_theme') || 'light';
+  applyTheme(savedTheme);
+  themeBtn.addEventListener('click', () => {
+    const next = html.classList.contains('dark-mode') ? 'light' : 'dark';
+    localStorage.setItem('noc_theme', next);
+    applyTheme(next);
+  });
+  function isDark() { return html.classList.contains('dark-mode'); }
+
+  // ─── ApexCharts common factory ───────────────────────
+  // PENTING: deep-merge `chart` properties supaya toolbar:{show:false} dan
+  // setting default lain tidak hilang ketika caller pass `chart:{type:'area'}`.
+  function commonChart(opts = {}) {
+    const defaults = {
+      chart: {
+        toolbar:    { show:false },     // ← critical: hide zoom/pan icons
+        zoom:       { enabled:false },
+        animations: { enabled:true, speed:400, animateGradually:{ enabled:false } },
+        foreColor:  isDark() ? '#8892a4' : '#64748b',
+        fontFamily: 'DM Sans, sans-serif',
+        sparkline:  { enabled:false },
+      },
+      grid: {
+        borderColor: isDark() ? '#2a2d3e' : '#e2e8f0',
+        strokeDashArray: 3,
+        padding: { top:0, right:5, bottom:0, left:5 }
+      },
+      tooltip: { theme: isDark() ? 'dark' : 'light', x: { format:'HH:mm:ss' } },
+      legend:  { show:false },
+    };
+    // Deep-merge khusus untuk `chart` (caller bisa override type/height tanpa
+    // menghapus toolbar/zoom defaults). Property non-chart pakai shallow merge.
+    const userChart = opts.chart || {};
+    const merged = Object.assign({}, defaults, opts);
+    merged.chart = Object.assign({}, defaults.chart, userChart);
+    return merged;
+  }
+
+  // ─── Chart instances ─────────────────────────────────
+  let chCpuGauge, chMemGauge, chPppoeSpark, chBwSpark;
+  let chCpuTL, chMemTL, chPppoeTL;
+  let chTicketStatus, chTicketPriority;
+
+  // ─── Anti-overflow: re-flow semua chart saat viewport berubah ───
+  // ApexCharts kadang mempertahankan lebar awal sehingga melebar keluar layar
+  // di mobile / saat rotasi. windowResize() memaksa chart mengukur ulang
+  // container-nya. Debounced supaya tidak spam saat resize beruntun.
+  let _ncResizeT = null;
+  function ncReflowCharts() {
+    const all = [chCpuGauge, chMemGauge, chPppoeSpark, chBwSpark,
+                 chCpuTL, chMemTL, chPppoeTL, chTicketStatus, chTicketPriority,
+                 _tsDonutChart, ...Object.values(monitorCharts || {})];
+    all.forEach(c => { if (c && typeof c.windowResize === 'function') { try { c.windowResize(); } catch(_){} } });
+  }
+  window.addEventListener('resize', function(){
+    clearTimeout(_ncResizeT);
+    _ncResizeT = setTimeout(ncReflowCharts, 180);
+  });
+  window.addEventListener('orientationchange', function(){
+    setTimeout(ncReflowCharts, 300);
+  });
+
+  function initCharts() {
+    // CPU Gauge
+    chCpuGauge = new ApexCharts($('chartCpuGauge'), {
+      chart:{ type:'radialBar', height:170, toolbar:{ show:false }, sparkline:{ enabled:false }, foreColor: isDark() ? '#8892a4' : '#64748b', fontFamily:'DM Sans, sans-serif', animations:{ enabled:true, speed:400 } },
+      series: [0],
+      colors: ['#22c55e'],
+      plotOptions: {
+        radialBar: {
+          startAngle:-135, endAngle:135,
+          hollow:{ size:'68%' },
+          track:{ background: isDark() ? '#252937' : '#eef2f7', strokeWidth:'100%', margin:0 },
+          dataLabels: {
+            name:  { show:false },
+            value: { show:true, offsetY:8, fontSize:'30px', fontWeight:800, fontFamily:'JetBrains Mono, monospace', color: isDark() ? '#ffffff' : '#1e293b', formatter:(v) => Number(v).toFixed(0) + '%' },
+          }
+        }
+      },
+      fill:   { type:'gradient', gradient:{ shade:'dark', type:'horizontal', shadeIntensity:0.4, gradientToColors:['#06b6d4'], stops:[0,100] } },
+      stroke: { lineCap:'round' },
+      labels: ['CPU'],
+    });
+    chCpuGauge.render();
+
+    // Memory Gauge
+    chMemGauge = new ApexCharts($('chartMemGauge'), {
+      chart:{ type:'radialBar', height:170, toolbar:{ show:false }, sparkline:{ enabled:false }, foreColor: isDark() ? '#8892a4' : '#64748b', fontFamily:'DM Sans, sans-serif', animations:{ enabled:true, speed:400 } },
+      series: [0],
+      colors: ['#3b82f6'],
+      plotOptions: {
+        radialBar: {
+          startAngle:-135, endAngle:135,
+          hollow:{ size:'68%' },
+          track:{ background: isDark() ? '#252937' : '#eef2f7', strokeWidth:'100%', margin:0 },
+          dataLabels: {
+            name:  { show:false },
+            value: { show:true, offsetY:8, fontSize:'30px', fontWeight:800, fontFamily:'JetBrains Mono, monospace', color: isDark() ? '#ffffff' : '#1e293b', formatter:(v) => Number(v).toFixed(0) + '%' },
+          }
+        }
+      },
+      fill:   { type:'gradient', gradient:{ shade:'dark', type:'horizontal', shadeIntensity:0.4, gradientToColors:['#14b8a6'], stops:[0,100] } },
+      stroke: { lineCap:'round' },
+      labels: ['Memory'],
+    });
+    chMemGauge.render();
+
+    // PPPoE sparkline
+    chPppoeSpark = new ApexCharts($('chartPppoeSpark'), {
+      ...commonChart({ chart:{ type:'area', height:54, sparkline:{ enabled:true } } }),
+      series: [{ name:'PPPoE', data: [] }],
+      colors: ['#3b82f6'],
+      stroke: { curve:'smooth', width:2 },
+      fill:   { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.5, opacityTo:0, stops:[0,100] } },
+    });
+    chPppoeSpark.render();
+
+    // Bandwidth Now sparkline (RX + TX, dua series stacked, sparkline style)
+    chBwSpark = new ApexCharts($('chartBwSpark'), {
+      ...commonChart({ chart:{ type:'area', height:60, sparkline:{ enabled:true } } }),
+      series: [
+        { name:'RX', data: [] },
+        { name:'TX', data: [] }
+      ],
+      colors: ['#3b82f6','#06b6d4'],
+      stroke: { curve:'smooth', width:2 },
+      fill:   { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.45, opacityTo:0, stops:[0,100] } },
+      tooltip:{ enabled:true, theme: isDark() ? 'dark' : 'light', x:{ format:'HH:mm:ss' }, y:{ formatter:(v)=>Number(v).toFixed(2)+' Mbps' } },
+    });
+    chBwSpark.render();
+
+    // CPU timeline
+    chCpuTL = new ApexCharts($('chartCpuTL'), {
+      ...commonChart({ chart:{ type:'area', height:160 } }),
+      series: [{ name:'CPU %', data:[] }],
+      colors: ['#f59e0b'],
+      stroke: { curve:'smooth', width:2 },
+      fill:   { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.45, opacityTo:0.05, stops:[0,100] } },
+      dataLabels:{ enabled:false },
+      xaxis: { type:'datetime', labels:{ datetimeUTC:false, style:{ fontSize:'10px' } } },
+      yaxis: { min:0, max:100, labels:{ formatter:(v)=>v + '%', style:{ fontSize:'10px' } } },
+    });
+    chCpuTL.render();
+
+    // Memory timeline
+    chMemTL = new ApexCharts($('chartMemTL'), {
+      ...commonChart({ chart:{ type:'area', height:160 } }),
+      series: [{ name:'Memory %', data:[] }],
+      colors: ['#14b8a6'],
+      stroke: { curve:'smooth', width:2 },
+      fill:   { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.45, opacityTo:0.05, stops:[0,100] } },
+      dataLabels:{ enabled:false },
+      xaxis: { type:'datetime', labels:{ datetimeUTC:false, style:{ fontSize:'10px' } } },
+      yaxis: { min:0, max:100, labels:{ formatter:(v)=>v + '%', style:{ fontSize:'10px' } } },
+    });
+    chMemTL.render();
+
+    // PPPoE timeline
+    chPppoeTL = new ApexCharts($('chartPppoeTL'), {
+      ...commonChart({ chart:{ type:'area', height:160 } }),
+      series: [{ name:'PPPoE', data:[] }],
+      colors: ['#3b82f6'],
+      stroke: { curve:'smooth', width:2 },
+      fill:   { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.45, opacityTo:0.05, stops:[0,100] } },
+      dataLabels:{ enabled:false },
+      xaxis: { type:'datetime', labels:{ datetimeUTC:false, style:{ fontSize:'10px' } } },
+      yaxis: { labels:{ style:{ fontSize:'10px' } } },
+    });
+    chPppoeTL.render();
+
+    // Ticket status donut — 5 status sesuai schema (open/in_progress/pending/resolved/closed)
+    // Warna mengikuti halaman /tickets: open=cyan, in_progress=green, closed=orange.
+    chTicketStatus = new ApexCharts($('chartTicketStatus'), {
+      ...commonChart({ chart:{ type:'donut', height:240 } }),
+      series: [0,0,0,0,0],
+      labels: ['Open','In Progress','Pending','Resolved','Closed'],
+      colors: ['#0891b2','#16a34a','#f59e0b','#3b82f6','#ea580c'],
+      stroke: { width:2, colors:[isDark() ? '#1a1d27' : '#ffffff'] },
+      plotOptions: {
+        pie: {
+          donut: {
+            size:'70%',
+            labels: {
+              show:true,
+              total: { show:true, label:'Total', fontSize:'11px', color: isDark() ? '#8892a4' : '#64748b', formatter:(w) => w.globals.series.reduce((a,b)=>a+b,0) },
+              value: { fontSize:'22px', fontWeight:800, fontFamily:'JetBrains Mono, monospace' },
+            }
+          }
+        }
+      },
+      dataLabels: { enabled:false },
+      legend: { show:true, position:'bottom', fontSize:'10px', fontWeight:600, markers:{width:8,height:8,radius:99} },
+    });
+    chTicketStatus.render();
+
+    // Ticket priority — 4 priority sesuai schema (low/medium/high/critical)
+    chTicketPriority = new ApexCharts($('chartTicketPriority'), {
+      ...commonChart({ chart:{ type:'bar', height:200 } }),
+      series: [{ name:'Tiket', data:[0,0,0,0] }],
+      plotOptions: {
+        bar: { horizontal:true, borderRadius:5, barHeight:'62%', distributed:true, dataLabels:{ position:'top' } }
+      },
+      colors: ['#ef4444','#f97316','#eab308','#94a3b8'],
+      xaxis: { categories:['Critical','High','Medium','Low'], labels:{ style:{ fontSize:'10px' } } },
+      dataLabels: {
+        enabled:true, textAnchor:'start', offsetX:6,
+        formatter:(val) => fmtNum(val),
+        style: { fontSize:'11px', fontWeight:700, colors:[isDark() ? '#e2e8f0' : '#1e293b'] },
+      },
+      tooltip: { x:{ formatter:(v,opts)=>opts.w.globals.labels[opts.dataPointIndex] } },
+    });
+    chTicketPriority.render();
+  }
+
+  function updateAllChartsTheme() {
+    const dark = isDark();
+    const upd = {
+      chart:   { foreColor: dark ? '#8892a4' : '#64748b' },
+      grid:    { borderColor: dark ? '#2a2d3e' : '#e2e8f0' },
+      tooltip: { theme: dark ? 'dark' : 'light' },
+    };
+    [chCpuGauge, chMemGauge, chPppoeSpark, chBwSpark,
+     chCpuTL, chMemTL, chPppoeTL,
+     chTicketStatus, chTicketPriority].forEach(c => {
+      try { c && c.updateOptions(upd, false, false); } catch(_) {}
+    });
+    // Update juga semua monitor chart yang sedang aktif
+    Object.values(monitorCharts).forEach(c => {
+      try { c && c.updateOptions(upd, false, false); } catch(_) {}
+    });
+    try { chTicketStatus.updateOptions({ stroke:{ colors:[dark ? '#1a1d27' : '#ffffff'] }}); } catch(_){}
+    // Update gauge-specific: value color (untuk persentase di tengah ring)
+    // dan track background — radialBar tidak ke-handle oleh `upd` di atas.
+    const gaugeUpd = {
+      plotOptions:{ radialBar:{
+        track:{ background: dark ? '#252937' : '#eef2f7' },
+        dataLabels:{
+          value:{ color: dark ? '#ffffff' : '#1e293b' }
+        }
+      }}
+    };
+    try { chCpuGauge && chCpuGauge.updateOptions(gaugeUpd, false, false); } catch(_){}
+    try { chMemGauge && chMemGauge.updateOptions(gaugeUpd, false, false); } catch(_){}
+  }
+
+  // ─── Loaders ─────────────────────────────────────────
+  async function loadRouters() {
+    const j = await api('/api/noc/routers');
+    return (j && j.success) ? j.data : [];
+  }
+  async function loadOverview() {
+    const j = await api('/api/noc/overview');
+    return (j && j.success) ? j.data : null;
+  }
+  async function loadAlerts() {
+    const j = await api('/api/noc/alerts?limit=15');
+    return (j && j.success) ? j.data : [];
+  }
+
+  // Clear semua alert dari log NocAlertsService (in-memory). State router
+  // online/offline TIDAK direset jadi alert tidak akan muncul ulang seketika.
+  window.ncClearAlerts = async function () {
+    if (!confirm('Hapus semua alert dari list?\n\nAlert akan tetap muncul lagi kalau ada perubahan status router.')) return;
+    const btn = document.getElementById('ncAlertClear');
+    if (btn) btn.disabled = true;
+    try {
+      const r = await fetch('/api/noc/alerts', { method:'DELETE', credentials:'same-origin' });
+      const j = await r.json();
+      if (!r.ok || !j.success) throw new Error(j.message || 'Failed');
+      // Reload alert list — harusnya empty
+      const alerts = await loadAlerts();
+      renderAlerts(alerts);
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  };
+  async function loadTicketStats() {
+    const j = await api('/api/noc/ticket-stats');
+    return (j && j.success) ? j.data : null;
+  }
+  // Reuse endpoint /api/genieacs/stats yang sudah live di halaman /genieacs.
+  // Endpoint ini sudah handle filter junk device + 5-min last inform threshold.
+  async function loadOntStats() {
+    const j = await api('/api/genieacs/stats');
+    return (j && j.success) ? j.data : null;
+  }
+
+  // ─── PPPoE Users (Active + Offline) ──────────────────────
+  // Load 3 endpoint paralel:
+  //   - /api/mikrotik/pppoe/active   → list session aktif (online)
+  //   - /api/mikrotik/pppoe/secrets  → semua secret PPPoE (untuk derive offline)
+  //   - /api/noc/pppoe-customer-map  → mapping {pppoe_username → customer name}
+  // Device context via header X-Device-Id (kalau selectedRouterId ada).
+  //
+  // Customer map cache: refresh setiap 5 menit untuk hindari hit DB tiap
+  // refresh interval (data jarang berubah, customer baru/edit jarang).
+  let _pppoeCustMapCache = null;
+  let _pppoeCustMapAt    = 0;
+  async function loadPppoeUsers() {
+    try {
+      const headers = selectedRouterId ? { 'X-Device-Id': String(selectedRouterId) } : {};
+
+      // Refresh customer map kalau cache > 5 menit atau belum ada
+      const now = Date.now();
+      const needCustMap = !_pppoeCustMapCache || (now - _pppoeCustMapAt) > 5 * 60 * 1000;
+
+      const promises = [
+        fetch('/api/mikrotik/pppoe/active',  { credentials:'same-origin', headers }).then(r => r.json()).catch(() => null),
+        fetch('/api/mikrotik/pppoe/secrets', { credentials:'same-origin', headers }).then(r => r.json()).catch(() => null),
+      ];
+      if (needCustMap) {
+        promises.push(
+          fetch('/api/noc/pppoe-customer-map', { credentials:'same-origin' }).then(r => r.json()).catch(() => null)
+        );
+      }
+      const results = await Promise.all(promises);
+      const activeRes  = results[0];
+      const secretsRes = results[1];
+      if (needCustMap) {
+        const mapRes = results[2];
+        if (mapRes && mapRes.success && mapRes.data) {
+          _pppoeCustMapCache = mapRes.data;
+          _pppoeCustMapAt = now;
+        }
+      }
+
+      return {
+        active:  (activeRes  && activeRes.success)  ? (activeRes.data  || []) : [],
+        secrets: (secretsRes && secretsRes.success) ? (secretsRes.data || []) : [],
+        custMap: _pppoeCustMapCache || {},
+      };
+    } catch (_) {
+      return { active: [], secrets: [], custMap: _pppoeCustMapCache || {} };
+    }
+  }
+  async function loadRealtime(routerId) {
+    const j = await api('/api/noc/router/' + routerId + '/realtime');
+    return j;  // pass through {success, message, data}
+  }
+  // Loader untuk timeline ring buffer.
+  // ifaces:  null/undefined → semua interface (untuk timeline CPU/Mem/PPPoE
+  //                         yang tidak per-interface, atau bandwidth global)
+  //          Array          → filter spesifik (untuk monitor cards)
+  async function loadHistory(routerId, ifaces) {
+    const q = (Array.isArray(ifaces) && ifaces.length)
+      ? '&ifaces=' + encodeURIComponent(ifaces.join(','))
+      : '';
+    const j = await api('/api/noc/router/' + routerId + '/history?points=60' + q);
+    return (j && j.success) ? j.data : null;
+  }
+  async function loadInterfaces(routerId) {
+    if (modalIfaceCache[routerId]) return modalIfaceCache[routerId];
+    const j = await api('/api/noc/router/' + routerId + '/interfaces');
+    const arr = (j && j.success) ? j.data : [];
+    modalIfaceCache[routerId] = arr;
+    return arr;
+  }
+
+  // ─── Traffic Summary per Provider/Kategori (connection tracking) ──
+  let _tsMode = 'provider';        // 'provider' | 'category'
+  let _tsLastData = null;          // cache hasil terakhir utk re-render saat toggle
+  let _tsDonutChart = null;
+
+  // Opsi donut terpusat (dipakai mode provider/kategori & mode web) supaya
+  // konsisten + responsif. TANPA sparkline:true agar tidak terpotong di mobile;
+  // width 100% mengikuti container square .ts-donut-col, tinggi via responsive.
+  function tsDonutOptions(series, labels, colors) {
+    return {
+      chart: {
+        type: 'donut',
+        width: '100%',
+        height: 220,
+        offsetY: 0,
+        parentHeightOffset: 0,
+        animations: { enabled: true },
+      },
+      series, labels, colors,
+      stroke: { width: 2, colors: ['#fff'] },
+      plotOptions: { pie: { donut: { size: '72%' }, expandOnClick: false } },
+      dataLabels: { enabled: false },
+      legend: { show: false },
+      grid: { padding: { top: 0, right: 0, bottom: 0, left: 0 } },
+      tooltip: { y: { formatter: (v) => fmtBytes(v) } },
+      states: { hover: { filter: { type: 'lighten', value: 0.06 } } },
+      responsive: [
+        { breakpoint: 640, options: { chart: { height: 200 } } },
+        { breakpoint: 380, options: { chart: { height: 180 } } },
+      ],
+    };
+  }
+
+  async function loadTrafficSummary(routerId) {
+    const j = await api('/api/noc/router/' + routerId + '/traffic-summary');
+    return j; // {success, available, providers, categories, totalConnections}
+  }
+
+  window.tsSetMode = function(mode) {
+    _tsMode = mode;
+    $('tsTabProvider').classList.toggle('active', mode === 'provider');
+    $('tsTabCategory').classList.toggle('active', mode === 'category');
+    const wTab = $('tsTabWeb'); if (wTab) wTab.classList.toggle('active', mode === 'web');
+    if (_tsLastData) renderTrafficSummary(_tsLastData);
+  };
+
+  function renderTrafficSummary(j) {
+    _tsLastData = j;
+    const empty   = $('tsEmpty');
+    const content = $('tsContent');
+    const sub     = $('tsSub');
+    const list    = $('tsList');
+    if (!empty || !content) return;
+
+    const fail = (msg) => {
+      empty.textContent = msg;
+      empty.style.display = '';
+      content.style.display = 'none';
+      if (sub) sub.textContent = '';
+    };
+
+    if (!j || !j.success) return fail('Gagal memuat summary traffic');
+    if (!j.available)      return fail('Connection tracking tidak aktif di router ini');
+
+    // ── Mode "Web": top domain dari DNS cache router ──
+    if (_tsMode === 'web') {
+      let web = (j.web || []).slice();
+      if (!web.length) {
+        return fail('Belum ada domain terdeteksi. Pastikan router jadi DNS server klien (allow-remote-requests=yes).');
+      }
+      // Palet warna untuk domain (tidak ada warna bawaan dari backend)
+      const WEB_PALETTE = ['#1d4ed8','#0ea5e9','#ef4444','#f59e0b','#10b981','#6366f1','#ec4899','#14b8a6','#f97316','#8b5cf6','#22c55e','#eab308','#06b6d4','#dc2626','#3b82f6'];
+      web = web.map((d, i) => ({ ...d, color: WEB_PALETTE[i % WEB_PALETTE.length] }));
+      const webTotal = web.reduce((s, d) => s + (d.bytes || 0), 0);
+
+      empty.style.display = 'none';
+      content.style.display = 'flex';
+      if (sub) sub.textContent = web.length + ' domain · ' + fmtBytes(webTotal) + ' termatch';
+      $('tsTotalVal').textContent = fmtBytes(webTotal);
+
+      const wLabels = web.map(d => d.domain);
+      const wSeries = web.map(d => d.bytes || 0);
+      const wColors = web.map(d => d.color);
+      const webDonutOpts = tsDonutOptions(wSeries, wLabels, wColors);
+      if (!_tsDonutChart) {
+        _tsDonutChart = new ApexCharts($('tsDonut'), webDonutOpts);
+        _tsDonutChart.render();
+      } else {
+        _tsDonutChart.updateOptions(webDonutOpts, true, true);
+      }
+
+      list.innerHTML = web.map(d => `
+        <div class="ts-row">
+          <span class="ts-dot" style="background:${d.color}"></span>
+          <span class="ts-name">${escHtml(d.domain)}<span class="ts-cat"> · ${(d.connections||0).toLocaleString('id-ID')} koneksi</span></span>
+          <span class="ts-pct">${(d.pct != null ? d.pct : 0)}%</span>
+          <span class="ts-bytes">${fmtBytes(d.bytes || 0)}</span>
+        </div>`).join('');
+      return;
+    }
+
+    // Pilih dataset sesuai mode
+    let rows = (_tsMode === 'category' ? j.categories : j.providers) || [];
+    // Sembunyikan "Lainnya" (IP tak terklasifikasi) dari donut & list.
+    rows = rows.filter(r => {
+      const nm = _tsMode === 'category' ? r.category : r.name;
+      return nm !== 'Lainnya';
+    });
+    if (!rows.length) return fail('Belum ada traffic provider terklasifikasi');
+
+    // Hitung ulang persentase berbasis total traffic yang TERKLASIFIKASI saja
+    // (tanpa "Lainnya"), supaya donut penuh & persen menjumlah ~100%.
+    const classifiedTotal = rows.reduce((s, r) => s + (r.bytes || 0), 0);
+    rows = rows.map(r => ({
+      ...r,
+      pct: classifiedTotal > 0 ? Math.round(((r.bytes || 0) / classifiedTotal) * 1000) / 10 : 0
+    }));
+
+    empty.style.display = 'none';
+    content.style.display = 'flex';
+    if (sub) sub.textContent = (j.totalConnections || 0).toLocaleString('id-ID') + ' koneksi · ' + fmtBytes(classifiedTotal) + ' terklasifikasi';
+
+    // Center total — pakai total terklasifikasi agar konsisten dengan donut
+    $('tsTotalVal').textContent = fmtBytes(classifiedTotal);
+
+    const labels = rows.map(r => _tsMode === 'category' ? r.category : r.name);
+    const series = rows.map(r => r.bytes || 0);
+    const colors = rows.map(r => r.color || '#94a3b8');
+
+    // Donut chart (ApexCharts) — buat sekali, lalu updateOptions.
+    // Pakai opsi terpusat tsDonutOptions (responsif, tanpa sparkline) supaya
+    // tidak terpotong di mobile dan konsisten dengan donut mode web.
+    const donutOpts = tsDonutOptions(series, labels, colors);
+    if (!_tsDonutChart) {
+      _tsDonutChart = new ApexCharts($('tsDonut'), donutOpts);
+      _tsDonutChart.render();
+    } else {
+      _tsDonutChart.updateOptions(donutOpts, true, true);
+    }
+
+    // List di bawah/samping donut
+    list.innerHTML = rows.map(r => {
+      const nm = _tsMode === 'category' ? r.category : r.name;
+      const catLine = _tsMode === 'provider' && r.category
+        ? `<span class="ts-cat"> · ${escHtml(r.category)}</span>` : '';
+      return `
+        <div class="ts-row">
+          <span class="ts-dot" style="background:${r.color || '#94a3b8'}"></span>
+          <span class="ts-name">${escHtml(nm)}${catLine}</span>
+          <span class="ts-pct">${(r.pct != null ? r.pct : 0)}%</span>
+          <span class="ts-bytes">${fmtBytes(r.bytes || 0)}</span>
+        </div>`;
+    }).join('');
+  }
+
+  // ─── Renderers ───────────────────────────────────────
+  function renderEmptyCards(list) {
+    const wrap = $('ncRouterCards');
+    if (!list || !list.length) {
+      wrap.innerHTML = `
+        <div class="nc-empty" style="grid-column:1/-1;">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/></svg></div>
+          <div class="t">Belum ada router terdaftar</div>
+          <div style="margin-top:6px;">Tambahkan router di menu <a href="/devices" style="color:#1e78ff;font-weight:700;">Device Management</a>.</div>
+        </div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(r => `
+      <button type="button" class="nc-router-card" onclick="ncSelectRouter('${r.id}')">
+        <div class="rc-name">
+          ${escHtml(r.name || 'Router')}
+          ${r.is_primary ? '<span class="pri">PRIMARY</span>' : ''}
+        </div>
+        <div class="rc-ip">${escHtml(r.ip_address || '—')}:${escHtml(r.api_port || '80')}</div>
+        <span class="rc-status ${r.status === 'online' ? 'online' : 'offline'}">
+          <span class="d"></span>${(r.status || 'unknown').toUpperCase()}
+        </span>
+      </button>
+    `).join('');
+  }
+
+  function renderRouterSelect(list) {
+    const sel = $('ncRouterSelect');
+    sel.innerHTML = '<option value="">— Pilih Router —</option>';
+    list.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = `${r.name} (${r.ip_address})` + (r.is_primary ? ' ★' : '');
+      sel.appendChild(opt);
+    });
+  }
+
+  function renderOverviewBar(d) {
+    if (!d) return;
+    $('sIsolated').textContent   = fmtNum(d.customers?.isolated || 0);
+    $('sTickets').textContent    = fmtNum(d.tickets?.open || 0);
+    $('sCustomers').textContent  = fmtNum(d.customers?.active || 0);
+    $('sInfra').textContent      = fmtNum(d.infrastructure?.total || 0);
+  }
+  // Set ONT online/offline dari /api/genieacs/stats supaya konsisten
+  // dengan data yang ditampilkan di halaman /genieacs.
+  function renderOntStats(s) {
+    $('sOntOnline').textContent  = fmtNum(s?.online  || 0);
+    $('sOntOffline').textContent = fmtNum(s?.offline || 0);
+  }
+
+  // ─── Render PPPoE Users (Online + Offline) ────────────────
+  // Online list: dari sessions aktif (semua yang punya address & uptime)
+  // Offline list: semua secret yang username-nya TIDAK ada di sessions aktif
+  // Customer name (kalau ada di mapping DB) ditampilkan di atas username PPPoE.
+  function renderPppoeUsers(data) {
+    const onlineList  = $('ncPppOnlineList');
+    const offlineList = $('ncPppOfflineList');
+    const onlineCount = $('ncPppOnlineCount');
+    const offlineCount = $('ncPppOfflineCount');
+    if (!onlineList || !offlineList) return;
+
+    const active  = Array.isArray(data?.active)  ? data.active  : [];
+    const secrets = Array.isArray(data?.secrets) ? data.secrets : [];
+    const custMap = (data?.custMap && typeof data.custMap === 'object') ? data.custMap : {};
+
+    // Helper untuk resolve nama customer dari username PPPoE
+    function getCustomerName(username) {
+      if (!username) return null;
+      return custMap[String(username).toLowerCase().trim()] || null;
+    }
+
+    // Sort online by uptime desc (yang lama connected di atas)
+    const sortedOnline = [...active].sort((a, b) => {
+      // uptime format MikroTik: "1w2d3h4m5s" atau "10m30s" — convert ke seconds
+      return _uptimeToSec(b.uptime) - _uptimeToSec(a.uptime);
+    });
+
+    // Set username yang sedang online (lowercase untuk match)
+    const onlineUsernames = new Set(active.map(s => (s.name || '').toLowerCase()));
+
+    // Filter secrets yang TIDAK online + skip yang disabled
+    const offline = secrets.filter(s => {
+      const u = (s.name || '').toLowerCase();
+      const disabled = s.disabled === 'true' || s.disabled === true;
+      return u && !onlineUsernames.has(u) && !disabled;
+    });
+    // Sort offline by last-logged-out desc (kalau MikroTik report), fallback: alfabetis
+    offline.sort((a, b) => {
+      const ta = a['last-logged-out'] ? new Date(a['last-logged-out']).getTime() : 0;
+      const tb = b['last-logged-out'] ? new Date(b['last-logged-out']).getTime() : 0;
+      if (tb !== ta) return tb - ta;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    // ── Render counters
+    onlineCount.textContent  = fmtNum(sortedOnline.length);
+    offlineCount.textContent = fmtNum(offline.length);
+
+    // ── Render online list
+    if (sortedOnline.length === 0) {
+      onlineList.innerHTML = '<div class="nc-pu-empty">Tidak ada user online</div>';
+    } else {
+      onlineList.innerHTML = sortedOnline.map(s => {
+        const username = s.name || '—';
+        const custName = getCustomerName(username);
+        // Tampilkan nama customer kalau ada; username di-show sebagai meta sub
+        const primary  = escHtml(custName || username);
+        const sub      = custName ? escHtml(username) : '';
+        const address  = escHtml(s.address || '');
+        const uptime   = escHtml(s.uptime || '');
+        return `
+          <div class="nc-pu-item" title="${escHtml(s.callerID||'')}">
+            <span class="nc-pu-dot online"></span>
+            <div class="nc-pu-info">
+              <div class="nc-pu-name">${primary}</div>
+              ${sub ? `<div class="nc-pu-sub">@${sub}</div>` : ''}
+            </div>
+            <span class="nc-pu-meta">${address}</span>
+            <span class="nc-pu-uptime">${uptime}</span>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Render offline list
+    if (offline.length === 0) {
+      offlineList.innerHTML = '<div class="nc-pu-empty">Semua user online ✓</div>';
+    } else {
+      offlineList.innerHTML = offline.map(s => {
+        const username = s.name || '—';
+        const custName = getCustomerName(username);
+        const primary  = escHtml(custName || username);
+        const sub      = custName ? escHtml(username) : '';
+        const profile  = escHtml(s.profile || 'default');
+        // last-logged-out: tampilkan time ago kalau ada record, kalau tidak ada
+        // (user belum pernah login) → tampil "belum pernah" dengan warna muted.
+        // Kalau memang ada record disconnect → tampil "Xj lalu" warna merah lembut.
+        const lo       = s['last-logged-out'];
+        const hasLo    = lo && new Date(lo).getTime() > 0;
+        const loLabel  = hasLo
+          ? `<span style="color:#ef4444;">${timeAgo(lo)}</span>`
+          : `<span style="opacity:.5;font-style:italic;">belum pernah</span>`;
+        return `
+          <div class="nc-pu-item">
+            <span class="nc-pu-dot offline"></span>
+            <div class="nc-pu-info">
+              <div class="nc-pu-name">${primary}</div>
+              ${sub ? `<div class="nc-pu-sub">@${sub}</div>` : ''}
+            </div>
+            <span class="nc-pu-meta">${profile}</span>
+            <span class="nc-pu-meta" style="min-width:80px;text-align:right;">${loLabel}</span>
+          </div>`;
+      }).join('');
+    }
+  }
+
+  // Helper convert MikroTik uptime ke detik untuk sorting
+  // Format examples: "1w2d3h", "5h30m", "45s", "2m15s"
+  function _uptimeToSec(s) {
+    if (!s) return 0;
+    let total = 0;
+    const re = /(\d+)\s*([wdhms])/g;
+    let m;
+    while ((m = re.exec(String(s))) !== null) {
+      const n = parseInt(m[1], 10) || 0;
+      switch (m[2]) {
+        case 'w': total += n * 604800; break;
+        case 'd': total += n * 86400;  break;
+        case 'h': total += n * 3600;   break;
+        case 'm': total += n * 60;     break;
+        case 's': total += n;          break;
+      }
+    }
+    return total;
+  }
+
+  function renderRealtime(rt) {
+    if (!rt) return;
+    if (!rt.success) {
+      // Tampilkan error banner tapi tetap pertahankan data lama
+      $('ncErrorBanner').style.display = 'flex';
+      $('ncErrorText').textContent = rt.message || 'Tidak bisa terhubung ke router';
+      $('ncLive').classList.add('off');
+      $('ncLive').firstElementChild.nextSibling.textContent = 'OFFLINE';
+      return;
+    }
+    // Sukses → sembunyikan error & set live ON
+    $('ncErrorBanner').style.display = 'none';
+    $('ncLive').classList.remove('off');
+    $('ncLive').innerHTML = '<span class="nc-live-dot"></span>RUNNING';
+
+    const d = rt.data;
+    // Status bar router info
+    $('sRouter').textContent   = d.identity || '—';
+    $('sRouterIp').textContent = [d.board, d.version].filter(Boolean).join(' · ') || '—';
+    $('sUptime').textContent   = d.uptime || '—';
+    // PPPoE punya unit span "sesi" — pakai innerHTML supaya unit tetap muncul
+    $('sPPPoE').innerHTML      = fmtNum(d.pppoeActive || 0) + '<span class="nc-stat-unit">sesi</span>';
+
+    // Header subtitle
+    $('ncSubTitle').textContent = `Monitoring ${d.identity || 'router'} · ${d.board || ''} ${d.version || ''}`.trim();
+
+    // Gauges
+    chCpuGauge.updateSeries([d.cpu || 0]);
+    chMemGauge.updateSeries([d.memoryPct || 0]);
+
+    $('cpuSub').textContent = (d.cpu || 0) + '% · ' + (d.board || '');
+    $('memSub').textContent = fmtBytes(d.memoryUsed) + ' / ' + fmtBytes(d.memoryTotal);
+
+    // PPPoE & bandwidth stats
+    $('kPPPoEval').textContent = fmtNum(d.pppoeActive || 0);
+    $('kRxMbps').textContent   = Number(d.totalRxMbps || 0).toFixed(2);
+    $('kTxMbps').textContent   = Number(d.totalTxMbps || 0).toFixed(2);
+    $('bwSub').textContent     = `${d.interfacesRunning || 0} interface aktif · sampling ${d.interfacesSampled || 0}`;
+
+    // Updated timestamp
+    $('ncUpdated').textContent = 'updated ' + new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+
+  function renderHistory(h) {
+    if (!h) return;
+    chCpuTL.updateSeries([{ name:'CPU %', data: h.cpu || [] }]);
+    chMemTL.updateSeries([{ name:'Memory %', data: h.mem || [] }]);
+    chPppoeTL.updateSeries([{ name:'PPPoE', data: h.pppoe || [] }]);
+    chPppoeSpark.updateSeries([{ name:'PPPoE', data: (h.pppoe || []).slice(-15) }]);
+    // Bandwidth Now sparkline — pakai last 20 sample dari history total
+    chBwSpark.updateSeries([
+      { name:'RX', data: (h.rx_mbps || []).slice(-20) },
+      { name:'TX', data: (h.tx_mbps || []).slice(-20) },
+    ]);
+  }
+
+  // ═══ MONITOR MANAGER ═══════════════════════════════════════════════
+  // Setiap monitor = 1 card chart dengan filter interface custom.
+  // Diload dari /api/noc/monitors, dirender ke #ncMonitorGrid.
+
+  async function loadMonitors() {
+    const j = await api('/api/noc/monitors');
+    return (j && j.success) ? j.data : [];
+  }
+
+  function renderMonitors() {
+    const grid = $('ncMonitorGrid');
+    if (!grid) return;
+
+    // Filter monitor sesuai router aktif (supaya pas pindah router yang
+    // ditampilkan hanya monitor untuk router itu).
+    const visible = selectedRouterId
+      ? monitors.filter(m => Number(m.router_id) === Number(selectedRouterId))
+      : [];
+
+    if (!visible.length) {
+      // Tidak ada monitor untuk router ini — render empty state.
+      // Selalu re-build dari template supaya tidak pegang reference lama yang
+      // mungkin sudah detached (bug sebelumnya: $('ncMonitorEmpty') return null
+      // setelah grid.innerHTML di-set).
+      grid.innerHTML = `
+        <div class="nc-monitor-empty" id="ncMonitorEmpty">
+          <div class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+          </div>
+          <div class="t">Belum ada monitor</div>
+          <p>Klik <strong>Tambah Interface</strong> untuk membuat panel bandwidth pertama. Kamu bisa buat satu untuk tiap interface yang perlu dipantau.</p>
+        </div>`;
+      // Destroy semua chart instance yang ter-orphan
+      Object.values(monitorCharts).forEach(c => { try { c.destroy(); } catch(_){} });
+      monitorCharts = {};
+      return;
+    }
+
+    // Build HTML untuk semua monitor card
+    grid.innerHTML = visible.map(m => {
+      const ifaceLabel = (m.ifaces || []).join(' · ') || '(belum ada interface)';
+      return `
+        <div class="nc-mon-card" data-mon-id="${m.id}">
+          <div class="nc-mon-card-head">
+            <div class="nc-mon-name">
+              <span class="dot" style="background:${escHtml(m.color || '#3b82f6')};"></span>
+              <span class="lbl">${escHtml(m.name)}</span>
+            </div>
+            <div class="nc-mon-meta" title="${escHtml(ifaceLabel)}">${escHtml(ifaceLabel)}</div>
+            <div class="nc-mon-actions">
+              <button type="button" class="nc-mon-act-btn" onclick="ncEditMonitor(${m.id})" title="Edit" aria-label="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button type="button" class="nc-mon-act-btn danger" onclick="ncDeleteMonitor(${m.id})" title="Hapus" aria-label="Hapus">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="nc-mon-now">
+            <div class="nc-mon-now-item">
+              <span class="nc-mon-now-lbl" style="color:${escHtml(m.color || '#3b82f6')};">RX</span>
+              <span class="nc-mon-now-val" id="monRx-${m.id}">—</span>
+            </div>
+            <div class="nc-mon-now-item">
+              <span class="nc-mon-now-lbl" style="color:#06b6d4;">TX</span>
+              <span class="nc-mon-now-val" id="monTx-${m.id}">—</span>
+            </div>
+          </div>
+          <div class="nc-mon-chart-wrap" id="monChart-${m.id}"></div>
+        </div>
+      `;
+    }).join('');
+
+    // Setup chart per monitor
+    visible.forEach(m => initOrUpdateMonitorChart(m));
+    // Trigger initial data load
+    visible.forEach(m => refreshOneMonitor(m));
+  }
+
+  function initOrUpdateMonitorChart(m) {
+    const elId = 'monChart-' + m.id;
+    const el = $(elId);
+    if (!el) return;
+
+    // Destroy existing chart kalau ada (saat re-render)
+    if (monitorCharts[m.id]) {
+      try { monitorCharts[m.id].destroy(); } catch(_){}
+      delete monitorCharts[m.id];
+    }
+
+    const primary = m.color || '#3b82f6';
+    const chart = new ApexCharts(el, {
+      ...commonChart({ chart:{ type:'area', height:170 } }),
+      series: [
+        { name:'RX', data:[] },
+        { name:'TX', data:[] }
+      ],
+      colors: [primary, '#06b6d4'],
+      stroke: { curve:'smooth', width:2 },
+      fill: { type:'gradient', gradient:{ shadeIntensity:1, opacityFrom:0.45, opacityTo:0.05, stops:[0,100] } },
+      dataLabels: { enabled:false },
+      xaxis: { type:'datetime', labels:{ datetimeUTC:false, style:{ fontSize:'10px' } } },
+      yaxis: { labels:{ formatter:(v)=>Number(v).toFixed(v < 10 ? 2 : 0) + ' Mbps', style:{ fontSize:'10px' } } },
+      legend: { show:false },
+      tooltip: { theme: isDark() ? 'dark' : 'light', x:{ format:'HH:mm:ss' }, y:{ formatter:(v)=>Number(v).toFixed(2) + ' Mbps' } },
+    });
+    chart.render();
+    monitorCharts[m.id] = chart;
+  }
+
+  // Refresh data 1 monitor — panggil /history dengan filter ifaces
+  async function refreshOneMonitor(m) {
+    if (!m || !selectedRouterId) return;
+    const h = await loadHistory(m.router_id, m.ifaces);
+    if (!h) return;
+    const chart = monitorCharts[m.id];
+    if (chart) {
+      chart.updateSeries([
+        { name:'RX', data: h.rx_mbps || [] },
+        { name:'TX', data: h.tx_mbps || [] },
+      ]);
+    }
+    // Update current value labels (ambil titik terakhir)
+    const rxArr = h.rx_mbps || [];
+    const txArr = h.tx_mbps || [];
+    const lastRx = rxArr.length ? rxArr[rxArr.length - 1].y : 0;
+    const lastTx = txArr.length ? txArr[txArr.length - 1].y : 0;
+    const rxEl = $('monRx-' + m.id);
+    const txEl = $('monTx-' + m.id);
+    if (rxEl) rxEl.textContent = Number(lastRx).toFixed(2);
+    if (txEl) txEl.textContent = Number(lastTx).toFixed(2);
+  }
+
+  // Refresh semua monitor saat tick polling — di-call dari refreshAll
+  function refreshAllMonitors() {
+    monitors
+      .filter(m => Number(m.router_id) === Number(selectedRouterId))
+      .forEach(m => refreshOneMonitor(m));
+  }
+
+  // ═══ MODAL CREATE / EDIT ═══════════════════════════════════════════
+  window.ncOpenMonitorModal = function() {
+    editingMonitorId = null;
+    modalSelectedIfaces = new Set();
+    $('ncMonitorModalTitle').textContent = 'Tambah Interface';
+    $('ncMonitorName').value = '';
+    $('ncMonitorColor').value = '#3b82f6';
+    // Default router select ke router yang sedang aktif
+    populateModalRouterSelect();
+    if (selectedRouterId) {
+      $('ncMonitorRouter').value = selectedRouterId;
+      ncMonitorRouterChanged();
+    } else {
+      $('ncMonitorIfaceList').innerHTML = '<div class="nc-empty" style="padding:24px;"><div style="color:var(--nc-muted);font-size:12px;">Pilih router dulu untuk lihat daftar interface</div></div>';
+    }
+    updateModalIfacesCount();
+    $('ncMonitorModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.ncEditMonitor = async function(id) {
+    const m = monitors.find(x => x.id === id);
+    if (!m) return;
+    editingMonitorId = id;
+    modalSelectedIfaces = new Set(m.ifaces || []);
+    $('ncMonitorModalTitle').textContent = 'Edit Monitor';
+    $('ncMonitorName').value = m.name || '';
+    $('ncMonitorColor').value = m.color || '#3b82f6';
+    populateModalRouterSelect();
+    $('ncMonitorRouter').value = m.router_id;
+    await renderModalIfaceList(m.router_id);
+    updateModalIfacesCount();
+    $('ncMonitorModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.ncCloseMonitorModal = function(ev) {
+    if (ev && ev.target !== ev.currentTarget) return;
+    $('ncMonitorModal').classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
+  function populateModalRouterSelect() {
+    const sel = $('ncMonitorRouter');
+    sel.innerHTML = '<option value="">— Pilih Router —</option>';
+    routers.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = `${r.name} (${r.ip_address})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  window.ncMonitorRouterChanged = async function() {
+    const rid = parseInt($('ncMonitorRouter').value);
+    if (!rid) {
+      $('ncMonitorIfaceList').innerHTML = '<div class="nc-empty" style="padding:24px;"><div style="color:var(--nc-muted);font-size:12px;">Pilih router dulu untuk lihat daftar interface</div></div>';
+      return;
+    }
+    // Reset selection kalau ganti router (kecuali sedang edit & sama router)
+    if (!editingMonitorId) modalSelectedIfaces = new Set();
+    await renderModalIfaceList(rid);
+    updateModalIfacesCount();
+  };
+
+  async function renderModalIfaceList(routerId) {
+    const wrap = $('ncMonitorIfaceList');
+    wrap.innerHTML = '<div class="nc-empty" style="padding:24px;"><div style="color:var(--nc-muted);font-size:12px;">Memuat interface…</div></div>';
+    const ifaces = await loadInterfaces(routerId);
+    if (!ifaces.length) {
+      wrap.innerHTML = '<div class="nc-empty" style="padding:24px;"><div style="color:var(--nc-muted);font-size:12px;">Router tidak punya interface</div></div>';
+      return;
+    }
+    wrap.innerHTML = ifaces.map(i => {
+      const checked = modalSelectedIfaces.has(i.name) ? 'checked' : '';
+      const disabled = i.disabled || !i.running;
+      return `
+        <label class="nc-iface-row ${disabled ? 'disabled' : ''}">
+          <input type="checkbox" value="${escHtml(i.name)}" ${checked} onchange="ncModalIfaceToggle(this)">
+          <span class="nc-iface-state ${i.running ? 'running' : 'down'}"></span>
+          <div class="nc-iface-info">
+            <div class="nc-iface-name">${escHtml(i.name)}</div>
+            <div class="nc-iface-comment">${escHtml(i.comment || i.type || '—')}</div>
+          </div>
+        </label>
+      `;
+    }).join('');
+  }
+
+  window.ncModalIfaceToggle = function(cb) {
+    if (cb.checked) modalSelectedIfaces.add(cb.value);
+    else            modalSelectedIfaces.delete(cb.value);
+    updateModalIfacesCount();
+  };
+  function updateModalIfacesCount() {
+    $('ncMonitorIfacesCount').textContent = modalSelectedIfaces.size + ' dipilih';
+  }
+
+  window.ncSaveMonitor = async function() {
+    const name     = $('ncMonitorName').value.trim();
+    const routerId = parseInt($('ncMonitorRouter').value);
+    const color    = $('ncMonitorColor').value || '#3b82f6';
+    const ifaces   = Array.from(modalSelectedIfaces);
+    if (!name) { alert('Nama monitor wajib diisi'); return; }
+    if (!routerId) { alert('Pilih router dulu'); return; }
+    if (!ifaces.length) { alert('Pilih minimal 1 interface'); return; }
+
+    const btn = $('ncMonitorSaveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan…';
+    try {
+      const isEdit = !!editingMonitorId;
+      const url = isEdit ? '/api/noc/monitors/' + editingMonitorId : '/api/noc/monitors';
+      const r = await fetch(url, {
+        method: isEdit ? 'PATCH' : 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ name, router_id: routerId, ifaces, color })
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.success) {
+        // Reload list & re-render
+        monitors = await loadMonitors();
+        renderMonitors();
+        ncCloseMonitorModal();
+      } else {
+        alert('Gagal: ' + ((j && j.message) || 'unknown error'));
+      }
+    } catch (e) {
+      alert('Gagal: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Simpan';
+    }
+  };
+
+  window.ncDeleteMonitor = async function(id) {
+    const m = monitors.find(x => x.id === id);
+    if (!m) return;
+    if (!confirm(`Hapus monitor "${m.name}"?`)) return;
+    try {
+      const r = await fetch('/api/noc/monitors/' + id, {
+        method:'DELETE', credentials:'same-origin'
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.success) {
+        monitors = monitors.filter(x => x.id !== id);
+        // Destroy chart & remove from monitorCharts map
+        if (monitorCharts[id]) {
+          try { monitorCharts[id].destroy(); } catch(_){}
+          delete monitorCharts[id];
+        }
+        renderMonitors();
+      } else {
+        alert('Gagal hapus: ' + ((j && j.message) || ''));
+      }
+    } catch (e) {
+      alert('Gagal hapus: ' + e.message);
+    }
+  };
+
+  // ESC tutup modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('ncMonitorModal').classList.contains('show')) {
+      ncCloseMonitorModal();
+    }
+  });
+
+  function renderAlerts(list) {
+    const wrap = $('ncAlertList');
+    const counter = $('ncAlertCount');
+    if (!list || !list.length) {
+      counter.textContent = '0 alert';
+      wrap.innerHTML = `
+        <div class="nc-empty">
+          <div class="ic" style="background:rgba(34,197,94,.12);color:#22c55e;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div class="t">Tidak ada alert</div>
+          <div>Jaringan beroperasi normal.</div>
+        </div>`;
+      return;
+    }
+    counter.textContent = list.length + ' alert';
+
+    // Label kategori untuk badge meta (lebih ramah dari raw type)
+    const categoryLabel = {
+      device_status:     'Device',
+      resource_cpu:      'CPU',
+      resource_ram:      'RAM',
+      pppoe_connect:     'PPPoE',
+      pppoe_disconnect:  'PPPoE',
+      // Legacy aliases (untuk backward compat dengan event lama yang masih di buffer)
+      pppoe_drop:        'PPPoE',
+      pppoe_up:          'PPPoE',
+    };
+
+    wrap.innerHTML = list.map(a => {
+      const sev = a.severity || 'info';
+      // Format pesan: title bold + detail di bawahnya (kalau ada)
+      const title  = escHtml(a.title || a.description || a.action || '—');
+      const detail = a.detail && a.detail !== a.title ? escHtml(a.detail) : '';
+      const msg = detail
+        ? `<strong>${title}</strong><div style="font-size:11px;color:var(--nc-muted);margin-top:2px;">${detail}</div>`
+        : `<strong>${title}</strong>`;
+      const catLabel = categoryLabel[a.type] || a.module || a.type || 'event';
+      return `
+        <div class="nc-alert-item">
+          <span class="nc-alert-dot ${escHtml(sev)}"></span>
+          <div class="nc-alert-body">
+            <div class="nc-alert-msg">${msg}</div>
+            <div class="nc-alert-meta">
+              <span>${escHtml(catLabel)}</span>
+              <span>·</span>
+              <span>${escHtml(timeAgo(a.created_at))}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderTickets(stats) {
+    if (!stats) return;
+    // Status donut — 5 status sesuai schema Ticket.status ENUM:
+    // ('open','in_progress','pending','resolved','closed')
+    const stO  = stats.byStatus?.open        || 0;
+    const stIP = stats.byStatus?.in_progress || 0;
+    const stP  = stats.byStatus?.pending     || 0;
+    const stR  = stats.byStatus?.resolved    || 0;
+    const stC  = stats.byStatus?.closed      || 0;
+    chTicketStatus.updateSeries([stO, stIP, stP, stR, stC]);
+
+    // Priority bar — 4 priority sesuai schema Ticket.priority ENUM:
+    // ('low','medium','high','critical')
+    const pCrit = stats.byPriority?.critical || 0;
+    const pHigh = stats.byPriority?.high     || 0;
+    const pMed  = stats.byPriority?.medium   || 0;
+    const pLow  = stats.byPriority?.low      || 0;
+    chTicketPriority.updateSeries([{ name:'Tiket', data:[pCrit, pHigh, pMed, pLow] }]);
+
+    const wrap = $('ncTicketList');
+    const list = stats.recent || [];
+    if (!list.length) {
+      wrap.innerHTML = `
+        <div class="nc-empty">
+          <div class="ic" style="background:rgba(59,130,246,.12);color:#3b82f6;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/></svg>
+          </div>
+          <div class="t">Tidak ada tiket</div>
+        </div>`;
+      return;
+    }
+    wrap.innerHTML = list.map(t => {
+      const pri = (t.priority || 'medium').toLowerCase();
+      const sta = (t.status || 'open').toLowerCase();
+      const staLabel = sta === 'in_progress' ? 'In Progress' : sta.charAt(0).toUpperCase() + sta.slice(1);
+      return `
+        <a class="nc-tk-item" href="/tickets/${t.id}">
+          <span class="nc-tk-pri ${escHtml(pri)}"></span>
+          <div class="nc-tk-body">
+            <div class="nc-tk-no">${escHtml(t.ticket_number || ('#' + t.id))}</div>
+            <div class="nc-tk-title">${escHtml(t.title || '(tanpa judul)')}</div>
+            <div class="nc-tk-meta">
+              <span class="nc-tk-badge ${escHtml(sta)}">${escHtml(staLabel)}</span>
+              <span>${escHtml(pri.toUpperCase())}</span>
+              <span>·</span>
+              <span>${escHtml(timeAgo(t.created_at))}</span>
+            </div>
+          </div>
+        </a>`;
+    }).join('');
+  }
+
+  // ─── Select router ───────────────────────────────────
+  window.ncSelectRouter = async function(id) {
+    if (!id) {
+      selectedRouterId = null;
+      $('ncEmptyState').style.display = 'block';
+      $('ncDashboard').style.display  = 'none';
+      $('ncRouterSelect').value = '';
+      $('ncLive').classList.add('off');
+      $('ncLive').innerHTML = '<span class="nc-live-dot"></span>OFFLINE';
+      setAutoRefresh(0);
+      return;
+    }
+    selectedRouterId = id;
+    localStorage.setItem('noc_router', id);
+    $('ncRouterSelect').value = id;
+    $('ncEmptyState').style.display = 'none';
+    $('ncDashboard').style.display  = 'block';
+
+    // Render monitors yang ter-asosiasi dengan router baru.
+    // Data monitors sudah di-load global di init. Render filter by router_id.
+    renderMonitors();
+
+    await refreshAll();
+    // Resume auto-refresh dengan interval yang sebelumnya dipilih
+    const activeBtn = document.querySelector('.nc-int-btn.active');
+    const sec = activeBtn ? (parseInt(activeBtn.getAttribute('data-int')) || 0) : 10;
+    setAutoRefresh(sec);
+  };
+
+  // ─── Refresh orchestrator ────────────────────────────
+  let _refreshing = false;
+  async function refreshAll() {
+    if (_refreshing) return;
+    _refreshing = true;
+    const btn = $('ncRefresh');
+    btn.classList.add('spin');
+    try {
+      // Always loaded: overview, alerts, ticket stats, ONT stats, PPPoE users
+      const tasks = [loadOverview(), loadAlerts(), loadTicketStats(), loadOntStats(), loadPppoeUsers()];
+      // Router-specific data hanya kalau ada selectedRouterId
+      if (selectedRouterId) {
+        // realtime (untuk gauges + status bar)
+        tasks.push(loadRealtime(selectedRouterId));
+        // history TANPA ifaces filter → untuk CPU/Mem/PPPoE timeline (bukan
+        // bandwidth). Bandwidth per-monitor di-refresh terpisah di bawah.
+        tasks.push(loadHistory(selectedRouterId));
+        // Traffic summary per provider (connection tracking) — index 7
+        tasks.push(loadTrafficSummary(selectedRouterId));
+      }
+      const results = await Promise.all(tasks);
+      renderOverviewBar(results[0]);
+      renderAlerts(results[1]);
+      renderTickets(results[2]);
+      renderOntStats(results[3]);
+      renderPppoeUsers(results[4]);
+      if (selectedRouterId) {
+        renderRealtime(results[5]);
+        renderHistory(results[6]);
+        renderTrafficSummary(results[7]);
+        // Refresh setiap monitor card (parallel internal)
+        refreshAllMonitors();
+      }
+    } finally {
+      setTimeout(() => btn.classList.remove('spin'), 400);
+      _refreshing = false;
+    }
+  }
+  $('ncRefresh').addEventListener('click', refreshAll);
+
+  // ─── Auto-refresh interval ───
+  let _refreshTimer = null;
+  function setAutoRefresh(seconds) {
+    if (_refreshTimer) { clearInterval(_refreshTimer); _refreshTimer = null; }
+    // Auto-refresh jalan terlepas dari router selection — supaya PPPoE,
+    // tickets, ONT stats tetap update. Router-specific data (gauges, charts)
+    // di-skip internal di refreshAll() kalau tidak ada selectedRouterId.
+    if (seconds > 0) {
+      _refreshTimer = setInterval(refreshAll, seconds * 1000);
+    }
+  }
+  document.querySelectorAll('.nc-int-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nc-int-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sec = parseInt(btn.getAttribute('data-int')) || 0;
+      setAutoRefresh(sec);
+    });
+  });
+
+  // ─── Init ────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', async () => {
+    initCharts();
+    // Load list router untuk selector & empty state cards
+    routers = await loadRouters();
+    renderRouterSelect(routers);
+    renderEmptyCards(routers);
+    // Load overview & alerts & tickets & monitors & ONT stats & PPPoE users
+    // (data global, tidak butuh router)
+    const [ov, al, tk, mons, ont, ppp] = await Promise.all([
+      loadOverview(), loadAlerts(), loadTicketStats(), loadMonitors(), loadOntStats(), loadPppoeUsers()
+    ]);
+    monitors = mons || [];
+    renderOverviewBar(ov);
+    renderAlerts(al);
+    renderTickets(tk);
+    renderOntStats(ont);
+    renderPppoeUsers(ppp);
+    // Restore last selected router atau auto-pick primary
+    const savedId = localStorage.getItem('noc_router');
+    const validSaved = savedId && routers.find(r => String(r.id) === String(savedId));
+    if (validSaved) {
+      ncSelectRouter(savedId);
+    } else if (routers.length > 0) {
+      const primary = routers.find(r => r.is_primary) || routers[0];
+      ncSelectRouter(String(primary.id));
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    if (_refreshTimer) clearInterval(_refreshTimer);
+  });
+})();
+</script>
+</body>
+</html>

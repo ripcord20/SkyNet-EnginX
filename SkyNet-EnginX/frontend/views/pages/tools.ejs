@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{--d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;--d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;--d-red:#f5365c;--d-green:#00c896;--d-navy:#1e3a8a;}
+    body,html{font-family:'DM Sans',sans-serif;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .35s ease both}.a2{animation:fadeUp .35s .07s ease both}.a3{animation:fadeUp .35s .14s ease both}
+
+    .tools-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+    .tools-title{font-size:22px;font-weight:800;color:#0f172a;letter-spacing:-.5px;}
+    .tools-sub{font-size:13px;color:#64748b;margin-top:2px;}
+
+    /* Router picker */
+    .router-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:12px 14px;margin-bottom:16px;}
+    .router-bar label{font-size:12px;font-weight:600;color:#475569;}
+    .router-bar select{font-family:'DM Sans';font-size:13px;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;min-width:220px;color:#0f172a;font-weight:600;}
+    .router-bar select:focus{outline:none;border-color:#2563eb;}
+    .router-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;background:#dbeafe;color:#1d4ed8;}
+
+    /* Tabs */
+    .tools-tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:2px solid #e8eaed;}
+    .tools-tab{padding:11px 18px;font-size:13.5px;font-weight:700;color:#64748b;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:7px;}
+    .tools-tab:hover{color:#1e3a8a;}
+    .tools-tab.active{color:#1e3a8a;border-bottom-color:#1e3a8a;}
+    .tools-tab svg{width:16px;height:16px;}
+    .tab-panel{display:none;animation:fadeUp .3s ease both;}
+    .tab-panel.active{display:block;}
+
+    /* Cards / forms */
+    .tcard{background:#fff;border:1px solid #e8eaed;border-radius:14px;padding:18px 20px;margin-bottom:16px;}
+    .tcard-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .scan-form{display:grid;grid-template-columns:1.3fr 1.3fr .7fr auto;gap:12px;align-items:end;}
+    @media(max-width:880px){.scan-form{grid-template-columns:1fr 1fr;}}
+    .fg{display:flex;flex-direction:column;gap:5px;}
+    .fg label{font-size:12px;font-weight:600;color:#475569;}
+    .fg input,.fg select{font-family:'DM Sans';font-size:13px;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;background:#fff;color:#0f172a;}
+    .fg input:focus,.fg select:focus{outline:none;border-color:#2563eb;}
+    .fg .mono{font-family:'DM Mono',monospace;}
+
+    .btn{font-family:'DM Sans';font-size:13px;font-weight:700;padding:10px 18px;border-radius:9px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s;white-space:nowrap;}
+    .btn-primary{background:#1e3a8a;color:#fff;}
+    .btn-primary:hover{background:#1d4ed8;}
+    .btn-primary:disabled{background:#94a3b8;cursor:not-allowed;}
+    .btn-danger{background:#f5365c;color:#fff;}
+    .btn-danger:hover{background:#dc2626;}
+    .btn-green{background:#00a878;color:#fff;}
+    .btn-green:hover{background:#059669;}
+    .btn-ghost{background:#f1f5f9;color:#334155;}
+    .btn-ghost:hover{background:#e2e8f0;}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:7px;}
+
+    /* Tables */
+    .ttbl{width:100%;border-collapse:collapse;font-size:13px;}
+    .ttbl th{text-align:left;padding:10px 12px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid #e8eaed;background:#f8fafc;}
+    .ttbl td{padding:11px 12px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle;}
+    .ttbl tr:hover td{background:#fafbff;}
+    .mono{font-family:'DM Mono',monospace;font-size:12.5px;}
+    .ip-tag{font-family:'DM Mono',monospace;font-size:12px;background:#f0f9ff;border:1px solid #bae6fd;color:#0c4a6e;padding:2px 8px;border-radius:6px;}
+    .mac-tag{font-family:'DM Mono',monospace;font-size:12px;background:#f1f5f9;border:1px solid #e2e8f0;color:#334155;padding:2px 8px;border-radius:6px;}
+
+    .badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:100px;display:inline-flex;align-items:center;gap:3px;}
+    .badge.green{background:#dcfce7;color:#16a34a;}
+    .badge.red{background:#fee2e2;color:#dc2626;}
+    .badge.amber{background:#fef3c7;color:#92400e;}
+    .badge.blue{background:#dbeafe;color:#1d4ed8;}
+    .badge.gray{background:#f1f5f9;color:#64748b;}
+
+    .empty{padding:48px 20px;text-align:center;color:#94a3b8;font-size:13px;}
+    .empty svg{width:42px;height:42px;margin-bottom:10px;opacity:.5;}
+    .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border:1px solid #e8eaed;border-radius:14px;overflow:hidden;margin-bottom:16px;}
+    .stat-cell{padding:16px 18px;border-right:1px solid #e8eaed;}
+    .stat-cell:last-child{border-right:none;}
+    .stat-lbl{font-size:11.5px;color:#64748b;font-weight:600;margin-bottom:6px;}
+    .stat-val{font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-1px;line-height:1;}
+    @media(max-width:760px){.stat-strip{grid-template-columns:repeat(2,1fr);} .stat-cell:nth-child(2){border-right:none;}}
+
+    .scan-meta{font-size:12px;color:#64748b;margin:10px 2px;display:flex;align-items:center;gap:10px;}
+    .modal-back{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+    .modal-back.show{display:flex;}
+    .modal-box{background:#fff;border-radius:16px;padding:24px;max-width:440px;width:100%;animation:fadeUp .25s ease both;}
+    .modal-box h3{font-size:17px;font-weight:800;color:#0f172a;margin:0 0 6px;}
+    .modal-box p{font-size:13px;color:#64748b;margin:0 0 16px;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="tools-head a1">
+        <div>
+          <div class="tools-title">🛠️ Tools</div>
+          <div class="tools-sub">IP Scan &amp; Hotspot IP Binding Management</div>
+        </div>
+        <button class="btn btn-ghost" onclick="window.location.reload()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg>
+          Refresh
+        </button>
+      </div>
+
+      <!-- Router picker (shared) -->
+      <div class="router-bar a2">
+        <label>Router MikroTik:</label>
+        <select id="routerSel" onchange="onRouterChange()"><option value="">— Memuat router… —</option></select>
+        <span class="router-pill" id="routerProto" style="display:none"></span>
+        <span style="flex:1"></span>
+        <span style="font-size:11.5px;color:#94a3b8;">Semua operasi memakai router yang dipilih</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tools-tabs a2">
+        <button class="tools-tab active" data-tab="binding" onclick="switchTab('binding')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"/></svg>
+          Hotspot Binding
+        </button>
+        <button class="tools-tab" data-tab="ipscan" onclick="switchTab('ipscan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          IP Scan
+        </button>
+      </div>
+
+      <!-- ══════════ TAB: HOTSPOT BINDING ══════════ -->
+      <div class="tab-panel active" id="panel-binding">
+
+        <div class="stat-strip a3">
+          <div class="stat-cell"><div class="stat-lbl">Pelanggan Hotspot</div><div class="stat-val" id="stHsTotal">–</div></div>
+          <div class="stat-cell"><div class="stat-lbl">Aktif</div><div class="stat-val" id="stHsActive" style="color:#16a34a">–</div></div>
+          <div class="stat-cell"><div class="stat-lbl">Terisolir</div><div class="stat-val" id="stHsIsolated" style="color:#dc2626">–</div></div>
+          <div class="stat-cell"><div class="stat-lbl">Mismatch (sync)</div><div class="stat-val" id="stHsMismatch" style="color:#d97706">–</div></div>
+        </div>
+
+        <div class="tcard a3">
+          <div class="tcard-title">
+            <span>Pelanggan Hotspot (IP Binding)</span>
+            <span style="flex:1"></span>
+            <button class="btn btn-ghost btn-sm" onclick="runSync()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg>
+              Sync DB ↔ MikroTik
+            </button>
+          </div>
+          <div style="overflow-x:auto" id="hsCustWrap">
+            <div class="empty">Memuat…</div>
+          </div>
+        </div>
+
+        <div class="tcard a3">
+          <div class="tcard-title"><span>IP Binding di Router</span>
+            <span style="flex:1"></span>
+            <button class="btn btn-ghost btn-sm" onclick="openBindingModal()">+ Tambah Binding</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadBindings()">Muat Ulang</button>
+          </div>
+          <div style="overflow-x:auto" id="bindingsWrap">
+            <div class="empty">Pilih router lalu klik "Muat Ulang".</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ TAB: IP SCAN ══════════ -->
+      <div class="tab-panel" id="panel-ipscan">
+        <div class="tcard a3">
+          <div class="tcard-title">🔍 IP Scan</div>
+          <div class="scan-form">
+            <div class="fg">
+              <label>Interface</label>
+              <select id="scanIface"><option value="">— Pilih router dulu —</option></select>
+            </div>
+            <div class="fg">
+              <label>Address Range <span style="color:#94a3b8;font-weight:400">(opsional)</span></label>
+              <input type="text" class="mono" id="scanRange" placeholder="192.168.1.0/24">
+            </div>
+            <div class="fg">
+              <label>Durasi (detik)</label>
+              <input type="number" id="scanDuration" value="5" min="1" max="30">
+            </div>
+            <button class="btn btn-primary" id="scanBtn" onclick="runScan()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+              Start Scan
+            </button>
+          </div>
+          <div class="scan-meta" id="scanMeta" style="display:none"></div>
+        </div>
+
+        <div class="tcard a3">
+          <div class="tcard-title"><span>Hasil Scan</span></div>
+          <div style="overflow-x:auto" id="scanWrap">
+            <div class="empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+              <div>Belum ada hasil. Pilih interface lalu klik Start Scan.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: Tambah Binding manual -->
+<div class="modal-back" id="bindingModal">
+  <div class="modal-box">
+    <h3>Tambah IP Binding</h3>
+    <p>Buat binding baru di router yang dipilih.</p>
+    <div class="fg" style="margin-bottom:12px"><label>MAC Address</label><input type="text" class="mono" id="bmMac" placeholder="AA:BB:CC:DD:EE:FF" style="text-transform:uppercase"></div>
+    <div class="fg" style="margin-bottom:12px"><label>Address (IP)</label><input type="text" class="mono" id="bmAddr" placeholder="192.168.1.50"></div>
+    <div class="fg" style="margin-bottom:12px"><label>Type</label>
+      <select id="bmType"><option value="bypassed">bypassed</option><option value="regular">regular</option><option value="blocked">blocked</option></select>
+    </div>
+    <div class="fg" style="margin-bottom:12px"><label>Comment</label><input type="text" id="bmComment" placeholder="opsional"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBindingModal()">Batal</button>
+      <button class="btn btn-primary" id="bmSaveBtn" onclick="saveBinding()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Bind hasil scan ke pelanggan -->
+<div class="modal-back" id="bindCustModal">
+  <div class="modal-box">
+    <h3>Bind ke Pelanggan</h3>
+    <p>Set MAC/IP ini ke pelanggan sebagai tipe koneksi <strong>Hotspot</strong>.</p>
+    <div class="fg" style="margin-bottom:12px"><label>MAC Address</label><input type="text" class="mono" id="bcMac" readonly style="background:#f8fafc"></div>
+    <div class="fg" style="margin-bottom:12px"><label>IP Address</label><input type="text" class="mono" id="bcAddr" readonly style="background:#f8fafc"></div>
+    <div class="fg" style="margin-bottom:12px"><label>Pilih Pelanggan</label>
+      <select id="bcCustomer"><option value="">— Memuat… —</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBindCustModal()">Batal</button>
+      <button class="btn btn-green" id="bcSaveBtn" onclick="saveBindCustomer()">Bind</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/tools.js"></script>
+</body></html>
