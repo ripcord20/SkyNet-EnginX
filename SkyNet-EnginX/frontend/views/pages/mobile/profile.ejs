@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--blue-deep:#0284c7;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:#eef2f7;color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    /* Header biru */
+    .ph{background:linear-gradient(160deg,#0ea5e9,#0284c7);padding:calc(16px + env(safe-area-inset-top)) 20px 54px;position:relative;}
+    .ph-top{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;}
+    .ph-back{width:38px;height:38px;border-radius:12px;border:none;background:rgba(255,255,255,.16);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;}
+    .ph-back svg{width:20px;height:20px;}
+    .ph-title{color:#fff;font-size:17px;font-weight:800;}
+    .ph-user{text-align:center;position:relative;z-index:2;margin-top:14px;}
+    .ph-av-wrap{position:relative;width:92px;height:92px;margin:0 auto;}
+    .ph-av{width:92px;height:92px;border-radius:50%;overflow:hidden;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;box-shadow:0 10px 26px -8px rgba(0,0,0,.3);border:4px solid rgba(255,255,255,.5);}
+    .ph-av img{width:100%;height:100%;object-fit:cover;}
+    .ph-av-btn{position:absolute;bottom:-2px;right:-2px;width:32px;height:32px;border-radius:50%;border:3px solid #0ea5e9;background:#fff;color:#0ea5e9;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.2);}
+    .ph-av-btn svg{width:15px;height:15px;}
+    .ph-av-del{margin-top:10px;background:rgba(255,255,255,.16);border:none;color:#fff;font-family:inherit;font-size:12px;font-weight:700;padding:6px 14px;border-radius:100px;cursor:pointer;}
+    .ph-name{color:#fff;font-size:19px;font-weight:800;margin-top:12px;}
+    .ph-role{color:rgba(255,255,255,.8);font-size:12.5px;margin-top:2px;text-transform:capitalize;}
+    /* Konten */
+    .content{padding:0 16px;margin-top:-40px;position:relative;z-index:3;}
+    .card{background:#fff;border-radius:18px;padding:6px 18px;margin-bottom:14px;box-shadow:0 6px 20px -12px rgba(30,60,120,.2);}
+    .card-title{font-size:13px;font-weight:800;color:var(--ink);padding:14px 0 6px;}
+    .prow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f2f5fa;cursor:pointer;}
+    .prow:last-child{border-bottom:none;}
+    .prow-ic{width:38px;height:38px;border-radius:11px;background:#f2f6ff;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .prow-ic svg{width:18px;height:18px;}
+    .prow-body{flex:1;min-width:0;}
+    .prow-lbl{font-size:11.5px;color:var(--muted);font-weight:600;}
+    .prow-val{font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .prow-arr{color:#c7d0e0;flex-shrink:0;} .prow-arr svg{width:18px;height:18px;}
+    .logout-btn{width:100%;padding:15px;border:none;background:#fff;color:var(--red);border-radius:16px;font-family:inherit;font-size:14.5px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px -12px rgba(30,60,120,.2);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;}
+    .logout-btn svg{width:18px;height:18px;}
+    .app-ver{text-align:center;font-size:11px;color:var(--muted);margin-bottom:8px;}
+    /* Bottom sheet edit */
+    .es-overlay{position:fixed;inset:0;z-index:400;background:rgba(15,27,74,.5);opacity:0;visibility:hidden;transition:opacity .25s;}
+    .es-overlay.open{opacity:1;visibility:visible;}
+    .es-sheet{position:fixed;left:50%;transform:translateX(-50%) translateY(100%);bottom:0;z-index:401;width:100%;max-width:520px;background:#fff;border-radius:24px 24px 0 0;transition:transform .3s cubic-bezier(.22,.61,.36,1);padding-bottom:calc(20px + env(safe-area-inset-bottom));}
+    .es-sheet.open{transform:translateX(-50%) translateY(0);}
+    .es-grab{width:38px;height:4px;border-radius:100px;background:#dbe2ec;margin:10px auto 4px;}
+    .es-head{display:flex;align-items:center;justify-content:space-between;padding:8px 20px 14px;border-bottom:1px solid #f0f3f8;}
+    .es-head h3{font-size:16px;font-weight:800;}
+    .es-close{width:32px;height:32px;border-radius:10px;border:none;background:#f4f6fa;color:#5a6885;display:flex;align-items:center;justify-content:center;cursor:pointer;} .es-close svg{width:17px;height:17px;}
+    .es-body{padding:16px 20px;}
+    .es-lbl{display:block;font-size:12px;font-weight:600;color:#5a6885;margin-bottom:6px;margin-top:12px;} .es-lbl:first-child{margin-top:0;}
+    .es-in{width:100%;padding:13px;border:1px solid #e6ebf3;background:#fbfcfe;border-radius:12px;font-size:14px;font-family:inherit;color:var(--ink);outline:none;}
+    .es-in:focus{border-color:var(--blue);background:#fff;}
+    .es-save{width:100%;margin-top:18px;padding:14px;border:none;border-radius:13px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;}
+    .es-save:disabled{opacity:.6;}
+    .es-hint{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:opacity .25s;pointer-events:none;max-width:88vw;text-align:center;}
+    .toast.show{opacity:1;} .toast.ok{background:#12946f;} .toast.err{background:#d13b42;}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="ph">
+      <div class="ph-top">
+        <a class="ph-back" href="/mobile" aria-label="Kembali"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></a>
+        <div class="ph-title">Akun Saya</div>
+        <div style="width:38px;"></div>
+      </div>
+      <div class="ph-user">
+        <div class="ph-av-wrap">
+          <div class="ph-av" id="phAv">D</div>
+          <button class="ph-av-btn" onclick="document.getElementById('avatarFile').click()" aria-label="Ubah foto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+          <input type="file" id="avatarFile" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="uploadAvatar(this)">
+        </div>
+        <div class="ph-name" id="phName">Memuat…</div>
+        <div class="ph-role" id="phRole">—</div>
+        <button class="ph-av-del" id="phAvDel" onclick="deleteAvatar()" style="display:none;">Hapus foto</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="card">
+        <div class="card-title">Pengaturan Akun</div>
+        <div class="prow" onclick="openEdit('name')">
+          <div class="prow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="prow-body"><div class="prow-lbl">Nama</div><div class="prow-val" id="vName">—</div></div>
+          <div class="prow-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="prow" onclick="openEdit('email')">
+          <div class="prow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg></div>
+          <div class="prow-body"><div class="prow-lbl">Email</div><div class="prow-val" id="vEmail">—</div></div>
+          <div class="prow-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="prow" onclick="openEdit('phone')">
+          <div class="prow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+          <div class="prow-body"><div class="prow-lbl">No. Handphone</div><div class="prow-val" id="vPhone">—</div></div>
+          <div class="prow-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+        <div class="prow" onclick="openEdit('password')">
+          <div class="prow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="prow-body"><div class="prow-lbl">Sandi Login</div><div class="prow-val">••••••••</div></div>
+          <div class="prow-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Informasi</div>
+        <div class="prow" style="cursor:default;">
+          <div class="prow-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div class="prow-body"><div class="prow-lbl">Peran</div><div class="prow-val" id="vRole" style="text-transform:capitalize;">—</div></div>
+        </div>
+      </div>
+
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Keluar
+      </button>
+      <div class="app-ver"><%= appName %> Mobile</div>
+    </div>
+  </div>
+
+  <!-- Edit sheet -->
+  <div class="es-overlay" id="esOverlay" onclick="closeEdit()"></div>
+  <div class="es-sheet" id="esSheet">
+    <div class="es-grab"></div>
+    <div class="es-head"><h3 id="esTitle">Edit</h3><button class="es-close" onclick="closeEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="es-body" id="esBody"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url,opts){ const t=getToken(); const o=opts||{}; o.headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}, o.headers||{}); o.credentials='include'; try{ const r=await fetch(url,o); if(r.status===401){location.href='/login';return null;} const x=await r.text(); let d=null; try{d=x?JSON.parse(x):null;}catch(_){} return {status:r.status,ok:r.ok,data:d}; }catch(e){ return {ok:false,data:null,err:e.message}; } }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function toast(m,t){ const el=document.getElementById('toast'); el.textContent=m; el.className='toast show'+(t?' '+t:''); setTimeout(()=>el.classList.remove('show'),2800); }
+
+    let _profile={};
+    function roleLabel(role){
+      if(!role) return '';
+      if(typeof role==='string') return role;
+      // objek relasi { name, display_name }
+      return role.display_name || role.name || '';
+    }
+    async function loadProfile(){
+      const r=await api('/api/auth/profile');
+      if(r&&r.ok&&r.data&&r.data.data){
+        _profile=r.data.data;
+        const nm=_profile.name||_profile.username||'User';
+        const rl=roleLabel(_profile.role) || (_profile.role_name||'') || (_profile.isDemo?'Demo':'');
+        renderAvatar(_profile.avatar, nm);
+        document.getElementById('phName').textContent=nm;
+        document.getElementById('phRole').textContent=rl;
+        document.getElementById('vName').textContent=_profile.name||'—';
+        document.getElementById('vEmail').textContent=_profile.email||'—';
+        document.getElementById('vPhone').textContent=_profile.phone||'—';
+        document.getElementById('vRole').textContent=rl||'—';
+      }
+    }
+    function renderAvatar(url, nm){
+      const av=document.getElementById('phAv'); const del=document.getElementById('phAvDel');
+      if(url){ av.innerHTML='<img src="'+esc(url)+'?t='+Date.now()+'" alt="Avatar">'; if(del)del.style.display='inline-block'; }
+      else { av.textContent=((nm||'U')[0]||'U').toUpperCase(); if(del)del.style.display='none'; }
+    }
+    async function uploadAvatar(input){
+      const file=input.files&&input.files[0]; if(!file)return;
+      if(file.size>3*1024*1024){ toast('Ukuran maksimal 3MB','err'); input.value=''; return; }
+      toast('Mengunggah foto…');
+      const fd=new FormData(); fd.append('avatar',file);
+      const t=getToken();
+      try{
+        const r=await fetch('/api/auth/avatar',{method:'POST',credentials:'include',headers:t?{'Authorization':'Bearer '+t}:{},body:fd});
+        const d=await r.json().catch(()=>null);
+        if(r.ok && d && d.success){ _profile.avatar=d.url||d.avatar; renderAvatar(_profile.avatar,_profile.name); toast('Foto profil diperbarui','ok'); }
+        else{ toast((d&&d.message)||'Gagal mengunggah','err'); }
+      }catch(e){ toast('Gagal mengunggah foto','err'); }
+      input.value='';
+    }
+    async function deleteAvatar(){
+      const r=await api('/api/auth/avatar',{method:'DELETE'});
+      if(r&&r.ok&&r.data&&r.data.success!==false){ _profile.avatar=null; renderAvatar(null,_profile.name); toast('Foto profil dihapus','ok'); }
+      else{ toast((r&&r.data&&r.data.message)||'Gagal menghapus foto','err'); }
+    }
+
+    const FIELDS={
+      name:  {title:'Ubah Nama', label:'Nama lengkap', key:'name', type:'text', ph:'Nama Anda'},
+      email: {title:'Ubah Email', label:'Alamat email', key:'email', type:'email', ph:'email@contoh.com'},
+      phone: {title:'Ubah No. Handphone', label:'Nomor HP', key:'phone', type:'tel', ph:'08xxxx'}
+    };
+    function openEdit(which){
+      const body=document.getElementById('esBody');
+      if(which==='password'){
+        document.getElementById('esTitle').textContent='Ubah Sandi Login';
+        body.innerHTML=
+          '<label class="es-lbl">Sandi saat ini</label><input class="es-in" id="esCur" type="password" placeholder="Sandi lama">'+
+          '<label class="es-lbl">Sandi baru</label><input class="es-in" id="esNew" type="password" placeholder="Min. 6 karakter">'+
+          '<label class="es-lbl">Ulangi sandi baru</label><input class="es-in" id="esNew2" type="password" placeholder="Ketik ulang sandi baru">'+
+          '<button class="es-save" id="esSave" onclick="savePassword()">Simpan Sandi</button>'+
+          '<div class="es-hint">Sandi minimal 6 karakter. Anda akan tetap login setelah mengganti sandi.</div>';
+      } else {
+        const f=FIELDS[which]; if(!f)return;
+        document.getElementById('esTitle').textContent=f.title;
+        const cur=_profile[f.key]||'';
+        body.innerHTML=
+          '<label class="es-lbl">'+f.label+'</label><input class="es-in" id="esVal" type="'+f.type+'" placeholder="'+f.ph+'" value="'+esc(cur)+'">'+
+          '<button class="es-save" id="esSave" onclick="saveField(\''+which+'\')">Simpan</button>';
+      }
+      document.getElementById('esOverlay').classList.add('open');
+      document.getElementById('esSheet').classList.add('open');
+    }
+    function closeEdit(){ document.getElementById('esOverlay').classList.remove('open'); document.getElementById('esSheet').classList.remove('open'); }
+
+    async function saveField(which){
+      const f=FIELDS[which]; const val=document.getElementById('esVal').value.trim();
+      if(which==='name' && !val){ toast('Nama tidak boleh kosong','err'); return; }
+      if(which==='email' && val && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val)){ toast('Format email tidak valid','err'); return; }
+      const btn=document.getElementById('esSave'); btn.disabled=true; btn.textContent='Menyimpan…';
+      // kirim name, phone, email sekaligus (endpoint update ketiganya)
+      const payload={ name:_profile.name||'', phone:_profile.phone||'', email:_profile.email||'' };
+      payload[f.key]=val;
+      const r=await api('/api/auth/profile',{method:'PUT',body:JSON.stringify(payload)});
+      btn.disabled=false; btn.textContent='Simpan';
+      if(r&&r.ok&&r.data&&r.data.success!==false){ toast('Profil diperbarui','ok'); closeEdit(); loadProfile(); }
+      else{ toast((r&&r.data&&r.data.message)||'Gagal menyimpan','err'); }
+    }
+    async function savePassword(){
+      const cur=document.getElementById('esCur').value, nw=document.getElementById('esNew').value, nw2=document.getElementById('esNew2').value;
+      if(!cur){ toast('Isi sandi saat ini','err'); return; }
+      if(!nw||nw.length<6){ toast('Sandi baru minimal 6 karakter','err'); return; }
+      if(nw!==nw2){ toast('Ulangi sandi baru tidak cocok','err'); return; }
+      const btn=document.getElementById('esSave'); btn.disabled=true; btn.textContent='Menyimpan…';
+      const r=await api('/api/auth/password',{method:'PUT',body:JSON.stringify({currentPassword:cur,newPassword:nw})});
+      btn.disabled=false; btn.textContent='Simpan Sandi';
+      if(r&&r.ok&&r.data&&r.data.success!==false){ toast('Sandi berhasil diubah','ok'); closeEdit(); }
+      else{ toast((r&&r.data&&r.data.message)||'Gagal mengubah sandi','err'); }
+    }
+    function doLogout(){ try{ localStorage.removeItem('token'); }catch(_){} document.cookie='token=; Max-Age=0; path=/;'; location.href='/login'; }
+
+    loadProfile();
+  </script>
+</body>
+</html>

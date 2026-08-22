@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{
+      --bg:#eff8ff; --card:#ffffff; --ink:#1F3849; --muted:#7c93a0; --line:#e2eefb;
+      --blue:#0ea5e9; --blue-deep:#0284c7; --blue-soft:#e0f2fe; --teal:#38bdf8; --teal-soft:#e0f2fe;
+      --green:#38bdf8; --amber:#f5a623; --red:#f2545b; --nav-h:66px;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;
+      padding-bottom:calc(env(safe-area-inset-bottom) + 20px);}
+    .money{font-family:'DM Mono',monospace;font-weight:500;}
+    .wrap{max-width:520px;margin:0 auto;}
+    /* Halaman ini dimuat di dalam sheet (iframe) — TIDAK ada bottom-nav di sini.
+       Netralkan padding-bawah yang di-set global mobile-shell.css untuk ruang
+       bottom-nav, supaya daftar invoice bisa mengalir penuh sampai bawah dan
+       tidak menyisakan area kosong. */
+    .wrap{ padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important; }
+
+    .topbar{padding:calc(18px + env(safe-area-inset-top)) 18px 14px;display:flex;align-items:center;gap:14px;}
+    .back{width:40px;height:40px;border-radius:13px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink);cursor:pointer;box-shadow:0 4px 12px -6px rgba(30,60,120,.2);}
+    .back svg{width:20px;height:20px;}
+    .topbar h1{font-size:19px;font-weight:800;letter-spacing:-.3px;}
+
+    .content{padding:4px 16px 20px;}
+
+    .lbl{font-size:12.5px;font-weight:700;color:#5a6885;margin:16px 2px 8px;}
+    .lbl:first-child{margin-top:4px;}
+
+    .search-wrap{position:relative;}
+    .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);}
+    .search-wrap input{width:100%;padding:14px 14px 14px 42px;border:1px solid var(--line);background:#fff;border-radius:15px;font-size:14px;font-family:inherit;outline:none;transition:border .15s;box-shadow:0 4px 12px -8px rgba(30,60,120,.14);}
+    .search-wrap input:focus{border-color:var(--blue);}
+
+    /* Jangan batasi tinggi di sini — biar daftar mengalir penuh dan yang
+       men-scroll adalah body sheet-nya. max-height di sini bikin scroll ganda
+       dan daftar tampak terpotong. */
+    .inv-list{display:flex;flex-direction:column;gap:9px;margin-top:10px;}
+    .inv{display:flex;align-items:flex-start;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:15px;padding:12px 14px;cursor:pointer;transition:all .12s;}
+    .inv:active{transform:scale(.98);}
+    .inv.sel{border-color:var(--blue);background:var(--blue-soft);}
+    .inv-av{width:40px;height:40px;border-radius:12px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;}
+    .inv.sel .inv-av{background:var(--blue);color:#fff;}
+    .inv-body{flex:1;min-width:0;}
+    .inv-top-row{display:flex;align-items:center;gap:8px;justify-content:space-between;}
+    .inv-t{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+    .inv-s{font-size:11px;color:var(--muted);margin-top:2px;}
+    .inv-due{display:flex;align-items:center;gap:5px;font-size:10.5px;color:#6b7a97;margin-top:4px;font-weight:600;}
+    .inv-due svg{width:12px;height:12px;flex-shrink:0;color:#7c93a0;}
+    .ist{font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;flex-shrink:0;text-transform:uppercase;letter-spacing:.2px;}
+    .ist-unpaid{background:#e0f2fe;color:#0ea5e9;} .ist-over{background:#fde5e6;color:#d13b42;}
+    .inv-amt{font-size:14px;font-weight:800;color:var(--ink);flex-shrink:0;align-self:flex-start;}
+
+    /* Amount display */
+    .amount-box{background:#fff;border-radius:20px;padding:20px;text-align:center;box-shadow:0 8px 20px -10px rgba(30,60,120,.18);margin-top:6px;}
+    .amount-cap{font-size:12px;color:var(--muted);font-weight:600;}
+    .amount-val{font-size:34px;font-weight:800;letter-spacing:-1px;margin-top:6px;color:var(--ink);}
+    .amount-val .cur{font-size:18px;color:var(--muted);vertical-align:middle;margin-right:4px;}
+    .amount-inv{font-size:11.5px;color:var(--muted);margin-top:6px;}
+
+    .field input, .field select{width:100%;padding:14px;border:1px solid var(--line);background:#fff;border-radius:15px;font-size:15px;font-family:inherit;outline:none;box-shadow:0 4px 12px -8px rgba(30,60,120,.14);}
+    .field input:focus,.field select:focus{border-color:var(--blue);}
+
+    /* Panel info periode & masa aktif */
+    .period-info{background:#fff;border-radius:16px;padding:6px 16px;margin-top:12px;box-shadow:0 5px 14px -9px rgba(30,60,120,.14);}
+    .pi-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #f2f5fa;}
+    .pi-row:last-child{border-bottom:none;}
+    .pi-lbl{font-size:12.5px;color:var(--muted);font-weight:500;}
+    .pi-val{font-size:13.5px;font-weight:700;color:var(--ink);}
+    .pi-active .pi-lbl{color:#0f9d63;font-weight:700;}
+    .pi-active .pi-val{color:#0f9d63;background:#dcf7ec;padding:4px 11px;border-radius:100px;font-size:12.5px;}
+
+    .methods{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+    .method{padding:13px 6px;border:1.5px solid var(--line);background:#fff;border-radius:14px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:#5a6885;transition:all .12s;}
+    .method.sel{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);}
+
+    .submit{width:100%;margin-top:22px;padding:16px;border:none;border-radius:16px;background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 12px 26px -8px rgba(47,111,237,.55);transition:opacity .15s;}
+    .submit:disabled{opacity:.5;cursor:not-allowed;}
+
+    .empty{padding:24px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .hint{font-size:11px;color:var(--muted);margin-top:7px;padding:0 2px;}
+    .notif-check{display:flex;align-items:flex-start;gap:11px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:9px;cursor:pointer;box-shadow:0 4px 12px -8px rgba(30,60,120,.14);}
+    .notif-check input{display:none;}
+    .nc-box{width:22px;height:22px;border-radius:7px;border:2px solid #cdd6e4;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;margin-top:1px;}
+    .notif-check input:checked + .nc-box{background:var(--blue);border-color:var(--blue);}
+    .notif-check input:checked + .nc-box::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg);margin-top:-2px;}
+    .nc-txt{font-size:12.5px;color:#3a4a68;line-height:1.4;} .nc-txt b{font-weight:700;color:var(--ink);}
+    .notif-check.dis{opacity:.5;} .notif-check.dis .nc-txt{color:#7c93a0;}
+
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 20px);background:#1F3849;color:#fff;padding:13px 22px;border-radius:13px;font-size:13.5px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;max-width:90vw;text-align:center;pointer-events:none;}
+    .toast.show{opacity:1;}
+    .toast.ok{background:#12946f;} .toast.err{background:#d13b42;}
+
+    /* Success overlay */
+    /* Success screen bergaya kartu — backdrop gelap lembut + kartu putih naik. */
+    .success{position:fixed;inset:0;z-index:500;background:rgba(15,27,74,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:26px;opacity:0;transition:opacity .3s ease;}
+    .success.show{display:flex;opacity:1;}
+    .sc-card{background:#fff;border-radius:26px;padding:34px 26px 26px;width:100%;max-width:360px;text-align:center;box-shadow:0 30px 70px -20px rgba(15,27,74,.5);transform:translateY(30px) scale(.96);opacity:0;transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .4s ease;}
+    .success.show .sc-card{transform:translateY(0) scale(1);opacity:1;}
+
+    /* Centang: lingkaran menyembul + gelombang halo + garis centang tergambar. */
+    .sc-ic{position:relative;width:92px;height:92px;margin:0 auto 22px;}
+    .sc-ic-circle{width:92px;height:92px;border-radius:50%;background:linear-gradient(135deg,#22c993,#38bdf8);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -8px rgba(56,189,248,.6);transform:scale(0);animation:scPop .55s cubic-bezier(.18,1.35,.4,1) .15s forwards;}
+    .sc-ic-circle svg{width:46px;height:46px;color:#fff;}
+    .sc-check{stroke-dasharray:36;stroke-dashoffset:36;animation:scDraw .4s ease .55s forwards;}
+    .sc-ic::before,.sc-ic::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid rgba(56,189,248,.45);opacity:0;animation:scWave 1s ease .5s;}
+    .sc-ic::after{animation-delay:.68s;}
+    @keyframes scPop{0%{transform:scale(0);}70%{transform:scale(1.08);}100%{transform:scale(1);}}
+    @keyframes scDraw{to{stroke-dashoffset:0;}}
+    @keyframes scWave{0%{opacity:.8;transform:scale(1);}100%{opacity:0;transform:scale(1.6);}}
+
+    /* Isi kartu — muncul bertahap (stagger). */
+    .sc-fade{opacity:0;transform:translateY(8px);animation:scFade .45s ease forwards;}
+    @keyframes scFade{to{opacity:1;transform:translateY(0);}}
+    .sc-title{font-size:21px;font-weight:800;letter-spacing:-.4px;animation-delay:.5s;}
+    .sc-sub{font-size:13.5px;color:#8a97ad;margin-top:5px;animation-delay:.58s;}
+    .sc-amount{font-size:34px;font-weight:800;letter-spacing:-1px;color:#38bdf8;margin:16px 0 4px;font-variant-numeric:tabular-nums;animation-delay:.64s;}
+    .sc-divider{height:1px;background:#eef1f7;margin:20px 0 4px;animation-delay:.7s;}
+    .sc-det-h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#a8b2c4;text-align:left;margin:14px 2px 10px;animation-delay:.72s;}
+    .sc-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 2px;animation-delay:.78s;}
+    .sc-k{font-size:13px;color:#8a97ad;}
+    .sc-v{font-size:13.5px;font-weight:700;color:var(--ink);text-align:right;word-break:break-word;}
+    .sc-badge{display:inline-flex;align-items:center;gap:5px;background:#dcf7ec;color:#0f9d63;font-size:11px;font-weight:800;padding:5px 12px;border-radius:100px;margin-top:14px;animation-delay:.84s;}
+    .sc-badge svg{width:12px;height:12px;}
+    .sc-done{width:100%;padding:15px;border:none;border-radius:15px;background:linear-gradient(135deg,#3f7bf5,#0ea5e9);color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;margin-top:22px;box-shadow:0 12px 24px -8px rgba(47,111,237,.5);animation-delay:.9s;transition:transform .12s;}
+    .sc-done:active{transform:scale(.98);}
+    .sc-again{background:none;border:none;color:var(--blue);font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:14px;padding:6px;animation-delay:.96s;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="back" onclick="closeOrList()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </div>
+      <h1>Catat Pembayaran</h1>
+    </div>
+
+    <div class="content">
+      <div class="lbl">Cari invoice belum lunas</div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="invSearch" placeholder="Nama pelanggan, CID, atau no. invoice…">
+      </div>
+      <div class="inv-list" id="invList">
+        <div class="inv"><div class="skel" style="width:40px;height:40px;border-radius:12px;"></div><div class="inv-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+        <div class="inv"><div class="skel" style="width:40px;height:40px;border-radius:12px;"></div><div class="inv-body"><div class="skel" style="width:130px;height:13px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div></div>
+      </div>
+
+      <div id="formArea" style="display:none;">
+        <div class="amount-box">
+          <div class="amount-cap">Jumlah Pembayaran</div>
+          <div class="amount-val"><span class="cur">Rp</span><span id="amountDisplay">0</span></div>
+          <div class="amount-inv" id="amountInvInfo"></div>
+        </div>
+
+        <!-- Info periode & masa aktif -->
+        <div class="period-info" id="periodInfo" style="display:none;">
+          <div class="pi-row">
+            <span class="pi-lbl">Periode tagihan</span>
+            <span class="pi-val" id="piPeriod">–</span>
+          </div>
+          <div class="pi-row">
+            <span class="pi-lbl">Jatuh tempo</span>
+            <span class="pi-val" id="piDue">–</span>
+          </div>
+          <div class="pi-row pi-active">
+            <span class="pi-lbl">Aktif sampai</span>
+            <span class="pi-val" id="piActive">–</span>
+          </div>
+        </div>
+
+        <div class="lbl">Jumlah bayar</div>
+        <div class="field">
+          <input type="tel" id="amountInput" inputmode="numeric" placeholder="0" oninput="onAmountInput(this)">
+        </div>
+        <div class="hint" id="amountHint"></div>
+
+        <div class="lbl">Tanggal bayar</div>
+        <div class="field">
+          <input type="date" id="dateInput">
+        </div>
+
+        <div class="lbl">Jatuh tempo berikutnya</div>
+        <div class="field">
+          <input type="date" id="dueAfterInput" onchange="updateActiveUntil()">
+        </div>
+        <div class="hint" id="dueAfterHint">Otomatis +1 bulan dari jatuh tempo sekarang. Ubah bila perlu.</div>
+
+        <div class="lbl">Metode pembayaran</div>
+        <div class="methods" id="methods">
+          <div class="method sel" data-m="cash">Tunai</div>
+          <div class="method" data-m="transfer">Transfer</div>
+          <div class="method" data-m="qris">QRIS</div>
+        </div>
+
+        <div class="lbl">Catatan (opsional)</div>
+        <div class="field">
+          <input type="text" id="noteInput" placeholder="mis. bayar via BCA">
+        </div>
+
+        <div class="lbl">Kirim notifikasi pembayaran</div>
+        <label class="notif-check" id="waCheckWrap"><input type="checkbox" id="sendWa"><span class="nc-box"></span><span class="nc-txt"><b>WhatsApp</b> — kirim konfirmasi pembayaran ke pelanggan</span></label>
+        <label class="notif-check" id="emailCheckWrap"><input type="checkbox" id="sendEmail"><span class="nc-box"></span><span class="nc-txt"><b>Email</b> — kirim kwitansi/konfirmasi ke email pelanggan</span></label>
+        <div class="hint" id="notifHint"></div>
+
+        <button class="submit" id="submitBtn" onclick="submitPayment()">Simpan Pembayaran</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="success" id="successOverlay">
+    <div class="sc-card">
+      <div class="sc-ic">
+        <div class="sc-ic-circle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="sc-check" d="M20 6L9 17l-5-5"/></svg></div>
+      </div>
+      <div class="sc-title sc-fade">Pembayaran Berhasil</div>
+      <div class="sc-sub sc-fade">Transaksi telah tercatat</div>
+      <div class="sc-amount sc-fade" id="successAmt">Rp 0</div>
+
+      <div class="sc-divider sc-fade"></div>
+      <div class="sc-det-h sc-fade">Detail Transaksi</div>
+      <div class="sc-row sc-fade"><span class="sc-k">Pelanggan</span><span class="sc-v" id="scName">—</span></div>
+      <div class="sc-row sc-fade"><span class="sc-k">No. Invoice</span><span class="sc-v" id="scInv">—</span></div>
+      <div class="sc-row sc-fade"><span class="sc-k">Tanggal</span><span class="sc-v" id="scDate">—</span></div>
+      <div class="sc-row sc-fade"><span class="sc-k">Metode</span><span class="sc-v" id="scMethod">—</span></div>
+
+      <div style="text-align:center;">
+        <span class="sc-badge sc-fade"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>TERVERIFIKASI</span>
+      </div>
+
+      <button class="sc-done sc-fade" onclick="closeOrList()">Selesai</button>
+      <div><button class="sc-again sc-fade" onclick="resetForm()">Catat pembayaran lain</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    function inSheet(){ try{ return window.parent && window.parent!==window; }catch(_){ return false; } }
+    function closeOrList(){ if(inSheet()){ try{ window.parent.postMessage({type:'close-payment-sheet'},'*'); return; }catch(_){} } if(history.length>1)history.back(); else location.href='/mobile/payments'; }
+    async function api(url, opts={}){
+      const t=getToken();
+      const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}, opts.headers||{});
+      try{ const r=await fetch(url,{credentials:'include',headers,...opts});
+        if(r.status===401){ location.href='/login'; return null; }
+        const txt=await r.text(); let data=null; try{ data=txt?JSON.parse(txt):null; }catch(_){}
+        return {status:r.status, data};
+      }catch(e){ return {status:0, data:null}; }
+    }
+    function fmtRp(n){ n=Number(n)||0; return 'Rp '+n.toLocaleString('id-ID'); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function toast(msg,type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type?' '+type:''); setTimeout(()=>t.classList.remove('show'),2600); }
+
+    let _selected=null, _method='cash', _amount=0, _submitting=false;
+    const MONTHS=['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    // Set tanggal bayar default = hari ini
+    (function(){ const d=new Date(); const el=document.getElementById('dateInput'); if(el) el.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); })();
+
+    function invStatusInfo(inv){
+      const st=(inv.status||'').toLowerCase();
+      const due=inv.due_date?new Date(inv.due_date):null;
+      const today=new Date(new Date().toDateString());
+      if(due && !isNaN(due) && due < today) return {cls:'ist-over',lbl:'Lewat tempo'};
+      return {cls:'ist-unpaid',lbl:'Belum bayar'};
+    }
+    function fmtDueShort(s){ if(!s)return'–'; const d=new Date(s); if(isNaN(d))return String(s).slice(0,10); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+    function daysDiff(s){ if(!s)return null; const d=new Date(s); if(isNaN(d))return null; const t=new Date(new Date().toDateString()); return Math.round((d-t)/86400000); }
+    function invCard(inv){
+      const nm=(inv.customer&&inv.customer.name)||inv.customer_name||inv.name||'Pelanggan';
+      const cid=(inv.customer&&inv.customer.customer_id)||inv.customer_id||'';
+      const no=inv.invoice_number||inv.number||('#'+inv.id);
+      const total=inv.total||inv.amount||0;
+      const init=(nm[0]||'?').toUpperCase();
+      const sel=(_selected&&_selected.id===inv.id)?' sel':'';
+      const si=invStatusInfo(inv);
+      const dd=daysDiff(inv.due_date);
+      let dueExtra='';
+      if(dd!==null){ if(dd<0)dueExtra=' · telat '+Math.abs(dd)+'h'; else if(dd===0)dueExtra=' · hari ini'; else dueExtra=' · '+dd+'h lagi'; }
+      const periode=(inv.period_month&&inv.period_year)?(MONTHS[inv.period_month]+' '+inv.period_year):'';
+      return '<div class="inv'+sel+'" data-id="'+inv.id+'" onclick="selectInvoice('+inv.id+')">'+
+        '<div class="inv-av">'+esc(init)+'</div>'+
+        '<div class="inv-body">'+
+          '<div class="inv-top-row"><div class="inv-t">'+esc(nm)+'</div><span class="ist '+si.cls+'">'+si.lbl+'</span></div>'+
+          '<div class="inv-s">'+esc(no)+(cid?(' · '+esc(cid)):'')+'</div>'+
+          '<div class="inv-due"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+(periode?('Periode '+esc(periode)+' · '):'')+'JT '+fmtDueShort(inv.due_date)+dueExtra+'</div>'+
+        '</div>'+
+        '<div class="inv-amt">'+fmtRp(total)+'</div>'+
+      '</div>';
+    }
+
+    let _invoices=[];
+    async function loadInvoices(search){
+      // Ambil invoice belum lunas: unpaid (belum jatuh tempo) + overdue (lewat tempo),
+      // supaya kolektor bisa membayar invoice apa pun yang masih tertunggak.
+      const mk=(st)=>{ const qs=new URLSearchParams(); qs.set('status',st); qs.set('limit','30'); if(search)qs.set('search',search); return '/api/billing/invoices?'+qs.toString(); };
+      const [r1,r2]=await Promise.all([api(mk('unpaid')), api(mk('overdue'))]);
+      const pick=(r)=>(r.data&&r.data.success)?(r.data.data&&r.data.data.rows?r.data.data.rows:(Array.isArray(r.data.data)?r.data.data:[])):[];
+      const merged=[]; const seen={};
+      pick(r1).concat(pick(r2)).forEach(x=>{ if(!seen[x.id]){ seen[x.id]=1; merged.push(x); } });
+      // urutkan: jatuh tempo terlama dulu
+      merged.sort((a,b)=>String(a.due_date||'').localeCompare(String(b.due_date||'')));
+      _invoices=merged;
+      const list=document.getElementById('invList');
+      if(merged.length){ list.innerHTML=merged.map(invCard).join(''); }
+      else{ list.innerHTML='<div class="empty">Tidak ada invoice belum lunas</div>'; }
+    }
+
+    // Tambah 1 bulan dengan mempertahankan tanggal (clamp bila bulan lebih pendek).
+    // Meniru addOneMonthKeepDay() di server agar default-nya sama persis.
+    function addOneMonthKeepDay(dateStr){
+      if(!dateStr) return '';
+      const d=new Date(dateStr);
+      if(isNaN(d.getTime())) return '';
+      const day=d.getDate();
+      const target=new Date(d.getFullYear(), d.getMonth()+1, 1);
+      const lastDay=new Date(target.getFullYear(), target.getMonth()+1, 0).getDate();
+      target.setDate(Math.min(day, lastDay));
+      const y=target.getFullYear();
+      const m=String(target.getMonth()+1).padStart(2,'0');
+      const dd=String(target.getDate()).padStart(2,'0');
+      return y+'-'+m+'-'+dd;
+    }
+
+    // "Aktif sampai" = tanggal jatuh tempo BERIKUTNYA. Model bisnisnya: siklus
+    // layanan berjalan dari jatuh tempo ke jatuh tempo (mis. pasang 1 Jan →
+    // jatuh tempo 1 Feb → setelah bayar, aktif s/d 1 Feb berikutnya).
+    // Bukan "akhir bulan periode" — itu keliru untuk pelanggan yang jatuh
+    // temponya di tengah bulan (mis. tgl 15).
+    function updateActiveUntil(){
+      const el=document.getElementById('piActive');
+      if(!el) return;
+      const nextDue=(document.getElementById('dueAfterInput')||{}).value||'';
+      el.textContent = nextDue ? fmtDateLong(nextDue) : '–';
+      // Pastikan baris info tampil walau periode invoice tidak terisi
+      const pinfo=document.getElementById('periodInfo');
+      if(pinfo && nextDue) pinfo.style.display='block';
+    }
+
+    function selectInvoice(id){
+      _selected=_invoices.find(x=>x.id===id); if(!_selected) return;
+      document.querySelectorAll('.inv').forEach(el=>el.classList.toggle('sel', parseInt(el.dataset.id)===id));
+      const total=_selected.total||_selected.amount||0;
+      const nm=(_selected.customer&&_selected.customer.name)||_selected.customer_name||'Pelanggan';
+      document.getElementById('formArea').style.display='block';
+      document.getElementById('amountInvInfo').textContent=nm+' · '+(_selected.invoice_number||('#'+_selected.id));
+      // default amount = total invoice
+      document.getElementById('amountInput').value=total.toLocaleString('id-ID');
+      _amount=total; updateAmountDisplay();
+      document.getElementById('amountHint').textContent='Tagihan: '+fmtRp(total);
+
+      // Jatuh tempo BERIKUTNYA (default +1 bulan dari jatuh tempo pelanggan saat
+      // ini; fallback ke jatuh tempo invoice). Ini yang membuat status pelanggan
+      // keluar dari 'overdue' setelah bayar.
+      const custDue=(_selected.customer && _selected.customer.due_date) || null;
+      const baseDue=custDue || _selected.due_date || null;
+      const nextDue=addOneMonthKeepDay(baseDue);
+      const dueEl=document.getElementById('dueAfterInput');
+      if(dueEl){
+        dueEl.value=nextDue||'';
+        document.getElementById('dueAfterHint').textContent =
+          baseDue ? ('Dari jatuh tempo '+fmtDateLong(baseDue)+' → '+(nextDue?fmtDateLong(nextDue):'-'))
+                  : 'Isi tanggal jatuh tempo berikutnya.';
+      }
+
+      // Info periode & masa aktif
+      const pm=_selected.period_month, py=_selected.period_year;
+      const pinfo=document.getElementById('periodInfo');
+      if(pm&&py){
+        pinfo.style.display='block';
+        document.getElementById('piPeriod').textContent=MONTHS[pm]+' '+py;
+        // Jatuh tempo saat ini
+        const due=_selected.due_date;
+        document.getElementById('piDue').textContent=due?fmtDateLong(due):'–';
+      } else {
+        pinfo.style.display='none';
+      }
+      // "Aktif sampai" mengikuti JATUH TEMPO BERIKUTNYA (siklus jatuh tempo →
+      // jatuh tempo), bukan akhir bulan periode. Mis. jatuh tempo 15 Juli →
+      // setelah bayar, layanan aktif s/d 15 Agustus.
+      updateActiveUntil();
+
+      document.getElementById('formArea').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+      // Aktif/nonaktifkan checkbox notif sesuai ketersediaan kontak pelanggan
+      const cust=_selected.customer||{};
+      const hasPhone=!!(cust.phone||_selected.customer_phone);
+      const hasEmail=!!(cust.email||_selected.customer_email);
+      const waWrap=document.getElementById('waCheckWrap'), emWrap=document.getElementById('emailCheckWrap');
+      const waCb=document.getElementById('sendWa'), emCb=document.getElementById('sendEmail');
+      waWrap.classList.toggle('dis',!hasPhone); waCb.disabled=!hasPhone; if(!hasPhone)waCb.checked=false;
+      emWrap.classList.toggle('dis',!hasEmail); emCb.disabled=!hasEmail; if(!hasEmail)emCb.checked=false;
+      const hints=[]; if(!hasPhone)hints.push('pelanggan belum punya no. HP'); if(!hasEmail)hints.push('belum punya email');
+      document.getElementById('notifHint').textContent=hints.length?('Catatan: '+hints.join(' & ')+'.'):'';
+    }
+    function fmtDateLong(s){ if(!s)return'–'; const d=new Date(s); if(isNaN(d))return String(s).slice(0,10); return d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}); }
+
+    function onAmountInput(el){
+      const digits=(el.value||'').replace(/[^0-9]/g,'');
+      _amount=parseInt(digits||'0',10);
+      el.value=_amount?_amount.toLocaleString('id-ID'):'';
+      updateAmountDisplay();
+    }
+    function updateAmountDisplay(){ document.getElementById('amountDisplay').textContent=(_amount||0).toLocaleString('id-ID'); }
+
+    document.getElementById('methods').addEventListener('click', function(e){
+      const m=e.target.closest('.method'); if(!m) return;
+      this.querySelectorAll('.method').forEach(x=>x.classList.remove('sel'));
+      m.classList.add('sel'); _method=m.dataset.m;
+    });
+
+    let _t=null;
+    document.getElementById('invSearch').addEventListener('input', function(){
+      clearTimeout(_t); const v=this.value.trim();
+      _t=setTimeout(()=>loadInvoices(v), 350);
+    });
+
+    async function submitPayment(){
+      if(_submitting) return;
+      if(!_selected){ toast('Pilih invoice dulu','err'); return; }
+      if(!_amount||_amount<=0){ toast('Jumlah harus lebih dari 0','err'); return; }
+
+      // Jatuh tempo berikutnya WAJIB — inilah yang memajukan customer.due_date
+      // dan mengembalikan status pelanggan dari overdue/isolir ke aktif.
+      const dueAfter=(document.getElementById('dueAfterInput')||{}).value||'';
+      if(!dueAfter){ toast('Isi tanggal jatuh tempo berikutnya','err'); return; }
+
+      // customer_id wajib untuk endpoint /payments/record
+      const custId=(_selected.customer && _selected.customer.id) || _selected.customer_id || null;
+      if(!custId){ toast('Data pelanggan tidak ditemukan pada invoice ini','err'); return; }
+
+      _submitting=true;
+      const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.textContent='Menyimpan…';
+
+      const wantWa=document.getElementById('sendWa').checked && !document.getElementById('sendWa').disabled;
+      const wantEmail=document.getElementById('sendEmail').checked && !document.getElementById('sendEmail').disabled;
+
+      // PENTING: pakai /payments/record (bukan /billing/payment).
+      // /billing/payment hanya membuat Payment + set invoice 'paid' — ia TIDAK
+      // memajukan customer.due_date, sehingga pelanggan tetap terlihat overdue.
+      // /payments/record (yang juga dipakai desktop) melakukan semuanya dalam
+      // satu transaksi: buat payment, invoice 'paid', customer.due_date +1 bulan,
+      // status 'active', selaraskan billing_date, dan restore bila terisolir.
+      const body={
+        customer_id:   custId,
+        amount:        _amount,
+        payment_date:  document.getElementById('dateInput').value || undefined,
+        method:        _method,
+        bank:          '',
+        reference_no:  '',
+        due_date_after: dueAfter,
+        send_wa:       wantWa ? 1 : 0,
+        send_email:    wantEmail ? 1 : 0,
+        notes:         document.getElementById('noteInput').value || '',
+        period_month:  _selected.period_month,
+        period_year:   _selected.period_year
+      };
+
+      const r=await api('/api/payments/record', { method:'POST', body:JSON.stringify(body) });
+      _submitting=false; btn.disabled=false; btn.textContent='Simpan Pembayaran';
+
+      const ok = r && r.data && r.data.success;
+      if(ok){
+        const nm=(_selected.customer&&_selected.customer.name)||_selected.customer_name||'Pelanggan';
+        const methodLbl={cash:'Tunai',transfer:'Transfer',qris:'QRIS'}[_method]||_method;
+        const payDate=document.getElementById('dateInput').value;
+        document.getElementById('successAmt').textContent=fmtRp(_amount);
+        document.getElementById('scName').textContent=nm;
+        document.getElementById('scInv').textContent=_selected.invoice_number||('#'+_selected.id);
+        document.getElementById('scDate').textContent=payDate?fmtDateLong(payDate):fmtDateLong(new Date().toISOString().slice(0,10));
+        document.getElementById('scMethod').textContent=methodLbl;
+        const sc=document.getElementById('successOverlay');
+        // Retrigger animasi: lepas show, paksa reflow, pasang lagi — supaya
+        // stagger & centang berjalan ulang tiap pembayaran, bukan hanya sekali.
+        sc.classList.remove('show'); void sc.offsetWidth;
+        sc.classList.add('show');
+        // Notifikasi WA/Email sudah ditangani server (send_wa/send_email), jadi
+        // tidak perlu memanggil endpoint kirim terpisah lagi di sini.
+        try{ if(window.parent && window.parent!==window){ window.parent.postMessage({type:'payment-saved'},'*'); } }catch(_){}
+      } else {
+        toast((r&&r.data&&r.data.message)||'Gagal menyimpan pembayaran','err');
+      }
+    }
+
+    function resetForm(){
+      document.getElementById('successOverlay').classList.remove('show');
+      _selected=null; _amount=0; _method='cash';
+      document.getElementById('formArea').style.display='none';
+      document.getElementById('periodInfo').style.display='none';
+      document.getElementById('invSearch').value='';
+      document.getElementById('noteInput').value='';
+      const da=document.getElementById('dueAfterInput'); if(da) da.value='';
+      const dh=document.getElementById('dueAfterHint'); if(dh) dh.textContent='Otomatis +1 bulan dari jatuh tempo sekarang. Ubah bila perlu.';
+      const wa=document.getElementById('sendWa'), em=document.getElementById('sendEmail');
+      if(wa)wa.checked=false; if(em)em.checked=false;
+      const nh=document.getElementById('notifHint'); if(nh)nh.textContent='';
+      const d=new Date(); document.getElementById('dateInput').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      document.querySelectorAll('.method').forEach((x,i)=>x.classList.toggle('sel',i===0));
+      loadInvoices('');
+    }
+
+    loadInvoices('');
+  </script>
+</body>
+</html>

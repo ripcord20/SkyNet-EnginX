@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#eff8ff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;display:flex;align-items:center;justify-content:space-between;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .refresh{width:42px;height:42px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--blue);cursor:pointer;box-shadow:0 5px 14px -8px rgba(30,60,120,.2);}
+    .refresh svg{width:19px;height:19px;} .refresh.spin svg{animation:spin 1s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .content{padding:4px 16px 20px;}
+    .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+    .kpi{background:#fff;border-radius:16px;padding:14px 15px 14px 16px;position:relative;overflow:hidden;box-shadow:0 6px 16px -10px rgba(30,60,120,.16);}
+    .kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
+    .kpi.blue::before{background:var(--blue);}.kpi.teal::before{background:var(--teal);}.kpi.green::before{background:var(--green);}.kpi.amber::before{background:var(--amber);}.kpi.red::before{background:var(--red);}
+    .kpi-ic{width:32px;height:32px;border-radius:10px;background:#f5f7fb;color:#3a4a68;display:flex;align-items:center;justify-content:center;margin-bottom:9px;}
+    .kpi-ic svg{width:17px;height:17px;stroke-width:1.8;}
+    .kpi-val{font-size:20px;font-weight:800;letter-spacing:-.5px;}
+    .kpi-lbl{font-size:11px;color:var(--muted);margin-top:3px;font-weight:500;}
+    .sec{font-size:14px;font-weight:800;margin:14px 2px 12px;letter-spacing:-.2px;}
+    .status-row{display:flex;align-items:center;gap:11px;background:#fff;border-radius:15px;padding:14px 15px;margin-bottom:10px;box-shadow:0 5px 14px -9px rgba(30,60,120,.14);}
+    .st-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+    .st-on{background:var(--green);box-shadow:0 0 0 4px rgba(31,184,119,.15);}
+    .st-off{background:var(--red);box-shadow:0 0 0 4px rgba(242,84,91,.15);}
+    .st-warn{background:var(--amber);box-shadow:0 0 0 4px rgba(245,166,35,.15);}
+    .st-body{flex:1;} .st-t{font-size:13.5px;font-weight:700;} .st-s{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .st-val{font-size:14px;font-weight:800;}
+    .skel{background:linear-gradient(90deg,#e7edf6 25%,#f2f6fb 50%,#e7edf6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;box-shadow:0 -6px 22px rgba(30,60,120,.07);}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;cursor:pointer;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;pointer-events:none;}
+    .toast.show{opacity:1;}
+    .live-dot{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:var(--red);letter-spacing:.5px;}
+    .live-dot .ld{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .rt-card{background:#fff;border:1px solid #eef1f6;border-radius:18px;padding:15px;margin-bottom:8px;}
+    .rt-sel{width:100%;padding:11px 13px;border:1px solid #eef1f6;background:#fbfcfe;border-radius:12px;font-size:13.5px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;margin-bottom:13px;}
+    .rt-legend{display:flex;gap:18px;margin-bottom:8px;}
+    .rt-legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+    .rt-legend i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+    .rt-legend b{color:var(--ink);font-size:12px;font-variant-numeric:tabular-nums;}
+    .rt-chart{width:100%;height:130px;overflow:visible;display:block;}
+    .iface-row{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:12px 14px;margin-bottom:9px;}
+    .if-ic{width:34px;height:34px;border-radius:10px;background:#f4f6fa;color:#3a4a68;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .if-ic svg{width:17px;height:17px;}
+    .if-body{flex:1;min-width:0;}
+    .if-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .if-rates{font-size:11px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums;}
+    .if-rates .rx{color:#0ea5e9;font-weight:700;} .if-rates .tx{color:#38bdf8;font-weight:700;}
+    /* Resource gauges */
+    .res-dev{padding:8px 12px;border:1px solid #eef1f6;background:#fff;border-radius:11px;font-size:12px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;max-width:150px;}
+    .gauge-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:12px;}
+    .gauge-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:14px 10px;text-align:center;}
+    .gauge-title{font-size:11.5px;font-weight:700;color:#5a6885;margin-bottom:10px;}
+    .gauge{position:relative;width:112px;height:112px;margin:0 auto;}
+    .gauge svg{width:112px;height:112px;transform:rotate(-90deg);}
+    .gauge .g-track{fill:none;stroke:#eef1f5;stroke-width:11;}
+    .gauge .g-arc{fill:none;stroke-width:11;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.22,.61,.36,1);}
+    .gauge .g-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .gauge .g-pct{font-size:22px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+    .gauge .g-sub{font-size:9.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+    .res-info{background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:11.5px;color:#6b7a97;line-height:1.7;}
+    .res-info .ri-row{display:flex;justify-content:space-between;gap:12px;}
+    .res-info b{color:#3a4a68;font-weight:700;}
+    /* Performance metrics */
+    .perf-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:14px 15px;margin-bottom:11px;}
+    .perf-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+    .perf-title{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;}
+    .perf-stats{display:flex;gap:11px;font-size:10px;color:var(--muted);font-weight:600;}
+    .perf-stats b{font-variant-numeric:tabular-nums;font-size:11px;color:#3a4a68;}
+    .perf-chart{width:100%;height:128px;display:block;overflow:visible;}
+    .perf-grid-line{stroke:#f0f3f8;stroke-width:1;}
+    .perf-axis{font-size:8px;fill:#b3bdd0;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div><div class="htitle">NOC / Jaringan</div><div class="hsub" id="nocUpdated">Memuat…</div></div>
+      <div class="refresh" id="refreshBtn" onclick="loadNoc(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+    </div>
+    <div class="content">
+      <div class="kpi-grid">
+        <div class="kpi blue"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></div><div class="kpi-val" id="nocDevTotal">–</div><div class="kpi-lbl">Total Device</div></div>
+        <div class="kpi green"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><div class="kpi-val" id="nocDevUp" style="color:var(--green);">–</div><div class="kpi-lbl">Device UP</div></div>
+        <div class="kpi red"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 20 0M5 12.55a11 11 0 0 1 14.08 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="kpi-val" id="nocDevDown" style="color:var(--red);">–</div><div class="kpi-lbl">Device Down</div></div>
+        <div class="kpi amber"><div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="kpi-val" id="nocOntOnline">–</div><div class="kpi-lbl">ONT Online</div></div>
+      </div>
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Resource Perangkat</span>
+        <select class="res-dev" id="resDev" onchange="loadResources()"><option value="">Router utama</option></select>
+      </div>
+      <div class="gauge-grid" id="gaugeGrid">
+        <div class="gauge-card"><div class="gauge-title">Router CPU</div><div class="gauge" id="gRouterCpu"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Router Memory</div><div class="gauge" id="gRouterMem"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Server CPU</div><div class="gauge" id="gServerCpu"></div></div>
+        <div class="gauge-card"><div class="gauge-title">Server Memory</div><div class="gauge" id="gServerMem"></div></div>
+      </div>
+      <div class="res-info" id="resInfo"></div>
+
+      <!-- Performance metrics real-time -->
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Performance Metrics</span>
+        
+      </div>
+      <div class="perf-card">
+        <div class="perf-head"><span class="perf-title" style="color:#f5a623;">CPU Usage</span>
+          <div class="perf-stats"><span>CUR <b id="cpuCur" style="color:#f5a623;">–</b></span><span>AVG <b id="cpuAvg">–</b></span><span>MAX <b id="cpuMax">–</b></span></div>
+        </div>
+        <svg class="perf-chart" id="cpuChart" viewBox="0 0 320 118" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="perf-card">
+        <div class="perf-head"><span class="perf-title" style="color:#0ea5e9;">Memory Usage</span>
+          <div class="perf-stats"><span>CUR <b id="memCur" style="color:#0ea5e9;">–</b></span><span>AVG <b id="memAvg">–</b></span><span>MAX <b id="memMax">–</b></span></div>
+        </div>
+        <svg class="perf-chart" id="memChart" viewBox="0 0 320 118" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <div class="sec">Kesehatan Jaringan</div>
+      <div id="nocHealth">
+        <div class="status-row"><div class="skel" style="width:11px;height:11px;border-radius:50%;"></div><div class="st-body"><div class="skel" style="width:120px;height:13px;"></div></div></div>
+        <div class="status-row"><div class="skel" style="width:11px;height:11px;border-radius:50%;"></div><div class="st-body"><div class="skel" style="width:120px;height:13px;"></div></div></div>
+      </div>
+
+      <!-- Real-time traffic interface -->
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>Traffic Real-time</span>
+        
+      </div>
+      <div class="rt-card">
+        <select class="rt-sel" id="devSel" onchange="onDevChange()"><option value="">Semua router</option></select>
+        <select class="rt-sel" id="ifaceSel" onchange="onIfaceChange()"><option value="">Memuat interface…</option></select>
+        <div class="rt-legend">
+          <span><i style="background:#0ea5e9;"></i>Download <b id="rtRx">0 bps</b></span>
+          <span><i style="background:#38bdf8;"></i>Upload <b id="rtTx">0 bps</b></span>
+        </div>
+        <svg class="rt-chart" id="rtChart" viewBox="0 0 320 130" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="sec">Interface MikroTik</div>
+      <div id="ifaceList">
+        <div class="status-row"><div class="skel" style="width:11px;height:11px;border-radius:50%;"></div><div class="st-body"><div class="skel" style="width:120px;height:13px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url){ const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}); try{ const r=await fetch(url,{credentials:'include',headers}); if(r.status===401){location.href='/login';return null;} const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;} }catch(e){return null;} }
+    function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+    function row(state,label,detail){ const cls=state==='on'?'st-on':state==='warn'?'st-warn':'st-off'; return '<div class="status-row"><div class="st-dot '+cls+'"></div><div class="st-body"><div class="st-t">'+label+'</div><div class="st-s">'+detail+'</div></div></div>'; }
+    async function loadNoc(manual){
+      const btn=document.getElementById('refreshBtn'); if(manual)btn.classList.add('spin');
+      const j=await api('/api/noc/overview');
+      if(j&&j.success){
+        const d=j.data;
+        const c=d.customers||{}, dev=d.devices||{}, ont=d.ont||{}, tk=d.tickets||{};
+        document.getElementById('nocDevTotal').textContent=dev.total!=null?dev.total:'–';
+        document.getElementById('nocDevUp').textContent=dev.online!=null?dev.online:'–';
+        document.getElementById('nocDevDown').textContent=dev.offline!=null?dev.offline:'–';
+        document.getElementById('nocOntOnline').textContent=(ont.online!=null?ont.online:'–')+(ont.total!=null?('/'+ont.total):'');
+        let html='';
+        html+=row(dev.offline===0?'on':(dev.online>0?'warn':'off'),'Perangkat MikroTik',(dev.online||0)+' online · '+(dev.offline||0)+' offline dari '+(dev.total||0));
+        html+=row(ont.offline===0&&ont.online>0?'on':(ont.online>0?'warn':'off'),'ONT / ONU',(ont.online||0)+' online · '+(ont.offline||0)+' offline'+(ont.health_pct!=null?(' · '+ont.health_pct+'%'):''));
+        html+=row(c.isolated===0?'on':'warn','Pelanggan terisolir',(c.isolated||0)+' terisolir · '+(c.suspended||0)+' suspend');
+        if(d.infrastructure) html+=row('on','Titik infrastruktur',(d.infrastructure.total||0)+' titik terdaftar');
+        document.getElementById('nocHealth').innerHTML=html;
+        document.getElementById('nocUpdated').textContent='Diperbarui '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+      } else { document.getElementById('nocUpdated').textContent='Gagal memuat data'; }
+      if(manual){ setTimeout(()=>btn.classList.remove('spin'),600); toast('Data diperbarui'); }
+    }
+    loadNoc(false); setInterval(()=>loadNoc(false),30000);
+
+    // ── Resource gauges ──
+    function gaugeColor(pct){ if(pct>=85)return '#f2545b'; if(pct>=65)return '#f5a623'; return '#38bdf8'; }
+    function drawGauge(elId,pct,subLabel){
+      pct=Math.max(0,Math.min(100,Math.round(pct||0)));
+      const el=document.getElementById(elId); if(!el)return;
+      const R=45, C=2*Math.PI*R, off=C-(C*pct/100), col=gaugeColor(pct);
+      el.innerHTML='<svg viewBox="0 0 112 112"><circle class="g-track" cx="56" cy="56" r="'+R+'"/>'+
+        '<circle class="g-arc" cx="56" cy="56" r="'+R+'" stroke="'+col+'" stroke-dasharray="'+C+'" stroke-dashoffset="'+C+'"/></svg>'+
+        '<div class="g-center"><div class="g-pct" style="color:'+col+';">'+pct+'<span style="font-size:13px;">%</span></div><div class="g-sub">'+(subLabel||'used')+'</div></div>';
+      // animasi: set dashoffset setelah paint
+      requestAnimationFrame(()=>{ const arc=el.querySelector('.g-arc'); if(arc)arc.style.strokeDashoffset=off; });
+    }
+    function fmtMB(bytes){ bytes=Number(bytes)||0; if(bytes>=1073741824)return (bytes/1073741824).toFixed(1)+' GB'; if(bytes>=1048576)return (bytes/1048576).toFixed(0)+' MB'; return (bytes/1024).toFixed(0)+' KB'; }
+    // ── Performance metrics history charts ──
+    let _cpuHist=[], _memHist=[], _tHist=[]; const PMAX=40;
+    function drawPerf(svgId, hist, color){
+      const svg=document.getElementById(svgId); if(!svg)return;
+      const W=320,H=118,padL=26,padR=8,padT=10,padB=18;
+      const plotW=W-padL-padR, plotH=H-padT-padB;
+      // horizontal grid + y labels
+      let grid='';
+      [0,25,50,75,100].forEach(function(v){ const y=padT+plotH*(1-v/100); grid+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#e2eefb" stroke-width="1"'+(v===0?'':' stroke-dasharray="3 4"')+'/><text x="'+(padL-5)+'" y="'+(y+3)+'" text-anchor="end" font-size="7.5" fill="#b3bdd0">'+v+'</text>'; });
+      // vertical grid (5 kolom)
+      for(let i=0;i<=4;i++){ const x=padL+plotW*i/4; grid+='<line x1="'+x+'" y1="'+padT+'" x2="'+x+'" y2="'+(padT+plotH)+'" stroke="#f3f6fb" stroke-width="1"/>'; }
+      if(hist.length<2){ svg.innerHTML=grid; return; }
+      const n=hist.length;
+      const xs=i=>padL+(i*plotW/(PMAX-1));
+      const ys=v=>padT+plotH*(1-Math.max(0,Math.min(100,v))/100);
+      const start=PMAX-n;
+      let d='M '+xs(start)+' '+ys(hist[0]);
+      for(let i=1;i<n;i++){ const x0=xs(start+i-1),y0=ys(hist[i-1]),x1=xs(start+i),y1=ys(hist[i]);const cx=(x0+x1)/2; d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1; }
+      const area=d+' L '+xs(start+n-1)+' '+(padT+plotH)+' L '+xs(start)+' '+(padT+plotH)+' Z';
+      const gid=svgId+'grad', glow=svgId+'glow';
+      const lastX=xs(start+n-1), lastY=ys(hist[n-1]);
+      // time axis labels (kiri = paling lama, kanan = sekarang)
+      let tlabels='';
+      if(_tHist.length){ const idxs=[0, Math.floor(n/2), n-1]; idxs.forEach(function(ii){ const t=_tHist[ii]; if(t){ const x=xs(start+ii); tlabels+='<text x="'+x+'" y="'+(H-5)+'" text-anchor="middle" font-size="7.5" fill="#b3bdd0">'+t+'</text>'; } }); }
+      svg.innerHTML=grid+
+        '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity=".28"/><stop offset="70%" stop-color="'+color+'" stop-opacity=".05"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient>'+
+        '<filter id="'+glow+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'+
+        '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+        '<path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#'+glow+')"/>'+
+        '<circle cx="'+lastX+'" cy="'+lastY+'" r="4.5" fill="'+color+'" opacity=".18"/>'+
+        '<circle cx="'+lastX+'" cy="'+lastY+'" r="2.6" fill="'+color+'"/><circle cx="'+lastX+'" cy="'+lastY+'" r="2.6" fill="#fff" opacity=".35"/>'+
+        tlabels;
+    }
+    function pushPerf(hist,val){ hist.push(val); if(hist.length>PMAX)hist.shift(); }
+    function perfStats(hist){ if(!hist.length)return{cur:0,avg:0,max:0}; const cur=hist[hist.length-1]; const avg=hist.reduce((a,b)=>a+b,0)/hist.length; const max=Math.max.apply(null,hist); return {cur:Math.round(cur),avg:Math.round(avg),max:Math.round(max)}; }
+    function updatePerf(cpu,mem){
+      pushPerf(_cpuHist,cpu||0); pushPerf(_memHist,mem||0);
+      const now=new Date(); _tHist.push(now.toTimeString().slice(0,5)); if(_tHist.length>PMAX)_tHist.shift();
+      const cs=perfStats(_cpuHist), ms=perfStats(_memHist);
+      document.getElementById('cpuCur').textContent=cs.cur+'%'; document.getElementById('cpuAvg').textContent=cs.avg+'%'; document.getElementById('cpuMax').textContent=cs.max+'%';
+      document.getElementById('memCur').textContent=ms.cur+'%'; document.getElementById('memAvg').textContent=ms.avg+'%'; document.getElementById('memMax').textContent=ms.max+'%';
+      drawPerf('cpuChart',_cpuHist,'#f5a623'); drawPerf('memChart',_memHist,'#0ea5e9');
+    }
+
+    async function loadResDevices(){
+      const r=await api('/api/devices/mikrotik-list');
+      const sel=document.getElementById('resDev');
+      const rows=(r&&r.success)?(Array.isArray(r.data)?r.data:(r.data&&r.data.rows?r.data.rows:[])):(Array.isArray(r)?r:[]);
+      if(rows.length){ sel.innerHTML='<option value="">Router utama</option>'+rows.map(d=>'<option value="'+d.id+'">'+(d.name||('Router #'+d.id))+'</option>').join(''); }
+    }
+    async function loadResources(){
+      const dev=document.getElementById('resDev').value;
+      const j=await api('/api/resources/all'+(dev?('?device_id='+encodeURIComponent(dev)):''));
+      if(j&&j.success&&j.data){
+        const rt=j.data.router, sv=j.data.server;
+        if(rt){
+          drawGauge('gRouterCpu', rt.cpuLoad!=null?rt.cpuLoad:0, 'CPU load');
+          drawGauge('gRouterMem', rt.memoryUsagePercent!=null?rt.memoryUsagePercent:0, fmtMB(rt.usedMemory)+' / '+fmtMB(rt.totalMemory));
+          updatePerf(rt.cpuLoad||0, rt.memoryUsagePercent||0);
+        } else { drawGauge('gRouterCpu',0,'—'); drawGauge('gRouterMem',0,'—'); }
+        if(sv){
+          drawGauge('gServerCpu', sv.cpuLoadPercent!=null?sv.cpuLoadPercent:0, sv.cpuCount+' core');
+          drawGauge('gServerMem', sv.memoryUsagePercent!=null?sv.memoryUsagePercent:0, fmtMB(sv.usedMemory)+' / '+fmtMB(sv.totalMemory));
+        } else { drawGauge('gServerCpu',0,'—'); drawGauge('gServerMem',0,'—'); }
+        const info=document.getElementById('resInfo');
+        info.innerHTML=
+          (rt?('<div class="ri-row"><span>Router</span><b>'+esc(rt.identity||'MikroTik')+'</b></div>'+
+               '<div class="ri-row"><span>Versi / Board</span><b>'+esc(rt.version||'-')+' · '+esc(rt.boardName||'-')+'</b></div>'+
+               '<div class="ri-row"><span>Uptime</span><b>'+esc(rt.uptime||'-')+'</b></div>'):'')+
+          (sv?('<div class="ri-row"><span>Server</span><b>'+esc(sv.hostname||'-')+'</b></div>'+
+               '<div class="ri-row"><span>Server uptime</span><b>'+esc(sv.uptime||'-')+'</b></div>'):'');
+      } else {
+        ['gRouterCpu','gRouterMem','gServerCpu','gServerMem'].forEach(id=>drawGauge(id,0,'—'));
+        document.getElementById('resInfo').innerHTML='<div style="text-align:center;color:#7c93a0;">Data resource tidak tersedia</div>';
+      }
+    }
+    // reset histori saat ganti router
+    document.getElementById('resDev').addEventListener('change',function(){ _cpuHist=[]; _memHist=[]; _tHist=[]; });
+    loadResDevices(); loadResources();
+    setInterval(loadResources, 4000);
+
+    // ── Real-time traffic interface ──
+    function fmtbps(bits){ bits=Number(bits)||0; if(bits>=1e9)return (bits/1e9).toFixed(2)+' Gbps'; if(bits>=1e6)return (bits/1e6).toFixed(2)+' Mbps'; if(bits>=1e3)return (bits/1e3).toFixed(1)+' Kbps'; return Math.round(bits)+' bps'; }
+    let _iface='', _rxHist=[], _txHist=[], _ifaceLoaded=false, _device=''; const MAXPTS=30;
+    async function loadDevices(){
+      const r=await api('/api/devices/mikrotik-list');
+      const sel=document.getElementById('devSel');
+      const rows=(r&&r.success)?(Array.isArray(r.data)?r.data:(r.data&&r.data.rows?r.data.rows:[])):(Array.isArray(r)?r:[]);
+      if(rows.length){ sel.innerHTML='<option value="">Semua router</option>'+rows.map(d=>'<option value="'+d.id+'">'+(d.name||('Router #'+d.id))+'</option>').join(''); }
+    }
+    function onDevChange(){ _device=document.getElementById('devSel').value; _ifaceLoaded=false; _iface=''; _rxHist=[]; _txHist=[]; document.getElementById('rtChart').innerHTML=''; document.getElementById('ifaceSel').innerHTML='<option value="">Memuat interface…</option>'; pollTraffic(); }
+    function devQs(){ return _device?('?device_id='+encodeURIComponent(_device)):''; }
+    function drawRt(){
+      const svg=document.getElementById('rtChart'); const W=320,H=130,padT=8,padB=8,padL=4,padR=4;
+      if(_rxHist.length<2){ svg.innerHTML=''; return; }
+      const all=_rxHist.concat(_txHist); let max=Math.max.apply(null,all); if(max<=0)max=1; max*=1.15;
+      const n=_rxHist.length;
+      const xs=i=>padL+(i*(W-padL-padR)/(MAXPTS-1));
+      const ys=v=>padT+(H-padT-padB)*(1-v/max);
+      let grid=''; for(let i=1;i<4;i++){ const y=padT+(H-padT-padB)*i/4; grid+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#f0f3f8" stroke-width="1" stroke-dasharray="3 4"/>'; }
+      function path(arr){ let d='M '+xs(MAXPTS-n)+' '+ys(arr[0]); for(let i=1;i<n;i++){ const x0=xs(MAXPTS-n+i-1),y0=ys(arr[i-1]),x1=xs(MAXPTS-n+i),y1=ys(arr[i]);const cx=(x0+x1)/2; d+=' C '+cx+' '+y0+' '+cx+' '+y1+' '+x1+' '+y1;} return d; }
+      const rxP=path(_rxHist), txP=path(_txHist);
+      const rxArea=rxP+' L '+xs(MAXPTS-1)+' '+(H-padB)+' L '+xs(MAXPTS-n)+' '+(H-padB)+' Z';
+      const txArea=txP+' L '+xs(MAXPTS-1)+' '+(H-padB)+' L '+xs(MAXPTS-n)+' '+(H-padB)+' Z';
+      const rlx=xs(MAXPTS-1), rly=ys(_rxHist[n-1]), tlx=xs(MAXPTS-1), tly=ys(_txHist[n-1]);
+      svg.innerHTML=grid+'<defs>'+
+        '<linearGradient id="rtgR" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0ea5e9" stop-opacity=".26"/><stop offset="100%" stop-color="#0ea5e9" stop-opacity="0"/></linearGradient>'+
+        '<linearGradient id="rtgT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".20"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/></linearGradient>'+
+        '<filter id="rtGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>'+
+        '<path d="'+txArea+'" fill="url(#rtgT)"/>'+
+        '<path d="'+rxArea+'" fill="url(#rtgR)"/>'+
+        '<path d="'+txP+'" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#rtGlow)"/>'+
+        '<path d="'+rxP+'" fill="none" stroke="#0ea5e9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#rtGlow)"/>'+
+        '<circle cx="'+tlx+'" cy="'+tly+'" r="2.4" fill="#38bdf8"/>'+
+        '<circle cx="'+rlx+'" cy="'+rly+'" r="4" fill="#0ea5e9" opacity=".18"/><circle cx="'+rlx+'" cy="'+rly+'" r="2.5" fill="#0ea5e9"/>';
+    }
+    function ifaceIcon(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>'; }
+    async function pollTraffic(){
+      const j=await api('/api/mikrotik/interfaces/monitor'+devQs());
+      if(!j||!j.success)return;
+      const stats=j.data||[]; const ifaces=j.interfaces||[];
+      if(!_ifaceLoaded && ifaces.length){ const sel=document.getElementById('ifaceSel'); sel.innerHTML=ifaces.map(i=>'<option value="'+i.name+'">'+i.name+(i.comment?(' — '+i.comment):'')+'</option>').join(''); _iface=ifaces[0].name; sel.value=_iface; _ifaceLoaded=true; }
+      document.getElementById('ifaceList').innerHTML=stats.map(function(s){ return '<div class="iface-row"><div class="if-ic">'+ifaceIcon()+'</div><div class="if-body"><div class="if-name">'+s.name+'</div><div class="if-rates"><span class="rx">↓ '+fmtbps(s.rxBitsPerSecond)+'</span> &nbsp; <span class="tx">↑ '+fmtbps(s.txBitsPerSecond)+'</span></div></div></div>'; }).join('')||'<div style="padding:16px;text-align:center;color:#7c93a0;font-size:12.5px;">Tidak ada interface aktif</div>';
+      const cur=stats.find(s=>s.name===_iface);
+      if(cur){ _rxHist.push(cur.rxBitsPerSecond); _txHist.push(cur.txBitsPerSecond); if(_rxHist.length>MAXPTS)_rxHist.shift(); if(_txHist.length>MAXPTS)_txHist.shift(); document.getElementById('rtRx').textContent=fmtbps(cur.rxBitsPerSecond); document.getElementById('rtTx').textContent=fmtbps(cur.txBitsPerSecond); drawRt(); }
+    }
+    function onIfaceChange(){ _iface=document.getElementById('ifaceSel').value; _rxHist=[]; _txHist=[]; document.getElementById('rtChart').innerHTML=''; pollTraffic(); }
+    loadDevices(); pollTraffic(); setInterval(pollTraffic, 2000);
+  </script>
+</body>
+</html>

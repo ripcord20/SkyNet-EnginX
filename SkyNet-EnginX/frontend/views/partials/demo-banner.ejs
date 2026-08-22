@@ -1,0 +1,291 @@
+<div id="demoBanner" class="demo-banner">
+  <div class="demo-banner-inner">
+    <div class="demo-banner-left">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <strong>Mode Demo</strong>
+      <span class="demo-banner-sep">•</span>
+      <span class="demo-banner-text">
+        Anda sedang melihat data sampel. Semua aksi edit/hapus/kirim dinonaktifkan.
+      </span>
+    </div>
+    <div class="demo-banner-right">
+      <a href="https://wa.me/628xxxxxxxxxx?text=Halo,%20saya%20tertarik%20dengan%20DIGSNET%20Dashboard"
+         target="_blank" rel="noopener"
+         class="demo-banner-cta">
+        Hubungi untuk Versi Penuh
+      </a>
+      <button type="button" class="demo-banner-close" onclick="document.getElementById('demoBanner').style.display='none'">
+        &times;
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .demo-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%);
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .demo-banner-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    max-width: 100%;
+    gap: 12px;
+  }
+  .demo-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .demo-banner-left svg { flex: 0 0 auto; }
+  .demo-banner-sep { opacity: .6; }
+  .demo-banner-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .demo-banner-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+  .demo-banner-cta {
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: background .15s;
+  }
+  .demo-banner-cta:hover {
+    background: rgba(255,255,255,.35);
+    color: #fff;
+  }
+  .demo-banner-close {
+    background: transparent;
+    border: 0;
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: .7;
+  }
+  .demo-banner-close:hover { opacity: 1; }
+
+  @media (max-width: 640px) {
+    .demo-banner-text { display: none; }
+    .demo-banner-sep { display: none; }
+  }
+</style>
+
+<script>
+  // Demo Mode: matikan semua aksi mutasi (tambah/edit/hapus/kirim) secara menyeluruh.
+  // Pendekatan: 3 lapis perlindungan
+  //   1. Hide/disable tombol berdasarkan teks dan atribut (proaktif sebelum klik)
+  //   2. Intercept klik & submit form untuk semua aksi yang berbahaya
+  //   3. Intercept fetch/XHR untuk method mutasi (POST/PUT/PATCH/DELETE)
+  (function() {
+    'use strict';
+
+    // Kata kunci pada teks tombol yang menandakan aksi mutasi
+    const ACTION_KEYWORDS = [
+      'tambah', 'add', 'create', 'buat', 'baru',
+      'hapus', 'delete', 'remove',
+      'edit', 'ubah', 'update', 'simpan', 'save',
+      'kirim', 'send', 'submit', 'broadcast',
+      'reboot', 'restart', 'reset', 'reload',
+      'apply', 'eksekusi', 'execute', 'run',
+      'isolir', 'aktifkan', 'nonaktifkan',
+      'import', 'upload', 'sync',
+      'test koneksi'
+    ];
+
+    // Selector tombol/link yang HARUS di-disable
+    const ACTION_SELECTORS = [
+      'button[type="submit"]',
+      'button[data-action]',
+      '[data-bs-target*="Modal"]',
+      '[data-bs-toggle="modal"]',
+      '.btn-primary', '.btn-danger', '.btn-warning', '.btn-success',
+      'a[href*="/create"]', 'a[href*="/new"]', 'a[href*="/edit"]', 'a[href*="/delete"]',
+    ];
+
+    // Selector yang AMAN (read-only) — jangan di-disable walau cocok pattern di atas
+    const SAFE_KEYWORDS = [
+      'cari', 'search', 'filter', 'detail', 'lihat', 'view', 
+      'tutup', 'close', 'batal', 'cancel', 'kembali', 'back',
+      'masuk', 'login', 'logout', 'keluar',
+      'isi otomatis', 'autofill',
+      'export', 'download', 'cetak', 'print',
+      'copy', 'salin',
+      'next', 'prev', 'previous', 'lanjut', 'sebelumnya',
+      'refresh', 'muat ulang'
+    ];
+
+    function getButtonText(el) {
+      return (el.textContent || el.value || el.title || el.getAttribute('aria-label') || '').toLowerCase().trim();
+    }
+
+    function isSafeButton(el) {
+      const text = getButtonText(el);
+      // Cek SAFE_KEYWORDS dulu — kalau cocok, button ini aman
+      return SAFE_KEYWORDS.some(kw => text.includes(kw));
+    }
+
+    function isActionButton(el) {
+      // Skip kalau elemen sudah ditandai aman
+      if (el.closest('.demo-banner')) return false;
+      if (isSafeButton(el)) return false;
+      
+      const text = getButtonText(el);
+      
+      // Cek keyword aksi
+      if (ACTION_KEYWORDS.some(kw => text.includes(kw))) return true;
+      
+      // Cek atribut data-action
+      const action = (el.getAttribute('data-action') || '').toLowerCase();
+      if (['delete','save','send','reboot','broadcast','submit','create','update','edit'].includes(action)) {
+        return true;
+      }
+      
+      return false;
+    }
+
+    function disableElement(el) {
+      if (el.dataset.demoDisabled) return;
+      el.dataset.demoDisabled = '1';
+      el.style.opacity = '0.5';
+      el.style.cursor = 'not-allowed';
+      el.title = (el.title ? el.title + ' — ' : '') + 'Dinonaktifkan pada mode demo';
+      // Untuk button asli, set disabled supaya benar2 ga bisa
+      if (el.tagName === 'BUTTON' || el.tagName === 'INPUT') {
+        el.disabled = true;
+      }
+    }
+
+    function scanAndDisable() {
+      const candidates = document.querySelectorAll(ACTION_SELECTORS.join(','));
+      candidates.forEach(el => {
+        if (isActionButton(el)) disableElement(el);
+      });
+    }
+
+    // Lapis 1: scan & disable saat load + observer untuk konten dinamis
+    function startObserver() {
+      scanAndDisable();
+      const obs = new MutationObserver((mutations) => {
+        // Throttle: hanya scan kalau ada node baru ditambah
+        for (const m of mutations) {
+          if (m.addedNodes && m.addedNodes.length > 0) {
+            scanAndDisable();
+            break;
+          }
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startObserver);
+    } else {
+      startObserver();
+    }
+
+    // Lapis 2: intercept klik & form submit
+    document.addEventListener('click', function(e) {
+      const el = e.target.closest('button, a, [role="button"]');
+      if (!el) return;
+      if (el.closest('.demo-banner')) return; // tombol di banner sendiri aman
+      if (!isActionButton(el)) return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      showDemoToast('Aksi ini dinonaktifkan pada mode demo.');
+    }, true);
+
+    // Block submit form (kecuali form login)
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+      const action = (form.action || '').toLowerCase();
+      // Form login & search aman
+      if (action.includes('/login') || action.includes('/search')) return;
+      // Form GET aman (biasanya search/filter)
+      if ((form.method || 'get').toLowerCase() === 'get') return;
+      
+      e.preventDefault();
+      e.stopPropagation();
+      showDemoToast('Aksi ini dinonaktifkan pada mode demo.');
+    }, true);
+
+    // Lapis 3: intercept fetch — block method mutasi & tampilkan toast
+    const origFetch = window.fetch;
+    window.fetch = async function(input, init) {
+      const method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      
+      // Whitelist: auth/logout, dashboard-layout
+      const isWhitelisted = /\/(auth\/logout|auth\/refresh|dashboard-layout)/.test(url);
+      
+      if (['POST','PUT','PATCH','DELETE'].includes(method) && !isWhitelisted) {
+        // Tetap kirim ke server (server akan tolak dengan 403),
+        // tapi kalau gagal show toast
+        try {
+          const res = await origFetch.apply(this, arguments);
+          if (res.status === 403) {
+            try {
+              const clone = res.clone();
+              const body = await clone.json();
+              if (body.code === 'DEMO_FORBIDDEN' || body.code === 'DEMO_READONLY') {
+                showDemoToast(body.message || 'Aksi ini dinonaktifkan pada mode demo.');
+              }
+            } catch(_) {}
+          }
+          return res;
+        } catch(err) {
+          showDemoToast('Aksi ini dinonaktifkan pada mode demo.');
+          throw err;
+        }
+      }
+      return origFetch.apply(this, arguments);
+    };
+
+    // Toast helper
+    let toastTimer = null;
+    function showDemoToast(msg) {
+      let toast = document.getElementById('__demoToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = '__demoToast';
+        toast.style.cssText = `
+          position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+          background: #1f2937; color: #fff; padding: 12px 20px; border-radius: 10px;
+          font-size: 13px; font-weight: 500; z-index: 99999;
+          box-shadow: 0 8px 24px rgba(0,0,0,.25);
+          max-width: 90vw; text-align: center;
+          opacity: 0; transition: opacity .2s;
+        `;
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2400);
+    }
+  })();
+</script>

@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Profil Pelanggan' %> - <%= appName %></title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --pg:#f0f4fb;--white:#fff;--border:#e4ecf7;
+      --text:#0d1b3e;--text2:#4a5a7a;--muted:#8898b8;
+      --blue:#1a6ef5;--blue2:#0047cc;--green:#00c896;--red:#f5365c;
+      --orange:#fb8c00;--cyan:#0891b2;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--pg)!important;font-family:'DM Sans',sans-serif;}
+    .main-content{background:var(--pg)!important;padding:0!important;}
+    .cp-page{padding:0;}
+
+    /* Page header — mengikuti style customers.ejs */
+    .cp-ph{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+    .cp-ph-left{}
+    .cp-ph-bc{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:6px;}
+    .cp-ph-bc a{color:var(--blue);text-decoration:none;font-weight:600;}
+    .cp-ph-bc a:hover{opacity:.75;}
+    .cp-ph-bc svg{flex-shrink:0;}
+    .cp-ph-left h1{font-size:22px;font-weight:800;color:#0f172a;margin:0 0 3px;letter-spacing:-.3px;font-family:'Plus Jakarta Sans','DM Sans',sans-serif;}
+    .cp-ph-left .cp-ph-sub{font-size:13px;color:#64748b;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .cp-ph-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+    .btn-ph{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .15s;white-space:nowrap;text-decoration:none;font-family:'DM Sans',sans-serif;}
+    .btn-ph-outline{background:#fff;border-color:#e2e8f0;color:#374151;}
+    .btn-ph-outline:hover{background:#f8fafc;border-color:#cbd5e1;}
+    .btn-ph-primary{background:#2563eb;border-color:#2563eb;color:#fff;}
+    .btn-ph-primary:hover{background:#1d4ed8;border-color:#1d4ed8;}
+    .btn-ph-green{background:#16a34a;border-color:#16a34a;color:#fff;}
+    .btn-ph-green:hover{background:#15803d;}
+    /* Banner action buttons — responsive */
+    .cp-banner-btns{position:absolute;bottom:12px;right:16px;display:flex;gap:7px;z-index:10;}
+    .cp-banner-btns .btn-ph{padding:7px 14px;font-size:12.5px;border-radius:9px;}
+    @media(max-width:640px){
+      .cp-banner-btns{bottom:8px;right:10px;gap:5px;}
+      .cp-banner-btns .btn-ph{padding:6px 10px;font-size:11px;border-radius:8px;gap:4px;}
+      .cp-banner-btns .btn-ph svg{width:12px;height:12px;}
+      .cp-banner-btns .btn-ph span{display:none;}
+    }
+    /* Breadcrumb lama disembunyikan */
+    .cp-bc{display:none;}
+
+    /* Hero */
+    .cp-hero{border-radius:20px;overflow:hidden;margin-bottom:16px;background:var(--white);border:1px solid var(--border);box-shadow:0 2px 16px rgba(13,27,62,.07);}
+    .cp-banner{height:110px;position:relative;overflow:hidden;}
+    /* Note: decorative circles (::before / ::after) sengaja dihilangkan
+       supaya background banner clean — hanya warna gradient/solid saja. */
+    .cp-body{padding:0 24px 20px;}
+    /* Banner action bar — posisi absolute di atas banner kanan */
+    .cp-banner-actions{position:absolute;bottom:10px;right:16px;display:flex;gap:6px;z-index:10;}
+    /* Top row: hanya avatar, margin negatif untuk overlap banner */
+    .cp-top{margin-top:-36px;margin-bottom:10px;}
+    .cp-av{width:72px;height:72px;border-radius:50%;border:4px solid #fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.18);flex-shrink:0;position:relative;z-index:5;}
+    .cp-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+    .cp-name{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+    .cp-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+    .cp-infogrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--border);margin-top:14px;padding-top:16px;}
+    .cp-fi{padding:0 20px 14px 0;}
+    .cp-fl{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+    .cp-fv{font-size:13.5px;font-weight:600;color:var(--text);}
+    .cp-fv.mono{font-family:'DM Mono',monospace;font-size:13px;}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;gap:4px;}
+    .bg{background:#e6fff7;color:#007a5e;} .br{background:#fff0f2;color:var(--red);}
+    .by{background:#fffbeb;color:#b45309;} .bb{background:#eef3ff;color:var(--blue);}
+    .bgy{background:#f1f5f9;color:#64748b;}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:11px;font-size:13px;font-weight:700;text-decoration:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;}
+    .btn-pri{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 10px rgba(26,110,245,.3);}
+    .btn-pri:hover{transform:translateY(-1px);}
+    .btn-ghost{background:var(--white);color:var(--text2);border:1.5px solid var(--border);}
+    .btn-ghost:hover{border-color:var(--blue);color:var(--blue);background:#f0f5ff;}
+    .btn-wa{background:#e6fff7;color:#00875a;border:1.5px solid #a7f3d0;}
+    .btn-sm{padding:6px 12px;font-size:12px;border-radius:9px;}
+
+    /* Map below hero */
+    .cp-maphero{border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--white);margin-bottom:16px;box-shadow:0 2px 12px rgba(13,27,62,.05);}
+    .cp-maphd{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--white);border-bottom:1px solid var(--border);}
+    .cp-maphd-l{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text);}
+    .cp-mapbody{height:340px;position:relative;}
+    .cp-mapbody .leaflet-container{height:100%;width:100%;}
+    .cp-nocoord{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:8px;color:var(--muted);font-size:12px;}
+    /* Map layer toggle */
+    .map-layer-toggle{position:absolute;top:10px;right:10px;z-index:1000;display:flex;gap:4px;}
+    .mlt-btn{padding:4px 9px;font-size:10px;font-weight:700;border-radius:6px;cursor:pointer;border:none;font-family:sans-serif;transition:all .12s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+    .mlt-btn.active{background:#1d4ed8;color:#fff;}
+    .mlt-btn:not(.active){background:rgba(255,255,255,.9);color:#374151;}
+    /* Anti-grid tile fix — eliminasi border/gap antar tile */
+    .leaflet-tile{
+      border:0!important;outline:0!important;margin:0!important;padding:0!important;
+      box-shadow:none!important;border-radius:0!important;
+      image-rendering:auto;
+    }
+    .leaflet-tile-container img{display:block;border:0!important;outline:0!important;}
+    .leaflet-tile-pane{opacity:1!important;}
+    .leaflet-zoom-animated .leaflet-tile-container{will-change:transform;}
+    .leaflet-container .leaflet-tile-pane .leaflet-layer{opacity:1!important;}
+    /* Customer map popup */
+    .cmp-wrap .leaflet-popup-content-wrapper{padding:0;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(13,27,62,.18);border:none;min-width:220px;}
+    .cmp-wrap .leaflet-popup-content{margin:0;width:auto!important;}
+    .cmp-wrap .leaflet-popup-tip-container{display:none;}
+    .cmp-wrap .leaflet-popup-close-button{right:10px;top:10px;color:#fff;font-size:16px;font-weight:700;z-index:10;opacity:.8;}
+    .cmp-wrap .leaflet-popup-close-button:hover{opacity:1;}
+    .cmp-hd{background:linear-gradient(135deg,#1a6ef5,#0047cc);padding:14px 16px 12px;color:#fff;position:relative;}
+    .cmp-hd-av{width:36px;height:36px;border-radius:50%;border:2.5px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;background:rgba(255,255,255,.18);flex-shrink:0;}
+    .cmp-hd-row{display:flex;align-items:center;gap:10px;}
+    .cmp-hd-name{font-size:14px;font-weight:800;letter-spacing:-.2px;line-height:1.2;}
+    .cmp-hd-cid{font-size:11px;opacity:.75;margin-top:1px;}
+    .cmp-hd-orb{position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.07);right:-15px;top:-20px;}
+    .cmp-body{padding:12px 14px;background:#fff;}
+    .cmp-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f1f5f9;gap:8px;}
+    .cmp-row:last-child{border-bottom:none;padding-bottom:0;}
+    .cmp-lbl{font-size:11px;color:#94a3b8;font-weight:500;}
+    .cmp-val{font-size:12px;color:#0d1b3e;font-weight:600;text-align:right;}
+    .cmp-foot{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid #f1f5f9;}
+    .cmp-btn{padding:10px 8px;font-size:12px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif;transition:opacity .15s;text-decoration:none;color:#fff!important;}
+    .cmp-btn:hover{opacity:.85;}
+    .cmp-btn-nav{background:#1a6ef5;color:#fff!important;border-radius:0 0 0 16px;}
+    .cmp-btn-wa{background:#16a34a;color:#fff!important;border-radius:0 0 16px 0;}
+
+    /* Usage */
+    .cp-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:16px;box-shadow:0 2px 12px rgba(13,27,62,.05);}
+    .cp-card-title{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+    .usage-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+    .uc{border-radius:14px;padding:15px 16px;position:relative;overflow:hidden;color:#fff;min-height:85px;}
+    .uc.dl{background:linear-gradient(135deg,#1a6ef5,#0047cc);}
+    .uc.ul{background:linear-gradient(135deg,#00c896,#00a07a);}
+    .uc-orb{position:absolute;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08);right:-16px;top:-16px;pointer-events:none;}
+    .uc-lbl{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.8;margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+    .uc-val{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;line-height:1;}
+    .uc-unit{font-size:12px;font-weight:600;opacity:.8;margin-left:2px;}
+    .uc-rate{font-size:11px;opacity:.7;margin-top:3px;}
+    .usage-ratio{background:var(--pg);border-radius:10px;padding:11px 13px;margin-bottom:10px;}
+    .ubar-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
+    .ubar-bg{flex:1;height:7px;background:#dce7f5;border-radius:99px;overflow:hidden;}
+    .ubar-dl{height:100%;background:linear-gradient(90deg,#1a6ef5,#0047cc);border-radius:99px;transition:width .8s;}
+    .ubar-ul{height:100%;background:linear-gradient(90deg,#00c896,#00a07a);border-radius:99px;transition:width .8s;}
+    .uso{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .uso-on{background:#f0fdf4;color:#16a34a;} .uso-off{background:#f1f5f9;color:#64748b;}
+    .uso-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+    .u-load{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--muted);font-size:12px;}
+    .u-spin{width:20px;height:20px;border:2.5px solid rgba(26,110,245,.15);border-top-color:#1a6ef5;border-radius:50%;animation:spin .7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Grid */
+    .cp-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    .cp-sidebar{display:flex;flex-direction:column;gap:14px;}
+    .stat-mg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+    .stat-m{background:var(--pg);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);}
+    .stat-mn{font-size:24px;font-weight:800;font-family:'DM Mono',monospace;line-height:1.1;}
+    .stat-ml{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f4f7fd;gap:12px;}
+    .info-row:last-child{border-bottom:none;padding-bottom:0;}
+    .ilbl{font-size:12px;color:var(--muted);font-weight:500;}
+    .ival{font-size:12.5px;font-weight:700;color:var(--text);text-align:right;}
+
+    /* Tabs */
+    .cp-tabs{display:flex;gap:2px;background:var(--white);border-radius:16px 16px 0 0;border:1px solid var(--border);border-bottom:none;padding:10px 12px 0;overflow-x:auto;scrollbar-width:none;}
+    .cp-tabs::-webkit-scrollbar{display:none;}
+    .cp-tab{padding:8px 14px;border-radius:10px 10px 0 0;font-size:12.5px;font-weight:700;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;white-space:nowrap;position:relative;}
+    .cp-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;background:transparent;transition:background .15s;}
+    .cp-tab.active{color:var(--blue);}
+    .cp-tab.active::after{background:var(--blue);}
+    .cp-tab:hover:not(.active){color:var(--text2);background:var(--pg);}
+    .tab-badge{background:var(--blue);color:#fff;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:10px;line-height:1.6;}
+    .cp-tab:not(.active) .tab-badge{background:#d4dce8;color:var(--text2);}
+    .cp-panel{background:var(--white);border:1px solid var(--border);border-top:none;border-radius:0 0 16px 16px;}
+    .pscroll{overflow-y:auto;max-height:calc(100vh - 300px);scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .pscroll::-webkit-scrollbar{width:4px;}
+    .pscroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+    /* Timeline */
+    .tl-list{padding:18px 20px;}
+    .tl-day{margin-bottom:20px;}
+    .tl-dh{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .tl-dl{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+    .tl-ln{flex:1;height:1px;background:var(--border);}
+    .tl-item{display:flex;gap:11px;margin-bottom:10px;}
+    .tl-dot{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+    .tl-bub{border-radius:12px;padding:10px 13px;border:1.5px solid;flex:1;min-width:0;}
+    .bub-inv{background:#fffbeb;border-color:#fde68a;}
+    .bub-pay{background:#f0fdf4;border-color:#86efac;}
+    .tl-bt{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;}
+    .tl-typ{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;}
+    .tl-tm{font-size:10.5px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;}
+    .tl-txt{font-size:13px;color:var(--text);line-height:1.5;}
+    .tl-sub{font-size:11px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+
+    /* Table */
+    .dtbl{width:100%;border-collapse:collapse;}
+    .dtbl th{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:10px 16px;border-bottom:2px solid var(--border);text-align:left;background:#fafcff;white-space:nowrap;}
+    .dtbl td{font-size:12.5px;color:var(--text);padding:10px 16px;border-bottom:1px solid #f4f7fd;vertical-align:middle;}
+    .dtbl tr:last-child td{border-bottom:none;}
+    .dtbl tr:hover td{background:#fafcff;}
+
+    /* Empty */
+    .empty-st{padding:52px 24px;text-align:center;color:var(--muted);}
+    .empty-st .ei{font-size:36px;margin-bottom:10px;opacity:.6;}
+    .empty-st p{font-size:13px;}
+
+    /* Quick reply */
+    .qr-bar{padding:12px 18px;border-top:1px solid var(--border);background:#fff;position:sticky;bottom:0;border-radius:0 0 16px 16px;}
+    .qr-row{display:flex;gap:8px;align-items:center;}
+    .qr-ta{flex:1;border:1.5px solid var(--border);border-radius:999px;padding:9px 16px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:none;line-height:1.4;transition:all .15s;background:#f8fafd;color:var(--text);}
+    .qr-ta:focus{border-color:var(--blue);background:#fff;}
+    .qr-ta::placeholder{color:var(--muted);}
+    .qr-send{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--blue2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .14s;}
+    .qr-send:hover{transform:scale(1.07);}
+    .qr-status{font-size:11.5px;margin-top:6px;padding:4px 10px;border-radius:8px;display:none;}
+    .qr-ok{background:#e6fff7;color:#007a5e;} .qr-err{background:#fff0f2;color:var(--red);}
+
+    /* Loading */
+    .cp-load{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);}
+    .cp-spin{width:36px;height:36px;border:3px solid rgba(26,110,245,.15);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin-right:12px;}
+
+    /* Responsive */
+    @media(max-width:960px){.cp-grid{grid-template-columns:1fr;}.cp-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.stat-mg{grid-template-columns:repeat(4,1fr);}}
+    @media(max-width:640px){.cp-page{padding:0 10px 20px;}.cp-hero{border-radius:14px;}.cp-banner{height:88px;}.cp-av{width:56px;height:56px;font-size:20px;}.cp-top{margin-top:-28px;}.cp-name{font-size:16px;}.cp-banner-actions{bottom:8px;right:12px;gap:5px;}.cp-banner-actions .btn-sm{padding:5px 10px;font-size:11px;}.cp-infogrid{grid-template-columns:repeat(2,1fr);}.cp-sidebar{grid-template-columns:1fr;}.stat-mg{grid-template-columns:repeat(4,1fr);gap:5px;}.cp-tab{padding:7px 9px;font-size:11px;}.cp-tab svg{display:none;}.usage-grid{grid-template-columns:1fr;}}
+    @media(max-width:380px){.stat-mg{grid-template-columns:repeat(2,1fr);}}
+    /* ONT signal bars */
+    .sig-bars{display:flex;align-items:flex-end;gap:2px;}
+    .sig-bar{width:3px;border-radius:1px;background:#e2e8f0;}
+    .ont-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+    .ont-online{background:#e6fff7;color:#16a34a;}
+    .ont-offline{background:#fff0f2;color:#dc2626;}
+    .ont-warn{background:#fffbeb;color:#d97706;}
+
+    /* Traffic History */
+    .traf-card{background:var(--white);border-radius:16px;border:1px solid var(--border);padding:16px;box-shadow:0 2px 12px rgba(13,27,62,.05);margin-bottom:16px;}
+    .traf-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+    .traf-hd-l{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text);}
+    .traf-tabs{display:flex;gap:4px;}
+    .traf-tab{padding:3px 9px;font-size:10px;font-weight:700;border-radius:5px;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#64748b;font-family:'DM Sans',sans-serif;transition:all .12s;}
+    .traf-tab.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+    .traf-canvas-wrap{position:relative;border-radius:10px;overflow:hidden;background:#f8fafc;border:1px solid #e2e8f0;}
+    #trafficChart{display:block;width:100%;height:180px;}
+    /* ── Dokumen (Foto Rumah & KTP) ───────────────────────── */
+    .docs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+    @media(max-width:560px){.docs-grid{grid-template-columns:1fr;}}
+    .doc-card{border:1px solid var(--border);border-radius:14px;background:var(--white);overflow:hidden;display:flex;flex-direction:column;}
+    .doc-card-hd{padding:11px 13px;border-bottom:1px solid var(--border);}
+    .doc-card-hd .dt{font-size:13px;font-weight:800;color:#0d1b3e;display:flex;align-items:center;gap:7px;}
+    .doc-card-hd .ds{font-size:10.5px;color:var(--muted);margin-top:2px;}
+    .doc-thumb{position:relative;aspect-ratio:4/3;background:#f1f5f9;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;}
+    .doc-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s;}
+    .doc-thumb:hover img{transform:scale(1.03);}
+    .doc-thumb .doc-empty{display:flex;flex-direction:column;align-items:center;gap:6px;color:#94a3b8;font-size:11.5px;font-weight:600;cursor:default;}
+    .doc-thumb .doc-zoom{position:absolute;top:8px;right:8px;background:rgba(13,27,62,.6);color:#fff;border-radius:7px;padding:4px 6px;font-size:10px;font-weight:700;opacity:0;transition:opacity .15s;backdrop-filter:blur(3px);}
+    .doc-thumb:hover .doc-zoom{opacity:1;}
+    .doc-actions{display:flex;gap:7px;padding:10px 12px;}
+    .doc-btn{flex:1;font-size:11.5px;font-weight:700;padding:7px 10px;border-radius:9px;cursor:pointer;border:1.5px solid var(--border);background:var(--pg);color:#0d1b3e;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .12s;}
+    .doc-btn.primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+    .doc-btn.primary:hover{background:#1e40af;}
+    .doc-btn.danger{flex:0 0 auto;color:#dc2626;border-color:#fecaca;background:#fff5f5;}
+    .doc-btn.danger:hover{background:#fee2e2;}
+    .doc-btn:disabled{opacity:.6;cursor:not-allowed;}
+    .doc-meta{font-size:10px;color:var(--muted);padding:0 12px 10px;margin-top:-2px;}
+    .doc-prog{height:4px;background:#e2e8f0;border-radius:3px;overflow:hidden;margin:0 12px 10px;display:none;}
+    .doc-prog > i{display:block;height:100%;width:0;background:#1d4ed8;transition:width .15s;}
+    /* Lightbox */
+    .doc-lb{position:fixed;inset:0;z-index:10050;background:rgba(8,15,35,.88);display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+    .doc-lb.open{display:flex;}
+    .doc-lb img{max-width:100%;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+    .doc-lb-close{position:absolute;top:18px;right:22px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;width:40px;height:40px;font-size:22px;cursor:pointer;}
+    .traf-note{display:flex;align-items:center;justify-content:space-between;margin-top:6px;flex-wrap:wrap;gap:4px;}
+    .traf-note-txt{font-size:10.5px;color:var(--muted);}
+    .traf-legend{display:flex;gap:10px;}
+    .traf-leg{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;}
+    .traf-leg-dl{width:10px;height:3px;background:#2563eb;border-radius:2px;}
+    .traf-leg-ul{width:10px;height:3px;background:#f97316;border-radius:2px;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+      <div class="cp-page" id="cpPage">
+        <div class="cp-load" id="cpLoading">
+          <div class="cp-spin"></div>
+          <span>Memuat profil pelanggan…</span>
+        </div>
+        <div id="cpContent" style="display:none"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/js/app.js"></script>
+<script>
+const CUST_ID = '<%= typeof custId !== "undefined" ? custId : "" %>';
+
+/* ── Helpers ─────────────────────────────────────────────── */
+const MN = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+function fmtD(d) {
+  if (!d) return '—';
+  var dt = new Date(d);
+  if (isNaN(dt.getTime())) return '—';
+  return dt.getDate()+' '+MN[dt.getMonth()+1]+' '+dt.getFullYear();
+}
+function fmtRp(v) { return 'Rp '+Number(v||0).toLocaleString('id-ID'); }
+function esc(s)   { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtBytes(b){ b=parseInt(b)||0; if(b>=1073741824) return (b/1073741824).toFixed(2)+' GB'; if(b>=1048576) return (b/1048576).toFixed(1)+' MB'; if(b>=1024) return Math.round(b/1024)+' KB'; return b+' B'; }
+function fmtRate(r) { r=parseInt(r)||0; if(r>=1000000) return (r/1000000).toFixed(1)+' Mbps'; if(r>=1000) return Math.round(r/1000)+' Kbps'; return r+' bps'; }
+
+const GRAD=[['#1a6ef5','#0047cc'],['#f5365c','#c0183a'],['#00c896','#00a07a'],['#fb8c00','#e65100'],
+            ['#0ea5e9','#0284c7'],['#06b6d4','#0891b2'],['#f59e0b','#d97706'],['#10b981','#059669']];
+function getGrad(s){ var h=0; for(var i=0;i<s.length;i++) h=((h<<5)-h)+s.charCodeAt(i); return GRAD[Math.abs(h)%GRAD.length]; }
+function getInit(s){ return (String(s||'?').trim()[0]||'?').toUpperCase(); }
+
+/* ── Build HTML helpers (no template literals) ───────────── */
+function mkEl(tag, attrs, inner) {
+  var a=''; for(var k in attrs) a+=' '+k+'="'+attrs[k]+'"';
+  return '<'+tag+a+'>'+inner+'</'+tag+'>';
+}
+function mkDiv(cls, inner) { return '<div class="'+cls+'">'+inner+'</div>'; }
+function mkSpan(cls, inner){ return '<span class="'+cls+'">'+inner+'</span>'; }
+
+/* ── Load Profile ────────────────────────────────────────── */
+async function loadProfile() {
+  if (!CUST_ID) {
+    document.getElementById('cpLoading').innerHTML = '<p style="color:var(--red)">Customer ID tidak valid.</p>';
+    return;
+  }
+  try {
+    var r = await Promise.all([
+      App.api('/customers/'+CUST_ID),
+      App.api('/billing/invoices?customer_id='+CUST_ID+'&limit=50')
+    ]);
+    var custR=r[0], invR=r[1];
+    if (!custR || !custR.success) {
+      document.getElementById('cpLoading').innerHTML = '<p style="color:var(--red)">Customer tidak ditemukan. <a href="/customers" style="color:var(--blue)">← Kembali</a></p>';
+      return;
+    }
+
+    var c        = custR.data;
+    // Ambil invoices dari billing endpoint, fallback ke c.invoices dari CustomerController
+    var invoices = (invR && invR.data && Array.isArray(invR.data)) ? invR.data
+                 : (invR && invR.data && invR.data.rows && Array.isArray(invR.data.rows)) ? invR.data.rows
+                 : (Array.isArray(c.invoices) ? c.invoices : []);
+
+    // Derive payments dari invoices yang sudah paid (tidak perlu endpoint terpisah)
+    // Setiap invoice paid = 1 transaksi pembayaran
+    var payments = invoices
+      .filter(function(inv){ return inv.status === 'paid' && inv.paid_date; })
+      .map(function(inv){
+        return {
+          id:             inv.id,
+          payment_date:   inv.paid_date,
+          amount:         inv.amount || inv.total,
+          invoice_no:     inv.invoice_no || inv.invoice_number,
+          payment_method: inv.payment_method || null,
+          validated_by:   inv.validated_by || null,
+          created_by:     inv.validated_by || null
+        };
+      });
+    var gc       = getGrad(c.phone||c.customer_id||String(c.id));
+    var c1=gc[0], c2=gc[1];
+    var init     = getInit(c.name);
+    var grad     = 'linear-gradient(135deg,'+c1+','+c2+')';
+
+    var totalPaid   = payments.reduce(function(s,p){ return s+Number(p.amount||0); },0);
+    var unpaidInv   = invoices.filter(function(i){ return ['unpaid','overdue'].indexOf(i.status)>=0; });
+    var totalUnpaid = unpaidInv.reduce(function(s,i){ return s+Number(i.amount||0); },0);
+
+    // Timeline
+    var timeline=[];
+    // Hanya push invoice events — payments sudah include di payments array (tidak double)
+    invoices.forEach(function(inv){
+      timeline.push({type:'invoice', date:inv.created_at, data:inv});
+    });
+    payments.forEach(function(p){
+      timeline.push({type:'payment_tx', date:p.payment_date, data:p});
+    });
+    timeline.sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+
+    // Status badge
+    var stMap={active:['bg','Aktif'],inactive:['bgy','Nonaktif'],suspended:['br','Suspended'],isolated:['br','Isolir']};
+    var stArr=stMap[c.status||'inactive']||['bgy','Unknown'];
+    var sbc=stArr[0], sbl=stArr[1];
+
+    // Due date
+    // ── Kalkulasi Jatuh Tempo ─────────────────────────────────
+    // SUMBER KEBENARAN: customers.due_date (di-update oleh sistem pembayaran &
+    // rollback hapus invoice). Halaman ini TIDAK menghitung ulang sendiri supaya
+    // selalu sinkron dgn tanggal jatuh tempo terbaru.
+
+    var dueD = null, duePaid = false, dueHtml = '—';
+
+    // Cari invoice unpaid/overdue terbaru dulu (untuk menentukan status bayar)
+    var unpaidInvDue = invoices.find(function(i){ return ['unpaid','overdue'].indexOf(i.status)>=0; });
+
+    if (unpaidInvDue && unpaidInvDue.due_date) {
+      // Ada tagihan belum lunas — tampilkan due date invoice tsb, status belum bayar
+      dueD    = unpaidInvDue.due_date;
+      duePaid = false;
+
+    } else if (c.due_date || c.latest_due_date) {
+      // Tidak ada tagihan tertunggak → pakai due_date pelanggan (sudah maju
+      // otomatis setelah pembayaran). Ini tanggal jatuh tempo TERBARU.
+      dueD = c.due_date || c.latest_due_date;
+      // Dianggap "lunas periode ini" kalau ada invoice paid terbaru ATAU memang tidak ada tagihan terbuka
+      duePaid = (invoices.length > 0 && invoices[0].status === 'paid') || invoices.length === 0;
+
+    } else if (invoices.length > 0 && invoices[0].status === 'paid') {
+      // Fallback lama: invoice lunas tapi customer.due_date kosong — hitung dari invoice
+      duePaid = true;
+      var lastDue = invoices[0].due_date;
+      if (lastDue) {
+        var lastDt   = new Date(lastDue + 'T00:00:00');
+        var bilDay   = c.billing_date ? Math.min(parseInt(c.billing_date)||lastDt.getDate(), 28) : lastDt.getDate();
+        var nextDue  = new Date(lastDt.getFullYear(), lastDt.getMonth()+1, bilDay);
+        dueD = nextDue.getFullYear()+'-'+('0'+(nextDue.getMonth()+1)).slice(-2)+'-'+('0'+bilDay).slice(-2);
+      }
+
+    } else if (c.billing_date) {
+      // Fallback terakhir: kalkulasi dari billing_date + installation_date
+      var bd   = Math.min(parseInt(c.billing_date)||1, 28);
+      var ref  = c.installation_date ? new Date(c.installation_date) : new Date();
+      var cand = new Date(ref.getFullYear(), ref.getMonth(), bd);
+      if (cand <= ref) cand = new Date(ref.getFullYear(), ref.getMonth()+1, bd);
+      dueD = cand.getFullYear()+'-'+('0'+(cand.getMonth()+1)).slice(-2)+'-'+('0'+cand.getDate()).slice(-2);
+    }
+
+    if (dueD) {
+      var due = new Date(dueD+'T00:00:00');
+      var tn  = new Date(); tn.setHours(0,0,0,0);
+      var dff = Math.round((due - tn) / 86400000);
+      var dfs = due.toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+      if (duePaid) {
+        // Sudah bayar periode ini — tampilkan due date berikutnya dengan badge hijau
+        if (dff <= 0) {
+          dueHtml = dfs + '<br><span class="badge bg" style="font-size:10px;margin-top:3px">✓ Lunas · Jatuh tempo hari ini</span>';
+        } else if (dff <= 7) {
+          dueHtml = dfs + '<br><span class="badge bg" style="font-size:10px;margin-top:3px">✓ Lunas · '+dff+' hari lagi</span>';
+        } else {
+          dueHtml = dfs + '<br><span class="badge bg" style="font-size:10px;margin-top:3px">✓ Lunas periode ini</span>';
+        }
+      } else {
+        // Belum bayar — tampilkan status merah/orange
+        if (dff < 0) {
+          dueHtml = '<span style="color:var(--red);font-weight:700">'+dfs+'</span><br><small style="color:var(--red)">'+Math.abs(dff)+' hari lalu</small>';
+        } else if (dff === 0) {
+          dueHtml = '<span style="color:var(--orange);font-weight:700">'+dfs+'</span><br><small style="color:var(--orange)">Hari ini!</small>';
+        } else if (dff <= 7) {
+          dueHtml = '<span style="color:var(--orange);font-weight:700">'+dfs+'</span><br><small style="color:var(--orange)">'+dff+' hari lagi</small>';
+        } else {
+          dueHtml = dfs;
+        }
+      }
+    }
+    // Package badge
+    var pkgBadge='';
+    if (c.package&&c.package.name) pkgBadge='<span class="badge bb">'+esc(c.package.name)+'</span>';
+    else if (c.package_name) pkgBadge='<span class="badge bb">'+esc(c.package_name)+'</span>';
+
+    // Price
+    var priceStr = (c.package&&c.package.price) ? fmtRp(c.package.price) : (c.monthly_fee ? fmtRp(c.monthly_fee) : '—');
+
+    // Coord
+    var hasCoord = !!(c.latitude && c.longitude);
+    var coordTxt = hasCoord
+      ? '<span style="font-size:11px;color:var(--muted);font-family:monospace">'+Number(c.latitude).toFixed(5)+', '+Number(c.longitude).toFixed(5)+'</span>'
+      : '<a href="/customers?edit='+c.id+'" style="font-size:11px;color:var(--blue);font-weight:600;text-decoration:none">+ Tambah Koordinat</a>';
+    var mapBody = hasCoord
+      ? '<div id="custMap" style="height:100%;width:100%"></div>'
+        +'<div class="map-layer-toggle">'
+          +'<button class="mlt-btn active" id="mapBtnStreet">Peta</button>'
+          +'<button class="mlt-btn" id="mapBtnSat">Satelit</button>'
+        +'</div>'
+      : '<div class="cp-nocoord"><svg width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:.3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg><span>Koordinat belum diatur</span></div>';
+
+    // Tagihan card
+    var tagihanHtml='';
+    if (totalUnpaid>0||totalPaid>0) {
+      tagihanHtml = '<div class="cp-card">'
+        +'<div class="cp-card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>Tagihan</div>'
+        +(totalUnpaid>0 ? '<div class="info-row"><span class="ilbl">Belum Lunas</span><span class="ival" style="color:var(--red)">'+fmtRp(totalUnpaid)+'</span></div>' : '')
+        +(totalPaid>0   ? '<div class="info-row"><span class="ilbl">Total Lunas</span><span class="ival" style="color:var(--green)">'+fmtRp(totalPaid)+'</span></div>' : '')
+        +(c.created_at  ? '<div class="info-row"><span class="ilbl">Pelanggan Sejak</span><span class="ival">'+fmtD(c.created_at)+'</span></div>' : '')
+        +'</div>';
+    }
+
+    // Teknis card — always shown jika ada data teknis atau ont_sn
+    var hasTeknis = !!(c.pppoe_username||c.ont_sn||c.static_ip);
+    var teknisHtml = '<div class="cp-card" id="teknisCrd">'
+      +'<div class="cp-card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>Teknis</div>'
+      +(c.pppoe_username ? '<div class="info-row"><span class="ilbl">PPPoE</span><span class="ival" style="font-family:monospace;font-size:12px">'+esc(c.pppoe_username)+'</span></div>' : '')
+      +(c.static_ip      ? '<div class="info-row"><span class="ilbl">Static IP</span><span class="ival" style="font-family:monospace;font-size:12px">'+esc(c.static_ip)+'</span></div>' : '')
+      +(c.ont_sn         ? '<div class="info-row"><span class="ilbl">ONT SN</span><span class="ival" style="font-family:monospace;font-size:12px">'+esc(c.ont_sn)+'</span></div>' : '')
+      // ODP row — diisi async
+      +'<div class="info-row" id="row-odp"><span class="ilbl">ODP</span><span class="ival" id="val-odp" style="font-size:12px;color:#94a3b8">Memuat…</span></div>'
+      // RX row
+      +'<div class="info-row" id="row-rx"><span class="ilbl">RX Signal</span><span class="ival" id="val-rx">Memuat…</span></div>'
+      // Status ONT row
+      +'<div class="info-row" id="row-ont-status"><span class="ilbl">Status ONT</span><span class="ival" id="val-ont-status"><span style="font-size:11px;color:#94a3b8">Memuat…</span></span></div>'
+      +'</div>';
+
+    // Invoice table
+    var invHtml = invoices.length===0
+      ? '<div class="empty-st"><div class="ei">🧾</div><p>Belum ada invoice.</p></div>'
+      : (function(){
+          var rows=invoices.map(function(inv){
+            var sc={paid:'bg',unpaid:'by',overdue:'br',cancelled:'bgy'}[inv.status]||'bgy';
+            return '<tr>'
+              +'<td data-label="Invoice" style="font-family:monospace;font-size:12px">'+esc(inv.invoice_no||String(inv.id||''))+'</td>'
+              +'<td data-label="Periode" style="color:var(--muted)">'+(inv.period_month||'—')+'/'+(inv.period_year||'—')+'</td>'
+              +'<td data-label="Nominal" style="font-weight:700">'+fmtRp(inv.amount)+'</td>'
+              +'<td data-label="Jatuh Tempo"><div style="font-size:12px">'+fmtD(inv.due_date)+'</div>'+(inv.paid_date?'<div style="font-size:11px;color:var(--green);margin-top:1px">Lunas '+fmtD(inv.paid_date)+'</div>':'')+'</td>'
+              +'<td data-label="Status"><span class="badge '+sc+'">'+esc(inv.status||'')+'</span></td>'
+              +'</tr>';
+          }).join('');
+          return '<table class="dtbl"><thead><tr><th>No. Invoice</th><th>Periode</th><th>Nominal</th><th>Jatuh Tempo</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+        })();
+
+    // Payment table
+    var payHtml = payments.length===0
+      ? '<div class="empty-st"><div class="ei">💳</div><p>Belum ada pembayaran.</p></div>'
+      : (function(){
+          var rows=payments.map(function(p){
+            return '<tr>'
+              +'<td data-label="Tanggal" style="font-family:monospace;font-size:11.5px;color:var(--muted)">'+fmtD(p.payment_date)+'</td>'
+              +'<td data-label="Jumlah" style="font-weight:700;color:var(--blue)">'+fmtRp(p.amount)+'</td>'
+              +'<td data-label="Metode"><span class="badge bb">'+esc(p.payment_method||p.method||'—')+'</span></td>'
+              +'<td data-label="Invoice" style="font-family:monospace;font-size:11.5px">'+esc(p.invoice_no||'—')+'</td>'
+              +'<td data-label="Oleh" style="font-size:12px;color:var(--muted)">'+esc(p.validated_by||p.created_by||'—')+'</td>'
+              +'</tr>';
+          }).join('');
+          return '<table class="dtbl"><thead><tr><th>Tanggal</th><th>Jumlah</th><th>Metode</th><th>Invoice</th><th>Dicatat Oleh</th></tr></thead><tbody>'+rows+'</tbody></table>';
+        })();
+
+    // Timeline HTML
+    var tlHtml = timeline.length===0
+      ? '<div class="empty-st"><div class="ei">📭</div><p>Belum ada aktivitas.</p></div>'
+      : buildTimeline(timeline);
+
+    // Normalisasi dokumen (kolom Customer.documents JSON). Default lama bisa
+    // berupa array [] → kita pakai object {house,ktp}. Abaikan kalau array.
+    var docs = (c.documents && !Array.isArray(c.documents) && typeof c.documents==='object') ? c.documents : {};
+    var docCount = (docs.house?1:0) + (docs.ktp?1:0);
+
+    // Assembe full HTML — Page header
+    var stBadgeClr = {active:'#16a34a',isolated:'#dc2626',suspended:'#d97706',inactive:'#64748b'}[c.status]||'#64748b';
+    var stBadgeBg  = {active:'#f0fdf4',isolated:'#fff0f2',suspended:'#fffbeb',inactive:'#f1f5f9'}[c.status]||'#f1f5f9';
+    var pkgSub = (c.package&&c.package.name) ? c.package.name : (c.package_name||'');
+
+    var html = ''
+    // Page header — judul "Customer Detail" + breadcrumb + tombol aksi
+    +'<div class="cp-ph">'
+      +'<div class="cp-ph-left">'
+        +'<h1>Customer Detail</h1>'
+        +'<p class="cp-ph-sub">'
+          +'<a href="/customers" style="color:var(--blue);text-decoration:none;font-weight:600">Data Pelanggan</a>'
+          +'<svg width="12" height="12" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>'
+          +'<span style="color:#374151;font-weight:600">'+esc(c.name)+'</span>'
+        +'</p>'
+      +'</div>'
+      +'<div class="cp-ph-right"></div>'
+    +'</div>'
+
+    // Hero
+    +'<div class="cp-hero">'
+      +'<div class="cp-banner" style="background:'+grad+'">'
+        +'<div class="cp-banner-btns">'
+          +'<a href="tel:'+esc(c.phone||'')+'" class="btn-ph btn-ph-outline" style="background:rgba(255,255,255,.92);border-color:rgba(255,255,255,.5);color:#0d1b3e;">'
+            +'<svg width="13" height="13" fill="none" stroke="#0d1b3e" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>'
+            +'<span>Hubungi</span>'
+          +'</a>'
+          +'<button class="btn-ph btn-ph-outline" id="btnEditProfile" style="background:rgba(255,255,255,.92);border-color:rgba(255,255,255,.5);color:#0d1b3e;">'
+            +'<svg width="13" height="13" fill="none" stroke="#0d1b3e" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>'
+            +'<span>Edit</span>'
+          +'</button>'
+          +'<button class="btn-ph btn-ph-green" id="btnSendWA">'
+            +'<svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+            +'<span>Kirim WA</span>'
+          +'</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="cp-body">'
+        +'<div class="cp-top">'
+          +'<div class="cp-av" style="background:'+grad+'">'+init+'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">'
+          +'<div class="cp-name">'+esc(c.name)+'</div>'
+          +'<span class="badge '+sbc+'">'+sbl+'</span>'+pkgBadge
+        +'</div>'
+        +'<div class="cp-sub">'+esc(c.email||'')+'</div>'
+        +'<div class="cp-infogrid">'
+          +'<div class="cp-fi"><div class="cp-fl">No. HP / WA</div><div class="cp-fv mono">'+esc(c.phone||'—')+'</div></div>'
+          +'<div class="cp-fi"><div class="cp-fl">CID</div><div class="cp-fv mono">'+esc(c.customer_id||'—')+'</div></div>'
+          +'<div class="cp-fi"><div class="cp-fl">Harga Paket</div><div class="cp-fv" style="color:var(--blue)">'+priceStr+'</div></div>'
+          +'<div class="cp-fi"><div class="cp-fl">Aktivasi</div><div class="cp-fv">'+fmtD(c.installation_date||c.activation_date)+'</div></div>'
+          +'<div class="cp-fi"><div class="cp-fl">Jatuh Tempo</div><div class="cp-fv">'+dueHtml+'</div></div>'
+          +(c.address ? '<div class="cp-fi"><div class="cp-fl">Alamat</div><div class="cp-fv" style="font-size:13px;font-weight:500;color:var(--text2)">'+esc(c.address.substring(0,50))+'</div></div>' : '')
+        +'</div>'
+      +'</div>'
+    +'</div>'
+
+    // MAP
+    +'<div class="cp-maphero">'
+      +'<div class="cp-maphd"><div class="cp-maphd-l"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Lokasi Pelanggan</div>'+coordTxt+'</div>'
+      +'<div class="cp-mapbody" id="custMapWrap">'+mapBody+'</div>'
+    +'</div>'
+
+    // USAGE
+    +'<div class="cp-card" id="usageSection" style="margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+        +'<div class="cp-card-title" style="margin-bottom:0"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Statistik Usage (Simple Queue)</div>'
+        +'<button id="btnRefreshUsage" style="font-size:11px;font-weight:700;color:var(--blue);background:var(--pg);border:1.5px solid var(--border);padding:4px 10px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>Refresh</button>'
+      +'</div>'
+      +'<div id="usageContent"><div class="u-load"><div class="u-spin"></div><span>Memuat data…</span></div></div>'
+    +'</div>'
+
+    // TRAFFIC HISTORY CHART
+    +'<div class="traf-card">'
+      +'<div class="traf-hd">'
+        +'<div class="traf-hd-l">'
+          +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>'
+          +'Traffic History'
+        +'</div>'
+        +'<div class="traf-tabs" id="trafTabs">'
+          +'<button class="traf-tab active" id="traf-rt">Live</button>'
+          +'<button class="traf-tab" id="traf-1m">30m</button>'
+          +'<button class="traf-tab" id="traf-3h">3h</button>'
+          +'<button class="traf-tab" id="traf-24h">24h</button>'
+          +'<button class="traf-tab" id="traf-3d">3d</button>'
+        +'</div>'
+      +'</div>'
+      +'<div class="traf-canvas-wrap" id="trafWrap"><canvas id="trafficChart"></canvas></div>'
+      +'<div class="traf-note">'
+        +'<span class="traf-note-txt" id="trafNote">Menunggu data…</span>'
+        +'<div class="traf-legend">'
+          +'<div class="traf-leg"><div class="traf-leg-dl"></div>Download</div>'
+          +'<div class="traf-leg"><div class="traf-leg-ul"></div>Upload</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+
+    // GRID
+    +'<div class="cp-grid">'
+      +'<div class="cp-sidebar">'
+        +'<div class="cp-card">'
+          +'<div class="cp-card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Statistik</div>'
+          +'<div class="stat-mg">'
+            +'<div class="stat-m"><div class="stat-mn" style="color:var(--blue)">'+invoices.length+'</div><div class="stat-ml">Invoice</div></div>'
+            +'<div class="stat-m"><div class="stat-mn" style="color:var(--green)">'+payments.length+'</div><div class="stat-ml">Pembayaran</div></div>'
+            +'<div class="stat-m"><div class="stat-mn" style="color:var(--red)">'+unpaidInv.length+'</div><div class="stat-ml">Belum Lunas</div></div>'
+            +'<div class="stat-m"><div class="stat-mn" style="color:var(--orange)">'+timeline.length+'</div><div class="stat-ml">Aktivitas</div></div>'
+          +'</div>'
+        +'</div>'
+        +tagihanHtml
+        +teknisHtml
+      +'</div>'
+      +'<div>'
+        +'<div class="cp-tabs">'
+          +'<button class="cp-tab active" id="tab-btn-timeline"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Timeline <span class="tab-badge">'+timeline.length+'</span></button>'
+          +'<button class="cp-tab" id="tab-btn-invoices"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Invoice <span class="tab-badge">'+invoices.length+'</span></button>'
+          +'<button class="cp-tab" id="tab-btn-payments"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Pembayaran <span class="tab-badge">'+payments.length+'</span></button>'
+          +'<button class="cp-tab" id="tab-btn-docs"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M18 6h.008v.008H18V6zm2.25 12.75H3.75A2.25 2.25 0 011.5 16.5V7.5a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 7.5v9a2.25 2.25 0 01-2.25 2.25z"/></svg>Dokumen <span class="tab-badge">'+docCount+'</span></button>'
+        +'</div>'
+        +'<div class="cp-panel">'
+          +'<div id="tab-timeline">'
+            +'<div class="pscroll"><div class="tl-list">'+tlHtml+'</div></div>'
+            +'<div class="qr-bar">'
+              +'<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Kirim Pesan WA</div>'
+              +'<div class="qr-row">'
+                +'<textarea class="qr-ta" id="qrMsg" rows="1" placeholder="Tulis pesan ke '+esc(c.name)+'…"></textarea>'
+                +'<button class="qr-send" id="qrSend"><svg width="15" height="15" fill="white" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>'
+              +'</div>'
+              +'<div id="qrStatus" class="qr-status"></div>'
+            +'</div>'
+          +'</div>'
+          +'<div id="tab-invoices" style="display:none"><div class="pscroll">'+invHtml+'</div></div>'
+          +'<div id="tab-payments" style="display:none"><div class="pscroll">'+payHtml+'</div></div>'
+          +'<div id="tab-docs" style="display:none"><div class="pscroll" style="padding:4px"><div class="docs-grid">'
+            +buildDocCard('house','Foto Rumah','Foto tampak depan rumah / lokasi pemasangan',docs.house)
+            +buildDocCard('ktp','Foto KTP','Kartu identitas pelanggan (KTP/SIM)',docs.ktp)
+          +'</div></div></div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+
+    document.getElementById('cpContent').innerHTML = html;
+    document.getElementById('cpLoading').style.display = 'none';
+    document.getElementById('cpContent').style.display = 'block';
+
+    // Wire up events
+    document.getElementById('btnSendWA').addEventListener('click', function(){ openWA(c.phone||''); });
+    document.getElementById('btnEditProfile').addEventListener('click', function(){ openEditModal(c); });
+    document.getElementById('btnRefreshUsage').addEventListener('click', loadUsage);
+    document.getElementById('qrSend').addEventListener('click', function(){ quickSendWA(c.phone||''); });
+    var qrTa = document.getElementById('qrMsg');
+    if (qrTa) {
+      qrTa.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,96)+'px'; });
+      qrTa.addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); quickSendWA(c.phone||''); } });
+    }
+    ['timeline','invoices','payments','docs'].forEach(function(name){
+      var btn = document.getElementById('tab-btn-'+name);
+      if (btn) btn.addEventListener('click', function(){ switchTab(name, btn); });
+    });
+    // Simpan id customer untuk upload/hapus dokumen
+    _docCustId = c.id;
+    wireDocCards();
+
+    // Wire traffic tab buttons
+    ['rt','1m','3h','24h','3d'].forEach(function(r){
+      var btn = document.getElementById('traf-'+r);
+      if (btn) btn.addEventListener('click', (function(range){ return function(){ setTrafRange(range, this); }; })(r));
+    });
+
+    // Init map + layer toggle buttons
+    if (hasCoord) {
+      _mapCustData = c;  // simpan untuk popup
+      setTimeout(function(){
+        initMap(parseFloat(c.latitude), parseFloat(c.longitude), c.name);
+        var btnS = document.getElementById('mapBtnStreet');
+        var btnT = document.getElementById('mapBtnSat');
+        if (btnS) btnS.addEventListener('click', function(){ setMapLayer('street'); });
+        if (btnT) btnT.addEventListener('click', function(){ setMapLayer('satellite'); });
+      }, 150);
+    }
+
+    // Load usage + init traffic chart + ONT info
+    setTimeout(function(){
+      loadUsage();
+      initTrafficChart();
+    }, 600);
+    // Fetch ONT data (ODP, RX, Status)
+    fetchOntInfo(c.id, c.ont_sn);
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('cpLoading').innerHTML = '<p style="color:var(--red)">Gagal memuat data: '+esc(e.message)+'</p>';
+  }
+}
+
+/* ── Timeline builder ───────────────────────────────────── */
+function buildTimeline(items) {
+  var groups={};
+  items.forEach(function(item){
+    var rawDate = item.date||'';
+    var dk = rawDate ? new Date(rawDate) : null;
+    dk = (dk && !isNaN(dk.getTime())) ? rawDate.substring(0,10) : 'unknown';
+    if(!groups[dk]) groups[dk]=[];
+    groups[dk].push(item);
+  });
+  var todayStr=new Date().toISOString().substring(0,10);
+  var yestStr=new Date(Date.now()-86400000).toISOString().substring(0,10);
+  var html='';
+  Object.keys(groups).forEach(function(dk){
+    var dlbl=dk===todayStr?'Hari Ini':dk===yestStr?'Kemarin':fmtD(dk);
+    var itemsHtml='';
+    groups[dk].forEach(function(item){
+      var t=item.type, d=item.data;
+      var ts=item.date?new Date(item.date).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
+      var bg='#f1f5f9',ic='#64748b',lbl=t,cls='';
+      if(t==='invoice'){bg='#fffbeb';ic='#b45309';lbl='Invoice Dibuat';cls='bub-inv';}
+      else if(t==='payment'||t==='payment_tx'){bg='#f0fdf4';ic='#16a34a';lbl='Pembayaran';cls='bub-pay';}
+      var icon='';
+      if(t==='invoice') icon='<svg width="15" height="15" fill="none" stroke="'+ic+'" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>';
+      else icon='<svg width="15" height="15" fill="none" stroke="'+ic+'" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+      var content='';
+      if(t==='invoice') content='<div class="tl-txt" style="font-weight:700">'+esc(d.invoice_no||String(d.id||''))+' — '+fmtRp(d.amount)+'</div><div class="tl-sub">Jatuh tempo: '+fmtD(d.due_date)+'</div>';
+      else content='<div class="tl-txt" style="font-weight:700">'+fmtRp(d.amount)+' — Lunas</div>'+(d.invoice_no?'<div class="tl-sub">Invoice '+esc(d.invoice_no)+'</div>':'')+(d.payment_method?'<div class="tl-sub"><span class="badge bb">'+esc(d.payment_method)+'</span></div>':'');
+      itemsHtml+='<div class="tl-item"><div class="tl-dot" style="background:'+bg+'">'+icon+'</div><div style="flex:1;min-width:0"><div class="tl-bub '+cls+'"><div class="tl-bt"><span class="tl-typ" style="color:'+ic+'">'+lbl+'</span><span class="tl-tm">'+ts+'</span></div>'+content+'</div></div></div>';
+    });
+    html+='<div class="tl-day"><div class="tl-dh"><span class="tl-dl">'+dlbl+'</span><div class="tl-ln"></div></div>'+itemsHtml+'</div>';
+  });
+  return html;
+}
+
+/* ── Tab switching ──────────────────────────────────────── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.cp-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.cp-panel > div').forEach(function(p){ p.style.display='none'; });
+  btn.classList.add('active');
+  var panel = document.getElementById('tab-'+name);
+  if (panel) panel.style.display='block';
+}
+
+/* ── Dokumen Pelanggan (Foto Rumah & KTP) ──────────────────── */
+var _docCustId = null;
+
+function docToast(msg, type) {
+  if (App && typeof App.showToast === 'function') App.showToast(msg, type || 'info');
+  else if (type === 'error') alert(msg);
+}
+
+function fmtFileSize(b){ b=parseInt(b)||0; if(b>=1048576) return (b/1048576).toFixed(1)+' MB'; if(b>=1024) return Math.round(b/1024)+' KB'; return b+' B'; }
+
+// Bangun satu kartu dokumen. slot='house'|'ktp', entry = {url,name,size,uploaded_at} | undefined
+function buildDocCard(slot, title, subtitle, entry) {
+  var hasFile = entry && entry.url;
+  var icon = slot==='house'
+    ? '<svg width="15" height="15" fill="none" stroke="#1d4ed8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>'
+    : '<svg width="15" height="15" fill="none" stroke="#1d4ed8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h12A2.25 2.25 0 0120.25 6v12A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18V6zM6.75 9a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM3.75 16.5l3.75-3.75 2.25 2.25 3-3 7.5 7.5"/></svg>';
+
+  var thumb = hasFile
+    ? '<div class="doc-thumb" onclick="openDocLightbox(\''+esc(entry.url)+'\')"><img src="'+esc(entry.url)+'" alt="'+esc(title)+'"><span class="doc-zoom">🔍 Perbesar</span></div>'
+    : '<div class="doc-thumb"><div class="doc-empty"><svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M18 6h.008v.008H18V6zm2.25 12.75H3.75A2.25 2.25 0 011.5 16.5V7.5a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 7.5v9a2.25 2.25 0 01-2.25 2.25z"/></svg><span>Belum ada foto</span></div></div>';
+
+  var meta = hasFile
+    ? '<div class="doc-meta" id="doc-meta-'+slot+'">'+esc(entry.name||'')+' • '+fmtFileSize(entry.size)+' • '+fmtD(entry.uploaded_at)+'</div>'
+    : '<div class="doc-meta" id="doc-meta-'+slot+'"></div>';
+
+  var actions = '<div class="doc-actions">'
+    + '<button type="button" class="doc-btn primary" id="doc-up-'+slot+'">'
+      + '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>'
+      + (hasFile ? 'Ganti' : 'Upload')
+    + '</button>'
+    + (hasFile ? '<button type="button" class="doc-btn danger" id="doc-del-'+slot+'" title="Hapus"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>' : '')
+    + '</div>';
+
+  return '<div class="doc-card" id="doc-card-'+slot+'">'
+    + '<div class="doc-card-hd"><div class="dt">'+icon+esc(title)+'</div><div class="ds">'+esc(subtitle)+'</div></div>'
+    + thumb
+    + '<div class="doc-prog" id="doc-prog-'+slot+'"><i></i></div>'
+    + actions
+    + meta
+    + '<input type="file" accept="image/png,image/jpeg,image/webp" id="doc-file-'+slot+'" style="display:none">'
+  + '</div>';
+}
+
+// Pasang event listener ke tombol upload/hapus/file input tiap kartu
+function wireDocCards() {
+  ['house','ktp'].forEach(function(slot){
+    var upBtn  = document.getElementById('doc-up-'+slot);
+    var delBtn = document.getElementById('doc-del-'+slot);
+    var file   = document.getElementById('doc-file-'+slot);
+    if (upBtn && file) upBtn.addEventListener('click', function(){ file.click(); });
+    if (file) file.addEventListener('change', function(){
+      if (file.files && file.files[0]) uploadDoc(slot, file.files[0]);
+    });
+    if (delBtn) delBtn.addEventListener('click', function(){ deleteDoc(slot); });
+  });
+}
+
+async function uploadDoc(slot, fileObj) {
+  if (!_docCustId) return;
+  if (fileObj.size > 8 * 1024 * 1024) {
+    docToast('Ukuran file maksimal 8MB', 'error');
+    return;
+  }
+  var prog = document.getElementById('doc-prog-'+slot);
+  var bar  = prog ? prog.querySelector('i') : null;
+  var upBtn= document.getElementById('doc-up-'+slot);
+  if (prog) prog.style.display='block';
+  if (bar)  bar.style.width='0%';
+  if (upBtn) upBtn.disabled=true;
+
+  var fd = new FormData();
+  fd.append('photo', fileObj);
+
+  // Pakai XHR supaya bisa progress bar (App.api memaksa JSON Content-Type, tak cocok untuk FormData)
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/customers/'+_docCustId+'/document/'+slot);
+  if (App.token && App.token !== 'null') xhr.setRequestHeader('Authorization', 'Bearer '+App.token);
+  xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+  xhr.withCredentials = true;
+
+  xhr.upload.onprogress = function(e){
+    if (e.lengthComputable && bar) bar.style.width = Math.round((e.loaded/e.total)*100)+'%';
+  };
+  xhr.onload = function(){
+    if (upBtn) upBtn.disabled=false;
+    if (prog) setTimeout(function(){ prog.style.display='none'; }, 400);
+    var res = {};
+    try { res = JSON.parse(xhr.responseText); } catch(e){}
+    if (xhr.status >= 200 && xhr.status < 300 && res.success) {
+      // Render ulang kartu dengan data baru
+      refreshDocCard(slot, res.data);
+      updateDocBadge(res.documents);
+      docToast('Dokumen berhasil disimpan', 'success');
+    } else {
+      var m = res.message || ('Gagal upload (HTTP '+xhr.status+')');
+      docToast(m, 'error');
+    }
+  };
+  xhr.onerror = function(){
+    if (upBtn) upBtn.disabled=false;
+    if (prog) prog.style.display='none';
+    docToast('Gagal terhubung ke server', 'error');
+  };
+  xhr.send(fd);
+}
+
+async function deleteDoc(slot) {
+  if (!_docCustId) return;
+  var ok = window.confirm('Hapus dokumen ini?');
+  if (!ok) return;
+  try {
+    var r = await App.api('/customers/'+_docCustId+'/document/'+slot, { method:'DELETE' });
+    if (r && r.success) {
+      refreshDocCard(slot, null);
+      updateDocBadge(r.documents);
+      docToast('Dokumen dihapus', 'success');
+    } else {
+      var m = (r && r.message) ? r.message : 'Gagal menghapus';
+      docToast(m, 'error');
+    }
+  } catch(e) {
+    docToast(e.message, 'error');
+  }
+}
+
+// Render ulang satu kartu (in-place) tanpa reload seluruh halaman
+function refreshDocCard(slot, entry) {
+  var titles = { house:['Foto Rumah','Foto tampak depan rumah / lokasi pemasangan'],
+                 ktp:  ['Foto KTP','Kartu identitas pelanggan (KTP/SIM)'] };
+  var t = titles[slot] || [slot,''];
+  var old = document.getElementById('doc-card-'+slot);
+  if (!old) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = buildDocCard(slot, t[0], t[1], entry);
+  old.replaceWith(tmp.firstChild);
+  wireDocCards(); // re-bind (kartu lama sudah diganti)
+}
+
+function updateDocBadge(documents) {
+  var docs = (documents && !Array.isArray(documents) && typeof documents==='object') ? documents : {};
+  var cnt = (docs.house?1:0) + (docs.ktp?1:0);
+  var btn = document.getElementById('tab-btn-docs');
+  if (btn) { var b = btn.querySelector('.tab-badge'); if (b) b.textContent = cnt; }
+}
+
+// Lightbox preview
+function openDocLightbox(url) {
+  var lb = document.getElementById('docLightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'docLightbox';
+    lb.className = 'doc-lb';
+    lb.innerHTML = '<button class="doc-lb-close" onclick="closeDocLightbox()">&times;</button><img id="docLightboxImg" src="" alt="preview">';
+    document.body.appendChild(lb);
+    lb.addEventListener('click', function(e){ if (e.target === lb) closeDocLightbox(); });
+  }
+  document.getElementById('docLightboxImg').src = url;
+  lb.classList.add('open');
+}
+function closeDocLightbox() {
+  var lb = document.getElementById('docLightbox');
+  if (lb) lb.classList.remove('open');
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDocLightbox(); });
+
+
+/* ── Map ────────────────────────────────────────────────── */
+var _leafletMap   = null;
+var _layerStreet  = null;
+var _layerSat     = null;
+
+function initMap(lat, lng, name) {
+  var mapEl = document.getElementById('custMap');
+  if (!mapEl || !window.L) return;
+
+  _leafletMap = L.map('custMap', {zoomControl:true, scrollWheelZoom:true}).setView([lat,lng],17);
+
+  // Layer definitions — sama dengan infrastructure.js (CartoDB + Google)
+  _layerStreet = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20
+  });
+  _layerSat = L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google',
+    subdomains: '0123',
+    maxZoom: 20
+  });
+
+  // Default: street
+  _layerStreet.addTo(_leafletMap);
+
+  // Marker icon — teardrop biru
+  var icon = L.divIcon({
+    className: '',
+    html: '<div style="width:32px;height:32px;background:linear-gradient(135deg,#1a6ef5,#0047cc);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 4px 16px rgba(26,110,245,.55)"></div>',
+    iconSize: [32,32], iconAnchor: [16,32], popupAnchor: [0,-36]
+  });
+
+  // Build popup dari data customer yang tersimpan di _mapCustData
+  var d = _mapCustData || {};
+  var initials = (name||'?').trim()[0].toUpperCase();
+  var phone    = d.phone || '';
+  var cid      = esc(d.customer_id||'');
+  var pkg      = (d.package&&d.package.name) ? esc(d.package.name) : (d.package_name ? esc(d.package_name) : '—');
+  var addr     = d.address ? esc(d.address.substring(0,40)) : '—';
+  var stClr    = {active:'#16a34a',isolated:'#dc2626',suspended:'#d97706'}[d.status]||'#64748b';
+  var stLbl    = {active:'Aktif',isolated:'Isolir',suspended:'Suspended',inactive:'Nonaktif'}[d.status]||'—';
+  var waPhone  = phone.replace(/[^0-9]/g,'');
+  if (waPhone.startsWith('0')) waPhone = '62'+waPhone.slice(1);
+  var navUrl   = 'https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng;
+  var waUrl    = 'https://wa.me/'+waPhone;
+
+  var ph = ''
+    +'<div class="cmp-hd">'
+      +'<div class="cmp-hd-orb"></div>'
+      +'<div class="cmp-hd-row">'
+        +'<div class="cmp-hd-av">'+initials+'</div>'
+        +'<div>'
+          +'<div class="cmp-hd-name">'+esc(name||'')+'</div>'
+          +'<div class="cmp-hd-cid">'+(cid?cid+' · ':'')+lat.toFixed(5)+', '+lng.toFixed(5)+'</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="cmp-body">'
+      +'<div class="cmp-row"><span class="cmp-lbl">Status</span><span class="cmp-val" style="color:'+stClr+'">● '+stLbl+'</span></div>'
+      +'<div class="cmp-row"><span class="cmp-lbl">Paket</span><span class="cmp-val">'+pkg+'</span></div>'
+      +(phone ? '<div class="cmp-row"><span class="cmp-lbl">No. HP</span><span class="cmp-val" style="font-family:monospace;font-size:11px">'+esc(phone)+'</span></div>' : '')
+      +'<div class="cmp-row"><span class="cmp-lbl">Alamat</span><span class="cmp-val" style="font-size:11px;max-width:130px;text-align:right">'+addr+'</span></div>'
+    +'</div>'
+    +'<div class="cmp-foot">'
+      +'<a href="'+navUrl+'" target="_blank" class="cmp-btn cmp-btn-nav">'
+        +'<svg width="13" height="13" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="3,11 22,2 13,21 11,13 3,11"/></svg>Navigasi'
+      +'</a>'
+      +(waPhone ? '<a href="'+waUrl+'" target="_blank" class="cmp-btn cmp-btn-wa">'
+        +'<svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Hubungi'
+      +'</a>'
+      : '<span class="cmp-btn cmp-btn-wa" style="opacity:.45;cursor:default">Tidak ada HP</span>')
+    +'</div>';
+
+  L.marker([lat,lng],{icon})
+    .addTo(_leafletMap)
+    .bindPopup(ph, {maxWidth:260, minWidth:220, className:'cmp-wrap', closeButton:true})
+    .openPopup();
+
+  setTimeout(function(){ _leafletMap.invalidateSize(); }, 300);
+}
+
+function setMapLayer(type) {
+  if (!_leafletMap || !_layerStreet || !_layerSat) return;
+  var btnStreet = document.getElementById('mapBtnStreet');
+  var btnSat    = document.getElementById('mapBtnSat');
+
+  if (type === 'satellite') {
+    _leafletMap.removeLayer(_layerStreet);
+    _layerSat.addTo(_leafletMap);
+    if (btnStreet) btnStreet.classList.remove('active');
+    if (btnSat)    btnSat.classList.add('active');
+  } else {
+    _leafletMap.removeLayer(_layerSat);
+    _layerStreet.addTo(_leafletMap);
+    if (btnSat)    btnSat.classList.remove('active');
+    if (btnStreet) btnStreet.classList.add('active');
+  }
+}
+
+/* ── Usage (Simple Queue) ───────────────────────────────── */
+async function loadUsage() {
+  var el = document.getElementById('usageContent');
+  if (!el) return;
+  el.innerHTML = '<div class="u-load"><div class="u-spin"></div><span>Memuat data dari MikroTik…</span></div>';
+  try {
+    var data = await App.api('/mikrotik/customer-traffic');
+    if (!data || !data.success || !Array.isArray(data.data)) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">Tidak dapat terhubung ke MikroTik</div>';
+      return;
+    }
+    var cu = data.data.find(function(x){ return x.id===parseInt(CUST_ID); });
+    if (!cu) {
+      el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">Data usage tidak ditemukan.<br><span style="font-size:11px">Pastikan Simple Queue / PPPoE sudah dikonfigurasi.</span></div>';
+      return;
+    }
+    renderUsage(cu);
+  } catch(e) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--red);font-size:12px">Error: '+esc(e.message||'Koneksi gagal')+'</div>';
+  }
+}
+
+function renderUsage(d) {
+  var el = document.getElementById('usageContent');
+  if (!el) return;
+  var online  = d.online;
+  var dlUtil  = d.utilDown||0;
+  var ulUtil  = d.utilUp||0;
+  var dlB = fmtBytes(d.bytesDown).split(' '), ulB = fmtBytes(d.bytesUp).split(' ');
+
+  var html = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    +'<span class="uso '+(online?'uso-on':'uso-off')+'"><span class="uso-dot"></span>'+(online?'Online':'Offline')+'</span>'
+    +(d.queueName?'<span style="font-size:11px;color:var(--muted)">Queue: <strong style="color:var(--text);font-family:monospace">'+esc(d.queueName)+'</strong></span>':'')
+    +(d.uptime?'<span style="font-size:11px;color:var(--muted)">Uptime: <strong style="color:var(--text)">'+esc(d.uptime)+'</strong></span>':'')
+    +(d.onlineSource?'<span style="font-size:10px;background:var(--pg);color:var(--muted);padding:2px 7px;border-radius:8px;border:1px solid var(--border)">'+d.onlineSource.toUpperCase()+'</span>':'')
+    +'</div>'
+    +'<div class="usage-grid">'
+      +'<div class="uc dl"><div class="uc-orb"></div>'
+        +'<div class="uc-lbl"><svg width="11" height="11" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>Total Download</div>'
+        +'<div class="uc-val">'+dlB[0]+'<span class="uc-unit">'+(dlB[1]||'')+'</span></div>'
+        +'<div class="uc-rate">↓ '+fmtRate(d.rateDown)+' real-time</div>'
+      +'</div>'
+      +'<div class="uc ul"><div class="uc-orb"></div>'
+        +'<div class="uc-lbl"><svg width="11" height="11" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>Total Upload</div>'
+        +'<div class="uc-val">'+ulB[0]+'<span class="uc-unit">'+(ulB[1]||'')+'</span></div>'
+        +'<div class="uc-rate">↑ '+fmtRate(d.rateUp)+' real-time</div>'
+      +'</div>'
+    +'</div>';
+
+  if (d.maxDown>0||d.maxUp>0) {
+    html += '<div class="usage-ratio">'
+      +'<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Rasio Download vs Upload</div>'
+      +'<div class="ubar-row">'
+        +'<span style="font-size:10px;color:#1a6ef5;font-weight:700;white-space:nowrap">↓ '+dlUtil+'%</span>'
+        +'<div class="ubar-bg"><div class="ubar-dl" style="width:'+dlUtil+'%"></div></div>'
+        +'<div class="ubar-bg"><div class="ubar-ul" style="width:'+ulUtil+'%"></div></div>'
+        +'<span style="font-size:10px;color:#00a07a;font-weight:700;white-space:nowrap">↑ '+ulUtil+'%</span>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)">'
+        +'<span>Max DL: '+fmtRate(d.maxDown)+'</span><span>Max UL: '+fmtRate(d.maxUp)+'</span>'
+      +'</div>'
+    +'</div>';
+  }
+  if (d.ip) html += '<div style="font-size:11px;color:var(--muted);font-family:monospace;margin-top:6px">IP: <strong style="color:var(--text)">'+esc(d.ip)+'</strong></div>';
+  el.innerHTML = html;
+
+  // Store queue info for chart
+  window._profileQueueName = d.queueName || null;
+  // Untuk pelanggan PPPoE yang sedang offline, dynamic queue tidak ada di MikroTik
+  // sehingga d.queueName = null. Pakai pppoe username sebagai fallback agar history
+  // chart bisa load via /api/mikrotik/customer-history?pppoeUser=...
+  window._profilePPPoEUser = d.pppoe || null;
+  window._profileCustId    = parseInt(CUST_ID);
+}
+
+/* ── Quick actions ──────────────────────────────────────── */
+function openWA(phone) {
+  if (!phone) return;
+  var n = phone.replace(/[^0-9]/g,'');
+  if (n.startsWith('0')) n = '62'+n.slice(1);
+  window.open('https://wa.me/'+n,'_blank');
+}
+
+/* ── Edit Customer Modal ──────────────────────────────────── */
+var _editCustId = null;
+
+function openEditModal(cust) {
+  _editCustId = cust.id;
+  var modal = document.getElementById('editProfileModal');
+  if (!modal) return;
+
+  // Fill fields
+  var set = function(id, val) { var el=document.getElementById(id); if(el) el.value=val||''; };
+  set('ep-name',         cust.name);
+  set('ep-phone',        cust.phone);
+  set('ep-email',        cust.email);
+  set('ep-nik',          cust.nik);
+  set('ep-address',      cust.address);
+  set('ep-latitude',     cust.latitude);
+  set('ep-longitude',    cust.longitude);
+  // Pre-fill tgl jatuh tempo dari due_date (DATEONLY YYYY-MM-DD).
+  // Konsisten dengan form edit di halaman customers list — full date picker.
+  set('ep-due-date',     (cust.due_date||'').substring(0,10));
+  set('ep-install-date', (cust.installation_date||'').substring(0,10));
+  set('ep-status',       cust.status||'active');
+  set('ep-pppoe',        cust.pppoe_username);
+  set('ep-ont-sn',       cust.ont_sn);
+  set('ep-static-ip',    cust.static_ip);
+  document.getElementById('ep-msg').textContent = '';
+
+  // Load packages
+  App.api('/packages').then(function(r){
+    var sel = document.getElementById('ep-package');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Pilih Paket —</option>';
+    if (r && r.data) {
+      (Array.isArray(r.data)?r.data:(r.data.rows||[])).forEach(function(p){
+        var opt = document.createElement('option');
+        opt.value = p.id; opt.textContent = p.name + ' ('+fmtRp(p.price)+')';
+        sel.appendChild(opt);
+      });
+    }
+    sel.value = cust.package_id || '';
+  }).catch(function(){});
+
+  // Load mikrotik devices — endpoint: /isolir/devices (sama dengan customers.js)
+  App.api('/isolir/devices').then(function(r){
+    var sel = document.getElementById('ep-mikrotik');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Pilih Router —</option>';
+    if (r && r.data && Array.isArray(r.data)) {
+      r.data.forEach(function(m){
+        var opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = (m.name||'Router') + (m.host ? ' ('+m.host+')' : '');
+        sel.appendChild(opt);
+      });
+    }
+    sel.value = cust.mikrotik_id || '';
+  }).catch(function(){
+    var sel = document.getElementById('ep-mikrotik');
+    if (sel) sel.innerHTML = '<option value="">— Tidak ada router —</option>';
+  });
+
+  // Load portal credentials (customer_id login + status password + last login)
+  loadPortalCredentials(cust.id);
+  // Load link pembayaran permanen
+  loadPaymentLink(cust.id);
+
+  modal.classList.add('open');
+  // Inisialisasi peta + pulihkan dropdown wilayah dari kolom area / alamat
+  epInitMap();
+  epRestoreRegion(cust.province, cust.regency, cust.district, cust.village);
+}
+
+// ── Portal Credentials (admin-side) ──────────────────────────────────
+function loadPortalCredentials(custId) {
+  // Default state: locked, empty pw field
+  var cidInput = document.getElementById('ep-cid');
+  var cidBtn   = document.getElementById('ep-cid-toggle');
+  var pwInput  = document.getElementById('ep-pw');
+  var hint     = document.getElementById('ep-pw-hint');
+  var last     = document.getElementById('ep-portal-last');
+  var enabled  = document.getElementById('ep-portal-enabled');
+  var cidWarn  = document.getElementById('ep-cid-warn');
+
+  if (cidInput) { cidInput.value=''; cidInput.readOnly = true; cidInput.style.background='#eef2f7'; cidInput.style.cursor='not-allowed'; }
+  if (cidBtn)   { cidBtn.textContent = 'Ubah'; }
+  if (cidWarn)  { cidWarn.style.display = 'none'; }
+  if (pwInput)  { pwInput.value=''; pwInput.type='password'; }
+  if (hint)     { hint.textContent='Memuat…'; hint.style.color='#94a3b8'; }
+  if (last)     { last.textContent=''; }
+  if (enabled)  { enabled.checked = true; }
+
+  App.api('/customers/'+custId+'/portal-credentials').then(function(r){
+    if (!r || !r.success || !r.data) {
+      if (hint) { hint.textContent = 'Tidak dapat memuat data kredensial portal'; hint.style.color='#dc2626'; }
+      return;
+    }
+    var d = r.data;
+    if (cidInput) cidInput.value = d.customer_id || '';
+    if (enabled)  enabled.checked = !!d.portal_enabled;
+    if (hint) {
+      if (d.has_custom_password) {
+        hint.innerHTML = '✓ Password sudah diset. Kosongkan untuk tidak mengubah.';
+        hint.style.color = '#16a34a';
+      } else if (d.fallback_login_hint) {
+        hint.innerHTML = 'Belum ada password custom — pelanggan login pakai nomor HP: <span style="font-family:DM Mono,monospace;color:#0d1b3e;font-weight:600;">'+d.fallback_login_hint+'</span>';
+        hint.style.color = '#b45309';
+      } else {
+        hint.innerHTML = '⚠ Belum ada password & belum ada nomor HP — pelanggan tidak bisa login.';
+        hint.style.color = '#dc2626';
+      }
+    }
+    if (last) {
+      if (d.last_portal_login) {
+        var dt = new Date(d.last_portal_login);
+        last.textContent = 'Login terakhir: ' + dt.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+      } else {
+        last.textContent = 'Pelanggan belum pernah login ke portal.';
+      }
+    }
+  }).catch(function(e){
+    if (hint) { hint.textContent = 'Gagal memuat: ' + (e.message||'error'); hint.style.color='#dc2626'; }
+  });
+}
+
+function togglePortalCidEdit() {
+  var cidInput = document.getElementById('ep-cid');
+  var btn      = document.getElementById('ep-cid-toggle');
+  var warn     = document.getElementById('ep-cid-warn');
+  if (!cidInput || !btn) return;
+  var nowLocked = cidInput.readOnly;
+  if (nowLocked) {
+    // Unlock
+    cidInput.readOnly = false;
+    cidInput.style.background = '#fff';
+    cidInput.style.cursor = 'text';
+    cidInput.focus();
+    cidInput.select();
+    btn.textContent = 'Batal';
+    btn.style.color = '#dc2626';
+    btn.style.borderColor = '#fecaca';
+    if (warn) warn.style.display = 'block';
+  } else {
+    // Lock (cancel edit) — reload original value
+    var custId = _editCustId;
+    if (custId) loadPortalCredentials(custId);
+    btn.style.color = '#1a6ef5';
+    btn.style.borderColor = '#e4ecf7';
+  }
+}
+
+function togglePortalPwVisibility() {
+  var pw = document.getElementById('ep-pw');
+  if (!pw) return;
+  pw.type = (pw.type === 'password') ? 'text' : 'password';
+}
+
+function generatePortalPassword() {
+  // 8 karakter mudah dibaca — tanpa O/0/I/l yang ambigu
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789abcdefghjkmnpqrstuvwxyz';
+  var out = '';
+  var arr = new Uint32Array(8);
+  if (window.crypto && window.crypto.getRandomValues) {
+    window.crypto.getRandomValues(arr);
+    for (var i=0;i<8;i++) out += chars[arr[i] % chars.length];
+  } else {
+    for (var j=0;j<8;j++) out += chars[Math.floor(Math.random()*chars.length)];
+  }
+  var pw = document.getElementById('ep-pw');
+  if (pw) { pw.value = out; pw.type = 'text'; }
+}
+
+async function resetPortalPasswordToPhone() {
+  if (!_editCustId) return;
+  if (!confirm('Reset password pelanggan? Setelah reset, pelanggan akan login menggunakan nomor HP-nya sendiri.')) return;
+  try {
+    var r = await App.api('/customers/'+_editCustId+'/portal-credentials/reset', { method: 'POST' });
+    if (r && r.success) {
+      App.showToast(r.message || 'Password direset', 'success');
+      loadPortalCredentials(_editCustId);
+      var pw = document.getElementById('ep-pw');
+      if (pw) pw.value = '';
+    } else {
+      App.showToast(r && r.message ? r.message : 'Gagal reset password', 'error');
+    }
+  } catch(err) {
+    App.showToast('Error: ' + (err.message||err), 'error');
+  }
+}
+
+async function savePortalCredentials() {
+  // Dipanggil dari saveEditProfile() sesudah profil tersimpan.
+  // Hanya kirim field yang benar-benar diubah supaya tidak overwrite data lain.
+  if (!_editCustId) return { ok:true };
+
+  var cidInput = document.getElementById('ep-cid');
+  var pwInput  = document.getElementById('ep-pw');
+  var enabled  = document.getElementById('ep-portal-enabled');
+  var payload  = {};
+
+  // Customer ID — hanya kirim kalau input ter-unlock (user benar-benar mengubahnya)
+  if (cidInput && !cidInput.readOnly) {
+    var cid = (cidInput.value||'').trim();
+    if (cid) payload.customer_id = cid;
+  }
+  // Password — kirim kalau ada isi
+  if (pwInput && pwInput.value) {
+    if (pwInput.value.length < 6) {
+      return { ok:false, message:'Password portal minimal 6 karakter' };
+    }
+    payload.new_password = pwInput.value;
+  }
+  // portal_enabled — selalu sync (cheap; satu boolean)
+  if (enabled) payload.portal_enabled = !!enabled.checked;
+
+  // Kalau tidak ada perubahan kredensial yang signifikan (cuma toggle yang sama),
+  // skip — backend akan return 400 "Tidak ada perubahan".
+  // Kita tetap kirim kalau ada toggle/cid/pw, biar simpel.
+  if (!('customer_id' in payload) && !('new_password' in payload)) {
+    // Kalau cuma toggle enabled, tetap kirim — backend akan handle.
+    // Kecuali kalau enabled = state sebelumnya, tapi kita tidak track itu — biarkan saja.
+  }
+
+  try {
+    var r = await App.api('/customers/'+_editCustId+'/portal-credentials', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (r && r.success) {
+      // Kalau password baru di-generate / di-set, tampilkan ke admin sekali.
+      if (r.data && r.data.new_password) {
+        showPortalPasswordResult(r.data.customer_id || (cidInput && cidInput.value), r.data.new_password);
+      }
+      return { ok:true };
+    } else {
+      return { ok:false, message: (r && r.message) ? r.message : 'Gagal update kredensial portal' };
+    }
+  } catch(err) {
+    return { ok:false, message: err.message || String(err) };
+  }
+}
+
+function showPortalPasswordResult(custId, password) {
+  // Modal kecil non-blocking yang menampilkan kredensial baru sekali saja
+  // supaya admin bisa salin & kirim ke pelanggan via WA.
+  var existing = document.getElementById('portalPwResultModal');
+  if (existing) existing.remove();
+  var html = ''
+    + '<div id="portalPwResultModal" style="position:fixed;inset:0;z-index:10001;background:rgba(13,27,62,.55);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">'
+    +   '<div style="background:#fff;border-radius:18px;width:100%;max-width:420px;padding:24px;box-shadow:0 30px 80px rgba(13,27,62,.3);">'
+    +     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'
+    +       '<div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;">'
+    +         '<svg width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+    +       '</div>'
+    +       '<div style="font-size:15px;font-weight:800;color:#0d1b3e;">Kredensial Portal Baru</div>'
+    +     '</div>'
+    +     '<div style="font-size:12.5px;color:#64748b;margin-bottom:14px;line-height:1.5;">'
+    +       'Berikut detail login pelanggan untuk Customer Portal. '
+    +       '<span style="color:#dc2626;font-weight:600;">Salin dan kirim ke pelanggan sekarang</span> — password ini tidak akan ditampilkan lagi.'
+    +     '</div>'
+    +     '<div style="background:#f8fafd;border:1.5px solid #e4ecf7;border-radius:12px;padding:14px;margin-bottom:14px;font-family:DM Mono,ui-monospace,monospace;">'
+    +       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">'
+    +         '<span style="font-size:10.5px;color:#94a3b8;text-transform:uppercase;font-weight:700;font-family:DM Sans,sans-serif;letter-spacing:.05em;">Customer ID</span>'
+    +         '<span id="ppr-cid" style="font-size:13.5px;color:#0d1b3e;font-weight:600;">'+escHtml(custId||'')+'</span>'
+    +       '</div>'
+    +       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    +         '<span style="font-size:10.5px;color:#94a3b8;text-transform:uppercase;font-weight:700;font-family:DM Sans,sans-serif;letter-spacing:.05em;">Password</span>'
+    +         '<span id="ppr-pw" style="font-size:13.5px;color:#0d1b3e;font-weight:600;letter-spacing:.05em;">'+escHtml(password||'')+'</span>'
+    +       '</div>'
+    +     '</div>'
+    +     '<div style="display:flex;gap:8px;">'
+    +       '<button id="ppr-copy-btn" onclick="copyPortalCreds()" style="flex:1;padding:10px;border:1.5px solid #e4ecf7;border-radius:10px;background:#fff;color:#1a6ef5;font-size:12.5px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif;">Salin Keduanya</button>'
+    +       '<button onclick="document.getElementById(\'portalPwResultModal\').remove()" style="flex:1;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:DM Sans,sans-serif;">Selesai</button>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function escHtml(s) {
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+function copyPortalCreds() {
+  var cid = document.getElementById('ppr-cid');
+  var pw  = document.getElementById('ppr-pw');
+  if (!cid || !pw) return;
+  var txt = 'Customer ID: ' + cid.textContent + '\nPassword: ' + pw.textContent;
+  var btn = document.getElementById('ppr-copy-btn');
+  var done = function(){ if(btn){ btn.textContent='✓ Tersalin'; btn.style.color='#16a34a'; setTimeout(function(){ btn.textContent='Salin Keduanya'; btn.style.color='#1a6ef5'; }, 1500);} };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(function(){
+      // Fallback
+      var ta = document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(_){} document.body.removeChild(ta);
+    });
+  } else {
+    var ta = document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); done();}catch(_){} document.body.removeChild(ta);
+  }
+}
+
+// ── Link Pembayaran Permanen (admin-side) ────────────────────────────
+var _plinkState = { token: null, url: null };
+
+function loadPaymentLink(custId) {
+  _plinkState = { token: null, url: null };
+  setPaymentLinkMsg('');
+  App.api('/customers/' + custId + '/payment-link').then(function (r) {
+    if (r && r.success && r.data) {
+      _plinkState.token = r.data.token || null;
+      _plinkState.url = r.data.url || null;
+    }
+    renderPaymentLink();
+  }).catch(function () { renderPaymentLink(); });
+}
+
+function renderPaymentLink() {
+  var box     = document.getElementById('ep-plink-box');
+  var empty   = document.getElementById('ep-plink-empty');
+  var urlIn   = document.getElementById('ep-plink-url');
+  var genTxt  = document.getElementById('ep-plink-gen-txt');
+  var revoke  = document.getElementById('ep-plink-revoke');
+  var has = !!_plinkState.url;
+  if (box)    box.style.display    = has ? 'block' : 'none';
+  if (empty)  empty.style.display  = has ? 'none'  : 'block';
+  if (revoke) revoke.style.display = has ? 'inline-flex' : 'none';
+  if (genTxt) genTxt.textContent   = has ? 'Buat Ulang' : 'Buat Link';
+  if (urlIn && has) urlIn.value = _plinkState.url;
+}
+
+function setPaymentLinkMsg(html, color) {
+  var m = document.getElementById('ep-plink-msg');
+  if (m) m.innerHTML = html ? '<span style="color:' + (color || '#64748b') + '">' + html + '</span>' : '';
+}
+
+async function generatePaymentLink() {
+  if (!_editCustId) return;
+  var btn = document.getElementById('ep-plink-gen');
+  // Kalau sudah ada link, konfirmasi dulu karena ini mencabut link lama.
+  if (_plinkState.url) {
+    setPaymentLinkMsg('Membuat ulang akan mencabut link lama. Lanjutkan? '
+      + '<a href="#" onclick="doGeneratePaymentLink();return false;" style="color:#1a6ef5;font-weight:700;">Ya, buat ulang</a> · '
+      + '<a href="#" onclick="setPaymentLinkMsg(\'\');return false;" style="color:#64748b;">Batal</a>', '#b45309');
+    return;
+  }
+  doGeneratePaymentLink();
+}
+
+async function doGeneratePaymentLink() {
+  if (!_editCustId) return;
+  var btn = document.getElementById('ep-plink-gen');
+  if (btn) btn.disabled = true;
+  setPaymentLinkMsg('Memproses…');
+  try {
+    var r = await App.api('/customers/' + _editCustId + '/payment-link', { method: 'POST' });
+    if (r && r.success && r.data) {
+      _plinkState.token = r.data.token;
+      _plinkState.url = r.data.url;
+      renderPaymentLink();
+      setPaymentLinkMsg(r.message || 'Link dibuat.', '#16a34a');
+    } else {
+      setPaymentLinkMsg((r && r.message) || 'Gagal membuat link', '#dc2626');
+    }
+  } catch (e) {
+    setPaymentLinkMsg('Error: ' + (e.message || e), '#dc2626');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function revokePaymentLink() {
+  if (!_editCustId || !_plinkState.url) return;
+  setPaymentLinkMsg('Cabut link permanen pelanggan ini? '
+    + '<a href="#" onclick="doRevokePaymentLink();return false;" style="color:#dc2626;font-weight:700;">Ya, cabut</a> · '
+    + '<a href="#" onclick="setPaymentLinkMsg(\'\');return false;" style="color:#64748b;">Batal</a>', '#b45309');
+}
+
+async function doRevokePaymentLink() {
+  if (!_editCustId) return;
+  setPaymentLinkMsg('Memproses…');
+  try {
+    var r = await App.api('/customers/' + _editCustId + '/payment-link', { method: 'DELETE' });
+    if (r && r.success) {
+      _plinkState = { token: null, url: null };
+      renderPaymentLink();
+      setPaymentLinkMsg(r.message || 'Link dicabut.', '#16a34a');
+    } else {
+      setPaymentLinkMsg((r && r.message) || 'Gagal mencabut link', '#dc2626');
+    }
+  } catch (e) {
+    setPaymentLinkMsg('Error: ' + (e.message || e), '#dc2626');
+  }
+}
+
+function copyPaymentLink() {
+  var urlIn = document.getElementById('ep-plink-url');
+  var btn = document.getElementById('ep-plink-copy');
+  if (!urlIn || !urlIn.value) return;
+  var done = function () { if (btn) { btn.textContent = '✓ Tersalin'; btn.style.color = '#16a34a'; setTimeout(function () { btn.textContent = 'Salin'; btn.style.color = '#1a6ef5'; }, 1500); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(urlIn.value).then(done).catch(function () {
+      urlIn.select(); try { document.execCommand('copy'); done(); } catch (_) {}
+    });
+  } else {
+    urlIn.select(); try { document.execCommand('copy'); done(); } catch (_) {}
+  }
+}
+
+function closeEditModal() {
+  var modal = document.getElementById('editProfileModal');
+  if (modal) modal.classList.remove('open');
+}
+
+// Close on backdrop click
+document.addEventListener('click', function(e){
+  var modal = document.getElementById('editProfileModal');
+  if (modal && modal.classList.contains('open') && e.target === modal) {
+    closeEditModal();
+  }
+});
+
+async function saveEditProfile() {
+  var btn = document.getElementById('ep-save-btn');
+  var msg = document.getElementById('ep-msg');
+  if (!_editCustId) return;
+
+  var val = function(id){ var el=document.getElementById(id); return el?el.value.trim():''; };
+  var name = val('ep-name');
+  if (!name) { msg.innerHTML='<span style="color:#dc2626">Nama tidak boleh kosong</span>'; return; }
+
+  if (btn) { btn.textContent='Menyimpan…'; btn.disabled=true; }
+  if (msg) msg.textContent = '';
+
+  try {
+    var payload = {
+      name:              name,
+      phone:             val('ep-phone'),
+      email:             val('ep-email'),
+      nik:               val('ep-nik') || null,
+      address:           val('ep-address'),
+      province:          epSelName('ep-prov') || null,
+      regency:           epSelName('ep-kab')  || null,
+      district:          epSelName('ep-kec')  || null,
+      village:           epSelName('ep-desa') || null,
+      latitude:          val('ep-latitude')  || null,
+      longitude:         val('ep-longitude') || null,
+      package_id:        val('ep-package') || null,
+      due_date:          val('ep-due-date') || null,
+      installation_date: val('ep-install-date') || null,
+      status:            val('ep-status') || 'active',
+      pppoe_username:    val('ep-pppoe'),
+      ont_sn:            val('ep-ont-sn'),
+      static_ip:         val('ep-static-ip') || null,
+      mikrotik_id:       val('ep-mikrotik') || null
+    };
+
+    var res = await App.api('/customers/'+_editCustId, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+
+    if (res && res.success) {
+      // Profil berhasil disimpan. Sekarang sync portal credentials.
+      // savePortalCredentials() hanya mengirim field yang berubah; backend
+      // akan return 400 "Tidak ada perubahan" kalau kosong — itu OK (kita skip).
+      var pcRes = await savePortalCredentials();
+      if (!pcRes.ok && pcRes.message && pcRes.message !== 'Tidak ada perubahan') {
+        // Profil sudah ke-save tapi portal credentials gagal — tampilkan warning,
+        // jangan tutup modal supaya admin bisa retry.
+        if (msg) msg.innerHTML = '<span style="color:#dc2626">Profil tersimpan, tapi kredensial portal gagal: '+esc(pcRes.message)+'</span>';
+        if (btn) { btn.textContent='Simpan'; btn.disabled=false; }
+        return;
+      }
+      if (msg) msg.innerHTML = '<span style="color:#16a34a">✓ Berhasil disimpan</span>';
+      // Kalau ada new_password yang ditampilkan via modal kredensial,
+      // jangan langsung tutup modal edit — biarkan admin baca dulu.
+      var pwModalShown = !!document.getElementById('portalPwResultModal');
+      setTimeout(function(){
+        closeEditModal();
+        loadProfile();
+      }, pwModalShown ? 200 : 800);
+    } else {
+      if (msg) msg.innerHTML = '<span style="color:#dc2626">'+(res&&res.message?esc(res.message):'Gagal menyimpan')+'</span>';
+    }
+  } catch(e) {
+    if (msg) msg.innerHTML = '<span style="color:#dc2626">Error: '+esc(e.message)+'</span>';
+  } finally {
+    if (btn) { btn.textContent='Simpan'; btn.disabled=false; }
+  }
+}
+function quickSendWA(phone) {
+  var ta  = document.getElementById('qrMsg');
+  var st  = document.getElementById('qrStatus');
+  var msg = ta&&ta.value.trim();
+  if (!msg||!phone) return;
+  openWA(phone+'?text='+encodeURIComponent(msg));
+  if (ta) { ta.value=''; ta.style.height='auto'; }
+  if (st) { st.textContent='✓ Membuka WhatsApp…'; st.className='qr-status qr-ok'; st.style.display='block'; setTimeout(function(){ st.style.display='none'; },3000); }
+}
+
+/* ── Traffic History Chart ──────────────────────────────── */
+var _trafRange    = 'rt';
+var _trafHistory  = [];  // ring buffer live [{rx,tx}]
+var _trafTimer    = null;
+var _trafCanvas   = null;
+var _trafCtx      = null;
+
+function initTrafficChart() {
+  _trafCanvas = document.getElementById('trafficChart');
+  if (!_trafCanvas) return;
+  _trafCtx = _trafCanvas.getContext('2d');
+  _trafRange = 'rt';
+  _trafHistory = [];
+  if (_trafTimer) clearInterval(_trafTimer);
+  // Set correct pixel dimensions
+  syncCanvasSize();
+  drawEmptyTraf('Memulai polling…');
+  // Start live polling
+  startTrafPolling();
+  // ResizeObserver untuk responsive
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function() {
+      syncCanvasSize();
+      if (_trafHistory.length > 0) {
+        drawTrafChart(_trafHistory.map(function(h){ return {rx_mbps:h.rx, tx_mbps:h.tx}; }));
+      }
+    });
+    var wrap = document.getElementById('trafWrap');
+    if (wrap) ro.observe(wrap);
+  }
+}
+
+function syncCanvasSize() {
+  if (!_trafCanvas) return;
+  var wrap = document.getElementById('trafWrap') || _trafCanvas.parentElement;
+  var cssW = wrap ? wrap.clientWidth  : (_trafCanvas.offsetWidth  || 900);
+  var cssH = 180;  // CSS height tetap 180px
+  // Set display size via CSS
+  _trafCanvas.style.width  = '100%';
+  _trafCanvas.style.height = cssH + 'px';
+  // Set actual pixel buffer = CSS size (1:1, tidak perlu DPR scaling di sini
+  // karena font kita sudah proporsional)
+  if (_trafCanvas.width !== cssW || _trafCanvas.height !== cssH) {
+    _trafCanvas.width  = cssW;
+    _trafCanvas.height = cssH;
+  }
+}
+
+function startTrafPolling() {
+  if (_trafTimer) clearInterval(_trafTimer);
+  fetchTrafLive();
+  _trafTimer = setInterval(function(){
+    if (_trafRange === 'rt') fetchTrafLive();
+  }, 2000);
+}
+
+async function fetchTrafLive() {
+  try {
+    var data = await App.api('/mikrotik/customer-traffic');
+    if (!data || !data.success) return;
+    var custId = parseInt(CUST_ID);
+    var d = data.data.find(function(x){ return x.id === custId; });
+    if (!d) return;
+    _trafHistory.push({ rx: (d.rateDown||0)/1e6, tx: (d.rateUp||0)/1e6 });
+    if (_trafHistory.length > 60) _trafHistory.shift();
+    if (_trafRange === 'rt') {
+      drawTrafChart(_trafHistory.map(function(h){ return {rx_mbps:h.rx, tx_mbps:h.tx}; }));
+      var note = document.getElementById('trafNote');
+      if (note) {
+        var fR = function(v){ return v>=1 ? v.toFixed(1)+' Mbps' : (v*1000).toFixed(0)+' Kbps'; };
+        note.textContent = 'Live · ↓'+fR((d.rateDown||0)/1e6)+' ↑'+fR((d.rateUp||0)/1e6);
+      }
+    }
+  } catch(e) { /* silent */ }
+}
+
+function setTrafRange(range, btnEl) {
+  _trafRange = range;
+  // Update button styles
+  var tabs = document.getElementById('trafTabs');
+  if (tabs) tabs.querySelectorAll('.traf-tab').forEach(function(b){
+    b.classList.remove('active');
+  });
+  if (btnEl) btnEl.classList.add('active');
+
+  if (range === 'rt') {
+    if (_trafHistory.length > 0) {
+      drawTrafChart(_trafHistory.map(function(h){ return {rx_mbps:h.rx, tx_mbps:h.tx}; }));
+    } else {
+      drawEmptyTraf('Menunggu data live…');
+    }
+  } else {
+    fetchTrafHistory(range);
+  }
+}
+
+async function fetchTrafHistory(range) {
+  var queueName = window._profileQueueName;
+  var pppoeUser = window._profilePPPoEUser;
+  if (!queueName && !pppoeUser) {
+    drawEmptyTraf('Belum ada Simple Queue untuk pelanggan ini. Untuk pelanggan IP statis, buat Simple Queue di MikroTik dengan target = IP pelanggan agar traffic terbaca. Untuk PPPoE, isi field PPPoE Username.');
+    var note = document.getElementById('trafNote');
+    if (note) note.textContent = 'Tidak ada queue';
+    return;
+  }
+  var note = document.getElementById('trafNote');
+  if (note) note.textContent = 'Memuat…';
+  drawEmptyTraf('Memuat data…');
+  try {
+    var tok = localStorage.getItem('token');
+    var hdr = {'X-Requested-With':'XMLHttpRequest'};
+    if (tok && tok !== 'null') hdr['Authorization'] = 'Bearer '+tok;
+    // Prefer queueName (exact match); fallback ke pppoeUser (LIKE match dynamic queue)
+    var qs = queueName
+      ? 'queueName='+encodeURIComponent(queueName)
+      : 'pppoeUser='+encodeURIComponent(pppoeUser);
+    var url = '/api/mikrotik/customer-history?'+qs+'&range='+range;
+    var res  = await fetch(url, {headers:hdr, credentials:'include'});
+    var data = await res.json();
+    if (_trafRange !== range) return; // user changed tab
+    if (!data.success || !data.data || data.data.length === 0) {
+      drawEmptyTraf('Belum ada data history untuk '+range);
+      if (note) note.textContent = 'Tidak ada data · '+range;
+      return;
+    }
+    drawTrafChart(data.data);
+    var maxDl = Math.max.apply(null, data.data.map(function(d){ return d.rx_mbps; }));
+    var maxUl = Math.max.apply(null, data.data.map(function(d){ return d.tx_mbps; }));
+    var fmtM  = function(v){ return v>=1 ? v.toFixed(1)+' Mbps' : (v*1000).toFixed(0)+' Kbps'; };
+    if (note) note.textContent = range+' · ↓'+fmtM(maxDl)+' ↑'+fmtM(maxUl)+' peak · '+data.data.length+' titik';
+  } catch(e) {
+    drawEmptyTraf('Gagal: '+esc(e.message));
+    var note2 = document.getElementById('trafNote');
+    if (note2) note2.textContent = 'Error';
+  }
+}
+
+function drawTrafChart(data) {
+  if (!_trafCanvas) return;
+  syncCanvasSize();
+  var cv  = _trafCanvas;
+  var ctx = cv.getContext('2d');
+  var dpr = window.devicePixelRatio || 1;
+  var W   = cv.width, H = cv.height;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!data || data.length < 2) { drawEmptyTraf('Tidak ada data'); return; }
+
+  var pad  = { t: 14, b: 8, l: 38, r: 12 };
+  var cW   = W - pad.l - pad.r;
+  var cH   = H - pad.t - pad.b;
+  var n    = data.length;
+  var step = cW / Math.max(n - 1, 1);
+
+  var maxVal = 0;
+  data.forEach(function(d){ maxVal = Math.max(maxVal, d.rx_mbps||0, d.tx_mbps||0); });
+  if (maxVal < 0.001) maxVal = 0.01;
+  var mag = Math.pow(10, Math.floor(Math.log10(maxVal)));
+  maxVal  = Math.ceil(maxVal / mag) * mag;
+
+  var fmtY = function(v) {
+    if (v === 0) return '0';
+    return v >= 1 ? v.toFixed(v < 10 ? 1 : 0)+'M' : (v*1000).toFixed(0)+'K';
+  };
+
+  // Font size proporsional terhadap canvas — TIDAK pakai px absolut
+  var fs   = Math.max(9, Math.round(Math.min(W, H) * 0.055));
+  var font = fs + 'px sans-serif';
+
+  // Horizontal grid lines (4 lines)
+  var gridCount = 4;
+  ctx.strokeStyle  = '#e8eef6';
+  ctx.lineWidth    = 1;
+  ctx.fillStyle    = '#94a3b8';
+  ctx.font         = font;
+  ctx.textAlign    = 'right';
+  ctx.textBaseline = 'middle';
+  for (var i = 0; i <= gridCount; i++) {
+    var gy = pad.t + (cH / gridCount) * i;
+    var gv = maxVal * (1 - i / gridCount);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, gy);
+    ctx.lineTo(pad.l + cW, gy);
+    ctx.stroke();
+    ctx.fillText(fmtY(gv), pad.l - 4, gy);
+  }
+
+  // Left axis border
+  ctx.strokeStyle = '#d1d9e6';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t);
+  ctx.lineTo(pad.l, pad.t + cH);
+  ctx.stroke();
+
+  // Draw helper
+  var drawSeries = function(key, lineClr, fillClr) {
+    if (n < 2) return;
+    var pts = data.map(function(d, i) {
+      var v = Math.max(0, d[key] || 0);
+      return {
+        x: pad.l + i * step,
+        y: pad.t + cH - (v / maxVal) * cH
+      };
+    });
+
+    // Area fill
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pad.t + cH);
+    pts.forEach(function(p) { ctx.lineTo(p.x, p.y); });
+    ctx.lineTo(pts[pts.length-1].x, pad.t + cH);
+    ctx.closePath();
+    ctx.fillStyle = fillClr;
+    ctx.fill();
+
+    // Smooth line
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (var j = 1; j < pts.length; j++) {
+      var cpx = (pts[j-1].x + pts[j].x) / 2;
+      ctx.bezierCurveTo(cpx, pts[j-1].y, cpx, pts[j].y, pts[j].x, pts[j].y);
+    }
+    ctx.strokeStyle  = lineClr;
+    ctx.lineWidth    = 2;
+    ctx.lineJoin     = 'round';
+    ctx.lineCap      = 'round';
+    ctx.stroke();
+  };
+
+  // Upload first (behind), then download
+  drawSeries('tx_mbps', '#f97316', 'rgba(249,115,22,0.13)');
+  drawSeries('rx_mbps', '#2563eb', 'rgba(37,99,235,0.18)');
+
+  // Peak label top-right corner
+  var peakDl = Math.max.apply(null, data.map(function(d){ return d.rx_mbps||0; }));
+  ctx.fillStyle    = '#64748b';
+  ctx.font         = 'bold ' + font;
+  ctx.textAlign    = 'right';
+  ctx.textBaseline = 'top';
+  ctx.fillText('↓' + fmtY(peakDl), W - pad.r, pad.t);
+}
+
+function drawEmptyTraf(msg) {
+  if (!_trafCanvas) return;
+  syncCanvasSize();
+  var cv  = _trafCanvas;
+  var ctx = cv.getContext('2d');
+  var W   = cv.width, H = cv.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle    = '#94a3b8';
+  ctx.font         = '12px sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(msg || 'Tidak ada data', W / 2, H / 2);
+}
+
+// Stop polling saat navigasi
+window.addEventListener('beforeunload', function(){
+  if (_trafTimer) clearInterval(_trafTimer);
+});
+
+/* ── ONT Info (ODP, RX, Status) ─────────────────────────── */
+async function fetchOntInfo(custId, ontSn) {
+  // Fetch RX Power + Status dari GenieACS
+  try {
+    var rRes = await App.api('/infrastructure/customer/'+custId+'/rx-power');
+
+    var valRx     = document.getElementById('val-rx');
+    var valStatus = document.getElementById('val-ont-status');
+
+    if (rRes && rRes.success && rRes.data) {
+      var d   = rRes.data;
+      var rx  = parseFloat(d.rx_power);
+      var online = d.online;
+
+      // Signal color
+      var clr = '#16a34a', qty = 'Bagus';
+      if (rx < -27)       { clr = '#dc2626'; qty = 'Kritis'; }
+      else if (rx < -25)  { clr = '#d97706'; qty = 'Lemah'; }
+
+      // 5-bar indicator
+      var barsHtml = [1,2,3,4,5].map(function(i){
+        var active = rx >= -27 + (i*1.5);
+        return '<span class="sig-bar" style="height:'+(4+i*3)+'px;background:'+(active?clr:'#e2e8f0')+'"></span>';
+      }).join('');
+
+      // Temp badge
+      var tmpBadge = d.temperature
+        ? '<span style="font-size:10px;color:#64748b;background:#f1f5f9;padding:1px 5px;border-radius:4px;margin-left:4px">'+d.temperature+'°C</span>'
+        : '';
+
+      if (valRx) valRx.innerHTML = '<div style="display:flex;align-items:center;gap:6px">'
+        +'<div class="sig-bars">'+barsHtml+'</div>'
+        +'<span style="font-family:monospace;font-weight:700;color:'+clr+';font-size:12px">'+rx.toFixed(2)+' dBm</span>'
+        +'<span class="ont-badge '+(clr==='#16a34a'?'ont-online':clr==='#d97706'?'ont-warn':'ont-warn')+'">'+qty+'</span>'
+        +tmpBadge
+        +'</div>';
+
+      // Status online/offline
+      if (valStatus) valStatus.innerHTML = online
+        ? '<span class="ont-badge ont-online">● ONLINE</span>'
+          +(d.last_inform ? '<span style="font-size:10px;color:#94a3b8;margin-left:5px">'+ago(d.last_inform)+'</span>' : '')
+        : '<span class="ont-badge ont-offline">● OFFLINE</span>'
+          +(d.last_inform ? '<span style="font-size:10px;color:#94a3b8;margin-left:5px">'+ago(d.last_inform)+'</span>' : '');
+
+    } else {
+      var errTxt = (rRes && rRes.error) ? esc(rRes.error) : 'Tidak tersedia';
+      if (valRx)     valRx.innerHTML     = '<span style="font-size:11px;color:#94a3b8">'+errTxt+'</span>';
+      if (valStatus) valStatus.innerHTML = '<span style="font-size:11px;color:#94a3b8">–</span>';
+    }
+  } catch(e) {
+    var vr = document.getElementById('val-rx');
+    var vs = document.getElementById('val-ont-status');
+    if (vr) vr.innerHTML = '<span style="font-size:11px;color:#94a3b8">Error</span>';
+    if (vs) vs.innerHTML = '<span style="font-size:11px;color:#94a3b8">–</span>';
+  }
+
+  // Fetch ODP info dari infrastructure map
+  try {
+    var mapRes = await App.api('/infrastructure/map');
+    var valOdp = document.getElementById('val-odp');
+    if (!valOdp) return;
+
+    if (mapRes && mapRes.success && mapRes.data) {
+      var pts = mapRes.data;
+      var odpName = null, odpStatus = null;
+
+      // Cari customer point yang memiliki parent ODP
+      pts.forEach(function(pt){
+        if (pt.type === 'customer' && pt.parent_id && pt.metadata) {
+          try {
+            var meta = typeof pt.metadata === 'string' ? JSON.parse(pt.metadata) : pt.metadata;
+            if (meta.customer_id === parseInt(custId)) {
+              var parent = pts.find(function(p){ return p.id === pt.parent_id; });
+              if (parent && parent.type === 'odp') {
+                odpName   = parent.name;
+                odpStatus = parent.status;
+              }
+            }
+          } catch(err) {}
+        }
+      });
+
+      if (odpName) {
+        var odpClr = odpStatus === 'active' ? '#16a34a' : '#d97706';
+        valOdp.innerHTML = '<span style="font-weight:700;color:'+odpClr+'">'+esc(odpName)+'</span>';
+      } else {
+        valOdp.innerHTML = '<span style="font-size:11px;color:#94a3b8">Belum terhubung ke ODP</span>';
+      }
+    } else {
+      var vo = document.getElementById('val-odp');
+      if (vo) vo.innerHTML = '<span style="font-size:11px;color:#94a3b8">–</span>';
+    }
+  } catch(e) {
+    var vo2 = document.getElementById('val-odp');
+    if (vo2) vo2.innerHTML = '<span style="font-size:11px;color:#94a3b8">Error</span>';
+  }
+}
+
+// ago() helper untuk last_inform
+function ago(d) {
+  if (!d) return '';
+  var diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+  if (diff < 60)    return diff+'d lalu';
+  if (diff < 3600)  return Math.floor(diff/60)+'m lalu';
+  if (diff < 86400) return Math.floor(diff/3600)+'j lalu';
+  return Math.floor(diff/86400)+'h lalu';
+}
+
+// ══════════════════════════════════════════════════════════════
+// Edit modal: Alamat berjenjang (emsifa) + Peta interaktif
+// Prefix ep* agar tidak bentrok dengan peta detail (_leafletMap).
+// ══════════════════════════════════════════════════════════════
+var EP_WILAYAH = '/api/regions';
+var _epProvLoaded = false;
+var _epMap = null, _epMarker = null;
+
+function epSelName(id){ var el=document.getElementById(id); if(!el||!el.value) return ''; var o=el.options[el.selectedIndex]; return o?(o.getAttribute('data-name')||o.textContent).trim():''; }
+async function epFetch(path){ try{ var r=await fetch(EP_WILAYAH+'/'+path); return r.ok?await r.json():[]; }catch(_){ return []; } }
+function epFill(id,items,ph){ var el=document.getElementById(id); if(!el) return; el.innerHTML='<option value="">'+ph+'</option>'+items.map(function(x){return '<option value="'+x.id+'" data-name="'+x.name+'">'+x.name+'</option>';}).join(''); el.disabled=items.length===0; }
+async function epLoadProvinces(){ if(_epProvLoaded) return; var p=await epFetch('provinces'); if(p.length){ epFill('ep-prov',p,'— pilih provinsi —'); _epProvLoaded=true; } }
+async function epOnProvChange(){ var id=document.getElementById('ep-prov').value; ['ep-kab','ep-kec','ep-desa'].forEach(function(x){var e=document.getElementById(x);e.innerHTML='<option value="">— pilih —</option>';e.disabled=true;}); if(id){ var k=await epFetch('regencies/'+id); epFill('ep-kab',k,'— pilih kab/kota —'); } epComposeAddr(); }
+async function epOnKabChange(){ var id=document.getElementById('ep-kab').value; ['ep-kec','ep-desa'].forEach(function(x){var e=document.getElementById(x);e.innerHTML='<option value="">— pilih —</option>';e.disabled=true;}); if(id){ var k=await epFetch('districts/'+id); epFill('ep-kec',k,'— pilih kecamatan —'); } epComposeAddr(); }
+async function epOnKecChange(){ var id=document.getElementById('ep-kec').value; var e=document.getElementById('ep-desa'); e.innerHTML='<option value="">— pilih —</option>'; e.disabled=true; if(id){ var d=await epFetch('villages/'+id); epFill('ep-desa',d,'— pilih desa/kelurahan —'); } epComposeAddr(); }
+function epComposeAddr(){
+  var jalan=(document.getElementById('ep-jalan').value||'').trim();
+  var no=(document.getElementById('ep-no-rumah').value||'').trim();
+  var rt=(document.getElementById('ep-rt').value||'').trim();
+  var rw=(document.getElementById('ep-rw').value||'').trim();
+  var desa=epSelName('ep-desa'), kec=epSelName('ep-kec'), kab=epSelName('ep-kab'), prov=epSelName('ep-prov');
+  var seg=[]; var js=jalan; if(no) js+=(jalan?' No. ':'No. ')+no; if(js) seg.push(js);
+  if(rt||rw) seg.push('RT '+(rt||'-')+'/RW '+(rw||'-'));
+  if(desa) seg.push('Kel. '+desa); if(kec) seg.push('Kec. '+kec); if(kab) seg.push(kab); if(prov) seg.push(prov);
+  var txt=seg.join(', '); var el=document.getElementById('ep-address'); if(txt&&el) el.value=txt;
+}
+// Restore dropdown wilayah saat edit (nama → kode emsifa). Fallback: parse alamat.
+function _epMatch(items,name){ if(!name) return null; var n=function(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();}; var t=n(name); var h=items.find(function(x){return n(x.name)===t;}); if(h) return h; var strip=function(s){return n(s).replace(/^(kabupaten|kota|kab\.|kec\.|kecamatan|kel\.|kelurahan|desa)\s+/i,'');}; var t2=strip(t); h=items.find(function(x){return strip(x.name)===t2;}); if(h) return h; h=items.find(function(x){return n(x.name).indexOf(t2)>=0||t2.indexOf(n(x.name))>=0;}); return h||null; }
+function _epParseAddr(a){ var o={province:'',regency:'',district:'',village:''}; if(!a) return o; var s=String(a).split(',').map(function(x){return x.trim();}).filter(Boolean); s.forEach(function(seg){ if(!o.village&&/^(kel\.|kelurahan|desa)\s+/i.test(seg)) o.village=seg.replace(/^(kel\.|kelurahan|desa)\s+/i,'').trim(); else if(!o.district&&/^(kec\.|kecamatan)\s+/i.test(seg)) o.district=seg.replace(/^(kec\.|kecamatan)\s+/i,'').trim(); else if(!o.regency&&/^(kab\.|kabupaten|kota|kotamadya)\s+/i.test(seg)) o.regency=seg.trim(); else if(!o.province&&/^(prov\.|provinsi)\s+/i.test(seg)) o.province=seg.replace(/^(prov\.|provinsi)\s+/i,'').trim(); }); if(!o.province&&s.length){ var last=s[s.length-1]; if(last&&!/\d/.test(last)&&!/^(kel\.|kec\.|kab\.|kota|rt|rw)/i.test(last)) o.province=last.trim(); } if(!o.regency&&s.length>=2){ var c=s[s.length-2]; if(c&&!/\d/.test(c)&&!/^(kel\.|kec\.|rt|rw|jl)/i.test(c)) o.regency=c.trim(); } return o; }
+async function epRestoreRegion(provName,regName,distName,vilName){
+  try{
+    if(!provName&&!regName&&!distName){ var p=_epParseAddr(document.getElementById('ep-address').value); provName=p.province;regName=p.regency;distName=p.district;vilName=p.village; }
+    if(!provName) return;
+    await epLoadProvinces();
+    var provs=await epFetch('provinces'); var prov=_epMatch(provs,provName); var ps=document.getElementById('ep-prov'); if(!prov||!ps) return; ps.value=prov.id;
+    var kabs=await epFetch('regencies/'+prov.id); epFill('ep-kab',kabs,'— pilih kab/kota —'); if(!regName) return; var kab=_epMatch(kabs,regName); var ks=document.getElementById('ep-kab'); if(!kab||!ks) return; ks.value=kab.id;
+    var kecs=await epFetch('districts/'+kab.id); epFill('ep-kec',kecs,'— pilih kecamatan —'); if(!distName) return; var kec=_epMatch(kecs,distName); var cs=document.getElementById('ep-kec'); if(!kec||!cs) return; cs.value=kec.id;
+    var desas=await epFetch('villages/'+kec.id); epFill('ep-desa',desas,'— pilih desa/kelurahan —'); if(vilName){ var d=_epMatch(desas,vilName); var ds=document.getElementById('ep-desa'); if(d&&ds) ds.value=d.id; }
+  }catch(e){ console.warn('epRestoreRegion:',e.message); }
+}
+// Geocode dari alamat → koordinat
+async function epGeocodeFromAddress(){
+  var latEl=document.getElementById('ep-latitude'), lngEl=document.getElementById('ep-longitude'), hint=document.getElementById('ep-geo-hint');
+  var desa=epSelName('ep-desa'),kec=epSelName('ep-kec'),kab=epSelName('ep-kab'),prov=epSelName('ep-prov');
+  if(!prov&&!kab){ if(hint){hint.textContent='Pilih minimal Provinsi/Kabupaten.';hint.style.color='#ea580c';} return; }
+  var q=[desa,kec,kab,prov,'Indonesia'].filter(Boolean).join(', ');
+  if(hint){hint.textContent='Mencari koordinat…';hint.style.color='#64748b';}
+  try{ var r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=id&countrycodes=id&q='+encodeURIComponent(q)); var arr=await r.json();
+    if(arr&&arr.length){ epSetPoint(+arr[0].lat,+arr[0].lon,true); if(_epMap){try{_epMap.setView([+arr[0].lat,+arr[0].lon],15);}catch(_){}} if(hint){hint.textContent='✓ Koordinat dari '+(desa||kec||kab||prov)+'. Geser pin untuk presisi.';hint.style.color='#16a34a';} }
+    else if(hint){hint.textContent='Wilayah tak ditemukan. Isi manual.';hint.style.color='#ea580c';}
+  }catch(_){ if(hint){hint.textContent='Gagal ambil koordinat.';hint.style.color='#ea580c';} }
+}
+// ── Peta ──
+function epPinIcon(){ return L.divIcon({className:'',html:'<div style="position:relative;width:28px;height:38px"><svg viewBox="0 0 30 40" width="28" height="38" style="filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))"><path d="M15 0C7 0 1 6 1 14c0 9 14 26 14 26s14-17 14-26C29 6 23 0 15 0z" fill="#1a6ef5"/><circle cx="15" cy="14" r="6" fill="#fff"/></svg></div>',iconSize:[28,38],iconAnchor:[14,38]}); }
+function epAddBaseLayers(map){
+  var street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'});
+  var sat=L.tileLayer('https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:21,subdomains:'0123',attribution:'&copy; Google'});
+  var labels=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png',{maxZoom:19,pane:'overlayPane'});
+  var hybrid=L.layerGroup([sat,labels]); street.addTo(map); var layers={street:street,hybrid:hybrid}; map._activeBase='street';
+  var Ctl=L.Control.extend({options:{position:'topright'},onAdd:function(){ var div=L.DomUtil.create('div','map-toggle'); div.innerHTML='<button type="button" data-base="street" class="on">Peta</button><button type="button" data-base="hybrid">Satelit</button>'; L.DomEvent.disableClickPropagation(div); div.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){ var k=b.dataset.base; if(map._activeBase===k) return; Object.values(layers).forEach(function(l){ if(map.hasLayer(l)) map.removeLayer(l); }); layers[k].addTo(map); map._activeBase=k; div.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x.dataset.base===k);}); }); }); return div; }});
+  map.addControl(new Ctl());
+}
+function epInitMap(){
+  var host=document.getElementById('ep-map'); if(!host||typeof L==='undefined') return;
+  if(!_epMap){ _epMap=L.map(host,{scrollWheelZoom:true}).setView([-6.2,106.81],12); epAddBaseLayers(_epMap); _epMap.on('click',function(e){ epSetPoint(e.latlng.lat,e.latlng.lng,true); }); }
+  setTimeout(function(){ try{_epMap.invalidateSize();}catch(_){}} ,200);
+  var lat=parseFloat(document.getElementById('ep-latitude').value), lng=parseFloat(document.getElementById('ep-longitude').value);
+  if(!isNaN(lat)&&!isNaN(lng)){ epSetPoint(lat,lng,false); setTimeout(function(){try{_epMap.setView([lat,lng],16);}catch(_){}} ,250); }
+  else { if(_epMarker){try{_epMap.removeLayer(_epMarker);}catch(_){} _epMarker=null;} }
+}
+function epSetPoint(lat,lng,recenter){ lat=+(+lat).toFixed(6); lng=+(+lng).toFixed(6); var la=document.getElementById('ep-latitude'),lo=document.getElementById('ep-longitude'); if(la)la.value=lat; if(lo)lo.value=lng; if(_epMap){ if(_epMarker)_epMarker.setLatLng([lat,lng]); else _epMarker=L.marker([lat,lng],{draggable:true,icon:epPinIcon()}).addTo(_epMap).on('dragend',function(ev){var p=ev.target.getLatLng();epSetPoint(p.lat,p.lng,false);}); if(recenter)_epMap.panTo([lat,lng]); } }
+function epOnCoordInput(){ var lat=parseFloat(document.getElementById('ep-latitude').value),lng=parseFloat(document.getElementById('ep-longitude').value); if(!isNaN(lat)&&!isNaN(lng)&&_epMap){ epSetPoint(lat,lng,true); try{_epMap.setView([lat,lng],16);}catch(_){}} }
+function epUseMyLocation(){ var hint=document.getElementById('ep-geo-hint'); if(!navigator.geolocation){ if(hint){hint.textContent='Browser tidak mendukung GPS.';hint.style.color='#ea580c';} return; } if(hint){hint.textContent='Mengambil lokasi…';hint.style.color='#64748b';} navigator.geolocation.getCurrentPosition(function(pos){ epSetPoint(pos.coords.latitude,pos.coords.longitude,true); if(_epMap){try{_epMap.setView([pos.coords.latitude,pos.coords.longitude],17);}catch(_){}} if(hint){hint.textContent='✓ Lokasi GPS terpasang. Geser pin untuk presisi.';hint.style.color='#16a34a';} },function(err){ if(hint){hint.textContent='Gagal ambil GPS: '+err.message;hint.style.color='#ea580c';} },{enableHighAccuracy:true,timeout:10000}); }
+
+// Init
+loadProfile();
+</script>
+<!-- ── Edit Customer Modal ───────────────────────────────── -->
+<div id="editProfileModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,27,62,.45);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:580px;max-height:90vh;overflow:hidden;box-shadow:0 24px 80px rgba(13,27,62,.25);display:flex;flex-direction:column;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px 14px;border-bottom:1px solid #e4ecf7;">
+      <div style="font-size:15px;font-weight:800;color:#0d1b3e;display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Edit Data Pelanggan
+      </div>
+      <button onclick="closeEditModal()" style="width:30px;height:30px;border:none;background:#f1f5f9;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748b;">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <!-- Body -->
+    <div style="overflow-y:auto;padding:18px 22px;flex:1;" id="editProfileBody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="epm-sec" style="grid-column:1/-1"><span class="epm-sec-t">Data Pelanggan</span></div>
+        <div style="grid-column:1/-1">
+          <label class="efl">Nama Lengkap *</label>
+          <input class="efc" id="ep-name" placeholder="Nama lengkap">
+        </div>
+        <div>
+          <label class="efl">No. HP / WA</label>
+          <input class="efc" id="ep-phone" placeholder="08xxxxxxxxxx">
+        </div>
+        <div>
+          <label class="efl">Email</label>
+          <input class="efc" id="ep-email" type="email" placeholder="email@example.com">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="efl">No. KTP / NIK</label>
+          <input class="efc" id="ep-nik" placeholder="16 digit" maxlength="16" inputmode="numeric" style="font-family:'DM Mono',ui-monospace,monospace">
+        </div>
+
+        <div class="epm-sec" style="grid-column:1/-1"><span class="epm-sec-t">Layanan &amp; Isolir</span></div>
+        <div>
+          <label class="efl">Paket Internet</label>
+          <select class="efc" id="ep-package"></select>
+        </div>
+        <div>
+          <label class="efl">Tgl Jatuh Tempo</label>
+          <input class="efc" id="ep-due-date" type="date">
+        </div>
+        <div>
+          <label class="efl">Tanggal Aktivasi</label>
+          <input class="efc" id="ep-install-date" type="date">
+        </div>
+        <div>
+          <label class="efl">Status</label>
+          <select class="efc" id="ep-status">
+            <option value="active">Aktif</option>
+            <option value="inactive">Nonaktif</option>
+            <option value="isolated">Isolir</option>
+            <option value="suspended">Suspended</option>
+          </select>
+        </div>
+        <div>
+          <label class="efl">PPPoE Username</label>
+          <input class="efc" id="ep-pppoe" placeholder="pppoe-username">
+        </div>
+        <div>
+          <label class="efl">ONT Serial Number</label>
+          <input class="efc" id="ep-ont-sn" placeholder="HWTC12345678">
+        </div>
+        <div>
+          <label class="efl">Static IP Address</label>
+          <input class="efc" id="ep-static-ip" placeholder="192.168.x.x">
+        </div>
+        <div>
+          <label class="efl">Router MikroTik</label>
+          <select class="efc" id="ep-mikrotik"></select>
+        </div>
+
+        <div class="epm-sec" style="grid-column:1/-1"><span class="epm-sec-t">Alamat</span><span class="epm-sec-h">Wilayah dari data resmi — alamat tersusun otomatis</span></div>
+        <div>
+          <label class="efl">Provinsi</label>
+          <select class="efc" id="ep-prov" onchange="epOnProvChange()"><option value="">— pilih provinsi —</option></select>
+        </div>
+        <div>
+          <label class="efl">Kabupaten / Kota</label>
+          <select class="efc" id="ep-kab" onchange="epOnKabChange()" disabled><option value="">— pilih —</option></select>
+        </div>
+        <div>
+          <label class="efl">Kecamatan</label>
+          <select class="efc" id="ep-kec" onchange="epOnKecChange()" disabled><option value="">— pilih —</option></select>
+        </div>
+        <div>
+          <label class="efl">Desa / Kelurahan</label>
+          <select class="efc" id="ep-desa" onchange="epComposeAddr()" disabled><option value="">— pilih —</option></select>
+        </div>
+        <div>
+          <label class="efl">Nama Jalan</label>
+          <input class="efc" id="ep-jalan" placeholder="Jl. ..." oninput="epComposeAddr()">
+        </div>
+        <div>
+          <label class="efl">No. Rumah</label>
+          <input class="efc" id="ep-no-rumah" placeholder="No." oninput="epComposeAddr()">
+        </div>
+        <div>
+          <label class="efl">RT</label>
+          <input class="efc" id="ep-rt" placeholder="001" inputmode="numeric" oninput="epComposeAddr()">
+        </div>
+        <div>
+          <label class="efl">RW</label>
+          <input class="efc" id="ep-rw" placeholder="002" inputmode="numeric" oninput="epComposeAddr()">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="efl">Alamat Lengkap <span style="font-weight:400;text-transform:none;color:#94a3b8;font-size:10px">— otomatis tersusun, bisa diedit</span></label>
+          <textarea class="efc" id="ep-address" rows="2" placeholder="Alamat lengkap"></textarea>
+        </div>
+
+        <div class="epm-sec" style="grid-column:1/-1"><span class="epm-sec-t">Titik Lokasi</span><span class="epm-sec-h">Klik / geser pin, atau isi koordinat</span></div>
+        <div>
+          <label class="efl">Latitude</label>
+          <input class="efc" id="ep-latitude" placeholder="-6.12345678" style="font-family:'DM Mono',ui-monospace,monospace" oninput="epOnCoordInput()">
+        </div>
+        <div>
+          <label class="efl">Longitude</label>
+          <input class="efc" id="ep-longitude" placeholder="106.12345678" style="font-family:'DM Mono',ui-monospace,monospace" oninput="epOnCoordInput()">
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+            <button type="button" onclick="epUseMyLocation()" class="epm-loc-btn">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg>
+              Lokasi Saya
+            </button>
+            <button type="button" onclick="epGeocodeFromAddress()" class="epm-loc-btn" style="border-color:#c7d2fe;background:#eef2ff;color:#4338ca">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
+              Cari dari alamat
+            </button>
+            <span id="ep-geo-hint" style="font-size:11.5px;color:#64748b"></span>
+          </div>
+          <div id="ep-map" style="width:100%;height:220px;border-radius:12px;border:1.5px solid #e4ecf7;overflow:hidden;z-index:0"></div>
+        </div>
+      </div>
+
+      <!-- ── Akses Portal Pelanggan ──────────────────────────────────── -->
+      <div style="margin-top:22px;padding:16px;border:1.5px solid #e4ecf7;border-radius:14px;background:#f8fafd;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <svg width="15" height="15" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 5.024c.149-.34.288-.687.415-1.04M4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 009 4.5a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 4.5 1.5 1.5 0 0016.5 6c.526 0 .988-.27 1.256-.679a6.012 6.012 0 011.912 2.706"/></svg>
+          <div style="font-size:13px;font-weight:800;color:#0d1b3e;">Akses Portal Pelanggan</div>
+        </div>
+        <div style="font-size:11.5px;color:#64748b;margin-bottom:14px;">
+          Kredensial yang dipakai pelanggan untuk login ke <span style="color:#1a6ef5;font-weight:600;">Customer Portal</span>.
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <!-- Customer ID (Login ID) -->
+          <div style="grid-column:1/-1;">
+            <label class="efl">Customer ID (Login ID Portal)</label>
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <input class="efc" id="ep-cid" placeholder="CST00001" readonly
+                     style="flex:1;font-family:'DM Mono',ui-monospace,monospace;letter-spacing:.02em;background:#eef2f7;cursor:not-allowed;">
+              <button type="button" id="ep-cid-toggle" onclick="togglePortalCidEdit()"
+                      style="padding:0 14px;border:1.5px solid #e4ecf7;border-radius:10px;background:#fff;color:#1a6ef5;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
+                Ubah
+              </button>
+            </div>
+            <div id="ep-cid-warn" style="display:none;font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;margin-top:6px;">
+              ⚠ Mengubah Customer ID akan mengubah login ID pelanggan. Invoice & data historis tetap aman (terhubung via internal ID).
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div style="grid-column:1/-1;">
+            <label class="efl">Password Baru (kosongkan jika tidak diubah)</label>
+            <div style="display:flex;gap:8px;align-items:stretch;">
+              <div style="flex:1;position:relative;">
+                <input class="efc" id="ep-pw" type="password" placeholder="Min. 6 karakter"
+                       style="font-family:'DM Mono',ui-monospace,monospace;letter-spacing:.04em;padding-right:42px;">
+                <button type="button" onclick="togglePortalPwVisibility()" id="ep-pw-eye"
+                        style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;display:flex;align-items:center;justify-content:center;"
+                        title="Tampilkan/sembunyikan">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
+              <button type="button" onclick="generatePortalPassword()"
+                      style="padding:0 14px;border:1.5px solid #e4ecf7;border-radius:10px;background:#fff;color:#1a6ef5;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:5px;">
+                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Generate
+              </button>
+            </div>
+            <div id="ep-pw-hint" style="font-size:11px;color:#64748b;margin-top:5px;">
+              <!-- diisi runtime: "Belum diset — pelanggan login pakai nomor HP" / "Password sudah diset" -->
+            </div>
+          </div>
+
+          <!-- Toggle aktif + Reset password -->
+          <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;">
+              <input type="checkbox" id="ep-portal-enabled" style="width:16px;height:16px;accent-color:#1a6ef5;cursor:pointer;">
+              <span style="font-size:12.5px;font-weight:600;color:#0d1b3e;">Akses portal aktif</span>
+              <span style="font-size:11px;color:#64748b;">— Pelanggan bisa login</span>
+            </label>
+            <button type="button" onclick="resetPortalPasswordToPhone()"
+                    style="padding:7px 14px;border:1.5px solid #fecaca;border-radius:9px;background:#fff;color:#dc2626;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+              Reset ke No. HP
+            </button>
+          </div>
+
+          <div id="ep-portal-last" style="grid-column:1/-1;font-size:11px;color:#94a3b8;margin-top:2px;">
+            <!-- diisi runtime: "Login terakhir: ..." -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Link Pembayaran Permanen ──────────────────────────────────── -->
+      <div style="margin-top:22px;padding:16px;border:1.5px solid #e4ecf7;border-radius:14px;background:#f8fafd;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <svg width="15" height="15" fill="none" stroke="#1a6ef5" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-3 3a4 4 0 01-5.656-5.656l1.5-1.5m6.656-1.828l3-3a4 4 0 00-5.656-5.656l-1.5 1.5"/></svg>
+          <div style="font-size:13px;font-weight:800;color:#0d1b3e;">Link Pembayaran Permanen</div>
+        </div>
+        <div style="font-size:11.5px;color:#64748b;margin-bottom:14px;">
+          Satu link tetap untuk pelanggan ini yang selalu menampilkan tagihan aktif terbaru — tidak berubah tiap bulan. Bisa dibagikan via WhatsApp atau ditempel di portal. Jika link bocor, tekan <span style="color:#1a6ef5;font-weight:600;">Buat Ulang</span> untuk mencabut link lama.
+        </div>
+
+        <div id="ep-plink-empty" style="display:none;font-size:12px;color:#64748b;padding:10px 0;">
+          Belum ada link permanen untuk pelanggan ini.
+        </div>
+
+        <div id="ep-plink-box" style="display:none;">
+          <label class="efl">URL Link Permanen</label>
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <input class="efc" id="ep-plink-url" readonly
+                   style="flex:1;font-family:'DM Mono',ui-monospace,monospace;font-size:12px;background:#eef2f7;cursor:text;">
+            <button type="button" id="ep-plink-copy" onclick="copyPaymentLink()"
+                    style="padding:0 14px;border:1.5px solid #e4ecf7;border-radius:10px;background:#fff;color:#1a6ef5;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
+              Salin
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button type="button" id="ep-plink-gen" onclick="generatePaymentLink()"
+                  style="padding:8px 16px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span id="ep-plink-gen-txt">Buat Link</span>
+          </button>
+          <button type="button" id="ep-plink-revoke" onclick="revokePaymentLink()"
+                  style="display:none;padding:8px 16px;border:1.5px solid #fecaca;border-radius:10px;background:#fff;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            Cabut Link
+          </button>
+        </div>
+        <div id="ep-plink-msg" style="font-size:11.5px;margin-top:8px;"></div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-top:1px solid #e4ecf7;gap:10px;">
+      <div id="ep-msg" style="font-size:12px;flex:1"></div>
+      <button onclick="closeEditModal()" style="padding:9px 18px;border:1.5px solid #e4ecf7;border-radius:10px;background:#fff;color:#64748b;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Batal</button>
+      <button id="ep-save-btn" onclick="saveEditProfile()" style="padding:9px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 3px 10px rgba(26,110,245,.3);">Simpan</button>
+    </div>
+  </div>
+</div>
+<style>
+  .efl{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px;}
+  .efc{width:100%;padding:9px 12px;border:1.5px solid #e4ecf7;border-radius:10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;color:#0d1b3e;background:#f8fafd;box-sizing:border-box;transition:border .15s;}
+  .efc:focus{border-color:#1a6ef5;background:#fff;}
+  textarea.efc{resize:vertical;}
+  select.efc{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+  #editProfileModal.open{display:flex!important;}
+  /* Section header + tombol lokasi + toggle peta (edit modal profil) */
+  .epm-sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:10px 0 2px;padding-bottom:7px;border-bottom:1.5px solid #e4ecf7;}
+  .epm-sec:first-child{margin-top:0;}
+  .epm-sec-t{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#1a6ef5;}
+  .epm-sec-h{font-size:11px;font-weight:400;color:#94a3b8;}
+  .epm-loc-btn{padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;border-radius:8px;display:inline-flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;}
+  .epm-loc-btn:hover{background:#dbeafe;}
+  #ep-map .map-toggle{display:flex;gap:0;background:#fff;border:1px solid #e4ecf7;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(15,40,90,.12);}
+  #ep-map .map-toggle button{border:none;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:#64748b;padding:7px 14px;cursor:pointer;}
+  #ep-map .map-toggle button:hover{background:#f1f5fb;color:#0d1b3e;}
+  #ep-map .map-toggle button.on{background:#1a6ef5;color:#fff;}
+</style>
+</body>
+</html>

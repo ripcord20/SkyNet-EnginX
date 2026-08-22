@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Login' %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: #f8fafc;
+      overflow-x: hidden;
+    }
+
+    .container {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+      box-shadow: 0 0 100px rgba(0,0,0,0.1);
+      margin: auto;
+    }
+
+    /* Left Section - Login Form */
+    .login-section {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: #ffffff;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 48px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-radius: 8px;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .login-header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    .login-header p {
+      color: #64748b;
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    .login-header p a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .login-header p a:hover {
+      text-decoration: underline;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 13px 16px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      color: #0f172a;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .password-toggle:hover {
+      color: #3b82f6;
+    }
+
+    .form-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      margin-top: 16px;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .remember-me input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+    }
+
+    .remember-me label {
+      font-size: 14px;
+      color: #475569;
+      cursor: pointer;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .forgot-link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #dc2626;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      display: none;
+    }
+
+    /* Right Section - Info Panel with Background Image */
+    .info-section {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    /* Background Image Layer */
+    .info-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('/img/bg-net.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
+    }
+
+    /* Blue Gradient Overlay */
+    .info-section::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, 
+        rgba(30, 64, 175, 0.65) 0%, 
+        rgba(59, 130, 246, 0.60) 50%, 
+        rgba(96, 165, 250, 0.55) 100%
+      );
+      z-index: 1;
+    }
+
+    /* Blur Overlay for depth effect */
+    .blur-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      z-index: 2;
+    }
+
+    /* Decorative Elements with Blur Shadow */
+    .bg-decoration {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.18;
+      z-index: 3;
+    }
+
+    .decoration-1 {
+      width: 500px;
+      height: 500px;
+      background: white;
+      top: -150px;
+      right: -150px;
+      filter: blur(80px);
+      box-shadow: 0 0 150px rgba(255, 255, 255, 0.4);
+    }
+
+    .decoration-2 {
+      width: 400px;
+      height: 400px;
+      background: white;
+      bottom: -120px;
+      left: -120px;
+      filter: blur(70px);
+      box-shadow: 0 0 130px rgba(255, 255, 255, 0.35);
+    }
+
+    .decoration-3 {
+      width: 250px;
+      height: 250px;
+      background: rgba(255, 255, 255, 0.25);
+      top: 45%;
+      left: 15%;
+      animation: float 6s ease-in-out infinite;
+      filter: blur(50px);
+      box-shadow: 0 0 100px rgba(255, 255, 255, 0.3);
+    }
+
+    .decoration-4 {
+      width: 180px;
+      height: 180px;
+      background: rgba(147, 197, 253, 0.4);
+      top: 25%;
+      right: 30%;
+      animation: float 8s ease-in-out infinite;
+      filter: blur(45px);
+      box-shadow: 0 0 90px rgba(147, 197, 253, 0.35);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      33% { transform: translateY(-25px) translateX(15px); }
+      66% { transform: translateY(15px) translateX(-20px); }
+    }
+
+    .info-content {
+      position: relative;
+      z-index: 10;
+      max-width: 500px;
+      color: white;
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 0 100px rgba(59, 130, 246, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      margin-bottom: 40px;
+    }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .info-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .info-card h2 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.3;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .info-card p {
+      font-size: 16px;
+      line-height: 1.7;
+      opacity: 0.95;
+      margin-bottom: 24px;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+    }
+
+    .feature-list {
+      list-style: none;
+    }
+
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 15px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-list li::before {
+      content: "✓";
+      width: 24px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(5px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-footer {
+      text-align: center;
+      opacity: 0.95;
+      font-size: 14px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .info-footer .dots {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .dot.active {
+      background: white;
+      width: 24px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Responsive */
+    @media (min-width: 1024px) {
+      .info-section {
+        display: flex;
+      }
+
+      .container {
+        max-width: 1400px;
+        border-radius: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .login-box {
+        max-width: 100%;
+      }
+
+      .login-header h1 {
+        font-size: 28px;
+      }
+
+      .logo {
+        margin-bottom: 32px;
+      }
+    }
+
+    /* Loading Animation */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 8px;
+    }
+
+    /* Additional glow effect */
+    @keyframes glow {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+    }
+
+    .decoration-3,
+    .decoration-4 {
+      animation: float 6s ease-in-out infinite, glow 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Tujuan setelah login berhasil. Prioritas:
+    //   1) nextUrl dari server (?next= yang sudah divalidasi), lalu
+    //   2) ?next= di URL saat ini (fallback), harus path internal yang aman.
+    window.FLYN_NEXT = (function(){
+      var fromServer = <%- JSON.stringify(typeof nextUrl !== 'undefined' ? nextUrl : '') %>;
+      function safe(v){ return (typeof v==='string' && v.charAt(0)==='/' && v.charAt(1)!=='/') ? v : ''; }
+      var chosen = '';
+      if (safe(fromServer)) chosen = fromServer;
+      if (!chosen) {
+        try {
+          var q = new URLSearchParams(window.location.search).get('next');
+          if (safe(q)) chosen = q;
+        } catch(_){}
+      }
+      // Ingat kalau tujuan adalah area mobile, supaya relaunch APK (yang mungkin
+      // membuka /login polos tanpa ?next) tetap kembali ke /mobile.
+      try {
+        if (chosen && chosen.indexOf('/mobile') === 0) {
+          localStorage.setItem('flyn_prefer_mobile', chosen);
+        }
+        if (!chosen) {
+          var remembered = localStorage.getItem('flyn_prefer_mobile');
+          if (safe(remembered) && remembered.indexOf('/mobile') === 0) chosen = remembered;
+        }
+      } catch(_){}
+      return chosen;
+    })();
+    // Gabungkan tujuan server-role dengan FLYN_NEXT (kalau ada, next menang).
+    window.flynDest = function(serverRedirect){
+      return window.FLYN_NEXT || serverRedirect || '/dashboard';
+    };
+  </script>
+  <!-- ════════════════════════════════════════════════════════════════
+       Auto-restore session: kalau localStorage masih punya token, coba
+       restore HttpOnly cookie via /api/auth/restore-cookie. Kalau valid,
+       redirect ke role's home page tanpa user perlu input password lagi.
+       
+       Pattern ini menutup gap dimana cookie HttpOnly (24 jam) bisa expire
+       lebih cepat dari yang user expect (mis. browser settings, restart,
+       atau cookie cleared) sementara localStorage masih punya token JWT
+       yang sebenarnya masih valid.
+       
+       PENTING: blok ini dijalankan SEBELUM render form. Sembunyikan body
+       sementara supaya user tidak melihat flicker form sebelum redirect.
+       ════════════════════════════════════════════════════════════════ -->
+  <div id="loginShade" style="position:fixed;inset:0;background:#f8fafc;z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px;color:#64748b;font-family:Inter,sans-serif;font-size:13px;">
+      <div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:lspin 0.8s linear infinite;"></div>
+      <div>Memulihkan sesi…</div>
+    </div>
+  </div>
+  <style>@keyframes lspin{to{transform:rotate(360deg)}}</style>
+  <script>
+    (async function tryRestoreSession() {
+      const shade = document.getElementById('loginShade');
+      try {
+        const t = localStorage.getItem('token');
+        if (!t || t === 'null' || t === 'undefined') {
+          // Tidak ada token sama sekali — langsung tampilkan form
+          shade.remove();
+          return;
+        }
+        const r = await fetch('/api/auth/restore-cookie', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + t, 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (r.ok) {
+          const j = await r.json();
+          if (j && j.success && j.redirect) {
+            // Cookie sudah di-set server-side → redirect (hormati ?next= bila ada)
+            window.location.replace(window.flynDest(j.redirect));
+            return;
+          }
+        }
+        // Token expired/invalid — hapus localStorage supaya tidak loop
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+      } catch (_) {
+        // Network error / endpoint missing — fallback ke form login normal
+      }
+      shade.remove();
+    })();
+  </script>
+  <div class="container">
+    <!-- Left Section: Login Form -->
+    <div class="login-section">
+      <div class="login-box">
+        <!-- Logo -->
+        <div class="logo">
+           <!--<div class="logo-icon">D</div>-->
+          <!--<span class="logo-text">DIGSnet</span>-->
+        </div>
+
+        <!-- Header -->
+        <div class="login-header">
+          <h1>Sign in</h1>
+          <p>Login to your dashboard all-in-one solution</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input 
+              type="email" 
+              class="form-input" 
+              id="email" 
+              placeholder="example@email.com"
+              required 
+              autocomplete="email"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+              <input 
+                type="password" 
+                class="form-input" 
+                id="password" 
+                placeholder="••••••"
+                required 
+                autocomplete="current-password"
+              >
+              <button type="button" class="password-toggle" id="togglePassword">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <div class="remember-me">
+              <input type="checkbox" id="remember">
+              <label for="remember">Remember me</label>
+            </div>
+            <a href="#" class="forgot-link">Forgot Password?</a>
+          </div>
+
+          <button type="submit" class="login-btn" id="loginBtn">
+            Sign in
+          </button>
+          <style>
+            @keyframes demoSpin { to { transform: rotate(360deg); } }
+            #demoQuickStart:hover, #demoSharedFill:hover { transform: translateY(-1px); }
+            #demoQuickStart:disabled, #demoSharedFill:disabled { opacity: .5; cursor: wait; transform: none; }
+          </style>
+          <script>
+            (function() {
+              const quickBtn = document.getElementById('demoQuickStart');
+              const sharedBtn = document.getElementById('demoSharedFill');
+              const loadingEl = document.getElementById('demoLoadingMsg');
+              const errorEl = document.getElementById('demoErrorMsg');
+              const emailInput = document.getElementById('email');
+              const passInput = document.getElementById('password');
+
+              if (!quickBtn || !sharedBtn) return;
+
+              function showError(msg) {
+                errorEl.textContent = msg;
+                errorEl.style.display = 'block';
+                loadingEl.style.display = 'none';
+                quickBtn.disabled = false;
+                sharedBtn.disabled = false;
+              }
+
+              // Mode B: Provisioning akun ephemeral
+              quickBtn.addEventListener('click', async function() {
+                errorEl.style.display = 'none';
+                loadingEl.style.display = 'block';
+                quickBtn.disabled = true;
+                sharedBtn.disabled = true;
+
+                try {
+                  const res = await fetch('/api/demo/provision', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                  });
+                  const data = await res.json().catch(() => ({}));
+
+                  // Kalau Mode B belum dikonfigurasi → auto-fallback ke Mode A
+                  if (data.code === 'DEMO_MIGRATION_NEEDED') {
+                    loadingEl.style.display = 'none';
+                    quickBtn.disabled = false;
+                    sharedBtn.disabled = false;
+                    showError(data.message);
+                    // Auto-fill kredensial bersama setelah 1.5 detik
+                    setTimeout(() => {
+                      if (emailInput) emailInput.value = 'demo@ispnetops.com';
+                      if (passInput) passInput.value = 'demo12345';
+                      errorEl.textContent = errorEl.textContent + ' (Kredensial sudah diisi otomatis)';
+                    }, 1500);
+                    return;
+                  }
+
+                  if (!res.ok || !data.success) {
+                    showError(data.message || 'Gagal membuat akun demo. Coba lagi atau pakai akun bersama.');
+                    return;
+                  }
+
+                  // Token sudah di-set sebagai cookie oleh server. Redirect ke dashboard.
+                  if (data.data && data.data.token) {
+                    try { localStorage.setItem('token', data.data.token); } catch(_) {}
+                  }
+                  window.location.href = window.flynDest(data.data && data.data.redirect);
+                } catch (e) {
+                  showError('Tidak bisa terhubung ke server. Coba lagi.');
+                }
+              });
+
+              // Mode A: Auto-fill kredensial bersama
+              sharedBtn.addEventListener('click', function() {
+                if (emailInput) emailInput.value = 'demo@ispnetops.com';
+                if (passInput) passInput.value = 'demo12345';
+                if (emailInput) emailInput.focus();
+              });
+            })();
+          </script>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Section: Info Panel with Background Image -->
+    <div class="info-section">
+      <!-- Blur Overlay -->
+      <div class="blur-overlay"></div>
+
+      <!-- Background Decorations with Blur Shadow -->
+      <div class="bg-decoration decoration-1"></div>
+      <div class="bg-decoration decoration-2"></div>
+      <div class="bg-decoration decoration-3"></div>
+      <div class="bg-decoration decoration-4"></div>
+
+      <!-- Info Content -->
+      <div class="info-content">
+        <div class="info-card">
+          <div class="info-card-header">
+          
+          </div>
+          <h2>Manage your network efficiently</h2>
+          <p>Monitor network performance, track customer activities, and manage billing seamlessly with our comprehensive ISP management platform.</p>
+          
+          <ul class="feature-list">
+            <li>Real-time network monitoring</li>
+            <li>Automated billing system</li>
+            <li>Customer relationship management</li>
+            <li>Advanced analytics & reports</li>
+          </ul>
+        </div>
+
+        <div class="info-footer">
+          
+          <p>Developed by DIGS.co.id</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Password Toggle
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const passwordInput = document.getElementById('password');
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+    });
+
+    // Login Form Submit
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('errorMsg');
+      
+      // Disable button and show loading
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading-spinner"></span>Signing in...';
+      errEl.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Store tokens and user data
+          localStorage.setItem('token', data.data.token);
+          localStorage.setItem('refreshToken', data.data.refreshToken);
+          localStorage.setItem('user', JSON.stringify(data.data.user));
+          
+          // Redirect berdasar role (dari server) — hormati ?next= bila ada
+          window.location.href = window.flynDest(data.data.redirect);
+        } else {
+          // Show error message
+          errEl.textContent = data.message || 'Login failed. Please check your credentials.';
+          errEl.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        errEl.textContent = 'Connection error. Please try again later.';
+        errEl.style.display = 'block';
+      } finally {
+        // Re-enable button
+        btn.disabled = false;
+        btn.innerHTML = 'Sign in';
+      }
+    });
+
+    // Carousel dots animation (optional)
+    const dots = document.querySelectorAll('.dot');
+    let currentDot = 0;
+
+    setInterval(() => {
+      dots[currentDot].classList.remove('active');
+      currentDot = (currentDot + 1) % dots.length;
+      dots[currentDot].classList.add('active');
+    }, 5000);
+  </script>
+</body>
+</html>

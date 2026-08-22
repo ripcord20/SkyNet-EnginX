@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="stylesheet" href="/css/mobile-shell.css?v=7">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    :root{--bg:#fff;--card:#fff;--ink:#1F3849;--muted:#7c93a0;--line:#e2eefb;--blue:#0ea5e9;--teal:#38bdf8;--green:#38bdf8;--amber:#f5a623;--red:#f2545b;--nav-h:70px;}
+    .iv-chart-card{background:#fff;border:1px solid #eef1f6;border-radius:16px;padding:15px 16px;margin-bottom:13px;box-shadow:0 8px 20px -15px rgba(30,60,120,.26);}
+    .ivc-title{font-size:12.5px;font-weight:800;color:#3a4a68;margin-bottom:13px;}
+    .ivc-main{display:flex;align-items:center;gap:17px;}
+    .ivc-donut{position:relative;width:104px;height:104px;flex-shrink:0;}
+    .ivc-donut svg{width:104px;height:104px;transform:rotate(-90deg);}
+    .ivc-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+    .ivc-center b{font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1;}
+    .ivc-center span{font-size:8.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+    .ivc-legend{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+    .ivl-row{display:flex;align-items:center;gap:9px;font-size:12px;}
+    .ivl-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+    .ivl-name{color:#5a6885;font-weight:600;}
+    .ivl-val{margin-left:auto;font-weight:800;color:#3a4a68;font-variant-numeric:tabular-nums;}
+    .ivc-bar-wrap{margin-top:15px;padding-top:14px;border-top:1px solid #f1f4f9;}
+    .ivc-bar-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:8px;}
+    .ivc-bar-top .k{color:var(--muted);font-weight:600;}
+    .ivc-bar-top .v{font-weight:800;color:#0f9d63;font-variant-numeric:tabular-nums;}
+    .ivc-bar{height:9px;border-radius:100px;background:#eef1f5;overflow:hidden;}
+    .ivc-fill{height:100%;background:linear-gradient(90deg,#38bdf8,#0ea5e9);border-radius:100px;transition:width .8s cubic-bezier(.22,.61,.36,1);}
+    .ivc-bar-sub{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:7px;font-weight:600;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;background:#fff;color:var(--ink);padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);-webkit-font-smoothing:antialiased;}
+    .wrap{max-width:520px;margin:0 auto;}
+    .head{padding:6px 20px 14px 20px;}
+    .head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+    .head .htitle{font-size:20px;font-weight:800;letter-spacing:-.3px;}
+    .head .hsub{font-size:12.5px;color:#6b7a97;margin-top:2px;font-weight:500;}
+    .gen-btn{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:9px 15px;border:none;border-radius:12px;background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#fff;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px -8px rgba(14,165,233,.65);transition:transform .12s;margin-top:2px;}
+    .gen-btn:active{transform:scale(.95);}
+    .gen-btn svg{width:16px;height:16px;}
+    .content{padding:4px 16px 20px;}
+    .cst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px;}
+    .cst{background:#fff;border:1px solid #eef1f6;border-radius:14px;padding:12px 6px;text-align:center;}
+    .cst-val{font-size:18px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;}
+    .cst-lbl{font-size:10px;color:var(--muted);margin-top:3px;font-weight:600;}
+    .search-wrap{position:relative;margin-bottom:13px;}
+    .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--muted);}
+    .search-wrap input{width:100%;padding:13px 14px 13px 42px;border:1px solid #eef1f6;background:#fff;border-radius:15px;font-size:14px;font-family:inherit;outline:none;}
+    .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+    .chips::-webkit-scrollbar{display:none;}
+    .chip{flex-shrink:0;padding:8px 15px;border:1px solid #eef1f6;background:#fff;border-radius:100px;font-size:12.5px;font-weight:700;color:#5a6885;cursor:pointer;transition:all .12s;}
+    .chip.sel{background:var(--blue);color:#fff;border-color:var(--blue);}
+    .count-bar{font-size:12px;color:var(--muted);font-weight:600;margin:0 2px 10px;}
+    .period-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+    .period-sel{width:100%;padding:11px 13px;border:1px solid #e6ebf4;background:#fff;border-radius:12px;font-size:13px;font-weight:600;font-family:inherit;color:var(--ink);outline:none;box-shadow:0 6px 16px -13px rgba(30,60,120,.22);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a0b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;}
+    .list{display:flex;flex-direction:column;gap:10px;}
+    .iv{background:#fff;border:1px solid #eef1f6;border-radius:15px;padding:14px 15px;}
+    .iv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+    .iv-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .iv-num{font-size:11.5px;color:var(--muted);margin-top:2px;}
+    .iv-badge{font-size:9.5px;font-weight:800;padding:4px 10px;border-radius:100px;flex-shrink:0;text-transform:uppercase;}
+    .b-paid{background:#dcf7ec;color:#0f9d63;} .b-unpaid{background:#e0f2fe;color:#0ea5e9;} .b-overdue{background:#fde5e6;color:#d13b42;}
+    .iv-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:11px;border-top:1px solid #f2f5fa;}
+    .iv-meta{font-size:11px;color:var(--muted);}
+    .iv-meta b{color:#3a4a68;font-weight:700;}
+    .iv-total{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;}
+    .iv-actions{display:flex;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid #f2f5fa;}
+    .iv-btn{flex:1;padding:9px;border:none;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .iv-btn svg{width:15px;height:15px;flex-shrink:0;}
+    .iv-wa{background:#e8f6ee;color:#1fae54;} .iv-email{background:#eef2ff;color:#0ea5e9;}
+    .iv-btn.iv-dis{background:#f0f3f9;color:#b3bdd0;cursor:not-allowed;}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);background:#1F3849;color:#fff;padding:12px 20px;border-radius:13px;font-size:13px;font-weight:600;z-index:400;opacity:0;transition:opacity .25s;pointer-events:none;max-width:88vw;text-align:center;}
+    .toast.show{opacity:1;} .toast.ok{background:#12946f;} .toast.err{background:#d13b42;}
+    .load-more{width:100%;margin-top:12px;padding:12px;border:1px solid #eef1f6;background:#fff;border-radius:13px;font-family:inherit;font-size:13px;font-weight:700;color:var(--blue);cursor:pointer;}
+    .empty{padding:44px 16px;text-align:center;color:var(--muted);font-size:13px;}
+    .empty svg{width:44px;height:44px;color:#c7d0e0;margin-bottom:12px;}
+    .skel{background:linear-gradient(90deg,#eef1f6 25%,#f6f8fb 50%,#eef1f6 75%);background-size:200% 100%;animation:sh 1.3s infinite;border-radius:8px;}
+    @keyframes sh{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+    .bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:300;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);display:flex;}
+    .bn-wrap{max-width:520px;margin:0 auto;width:100%;display:flex;height:var(--nav-h);}
+    .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-decoration:none;color:var(--muted);font-size:10px;font-weight:600;}
+    .bn-item svg{width:22px;height:22px;stroke-width:2;} .bn-item.active{color:var(--cyan,#0ea5e9);}
+    .bn-fab{flex:0 0 auto;width:66px;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+    .bn-fab a,.bn-fab button{position:absolute;font-family:inherit;padding:0;cursor:pointer;top:-22px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;box-shadow:0 12px 26px -6px rgba(14,165,233,.6);border:4px solid #fff;transition:transform .14s;}
+    .bn-fab a:active,.bn-fab button:active{transform:scale(.92);}
+    .bn-fab svg{width:26px;height:26px;stroke-width:2.6;}
+  </style>
+</head>
+<body>
+  <%- include('../../partials/mobile-drawer', { active: active, appName: (typeof appName!=='undefined'?appName:'FLAYNET'), user: user }) %>
+  <div class="wrap">
+    <div class="head">
+      <div class="head-row">
+        <div>
+          <div class="htitle">Invoice</div>
+          <div class="hsub" id="ivSub">Daftar tagihan pelanggan</div>
+        </div>
+        <button class="gen-btn" onclick="openGenerateInvoice()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Generate
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="cst-grid" id="ivStats">
+        <div class="cst"><div class="cst-val" id="isTotal">–</div><div class="cst-lbl">Total Invoice</div></div>
+        <div class="cst"><div class="cst-val" id="isUnpaid" style="color:var(--blue);">–</div><div class="cst-lbl">Belum Bayar</div></div>
+        <div class="cst"><div class="cst-val" id="isOverdue" style="color:var(--red);">–</div><div class="cst-lbl">Lewat Tempo</div></div>
+      </div>
+
+      <div class="iv-chart-card" id="ivChartCard">
+        <div class="ivc-title">Komposisi Invoice Bulan Ini</div>
+        <div class="ivc-main">
+          <div class="ivc-donut" id="ivDonut"></div>
+          <div class="ivc-legend" id="ivLegend"></div>
+        </div>
+        <div class="ivc-bar-wrap">
+          <div class="ivc-bar-top"><span class="k">Nilai tertagih</span><span class="v" id="ivBillPct">–</span></div>
+          <div class="ivc-bar"><div class="ivc-fill" id="ivBillFill" style="width:0%;"></div></div>
+          <div class="ivc-bar-sub"><span id="ivBillPaid">Lunas –</span><span id="ivBillTotal">Total –</span></div>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="ivSearch" placeholder="Cari nama, CID, atau no invoice…">
+      </div>
+      <div class="chips" id="statusChips">
+        <div class="chip sel" data-s="">Semua</div>
+        <div class="chip" data-s="unpaid">Belum Bayar</div>
+        <div class="chip" data-s="overdue">Lewat Tempo</div>
+        <div class="chip" data-s="paid">Lunas</div>
+      </div>
+      <div class="period-bar">
+        <select class="period-sel" id="pMonth" onchange="onPeriodChange()"></select>
+        <select class="period-sel" id="pYear" onchange="onPeriodChange()"></select>
+      </div>
+      <div class="count-bar" id="countBar">–</div>
+      <div class="list" id="ivList">
+        <div class="iv"><div class="iv-top"><div><div class="skel" style="width:130px;height:14px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div><div class="skel" style="width:50px;height:18px;border-radius:100px;"></div></div></div>
+        <div class="iv"><div class="iv-top"><div><div class="skel" style="width:130px;height:14px;"></div><div class="skel" style="width:90px;height:10px;margin-top:6px;"></div></div><div class="skel" style="width:50px;height:18px;border-radius:100px;"></div></div></div>
+      </div>
+    </div>
+  </div>
+    <nav class="bottomnav">
+    <div class="bn-wrap">
+      <a class="bn-item" href="/mobile"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span>Beranda</span></a>
+      <a class="bn-item" href="/mobile/customers"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></span><span>Pelanggan</span></a>
+      <div class="bn-fab"><button type="button" onclick="FabSheet.open()" aria-label="Tambah cepat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+      <a class="bn-item" href="/mobile/finance"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></span><span>Laporan</span></a>
+      <a class="bn-item" href="/mobile/monitoring"><span class="bn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span><span>Monitor</span></a>
+    </div>
+  </nav>
+  <script>
+    function getToken(){ const ls=localStorage.getItem('token'); if(ls)return ls; const m=document.cookie.match(/(?:^|;\s*)token=([^;]+)/); return m?decodeURIComponent(m[1]):null; }
+    async function api(url){ const t=getToken(); const headers=Object.assign({'Content-Type':'application/json'}, t?{'Authorization':'Bearer '+t}:{}); try{ const r=await fetch(url,{credentials:'include',headers}); if(r.status===401){location.href='/login';return null;} const x=await r.text(); try{return x?JSON.parse(x):null;}catch(_){return null;} }catch(e){return null;} }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function fmtRp(n){ return 'Rp '+Math.round(Number(n)||0).toLocaleString('id-ID'); }
+    function fmtRpShort(n){ n=Number(n)||0; if(n>=1000000)return 'Rp '+(n/1000000).toFixed(1).replace('.0','')+'jt'; if(n>=1000)return 'Rp '+Math.round(n/1000)+'rb'; return 'Rp '+Math.round(n).toLocaleString('id-ID'); }
+    function renderInvoiceChart(d){
+      const paid=Number(d.paidInvoiceCount!=null?d.paidInvoiceCount:d.paidThisMonth)||0;
+      const overdue=Number(d.overdue)||0;
+      const unpaidTotal=Number(d.unpaid)||0;
+      const unpaidOnly=Math.max(0, unpaidTotal-overdue); // belum bayar tapi belum lewat tempo
+      const items=[
+        {k:'Lunas',       v:paid,       col:'#0f9d63'},
+        {k:'Belum Bayar', v:unpaidOnly, col:'#f5a623'},
+        {k:'Lewat Tempo', v:overdue,    col:'#f2545b'}
+      ];
+      const tot=items.reduce((a,b)=>a+b.v,0);
+      const el=document.getElementById('ivDonut');
+      const R=44, C=2*Math.PI*R; let segs='', acc=0;
+      items.forEach(function(it){ if(it.v<=0)return; const frac=it.v/tot; const len=frac*C;
+        segs+='<circle cx="52" cy="52" r="'+R+'" fill="none" stroke="'+it.col+'" stroke-width="11" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-acc*C).toFixed(2)+'"/>'; acc+=frac; });
+      el.innerHTML='<svg viewBox="0 0 104 104"><circle cx="52" cy="52" r="'+R+'" fill="none" stroke="#eef2f7" stroke-width="11"/>'+segs+'</svg>'+
+        '<div class="ivc-center"><b>'+tot+'</b><span>Invoice</span></div>';
+      document.getElementById('ivLegend').innerHTML=items.map(function(it){ const pct=tot>0?Math.round(it.v/tot*100):0;
+        return '<div class="ivl-row"><span class="ivl-dot" style="background:'+it.col+';"></span><span class="ivl-name">'+it.k+'</span><span class="ivl-val">'+it.v+' · '+pct+'%</span></div>'; }).join('');
+      // Bar nilai tertagih
+      const totalVal=Number(d.totalInvoiceValue)||0, paidVal=Number(d.paidInvoiceValue)||0;
+      const pct=totalVal>0?Math.round(paidVal/totalVal*100):0;
+      document.getElementById('ivBillPct').textContent=pct+'%';
+      document.getElementById('ivBillFill').style.width=pct+'%';
+      document.getElementById('ivBillPaid').textContent='Lunas '+fmtRpShort(paidVal);
+      document.getElementById('ivBillTotal').textContent='Total '+fmtRpShort(totalVal);
+    }
+    async function loadStats(){
+      const j=await api('/api/billing/stats');
+      if(j&&j.success&&j.data){
+        const d=j.data;
+        document.getElementById('isTotal').textContent=(d.paidThisMonth!=null&&d.unpaid!=null)?((d.paidThisMonth||0)+(d.unpaid||0)):'–';
+        document.getElementById('isUnpaid').textContent=d.unpaid!=null?d.unpaid:'–';
+        document.getElementById('isOverdue').textContent=d.overdue!=null?d.overdue:'–';
+        renderInvoiceChart(d);
+      }
+    }
+    function fmtDate(s){ if(!s)return'-'; const d=new Date(s); if(isNaN(d))return String(s).slice(0,10); return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}); }
+    const MONTHS=['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    let _status='', _search='', _page=1, _loading=false, _ivById={};
+    let _month='', _year='';   // '' = semua periode
+
+    function ivStatus(inv){
+      const st=(inv.status||'').toLowerCase();
+      if(st==='paid') return {cls:'b-paid',lbl:'Lunas'};
+      const due=inv.due_date?new Date(inv.due_date):null;
+      if(due && due < new Date(new Date().toDateString())) return {cls:'b-overdue',lbl:'Lewat Tempo'};
+      return {cls:'b-unpaid',lbl:'Belum Bayar'};
+    }
+    function ivCard(inv){
+      const cust=inv.customer||{}; const nm=cust.name||inv.customer_name||'Pelanggan';
+      const cid=cust.customer_id||inv.cid||''; const num=inv.invoice_number||('#'+inv.id);
+      const periode=(inv.period_month&&inv.period_year)?(MONTHS[inv.period_month]+' '+inv.period_year):'';
+      const s=ivStatus(inv);
+      const phone=(cust.phone||inv.customer_phone||'').replace(/[^0-9]/g,'');
+      const hasWa=!!phone; const hasEmail=!!(cust.email||inv.customer_email);
+      _ivById[inv.id]=inv;
+      return '<div class="iv">'+
+        '<div class="iv-top"><div style="min-width:0;"><div class="iv-name">'+esc(nm)+'</div><div class="iv-num">'+esc(num)+(cid?(' · '+esc(cid)):'')+'</div></div>'+
+        '<span class="iv-badge '+s.cls+'">'+s.lbl+'</span></div>'+
+        '<div class="iv-foot"><div class="iv-meta">'+(periode?('Periode <b>'+esc(periode)+'</b> · '):'')+'Jatuh tempo <b>'+fmtDate(inv.due_date)+'</b></div>'+
+        '<div class="iv-total">'+fmtRp(inv.total)+'</div></div>'+
+        '<div class="iv-actions">'+
+          '<button class="iv-btn iv-wa'+(hasWa?'':' iv-dis')+'" '+(hasWa?('onclick="sendInvoiceWa('+inv.id+',this)"'):'disabled')+'><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.06 2.87 1.21 3.07.15.2 2.09 3.2 5.07 4.49 2.98 1.29 2.98.86 3.52.81.54-.05 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.13-.27-.2-.57-.35z"/></svg>Kirim WA</button>'+
+          '<button class="iv-btn iv-email'+(hasEmail?'':' iv-dis')+'" '+(hasEmail?('onclick="sendInvoiceEmail('+inv.id+',this)"'):'disabled')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/></svg>Email</button>'+
+        '</div>'+
+      '</div>';
+    }
+    async function loadInvoices(reset){
+      if(_loading)return; _loading=true; if(reset)_page=1;
+      const qs=new URLSearchParams(); qs.set('page',_page); qs.set('limit','20');
+      if(_status)qs.set('status',_status); if(_search)qs.set('search',_search);
+      if(_month)qs.set('month',_month); if(_year)qs.set('year',_year);
+      const j=await api('/api/billing/invoices?'+qs.toString());
+      const list=document.getElementById('ivList');
+      const rows=(j&&j.success)?(Array.isArray(j.data)?j.data:(j.data&&j.data.rows?j.data.rows:[])):[];
+      const total=(j&&j.pagination)?j.pagination.total:rows.length;
+      if(reset)list.innerHTML='';
+      const old=document.getElementById('loadMoreBtn'); if(old)old.remove();
+      document.getElementById('countBar').textContent=(total!=null?total:rows.length)+' invoice';
+      if(rows.length){
+        list.insertAdjacentHTML('beforeend', rows.map(ivCard).join(''));
+        if(rows.length>=20){ const b=document.createElement('button'); b.id='loadMoreBtn'; b.className='load-more'; b.textContent='Muat lebih banyak'; b.onclick=function(){_page++;loadInvoices(false);}; list.appendChild(b); }
+      } else if(reset){ list.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div>Tidak ada invoice ditemukan</div></div>'; }
+      _loading=false;
+    }
+    document.getElementById('statusChips').addEventListener('click',function(e){ const c=e.target.closest('.chip'); if(!c)return; this.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); _status=c.dataset.s||''; loadInvoices(true); });
+    let _t=null; document.getElementById('ivSearch').addEventListener('input',function(){ clearTimeout(_t); const v=this.value.trim(); _t=setTimeout(()=>{_search=v;loadInvoices(true);},350); });
+    function toast(m,t){ const el=document.getElementById('toast'); el.textContent=m; el.className='toast show'+(t?' '+t:''); setTimeout(()=>el.classList.remove('show'),2800); }
+    async function postApi(url){ const t=getToken(); try{ const r=await fetch(url,{method:'POST',credentials:'include',headers:Object.assign({'Content-Type':'application/json'},t?{'Authorization':'Bearer '+t}:{})}); const d=await r.json().catch(()=>null); return {ok:(r.ok && d && d.success!==false), msg:(d&&d.message)||''}; }catch(e){ return {ok:false,msg:e.message}; } }
+    async function sendInvoiceWa(id,btn){
+      const inv=_ivById[id]; if(!inv)return;
+      if(btn){ btn.disabled=true; btn.dataset.txt=btn.innerHTML; btn.innerHTML='Mengirim…'; }
+      const r=await postApi('/api/invoices/'+id+'/send-wa-invoice');
+      if(btn){ btn.disabled=false; btn.innerHTML=btn.dataset.txt; }
+      toast(r.ok?('Invoice terkirim via WhatsApp'):(r.msg||'Gagal kirim WA'), r.ok?'ok':'err');
+    }
+    async function sendInvoiceEmail(id,btn){
+      const inv=_ivById[id]; if(!inv)return;
+      if(btn){ btn.disabled=true; btn.dataset.txt=btn.innerHTML; btn.innerHTML='Mengirim…'; }
+      const r=await postApi('/api/billing/invoices/'+id+'/send-email');
+      if(btn){ btn.disabled=false; btn.innerHTML=btn.dataset.txt; }
+      toast(r.ok?('Invoice terkirim via Email'):(r.msg||'Gagal kirim email'), r.ok?'ok':'err');
+    }
+
+    // Setup dropdown periode: default = bulan & tahun berjalan.
+    function setupPeriod(){
+      const now=new Date();
+      const curM=now.getMonth()+1, curY=now.getFullYear();
+      const mSel=document.getElementById('pMonth'), ySel=document.getElementById('pYear');
+      // Bulan: "Semua bulan" + Jan..Des
+      let mHtml='<option value="">Semua bulan</option>';
+      const monthFull=['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      for(let m=1;m<=12;m++){ mHtml+='<option value="'+m+'"'+(m===curM?' selected':'')+'>'+monthFull[m]+'</option>'; }
+      mSel.innerHTML=mHtml;
+      // Tahun: "Semua tahun" + (curY-4 .. curY+1)
+      let yHtml='<option value="">Semua tahun</option>';
+      for(let y=curY+1;y>=curY-4;y--){ yHtml+='<option value="'+y+'"'+(y===curY?' selected':'')+'>'+y+'</option>'; }
+      ySel.innerHTML=yHtml;
+      // Default state → bulan ini
+      _month=String(curM); _year=String(curY);
+    }
+    function onPeriodChange(){
+      _month=document.getElementById('pMonth').value||'';
+      _year=document.getElementById('pYear').value||'';
+      loadInvoices(true);
+    }
+
+    // Buka sheet Generate Invoice (dari partial bersama) dgn periode mengikuti
+    // filter halaman ini. Kalau filter "Semua bulan/tahun", pakai bulan berjalan.
+    function openGenerateInvoice(){
+      const now=new Date();
+      const mm=parseInt(document.getElementById('pMonth').value,10) || (now.getMonth()+1);
+      const yy=parseInt(document.getElementById('pYear').value,10)  || now.getFullYear();
+      if(window.FabSheet && typeof FabSheet.openGenerate==='function'){
+        FabSheet.openGenerate({ month:mm, year:yy, onDone:function(){ loadStats(); loadInvoices(true); } });
+      }
+    }
+
+    setupPeriod();
+    loadStats(); loadInvoices(true);
+  </script>
+  <div class="toast" id="toast"></div>
+</body>
+</html>

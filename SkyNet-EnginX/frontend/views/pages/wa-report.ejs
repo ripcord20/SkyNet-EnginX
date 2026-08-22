@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{
+      --a-bg:#f6f8fc; --a-card:#ffffff; --a-border:#eaeef6; --a-line:#f1f4fa;
+      --a-text:#16203a; --a-muted:#7c879c; --a-soft:#aab2c4;
+      --a-blue:#2563eb; --a-blue2:#3b82f6; --a-blue-soft:#eef3ff;
+      --a-teal:#0fb6a3; --a-teal-soft:#e6faf6;
+      --a-green:#10b981; --a-green-soft:#e7f9f1; --a-red:#ef4444; --a-amber:#f59e0b;
+      --a-wa:#25d366; --a-wa-deep:#128c7e;
+    }
+    *{box-sizing:border-box;}
+    body{background:var(--a-bg);font-family:'DM Sans',sans-serif;color:var(--a-text);}
+    .page-content{padding:22px 26px 44px;}
+
+    .a-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+    .a-h1{font-size:23px;font-weight:800;letter-spacing:-.02em;}
+    .a-h1-sub{font-size:13px;color:var(--a-muted);font-weight:500;margin-top:3px;}
+    .a-head-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .a-btn{font-family:inherit;font-size:12.5px;font-weight:600;border-radius:10px;padding:9px 15px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:7px;border:1px solid var(--a-border);background:#fff;color:var(--a-text);transition:all .15s;}
+    .a-btn:hover{border-color:var(--a-soft);}
+    .a-btn:disabled{opacity:.5;cursor:default;}
+    .a-btn.solid{background:var(--a-blue);color:#fff;border:none;}
+    .a-btn.solid:hover{background:#1d4ed8;}
+    .a-btn.wa{background:linear-gradient(135deg,var(--a-wa),var(--a-wa-deep));color:#fff;border:none;box-shadow:0 4px 12px -3px rgba(18,140,126,.45);}
+    .a-btn.wa:hover{transform:translateY(-1px);}
+
+    /* KPI cards */
+    .a-deliv{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+    @media(max-width:1080px){.a-deliv{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:560px){.a-deliv{grid-template-columns:1fr;}}
+    .a-dc{background:var(--a-card);border:1px solid var(--a-border);border-radius:16px;padding:16px 17px 8px;position:relative;overflow:hidden;}
+    .a-dc.hl{background:linear-gradient(150deg,var(--a-blue) 0%,#4f6ef0 55%,var(--a-teal) 165%);border:none;color:#fff;}
+    .a-dc-top{display:flex;align-items:center;justify-content:space-between;}
+    .a-dc-lbl{font-size:12.5px;font-weight:700;color:var(--a-muted);}
+    .a-dc.hl .a-dc-lbl{color:rgba(255,255,255,.9);}
+    .a-dc-i{color:var(--a-soft);}
+    .a-dc.hl .a-dc-i{color:rgba(255,255,255,.7);}
+    .a-dc-val{display:flex;align-items:baseline;gap:9px;margin-top:11px;}
+    .a-dc-num{font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+    .a-dc-delta{font-size:11.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;}
+    .a-dc-delta.up{color:var(--a-green);background:var(--a-green-soft);}
+    .a-dc-delta.down{color:var(--a-red);background:#fdecec;}
+    .a-dc-delta.mut{color:var(--a-muted);background:#f1f4fa;}
+    .a-dc.hl .a-dc-delta{background:rgba(255,255,255,.22);color:#fff;}
+    .a-dc-sub{font-size:11.5px;font-weight:600;color:var(--a-soft);margin-top:7px;}
+    .a-dc.hl .a-dc-sub{color:rgba(255,255,255,.82);}
+    .a-dc-spark{height:26px;margin:6px -4px 0;opacity:.65;}
+
+    /* ── Stat strip pola /wa/reminder (rm-*) ─────────────────────── */
+    .rm-strip{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-radius:16px;border:1px solid var(--a-border);margin-bottom:24px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.03);}
+    .rm-sc{padding:16px 18px 14px;border-right:1px solid var(--a-border);position:relative;overflow:hidden;}
+    .rm-sc:last-child{border-right:none;}
+    .rm-sc.hl{background:linear-gradient(150deg,var(--a-blue) 0%,#4f6ef0 55%,var(--a-teal) 165%);border-right:none;}
+    .rm-sc.hl .rm-sc-lbl{color:rgba(255,255,255,.9);}
+    .rm-sc.hl .rm-sc-val{color:#fff;}
+    .rm-sc.hl .rm-sc-sub{color:rgba(255,255,255,.85);}
+    .rm-sc-lbl{font-size:11.5px;font-weight:600;color:var(--a-muted);margin-bottom:9px;letter-spacing:.1px;}
+    .rm-sc-body{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;}
+    .rm-sc-val{font-size:27px;font-weight:800;color:#0f172a;letter-spacing:-1px;line-height:1;}
+    .rm-sc-meta{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap;}
+    .rm-sc-pill{display:inline-flex;align-items:center;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;}
+    .rm-sc.hl .rm-sc-pill{background:rgba(255,255,255,.22);color:#fff;}
+    .rm-sc-sub{font-size:11px;color:#94a3b8;}
+    .pill-blue{background:#dbeafe;color:#1d4ed8;}.pill-teal{background:#cffafe;color:#0e7490;}
+    .pill-amber{background:#fef3c7;color:#b45309;}.pill-green{background:#dcfce7;color:#16a34a;}
+    .pill-red{background:#fee2e2;color:#dc2626;}
+    .rm-spark{flex-shrink:0;width:66px;height:34px;}.rm-spark svg{width:66px;height:34px;}
+    .sp-line{stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+    @media(max-width:760px){.rm-strip{grid-template-columns:repeat(2,1fr);}
+      .rm-sc{border-bottom:1px solid var(--a-border);}
+      .rm-sc:nth-child(odd){border-right:1px solid var(--a-border);}.rm-sc:nth-child(even){border-right:none;}
+      .rm-sc:nth-last-child(-n+2){border-bottom:none;}}
+
+    /* ── Grid 3 kolom pola /wa/reminder ──────────────────────────── */
+    .et-grid{display:grid;grid-template-columns:320px 1fr 1fr;gap:16px;align-items:start;}
+    @media (max-width:1280px){.et-grid{grid-template-columns:280px 1fr;}.et-preview-col{grid-column:1 / -1;}}
+    @media (max-width:860px){.et-grid{grid-template-columns:1fr;}}
+    .et-col{display:flex;flex-direction:column;gap:16px;}
+    .et-card{background:var(--a-card);border:1px solid var(--a-border);border-radius:16px;overflow:hidden;}
+    .et-card-h{padding:13px 16px;border-bottom:1px solid var(--a-border);font-size:12px;font-weight:800;
+      letter-spacing:.04em;text-transform:uppercase;color:var(--a-muted);display:flex;align-items:center;gap:8px;}
+    .et-card-h .cnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--a-blue);background:#eef5ff;
+      padding:2px 8px;border-radius:20px;letter-spacing:0;}
+    .et-card-b{padding:16px;}
+
+    .a-sec{display:flex;align-items:center;justify-content:space-between;margin:0 0 13px;}
+    .a-sec-t{font-size:15px;font-weight:800;letter-spacing:-.01em;}
+
+    /* main layout */
+    .a-main{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+    @media(max-width:1000px){.a-main{grid-template-columns:1fr;}}
+    .a-card{background:var(--a-card);border:1px solid var(--a-border);border-radius:18px;padding:18px 20px;}
+    .a-card.pad0{padding:0;overflow:hidden;}
+    .a-col{display:flex;flex-direction:column;gap:16px;}
+    .a-ctitle{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--a-muted);display:flex;align-items:center;gap:8px;}
+    .a-ctitle .lead{font-size:14px;font-weight:800;color:var(--a-text);letter-spacing:-.01em;text-transform:none;}
+
+    /* period chips (segmented) */
+    .a-chips{display:inline-flex;background:#f3f6fc;border-radius:11px;padding:4px;gap:3px;flex-wrap:wrap;}
+    .a-chips button{border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--a-muted);padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .14s;}
+    .a-chips button.on{background:#fff;color:var(--a-blue);box-shadow:0 1px 3px rgba(22,32,58,.1);}
+
+    /* section toggles */
+    .a-secgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+    @media(max-width:560px){.a-secgrid{grid-template-columns:1fr;}}
+    .a-sectile{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;border:1.5px solid var(--a-border);background:#fff;cursor:pointer;transition:all .14s;font-size:13px;font-weight:600;color:var(--a-text);}
+    .a-sectile:hover{border-color:#c9d6ee;}
+    .a-sectile.on{border-color:var(--a-blue);background:var(--a-blue-soft);}
+    .a-sectile .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--a-soft);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .14s;}
+    .a-sectile.on .box{background:var(--a-blue);border-color:var(--a-blue);}
+    .a-sectile .box svg{width:12px;height:12px;stroke:#fff;opacity:0;transition:opacity .14s;}
+    .a-sectile.on .box svg{opacity:1;}
+    .a-sectile input{display:none;}
+
+    /* WhatsApp preview */
+    .wa-bar{background:var(--a-wa-deep);padding:11px 16px;display:flex;align-items:center;gap:11px;}
+    .wa-av{width:38px;height:38px;border-radius:50%;background:var(--a-wa);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;}
+    .wa-name{font-size:14px;font-weight:700;color:#fff;line-height:1.2;}
+    .wa-status{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+    .wa-dots{margin-left:auto;display:flex;gap:3px;}
+    .wa-dots span{width:4px;height:4px;background:rgba(255,255,255,.7);border-radius:50%;}
+    .wa-screen{background:#e5ddd5;background-image:linear-gradient(rgba(229,221,213,.92),rgba(229,221,213,.92));
+      padding:14px 12px 18px;min-height:200px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+    .wa-screen::-webkit-scrollbar{width:5px;}
+    .wa-screen::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18);border-radius:5px;}
+    .wa-datepill{align-self:center;background:rgba(255,255,255,.9);padding:3px 11px;border-radius:10px;font-size:10px;font-weight:600;color:#64748b;margin:2px 0 8px;}
+    .wa-bwrap{display:flex;justify-content:flex-end;padding:0 2px;}
+    .wa-bubble{background:#d9fdd3;border-radius:12px 2px 12px 12px;padding:8px 11px 6px;max-width:90%;box-shadow:0 1px 2px rgba(0,0,0,.12);position:relative;}
+    .wa-bubble::before{content:'';position:absolute;top:0;right:-8px;border-width:0 0 10px 10px;border-style:solid;border-color:transparent transparent transparent #d9fdd3;}
+    .wa-text{font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;white-space:pre-wrap;line-height:1.6;color:#111b21;word-break:break-word;}
+    .wa-bold{font-weight:700;} .wa-italic{font-style:italic;}
+    .wa-foot{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:4px;}
+    .wa-time{font-size:10.5px;color:#667781;}
+    .wa-tick svg{width:16px;height:11px;fill:#53bdeb;}
+    .wa-note{padding:7px 14px;background:#f0f2f5;border-top:1px solid #e9edef;display:flex;align-items:center;justify-content:space-between;}
+    .wa-note span{font-size:10.5px;color:#667781;}
+
+    /* template editor */
+    .a-ta{width:100%;border:1.5px solid var(--a-border);border-radius:12px;padding:12px 13px;font-family:'DM Mono',monospace;
+      font-size:12px;line-height:1.7;resize:vertical;outline:none;background:#fbfdff;color:var(--a-text);transition:all .14s;}
+    .a-ta:focus{border-color:var(--a-blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .a-varbox{background:#f7f9fd;border:1px solid var(--a-border);border-radius:12px;padding:14px 15px;margin-bottom:14px;}
+    .a-vartitle{font-size:10.5px;font-weight:800;color:var(--a-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;display:flex;align-items:center;gap:7px;}
+    .a-vartitle::after{content:'';flex:1;height:1px;background:var(--a-border);}
+    .a-vargroup{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-bottom:9px;}
+    .a-vargroup:last-child{margin-bottom:0;}
+    .a-varlbl{font-size:9.5px;font-weight:800;color:var(--a-soft);text-transform:uppercase;letter-spacing:.06em;width:100%;margin-bottom:2px;}
+    .a-chip{position:relative;display:inline-flex;align-items:center;padding:4px 10px;border-radius:7px;font-size:11.5px;font-weight:600;
+      font-family:'DM Mono',monospace;cursor:pointer;border:1.5px solid transparent;transition:all .12s;user-select:none;white-space:nowrap;}
+    .a-chip:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(0,0,0,.1);}
+    .vc-blue{background:var(--a-blue-soft);color:#1d4ed8;border-color:#bfdbfe;}
+    .vc-green{background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
+    .vc-red{background:#fef2f2;color:#dc2626;border-color:#fecaca;}
+    .vc-amber{background:#fffbeb;color:#b45309;border-color:#fde68a;}
+    .vc-teal{background:#f0fdfa;color:#0f766e;border-color:#99f6e4;}
+    .vc-slate{background:#f8fafc;color:#475569;border-color:#cbd5e1;}
+    .a-chip[data-desc]:hover::after{content:attr(data-desc);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);
+      background:#0f172a;color:#fff;font-size:10px;font-weight:500;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;font-family:'DM Sans',sans-serif;z-index:5;}
+
+    /* admin phones */
+    .a-inp{width:100%;padding:10px 12px;border-radius:11px;border:1.5px solid var(--a-border);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fbfdff;color:var(--a-text);transition:all .14s;}
+    .a-inp:focus{border-color:var(--a-blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .a-lbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--a-muted);display:block;margin-bottom:7px;}
+    .ph-pill{display:inline-flex;align-items:center;gap:5px;background:var(--a-blue-soft);border:1px solid #bfdbfe;color:var(--a-blue);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;font-family:'DM Mono',monospace;margin:2px;}
+    .a-fullbtn{width:100%;padding:11px;border-radius:11px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;transition:all .15s;}
+    .a-fullbtn.blue{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;}
+    .a-fullbtn.blue:hover{transform:translateY(-1px);}
+    .a-fullbtn:disabled{opacity:.6;cursor:default;transform:none;}
+
+    /* schedule cards */
+    .sch-card{border:1.5px solid var(--a-border);border-radius:13px;padding:12px 14px;margin-bottom:10px;transition:all .15s;}
+    .sch-card:last-child{margin-bottom:0;}
+    .sch-card.on{border-color:#bfdbfe;background:#fafcff;}
+    .sch-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+    .sch-mini-lbl{font-size:9.5px;font-weight:800;text-transform:uppercase;color:var(--a-muted);display:block;margin-bottom:4px;letter-spacing:.05em;}
+    .sch-mini{width:100%;padding:7px 10px;border-radius:9px;border:1.5px solid var(--a-border);font-size:12px;font-family:inherit;outline:none;background:#fff;color:var(--a-text);}
+    .sch-mini:focus{border-color:var(--a-blue);}
+    .a-tog{position:relative;width:42px;height:24px;border-radius:99px;background:#cfd8e8;cursor:pointer;transition:background .2s;flex-shrink:0;}
+    .a-tog.on{background:linear-gradient(135deg,var(--a-blue),#1d4ed8);}
+    .a-tog .thumb{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+    .a-tog.on .thumb{left:21px;}
+
+    .a-toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(16px);opacity:0;display:flex;align-items:center;gap:11px;background:#fff;color:#0f172a;padding:14px 18px 14px 15px;border-radius:14px;font-size:13.5px;font-weight:600;z-index:10002;transition:all .28s cubic-bezier(.16,1,.3,1);box-shadow:0 12px 34px -8px rgba(15,23,42,.28),0 0 0 1px rgba(15,23,42,.04);pointer-events:none;max-width:min(420px,92vw);border-left:4px solid #16a34a;}
+    .a-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .a-toast .a-toast-ic{flex-shrink:0;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#dcfce7;color:#15803d;}
+    .a-toast .a-toast-ic svg{width:17px;height:17px;}
+    .a-toast .a-toast-msg{line-height:1.4;color:#1e293b;}
+    .a-toast.err{border-left-color:#dc2626;}
+    .a-toast.err .a-toast-ic{background:#fee2e2;color:#dc2626;}
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="a-head">
+        <div>
+          <div class="a-h1">Automation Report</div>
+          <div class="a-h1-sub" id="rpHeaderSub">Laporan otomatis pembayaran via WhatsApp</div>
+        </div>
+        <div class="a-head-r">
+          <button class="a-btn" id="btnPreview" onclick="previewReport()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Preview
+          </button>
+          <button class="a-btn wa" id="btnSendNow" onclick="sendReportNow()">
+            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Kirim Sekarang
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat strip (pola /wa/reminder) -->
+      <div class="rm-strip" id="kpi">
+        <div class="rm-sc hl">
+          <div class="rm-sc-lbl">Total Tagihan</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scTotal">–</div>
+              <div class="rm-sc-meta"><span class="rm-sc-sub" id="scTotalSub">memuat…</span></div>
+            </div>
+            <div class="rm-spark"><svg viewBox="0 0 66 34" preserveAspectRatio="none"><path class="sp-line" id="sp-total-line" d="" stroke="#ffffff"/><circle id="sp-total-dot" r="2.4" fill="#ffffff"/></svg></div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Dibayar</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scBayar">–</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-green">Masuk</span><span class="rm-sc-sub" id="scBayarSub">memuat…</span></div>
+            </div>
+            <div class="rm-spark"><svg viewBox="0 0 66 34" preserveAspectRatio="none"><path class="sp-line" id="sp-bayar-line" d="" stroke="#16a34a"/><circle id="sp-bayar-dot" r="2.4" fill="#16a34a"/></svg></div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Belum Bayar</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scBelum">–</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-amber">Outstanding</span><span class="rm-sc-sub" id="scBelumSub">memuat…</span></div>
+            </div>
+            <div class="rm-spark"><svg viewBox="0 0 66 34" preserveAspectRatio="none"><path class="sp-line" id="sp-belum-line" d="" stroke="#d97706"/><circle id="sp-belum-dot" r="2.4" fill="#d97706"/></svg></div>
+          </div>
+        </div>
+        <div class="rm-sc">
+          <div class="rm-sc-lbl">Collection Rate</div>
+          <div class="rm-sc-body">
+            <div><div class="rm-sc-val" id="scRate">–</div>
+              <div class="rm-sc-meta"><span class="rm-sc-pill pill-blue" id="scRateDelta">—</span><span class="rm-sc-sub">sudah bayar</span></div>
+            </div>
+            <div class="rm-spark"><svg viewBox="0 0 66 34" preserveAspectRatio="none"><path class="sp-line" id="sp-rate-line" d="" stroke="#2563eb"/><circle id="sp-rate-dot" r="2.4" fill="#2563eb"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main (3 kolom, pola /wa/reminder) -->
+      <div class="et-grid">
+        <!-- LEFT: Konfigurasi + Nomor + Jadwal -->
+        <div class="et-col">
+
+          <!-- Config: period + sections -->
+          <div class="a-card">
+            <div class="a-ctitle" style="margin-bottom:13px;">Periode Laporan</div>
+            <div class="a-chips" id="periodChips" style="margin-bottom:18px;">
+              <button class="on" data-period="this_month" onclick="setPeriod('this_month',this)">Bulan Ini</button>
+              <button data-period="last_month" onclick="setPeriod('last_month',this)">Bulan Lalu</button>
+              <button data-period="this_week" onclick="setPeriod('this_week',this)">Minggu Ini</button>
+              <button data-period="last_week" onclick="setPeriod('last_week',this)">Minggu Lalu</button>
+            </div>
+            <div class="a-ctitle" style="margin-bottom:11px;">Bagian Laporan</div>
+            <div class="a-secgrid" id="secGrid">
+              <label class="a-sectile on" id="sec-summary" onclick="toggleSecTile('summary',this,event)"><span class="box"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><input type="checkbox" checked> Ringkasan Tagihan</label>
+              <label class="a-sectile on" id="sec-rate" onclick="toggleSecTile('rate',this,event)"><span class="box"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><input type="checkbox" checked> Collection Rate</label>
+              <label class="a-sectile" id="sec-method" onclick="toggleSecTile('method',this,event)"><span class="box"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><input type="checkbox"> Metode Pembayaran</label>
+              <label class="a-sectile" id="sec-top" onclick="toggleSecTile('top',this,event)"><span class="box"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><input type="checkbox"> Top Pembayar</label>
+              <label class="a-sectile" id="sec-due" onclick="toggleSecTile('due',this,event)"><span class="box"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span><input type="checkbox"> Jatuh Tempo 7 Hari</label>
+            </div>
+          </div>
+
+
+          <!-- Admin phones -->
+          <div class="a-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:13px;border-bottom:1px solid var(--a-border);">
+              <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--a-wa),var(--a-wa-deep));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="17" height="17" fill="#fff" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+              </div>
+              <div>
+                <div class="a-ctitle">Nomor Admin</div>
+                <div style="font-size:13.5px;font-weight:800;color:var(--a-text);">Penerima Laporan</div>
+              </div>
+            </div>
+            <div id="phonePills" style="margin-bottom:12px;min-height:28px;"></div>
+            <label class="a-lbl">Tambah / Edit Nomor</label>
+            <textarea class="a-inp" id="phoneInput" rows="3" placeholder="628123456789&#10;628987654321&#10;(satu nomor per baris)" style="resize:vertical;font-family:'DM Mono',monospace;font-size:12px;margin-bottom:12px;"></textarea>
+            <button class="a-fullbtn blue" onclick="savePhones()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              Simpan Nomor
+            </button>
+          </div>
+
+          <!-- Schedule -->
+          <div class="a-card">
+            <div class="a-ctitle" style="margin-bottom:14px;">Jadwal Otomatis</div>
+            <div id="schedGrid"><div style="text-align:center;color:var(--a-soft);padding:18px;font-size:13px;">Memuat jadwal…</div></div>
+            <button class="a-fullbtn blue" style="margin-top:13px;" onclick="saveSchedules()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+              Simpan Jadwal
+            </button>
+          </div>
+
+          <!-- Status -->
+          <div class="a-card">
+            <div class="a-ctitle" style="margin-bottom:10px;">Status Pengiriman</div>
+            <div id="lastSentInfo" style="font-size:12.5px;color:var(--a-muted);line-height:1.6;">–</div>
+          </div>
+        </div>
+
+        <!-- CENTER: Editor Template -->
+        <div class="et-col">
+          <!-- Template Editor -->
+          <div class="a-card">
+            <div class="a-card-h" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
+              <div>
+                <div class="a-ctitle lead">Edit Template Pesan</div>
+                <div style="font-size:11.5px;color:var(--a-muted);margin-top:2px;">Kustomisasi format laporan WhatsApp</div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="a-btn" style="padding:7px 12px;" onclick="resetReportTemplate()">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h5M20 20v-5h-5M4 9a8 8 0 0114-3M20 15a8 8 0 01-14 3"/></svg>
+                  Reset
+                </button>
+                <button class="a-btn solid" style="padding:7px 14px;" onclick="saveReportTemplate()">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Simpan
+                </button>
+              </div>
+            </div>
+
+            <div class="a-varbox">
+              <div class="a-vartitle">Variabel Tersedia — klik untuk sisipkan</div>
+              <div class="a-vargroup">
+                <div class="a-varlbl">Identitas</div>
+                <span class="a-chip vc-blue" onclick="insertVar('{label}')" data-desc="Judul laporan">{label}</span>
+                <span class="a-chip vc-blue" onclick="insertVar('{app_name}')" data-desc="Nama aplikasi">{app_name}</span>
+                <span class="a-chip vc-blue" onclick="insertVar('{period}')" data-desc="Periode laporan">{period}</span>
+                <span class="a-chip vc-blue" onclick="insertVar('{now}')" data-desc="Waktu saat ini">{now}</span>
+                <span class="a-chip vc-slate" onclick="insertVar('{sep}')" data-desc="Garis pemisah">{sep}</span>
+              </div>
+              <div class="a-vargroup">
+                <div class="a-varlbl">Pelanggan &amp; Tagihan</div>
+                <span class="a-chip vc-blue" onclick="insertVar('{aktif_cnt}')" data-desc="Jumlah pelanggan aktif">{aktif_cnt}</span>
+                <span class="a-chip vc-blue" onclick="insertVar('{aktif_total}')" data-desc="Total tagihan aktif">{aktif_total}</span>
+                <span class="a-chip vc-amber" onclick="insertVar('{due_cnt}')" data-desc="Jumlah jatuh tempo">{due_cnt}</span>
+                <span class="a-chip vc-amber" onclick="insertVar('{due_total}')" data-desc="Total nominal jatuh tempo">{due_total}</span>
+                <span class="a-chip vc-teal" onclick="insertVar('{rate}')" data-desc="Collection rate (%)">{rate}</span>
+              </div>
+              <div class="a-vargroup">
+                <div class="a-varlbl">Pembayaran</div>
+                <span class="a-chip vc-green" onclick="insertVar('{bayar_cnt}')" data-desc="Jumlah sudah bayar">{bayar_cnt}</span>
+                <span class="a-chip vc-green" onclick="insertVar('{bayar_total}')" data-desc="Total nominal dibayar">{bayar_total}</span>
+                <span class="a-chip vc-red" onclick="insertVar('{unpaid_cnt}')" data-desc="Jumlah belum bayar">{unpaid_cnt}</span>
+                <span class="a-chip vc-red" onclick="insertVar('{unpaid_total}')" data-desc="Total nominal belum bayar">{unpaid_total}</span>
+              </div>
+              <div class="a-vargroup">
+                <div class="a-varlbl">Daftar Detail</div>
+                <span class="a-chip vc-green" onclick="insertVar('{paid_list}')" data-desc="List sudah bayar">{paid_list}</span>
+                <span class="a-chip vc-red" onclick="insertVar('{unpaid_list}')" data-desc="List belum bayar">{unpaid_list}</span>
+                <span class="a-chip vc-amber" onclick="insertVar('{due_today_list}')" data-desc="List jatuh tempo hari ini">{due_today_list}</span>
+                <span class="a-chip vc-amber" onclick="insertVar('{due_list}')" data-desc="List semua jatuh tempo">{due_list}</span>
+              </div>
+            </div>
+
+            <textarea id="reportTemplate" class="a-ta" rows="16" oninput="livePreviewTemplate()">Memuat template…</textarea>
+            <div style="font-size:11px;color:var(--a-soft);margin-top:6px;">Gunakan <b>*teks*</b> untuk bold, <b>_teks_</b> untuk italic di WhatsApp.</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Preview WhatsApp -->
+        <div class="et-col et-preview-col">
+          <!-- WA Preview -->
+          <div class="et-card">
+            <div class="et-card-h">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Langsung
+            </div>
+            <div class="wa-bar">
+              <div class="wa-av"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+              <div>
+                <div class="wa-name">ISP NetOps</div>
+                <div class="wa-status" id="waContactStatus">Auto Report</div>
+              </div>
+              <div class="wa-dots"><span></span><span></span><span></span></div>
+            </div>
+            <div class="wa-screen" id="waScreen">
+              <div class="wa-datepill" id="waDatePill">Hari ini</div>
+              <div class="wa-bwrap">
+                <div class="wa-bubble">
+                  <div class="wa-text" id="waPreviewText">Klik <strong>Preview</strong> untuk melihat isi pesan laporan…</div>
+                  <div class="wa-foot">
+                    <span class="wa-time" id="waPreviewTime">–</span>
+                    <span class="wa-tick"><svg viewBox="0 0 16 11" xmlns="http://www.w3.org/2000/svg"><path d="M11.071.653L4.42 7.304 1.929 4.813 1 5.742l3.42 3.42L12 1.582z"/><path d="M15.071.653L8.42 7.304 7.5 6.384l-.929.929 1.849 1.849L16 1.582z"/></svg></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="wa-note">
+              <span style="font-style:italic;">Preview otomatis · contoh tampilan</span>
+              <span id="previewLabel"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="a-toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/wa-report.js"></script>
+</body>
+</html>

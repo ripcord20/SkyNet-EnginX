@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="id" data-nms-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+  <style>
+    /* ════════════════════════════════════════════════════════════
+       FlayNMS · NMS Interface Monitor — Grafana/Prometheus style
+       Self-contained theme (dark default + light), scoped to .nms
+       ════════════════════════════════════════════════════════════ */
+    .nms{
+      --g-bg:#0a0a0c; --g-panel:#161618; --g-panel-2:#1e1e21; --g-border:#2a2a2e;
+      --g-text:#ececee; --g-text-dim:#9a9aa2; --g-text-faint:#62626b;
+      --g-grid:#242428; --g-rx:#36a9e1; --g-tx:#c2186a; --g-accent:#a3e635;
+      --g-warn:#fbbf24; --g-crit:#f87171; --g-ok:#4ade80;
+      --g-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+      --g-sans:'Plus Jakarta Sans',system-ui,sans-serif;
+    }
+    [data-nms-theme="light"] .nms{
+      --g-bg:#f4f6fa; --g-panel:#ffffff; --g-panel-2:#f8fafc; --g-border:#e2e8f0;
+      --g-text:#1e293b; --g-text-dim:#64748b; --g-text-faint:#94a3b8;
+      --g-grid:#eef2f7; --g-rx:#16a34a; --g-tx:#2563eb; --g-accent:#2563eb;
+    }
+
+    .nms{ background:var(--g-bg); color:var(--g-text); font-family:var(--g-sans); margin:-24px -28px -80px; padding:24px 0 40px; }
+    @media(max-width:768px){ .nms{ margin:-16px -16px 0; padding:8px 0 90px; } }
+    .nms *{ box-sizing:border-box; }
+
+    /* ── Header card (pola NOC Dashboard) ── */
+    .nms-header{
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+      background:var(--g-panel); border:1px solid var(--g-border); border-radius:14px;
+      padding:14px 20px; margin:0 28px 0; box-shadow:0 1px 4px rgba(0,0,0,.04);
+    }
+    [data-nms-theme="dark"] .nms-header{ box-shadow:0 2px 12px rgba(0,0,0,.25); }
+    @media(max-width:768px){ .nms-header{ margin:0 14px 4px; padding:14px 16px; flex-direction:column; align-items:stretch; } }
+    .nms-header-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .nms-header-icon{ width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#1e78ff,#0052cc); display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(30,120,255,.3); }
+    .nms-header-icon svg{ width:20px; height:20px; color:#fff; }
+    .nms-header-text{ min-width:0; }
+    .nms-header-text h1{ font-size:16px; font-weight:800; margin:0 0 2px; letter-spacing:-.3px; }
+    .nms-header-text p{ font-size:11px; color:var(--g-text-dim); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .nms-header-right{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    @media(max-width:768px){
+      .nms-header-right{ display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+      /* baris 1: clock + panel count */
+      .nms-header-right .nms-clock{ grid-column:1; align-self:center; }
+      .nms-header-right .nms-pancount{ grid-column:2; text-align:right; align-self:center; }
+      /* baris 2: dua dropdown sejajar, lebar penuh */
+      .nms-header-right .nms-select{ grid-column:span 1; width:100%; }
+      /* baris 3: tombol pause+theme di kiri, tambah interface lebar */
+      .nms-header-right #nmsPauseBtn{ grid-column:1; }
+      .nms-header-right #nmsThemeBtn{ grid-column:2; }
+      .nms-header-right #nmsPauseBtn, .nms-header-right #nmsThemeBtn{ width:100%; }
+      .nms-header-right .nms-btn.primary{ grid-column:1 / -1; width:100%; justify-content:center; padding:11px; }
+    }
+    .nms-clock{ font-size:11px; color:var(--g-text-faint); font-family:var(--g-mono); }
+    .nms-pancount{ font-size:11px; color:var(--g-text-dim); font-family:var(--g-mono); }
+    .nms-pancount b{ color:var(--g-text); }
+
+    .nms-select, .nms-btn{
+      font-family:var(--g-sans); font-size:13px; font-weight:600; color:var(--g-text);
+      background:var(--g-panel-2); border:1px solid var(--g-border); border-radius:8px;
+      padding:8px 12px; cursor:pointer; outline:none; transition:border-color .15s, background .15s;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .nms-select:hover, .nms-btn:hover{ border-color:var(--g-accent); }
+    .nms-btn.primary{ background:var(--g-accent); color:#fff; border-color:var(--g-accent); display:flex; align-items:center; gap:6px; }
+    .nms-btn.primary:hover{ filter:brightness(1.08); }
+    .nms-btn svg{ width:15px; height:15px; }
+    .nms-iconbtn{ width:36px; height:36px; display:flex; align-items:center; justify-content:center; padding:0; }
+    @keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.45} }
+
+    /* ── Grid of panels ── */
+    .nms-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(380px,1fr)); gap:14px; padding:18px 28px 90px; }
+    @media(max-width:768px){ .nms-grid{ grid-template-columns:1fr; padding:16px 14px 8px; gap:12px; } }
+    @media(max-width:768px){ .nms-header-text p{ white-space:normal; } }
+
+    .panel{
+      background:var(--g-panel); border:1px solid var(--g-border); border-radius:10px;
+      overflow:hidden; display:flex; flex-direction:column; position:relative;
+    }
+    .panel-clickable{ cursor:pointer; transition:border-color .15s, box-shadow .15s, transform .15s; }
+    .panel-clickable:hover{ border-color:var(--g-accent); box-shadow:0 6px 22px rgba(0,0,0,.18); transform:translateY(-2px); }
+    .panel-head{ display:flex; align-items:center; gap:10px; padding:11px 14px 9px; border-bottom:1px solid var(--g-border); }
+    .panel-name{ font-weight:700; font-size:13px; letter-spacing:-.1px; }
+    .panel-router{ font-size:10.5px; color:var(--g-text-faint); font-family:var(--g-mono); }
+    .panel-status{ margin-left:auto; display:flex; align-items:center; gap:5px; font-size:10px; font-family:var(--g-mono); font-weight:600; padding:3px 7px; border-radius:5px; }
+    .panel-status.up{ color:var(--g-ok); background:color-mix(in srgb,var(--g-ok) 14%,transparent); }
+    .panel-status.down{ color:var(--g-crit); background:color-mix(in srgb,var(--g-crit) 14%,transparent); }
+    .panel-status .sdot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .panel-del{ background:none; border:none; color:var(--g-text-faint); cursor:pointer; padding:4px; border-radius:5px; display:flex; }
+    .panel-del:hover{ color:var(--g-crit); background:color-mix(in srgb,var(--g-crit) 12%,transparent); }
+
+    /* Live readouts */
+    .panel-metrics{ display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--g-border); }
+    .metric{ background:var(--g-panel); padding:9px 14px; }
+    .metric-lbl{ font-size:9.5px; text-transform:uppercase; letter-spacing:.7px; color:var(--g-text-faint); font-weight:700; display:flex; align-items:center; gap:5px; }
+    .metric-lbl .mdot{ width:7px; height:7px; border-radius:2px; }
+    .metric-lbl .mdot.rx{ background:var(--g-rx); } .metric-lbl .mdot.tx{ background:var(--g-tx); }
+    .metric-val{ font-family:var(--g-mono); font-size:19px; font-weight:700; margin-top:2px; letter-spacing:-.5px; line-height:1.1; }
+    .metric-val.rx{ color:var(--g-rx); } .metric-val.tx{ color:var(--g-tx); }
+    .metric-unit{ font-size:11px; color:var(--g-text-dim); font-weight:500; margin-left:2px; }
+    .metric-sub{ font-size:9.5px; color:var(--g-text-faint); font-family:var(--g-mono); margin-top:2px; }
+
+    .panel-chart{ padding:4px 6px 2px; min-height:140px; }
+
+    /* Empty / loading states */
+    .nms-empty{ text-align:center; padding:80px 24px; color:var(--g-text-dim); }
+    .nms-empty svg{ width:54px; height:54px; opacity:.4; margin-bottom:16px; }
+    .nms-empty h3{ font-size:17px; font-weight:800; color:var(--g-text); margin:0 0 6px; }
+    .nms-empty p{ font-size:13px; margin:0 0 18px; }
+    .skel{ background:linear-gradient(90deg,var(--g-panel) 25%,var(--g-panel-2) 50%,var(--g-panel) 75%); background-size:200% 100%; animation:shimmer 1.4s infinite; border-radius:10px; height:230px; }
+    @keyframes shimmer{ to{ background-position:-200% 0; } }
+
+    /* ── Picker modal ── */
+    .nms-modal-bg{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1300; align-items:flex-end; justify-content:center; padding:0; backdrop-filter:blur(2px); }
+    .nms-modal-bg.show{ display:flex; }
+    @media(min-width:560px){ .nms-modal-bg{ align-items:center; padding:24px; } }
+    .nms-modal{ background:var(--g-panel); border:1px solid var(--g-border); width:100%; max-width:520px; max-height:88vh; border-radius:16px 16px 0 0; display:flex; flex-direction:column; overflow:hidden; animation:slideUp .25s ease; }
+    @media(min-width:560px){ .nms-modal{ border-radius:14px; } }
+    @keyframes slideUp{ from{ transform:translateY(24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+    .nms-modal-head{ padding:16px 18px; border-bottom:1px solid var(--g-border); display:flex; align-items:center; gap:10px; flex:0 0 auto; }
+    .nms-modal-head h3{ margin:0; font-size:15px; font-weight:800; }
+    .nms-modal-close{ margin-left:auto; background:var(--g-panel-2); border:1px solid var(--g-border); color:var(--g-text-dim); cursor:pointer; width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .nms-modal-close:hover{ background:var(--g-border); color:var(--g-text); }
+    .nms-modal-body{ padding:14px 18px; overflow-y:auto; flex:1 1 auto; min-height:0; }
+    .nms-field-lbl{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--g-text-dim); margin:0 0 7px; }
+    .if-list{ display:flex; flex-direction:column; gap:6px; margin-top:14px; }
+    .if-row{ display:flex; align-items:center; gap:11px; padding:11px 13px; border:1px solid var(--g-border); border-radius:9px; cursor:pointer; transition:border-color .15s, background .15s; -webkit-tap-highlight-color:transparent; }
+    .if-row:hover{ border-color:var(--g-accent); background:var(--g-panel-2); }
+    .if-row.added{ opacity:.5; cursor:default; }
+    .if-row.added:hover{ border-color:var(--g-border); background:transparent; }
+    .if-ic{ width:30px; height:30px; border-radius:7px; background:var(--g-panel-2); display:flex; align-items:center; justify-content:center; color:var(--g-accent); flex-shrink:0; }
+    .if-ic svg{ width:16px; height:16px; }
+    .if-meta{ flex:1; min-width:0; }
+    .if-name{ font-family:var(--g-mono); font-weight:600; font-size:13px; }
+    .if-type{ font-size:10.5px; color:var(--g-text-faint); }
+    .if-state{ font-size:9.5px; font-family:var(--g-mono); font-weight:700; padding:2px 7px; border-radius:5px; }
+    .if-state.run{ color:var(--g-ok); background:color-mix(in srgb,var(--g-ok) 14%,transparent); }
+    .if-state.stop{ color:var(--g-text-faint); background:var(--g-panel-2); }
+    .if-add{ color:var(--g-accent); font-size:11px; font-weight:700; font-family:var(--g-mono); }
+    .nms-spin{ display:inline-block; width:15px; height:15px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:nspin .7s linear infinite; }
+    @keyframes nspin{ to{ transform:rotate(360deg); } }
+    .nms-loading{ text-align:center; padding:30px; color:var(--g-text-dim); font-size:13px; }
+    /* Detail modal */
+    .dt-metrics{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px; }
+    .dt-metric{ background:var(--g-panel-2); border:1px solid var(--g-border); border-radius:10px; padding:12px 14px; }
+    .dt-info{ display:flex; flex-direction:column; font-size:12.5px; }
+    .dt-info .row{ display:flex; justify-content:space-between; gap:12px; padding:7px 2px; border-bottom:1px solid var(--g-grid); }
+    .dt-info .row:last-child{ border-bottom:none; }
+    .dt-info .k{ color:var(--g-text-dim); }
+    .dt-info .v{ color:var(--g-text); font-weight:600; font-family:var(--g-mono); text-align:right; word-break:break-all; }
+    /* Detail modal landscape (desktop) */
+    .nms-modal-detail{ max-width:600px; }
+    .dt-body{ display:flex; flex-direction:column; gap:14px; }
+    .dt-side .dt-info{ background:var(--g-panel-2); border:1px solid var(--g-border); border-radius:10px; padding:4px 14px; }
+    /* Segmented control (clean & modern) */
+    .dt-range{ display:inline-flex; gap:2px; margin-top:12px; padding:3px; background:var(--g-panel-2); border:1px solid var(--g-border); border-radius:10px; }
+    .dt-range-btn{ font-family:var(--g-sans); font-size:12px; font-weight:600; padding:6px 14px; border-radius:7px; border:none; background:transparent; color:var(--g-text-dim); cursor:pointer; transition:color .15s, background .15s; white-space:nowrap; }
+    .dt-range-btn:hover{ color:var(--g-text); }
+    .dt-range-btn.active{ background:var(--g-panel); color:var(--g-text); box-shadow:0 1px 3px rgba(0,0,0,.12); }
+    [data-nms-theme="dark"] .dt-range-btn.active{ background:var(--g-border); color:var(--g-text); box-shadow:none; }
+    .dt-chart-note{ font-size:10.5px; color:var(--g-text-faint); font-family:var(--g-mono); margin-top:6px; min-height:14px; }
+    /* Bungkus chart dengan tinggi tetap supaya modal tidak ikut membesar */
+    .dt-chart-wrap{ height:240px; margin-top:10px; overflow:hidden; }
+    .dt-chart-wrap #dtChart{ height:240px !important; }
+    .dt-chart-wrap .apexcharts-canvas{ height:240px !important; }
+    /* Statistik kumulatif */
+    .dt-stats{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .dt-stat{ display:flex; align-items:center; gap:10px; background:var(--g-panel-2); border:1px solid var(--g-border); border-radius:10px; padding:10px 12px; }
+    .ds-ic{ width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ds-ic svg{ width:17px; height:17px; }
+    .ds-ic.rx{ background:color-mix(in srgb,var(--g-rx) 16%,transparent); color:var(--g-rx); }
+    .ds-ic.tx{ background:color-mix(in srgb,var(--g-tx) 16%,transparent); color:var(--g-tx); }
+    .ds-lbl{ font-size:10.5px; color:var(--g-text-dim); font-weight:600; letter-spacing:.2px; }
+    .ds-val{ font-size:15px; font-weight:800; font-family:var(--g-mono); color:var(--g-text); margin-top:2px; letter-spacing:-.3px; }
+    @media(min-width:900px){
+      .nms-modal-detail{ max-width:980px; height:auto !important; max-height:none !important; }
+      .nms-modal-detail .nms-modal-body{ flex:0 0 auto; overflow:visible; }
+      .dt-body{ flex-direction:row; align-items:flex-start; gap:18px; }
+      .dt-main{ flex:1.7; min-width:0; display:flex; flex-direction:column; }
+      .dt-side{ flex:1; min-width:300px; max-width:360px; display:flex; flex-direction:column; }
+    }
+  </style>
+</head>
+<body data-theme="light">
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+      <div class="nms" id="nmsRoot">
+
+        <!-- Header (pola NOC Dashboard) -->
+        <header class="nms-header">
+          <div class="nms-header-left">
+          
+            <div class="nms-header-text">
+              <h1>Interface Graph Monitor</h1>
+              <p>Network Monitoring System · pantau traffic interface MikroTik real-time</p>
+            </div>
+          </div>
+          <div class="nms-header-right">
+            <span class="nms-clock" id="nmsClock">--:--:--</span>
+            <span class="nms-pancount">panel <b id="nmsCount">0</b></span>
+            <select class="nms-select" id="nmsRouterFilter" title="Filter router" onchange="nmsFilterRouter()">
+              <option value="">Semua Router</option>
+            </select>
+            <select class="nms-select" id="nmsInterval" title="Interval refresh" onchange="nmsSetInterval(this.value)">
+              <option value="5000">5 detik</option>
+              <option value="30000">30 detik</option>
+              <option value="60000">1 menit</option>
+              <option value="300000">5 menit</option>
+              <option value="1800000">30 menit</option>
+            </select>
+            <button class="nms-btn nms-iconbtn" id="nmsPauseBtn" title="Pause/Resume" onclick="nmsTogglePause()">
+              <svg id="nmsPauseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+            <button class="nms-btn nms-iconbtn" id="nmsThemeBtn" title="Toggle tema" onclick="nmsToggleTheme()">
+              <svg id="nmsThemeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="nms-btn primary" onclick="nmsOpenPicker()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Tambah Interface
+            </button>
+          </div>
+        </header>
+
+        <!-- Panels -->
+        <div id="nmsGridWrap">
+          <div class="nms-grid" id="nmsGrid">
+            <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Picker Modal -->
+<div class="nms-modal-bg" id="nmsPicker" onclick="if(event.target===this)nmsClosePicker()">
+  <div class="nms-modal nms">
+    <div class="nms-modal-head">
+      <h3>Tambah Interface ke Monitoring</h3>
+      <button class="nms-modal-close" onclick="nmsClosePicker()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="nms-modal-body">
+      <p class="nms-field-lbl">Pilih Router</p>
+      <select class="nms-select" id="pkRouter" style="width:100%;" onchange="nmsLoadIfaces()"></select>
+      <p class="nms-field-lbl" style="margin-top:16px;">Interface Tersedia</p>
+      <div class="if-list" id="pkIfaceList">
+        <div class="nms-loading">Pilih router untuk memuat interface…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="nms-modal-bg" id="nmsDetail" onclick="if(event.target===this)nmsCloseDetail()">
+  <div class="nms-modal nms nms-modal-detail">
+    <div class="nms-modal-head">
+      <div style="flex:1;min-width:0;">
+        <h3 id="dtTitle" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Detail Interface</h3>
+        <div class="panel-router" id="dtSub" style="margin-top:3px;"></div>
+      </div>
+      <span class="panel-status up" id="dtStatus" style="margin-left:0;"><span class="sdot"></span>UP</span>
+      <button class="nms-modal-close" onclick="nmsCloseDetail()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="nms-modal-body dt-body">
+      <!-- KIRI: metrics + chart -->
+      <div class="dt-main">
+        <div class="dt-metrics">
+          <div class="dt-metric">
+            <div class="metric-lbl"><span class="mdot rx"></span>Download (RX)</div>
+            <div class="metric-val rx" style="font-size:26px;"><span id="dtRx">0</span><span class="metric-unit" id="dtRxu">bps</span></div>
+            <div class="metric-sub">max <span id="dtRxMax">0</span> · pps <span id="dtRxPps">0</span></div>
+          </div>
+          <div class="dt-metric">
+            <div class="metric-lbl"><span class="mdot tx"></span>Upload (TX)</div>
+            <div class="metric-val tx" style="font-size:26px;"><span id="dtTx">0</span><span class="metric-unit" id="dtTxu">bps</span></div>
+            <div class="metric-sub">max <span id="dtTxMax">0</span> · pps <span id="dtTxPps">0</span></div>
+          </div>
+        </div>
+        <!-- Range selector: Live + histori -->
+        <div class="dt-range" id="dtRange">
+          <button class="dt-range-btn active" data-range="live" onclick="nmsSetRange('live')">Live</button>
+          <button class="dt-range-btn" data-range="1d" onclick="nmsSetRange('1d')">1H</button>
+          <button class="dt-range-btn" data-range="3d" onclick="nmsSetRange('3d')">3H</button>
+          <button class="dt-range-btn" data-range="7d" onclick="nmsSetRange('7d')">7H</button>
+          <button class="dt-range-btn" data-range="30d" onclick="nmsSetRange('30d')">30H</button>
+        </div>
+        <div class="dt-chart-wrap"><div id="dtChart"></div></div>
+        <div class="dt-chart-note" id="dtChartNote"></div>
+
+        <!-- Statistik kumulatif (mengisi area, informatif) -->
+        <p class="nms-field-lbl" style="margin:16px 0 8px;">Statistik Kumulatif</p>
+        <div class="dt-stats">
+          <div class="dt-stat">
+            <div class="ds-ic rx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+            <div><div class="ds-lbl">Total Download</div><div class="ds-val" id="dsTotalRx">—</div></div>
+          </div>
+          <div class="dt-stat">
+            <div class="ds-ic tx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>
+            <div><div class="ds-lbl">Total Upload</div><div class="ds-val" id="dsTotalTx">—</div></div>
+          </div>
+          <div class="dt-stat">
+            <div class="ds-ic rx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div><div class="ds-lbl">Paket RX</div><div class="ds-val" id="dsPktRx">—</div></div>
+          </div>
+          <div class="dt-stat">
+            <div class="ds-ic tx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+            <div><div class="ds-lbl">Paket TX</div><div class="ds-val" id="dsPktTx">—</div></div>
+          </div>
+        </div>
+      </div>
+      <!-- KANAN: info statis + router -->
+      <div class="dt-side">
+        <p class="nms-field-lbl" style="margin:0 0 8px;">Informasi Interface</p>
+        <div class="dt-info" id="dtInfo"><div class="nms-loading"><span class="nms-spin"></span> Memuat…</div></div>
+        <p class="nms-field-lbl" style="margin:16px 0 8px;">Perangkat / Router</p>
+        <div class="dt-info" id="dtRouter"><div class="nms-loading"><span class="nms-spin"></span> Memuat…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════
+   FlayNMS · NMS Interface Monitor
+   ════════════════════════════════════════════════════════════════ */
+const NMS = {
+  charts: {},          // id -> ApexCharts instance
+  series: {},          // id -> { rx:[], tx:[] }
+  panels: {},          // id -> preset meta (yang sedang tampil)
+  allPanels: [],       // semua preset (sebelum filter router)
+  routerFilter: '',    // filter router aktif (router_id) atau '' = semua
+  paused: false,
+  timer: null,
+  POLL_MS: 5000,
+  MAX_POINTS: 60       // 60 titik × 5s = 5 menit window
+};
+
+/* ── Theme (persist) ── */
+function nmsApplyTheme(t){
+  document.documentElement.setAttribute('data-nms-theme', t);
+  const ic = document.getElementById('nmsThemeIcon');
+  if(t === 'light'){
+    ic.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    ic.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  // re-theme charts (grid/labels)
+  Object.keys(NMS.charts).forEach(id => {
+    try { NMS.charts[id].updateOptions(nmsChartTheme(), false, false); } catch(e){}
+  });
+}
+function nmsToggleTheme(){
+  const cur = document.documentElement.getAttribute('data-nms-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('nms_theme', next);
+  nmsApplyTheme(next);
+}
+
+/* ── Format helpers ── */
+function fmtbps(bps){
+  bps = +bps || 0;
+  if(bps >= 1e9) return (bps/1e9).toFixed(2);
+  if(bps >= 1e6) return (bps/1e6).toFixed(2);
+  if(bps >= 1e3) return (bps/1e3).toFixed(1);
+  return String(Math.round(bps));
+}
+function unitbps(bps){
+  bps = +bps || 0;
+  if(bps >= 1e9) return 'Gbps';
+  if(bps >= 1e6) return 'Mbps';
+  if(bps >= 1e3) return 'kbps';
+  return 'bps';
+}
+
+/* ── Chart theme (reads CSS vars live) ── */
+function cssVar(n){ return getComputedStyle(document.getElementById('nmsRoot')).getPropertyValue(n).trim(); }
+function nmsChartTheme(){
+  return {
+    chart:{ foreColor: cssVar('--g-text-faint') },
+    grid:{ borderColor: cssVar('--g-grid') },
+    xaxis:{ labels:{ style:{ colors: cssVar('--g-text-faint') } } },
+    tooltip:{ theme: (document.documentElement.getAttribute('data-nms-theme')==='light'?'light':'dark') }
+  };
+}
+
+/* ── Build a panel ── */
+function panelHTML(p){
+  const accent = p.color || '#58a6ff';
+  return `
+  <div class="panel panel-clickable" id="panel-${p.id}" style="--g-accent:${accent}" onclick="nmsOpenDetail(${p.id})">
+    <div class="panel-head">
+      <div>
+        <div class="panel-name">${p.label || p.iface_name}</div>
+        <div class="panel-router">${(p.router && p.router.name) || 'router#'+p.router_id} · ${p.iface_name}</div>
+      </div>
+      <span class="panel-status up" id="st-${p.id}"><span class="sdot"></span>UP</span>
+      <button class="panel-del" title="Hapus" onclick="event.stopPropagation();nmsRemove(${p.id})">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+    <div class="panel-metrics">
+      <div class="metric">
+        <div class="metric-lbl"><span class="mdot rx"></span>Download (RX)</div>
+        <div class="metric-val rx"><span id="rx-${p.id}">0</span><span class="metric-unit" id="rxu-${p.id}">bps</span></div>
+        <div class="metric-sub">max <span id="rxmax-${p.id}">0</span></div>
+      </div>
+      <div class="metric">
+        <div class="metric-lbl"><span class="mdot tx"></span>Upload (TX)</div>
+        <div class="metric-val tx"><span id="tx-${p.id}">0</span><span class="metric-unit" id="txu-${p.id}">bps</span></div>
+        <div class="metric-sub">max <span id="txmax-${p.id}">0</span></div>
+      </div>
+    </div>
+    <div class="panel-chart" id="chart-${p.id}"></div>
+  </div>`;
+}
+
+function makeChart(p){
+  const rxC = cssVar('--g-rx'), txC = cssVar('--g-tx');
+  const opts = {
+    chart:{ type:'area', height:150, stacked:true, animations:{ enabled:true, easing:'linear', dynamicAnimation:{ speed:600 } }, toolbar:{ show:false }, zoom:{ enabled:false }, foreColor: cssVar('--g-text-faint'), fontFamily:'JetBrains Mono, monospace', sparkline:{ enabled:false } },
+    series:[ { name:'RX', data:[] }, { name:'TX', data:[] } ],
+    colors:[ rxC, txC ],
+    stroke:{ curve:'smooth', width:1.5, lineCap:'round' },
+    fill:{ type:'gradient', gradient:{ shade:'dark', type:'vertical', shadeIntensity:1, gradientToColors:[ rxC, txC ], inverseColors:false, opacityFrom:0.9, opacityTo:0.15, stops:[0,90,100] } },
+    dataLabels:{ enabled:false },
+    grid:{ borderColor: cssVar('--g-grid'), strokeDashArray:3, padding:{ left:6, right:6, top:0, bottom:0 } },
+    xaxis:{ type:'category', labels:{ show:false }, axisBorder:{ show:false }, axisTicks:{ show:false } },
+    yaxis:{ labels:{ formatter:(v)=> fmtbps(v)+' '+unitbps(v), style:{ fontSize:'10px' } }, min:0, forceNiceScale:true },
+    legend:{ show:false },
+    tooltip:{ theme:(document.documentElement.getAttribute('data-nms-theme')==='light'?'light':'dark'), x:{ show:false }, y:{ formatter:(v)=> fmtbps(v)+' '+unitbps(v) } }
+  };
+  const c = new ApexCharts(document.getElementById('chart-'+p.id), opts);
+  c.render();
+  NMS.charts[p.id] = c;
+  NMS.series[p.id] = { rx:[], tx:[], rxmax:0, txmax:0 };
+}
+
+/* ── Load presets & render panels ── */
+async function nmsLoadPanels(){
+  try{
+    const r = await App.api('/nms/interfaces');
+    NMS.allPanels = (r && r.data) || [];
+    nmsPopulateRouterFilter(NMS.allPanels);
+    // terapkan filter router aktif
+    const rf = NMS.routerFilter;
+    const list = rf ? NMS.allPanels.filter(p => String(p.router_id) === String(rf)) : NMS.allPanels;
+    document.getElementById('nmsCount').textContent = list.length;
+
+    // destroy old charts
+    Object.values(NMS.charts).forEach(c=>{ try{c.destroy();}catch(e){} });
+    NMS.charts = {}; NMS.series = {}; NMS.panels = {};
+
+    if(!list.length){
+      const allEmpty = !NMS.allPanels.length;
+      document.getElementById('nmsGridWrap').innerHTML = `
+        <div class="nms-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <h3>${allEmpty?'Belum ada interface dipantau':'Tidak ada interface pada router ini'}</h3>
+          <p>${allEmpty?'Tambahkan interface MikroTik untuk mulai memonitor traffic secara live.':'Pilih router lain atau tambahkan interface dari router ini.'}</p>
+          <button class="nms-btn primary" style="margin:0 auto;" onclick="nmsOpenPicker()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Interface
+          </button>
+        </div>`;
+      return;
+    }
+
+    // ensure grid exists
+    document.getElementById('nmsGridWrap').innerHTML = '<div class="nms-grid" id="nmsGrid"></div>';
+    const g = document.getElementById('nmsGrid');
+    g.innerHTML = list.map(panelHTML).join('');
+    list.forEach(p => { NMS.panels[p.id] = p; makeChart(p); });
+
+    nmsTick(); // immediate first poll
+  }catch(e){ console.error('nmsLoadPanels', e); }
+}
+
+// Isi dropdown filter router dari panel yang ada (unik per router)
+function nmsPopulateRouterFilter(panels){
+  const sel = document.getElementById('nmsRouterFilter');
+  if(!sel) return;
+  const seen = {};
+  panels.forEach(p => { if(p.router_id && !seen[p.router_id]) seen[p.router_id] = (p.router && p.router.name) || ('router#'+p.router_id); });
+  const cur = NMS.routerFilter || '';
+  sel.innerHTML = '<option value="">Semua Router</option>' +
+    Object.keys(seen).map(id => `<option value="${id}" ${String(id)===String(cur)?'selected':''}>${seen[id]}</option>`).join('');
+}
+function nmsFilterRouter(){
+  NMS.routerFilter = document.getElementById('nmsRouterFilter').value || '';
+  nmsLoadPanels();
+}
+// Ganti interval refresh
+function nmsSetInterval(ms){
+  NMS.POLL_MS = parseInt(ms) || 5000;
+  localStorage.setItem('nms_interval', NMS.POLL_MS);
+  if(NMS.timer) clearInterval(NMS.timer);
+  NMS.timer = setInterval(nmsTick, NMS.POLL_MS);
+  nmsTick(); // refresh langsung
+}
+
+/* ── Poll live stats ── */
+async function nmsTick(){
+  if(NMS.paused) return;
+  try{
+    const r = await App.api('/nms/live');
+    if(!r || !r.success) return;
+    const now = new Date().toLocaleTimeString('id-ID', { hour12:false });
+    (r.data || []).forEach(d => {
+      const s = NMS.series[d.id];
+      if(!s) return;
+      s.rx.push(d.rx_bps); s.tx.push(d.tx_bps);
+      if(s.rx.length > NMS.MAX_POINTS){ s.rx.shift(); s.tx.shift(); }
+      s.rxmax = Math.max(s.rxmax, d.rx_bps);
+      s.txmax = Math.max(s.txmax, d.tx_bps);
+
+      // readouts
+      setTxt('rx-'+d.id, fmtbps(d.rx_bps));  setTxt('rxu-'+d.id, unitbps(d.rx_bps));
+      setTxt('tx-'+d.id, fmtbps(d.tx_bps));  setTxt('txu-'+d.id, unitbps(d.tx_bps));
+      setTxt('rxmax-'+d.id, fmtbps(s.rxmax)+' '+unitbps(s.rxmax));
+      setTxt('txmax-'+d.id, fmtbps(s.txmax)+' '+unitbps(s.txmax));
+
+      // status badge
+      const st = document.getElementById('st-'+d.id);
+      if(st){
+        if(d.reachable){ st.className='panel-status up'; st.innerHTML='<span class="sdot"></span>UP'; }
+        else { st.className='panel-status down'; st.innerHTML='<span class="sdot"></span>UNREACH'; }
+      }
+
+      // chart update
+      const c = NMS.charts[d.id];
+      if(c){
+        c.updateSeries([
+          { name:'RX', data: s.rx.slice() },
+          { name:'TX', data: s.tx.slice() }
+        ], true);
+      }
+
+      // detail modal live update (jika terbuka untuk interface ini)
+      if(NMS.detOpenId === d.id){
+        setTxt('dtRx', fmtbps(d.rx_bps));  setTxt('dtRxu', unitbps(d.rx_bps));
+        setTxt('dtTx', fmtbps(d.tx_bps));  setTxt('dtTxu', unitbps(d.tx_bps));
+        setTxt('dtRxMax', fmtbps(s.rxmax)+' '+unitbps(s.rxmax));
+        setTxt('dtTxMax', fmtbps(s.txmax)+' '+unitbps(s.txmax));
+        setTxt('dtRxPps', (d.rx_pps||0).toLocaleString('id-ID'));
+        setTxt('dtTxPps', (d.tx_pps||0).toLocaleString('id-ID'));
+        const dst = document.getElementById('dtStatus');
+        if(dst){ if(d.reachable){ dst.className='panel-status up'; dst.innerHTML='<span class="sdot"></span>UP'; } else { dst.className='panel-status down'; dst.innerHTML='<span class="sdot"></span>UNREACH'; } }
+        if(NMS.detChart && NMS.detRange === 'live'){ NMS.detChart.updateSeries([ { name:'RX', data: s.rx.slice() }, { name:'TX', data: s.tx.slice() } ], true); }
+      }
+    });
+    document.getElementById('nmsClock').textContent = now;
+  }catch(e){ console.error('nmsTick', e); }
+}
+function setTxt(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
+/* ── Pause/resume ── */
+function nmsTogglePause(){
+  NMS.paused = !NMS.paused;
+  const ic = document.getElementById('nmsPauseIcon');
+  ic.innerHTML = NMS.paused
+    ? '<polygon points="5 3 19 12 5 21 5 3"/>'
+    : '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  document.getElementById('nmsPauseBtn').title = NMS.paused ? 'Resume' : 'Pause';
+}
+
+/* ── Remove panel ── */
+async function nmsRemove(id){
+  if(!confirm('Hapus interface ini dari monitoring?')) return;
+  try{
+    await App.api('/nms/interfaces/'+id, { method:'DELETE' });
+    if(NMS.detOpenId===id) nmsCloseDetail();
+    nmsLoadPanels();
+  }catch(e){ alert('Gagal menghapus'); }
+}
+
+/* ── Detail modal ── */
+NMS.detOpenId = null;
+NMS.detChart = null;
+async function nmsOpenDetail(id){
+  const p = NMS.panels[id]; if(!p) return;
+  NMS.detOpenId = id;
+  NMS.detRange = 'live';
+  document.getElementById('nmsDetail').classList.add('show');
+  document.getElementById('dtTitle').textContent = p.label || p.iface_name;
+  document.getElementById('dtSub').textContent = ((p.router && p.router.name) || 'router#'+p.router_id) + ' · ' + p.iface_name;
+  document.getElementById('dtInfo').innerHTML = '<div class="nms-loading"><span class="nms-spin"></span> Memuat…</div>';
+  document.getElementById('dtRouter').innerHTML = '<div class="nms-loading"><span class="nms-spin"></span> Memuat…</div>';
+  ['dsTotalRx','dsTotalTx','dsPktRx','dsPktTx'].forEach(x=>setTxt(x,'—'));
+  document.getElementById('dtChartNote').textContent = '';
+  // reset tombol range ke Live
+  document.querySelectorAll('#dtRange .dt-range-btn').forEach(b=>b.classList.toggle('active', b.dataset.range==='live'));
+
+  // buat chart detail (lebih besar), seed dari history panel
+  const s = NMS.series[id] || { rx:[], tx:[] };
+  const rxC = cssVar('--g-rx'), txC = cssVar('--g-tx');
+  if(NMS.detChart){ try{ NMS.detChart.destroy(); }catch(e){} NMS.detChart=null; }
+  NMS.detChart = new ApexCharts(document.getElementById('dtChart'), {
+    chart:{ type:'area', height:240, width:'100%', stacked:true, animations:{ enabled:true, easing:'linear', dynamicAnimation:{ speed:600 } }, toolbar:{ show:false }, zoom:{ enabled:false }, foreColor: cssVar('--g-text-faint'), fontFamily:'JetBrains Mono, monospace' },
+    series:[ { name:'RX', data: s.rx.slice() }, { name:'TX', data: s.tx.slice() } ],
+    colors:[ rxC, txC ],
+    stroke:{ curve:'smooth', width:1.5, lineCap:'round' },
+    fill:{ type:'gradient', gradient:{ shade:'dark', type:'vertical', shadeIntensity:1, gradientToColors:[ rxC, txC ], inverseColors:false, opacityFrom:0.9, opacityTo:0.15, stops:[0,90,100] } },
+    dataLabels:{ enabled:false },
+    grid:{ borderColor: cssVar('--g-grid'), strokeDashArray:3, padding:{ left:8, right:8 } },
+    xaxis:{ type:'category', labels:{ show:false }, axisBorder:{ show:false }, axisTicks:{ show:false } },
+    yaxis:{ labels:{ formatter:(v)=> fmtbps(v)+' '+unitbps(v), style:{ fontSize:'11px' } }, min:0, forceNiceScale:true },
+    legend:{ show:true, position:'top', horizontalAlign:'right', fontSize:'12px', markers:{ width:9, height:9 } },
+    tooltip:{ theme:(document.documentElement.getAttribute('data-nms-theme')==='light'?'light':'dark'), x:{ show:false }, y:{ formatter:(v)=> fmtbps(v)+' '+unitbps(v) } }
+  });
+  NMS.detChart.render();
+
+  // ambil info statis dari router
+  try{
+    const r = await App.api('/nms/interfaces/'+id+'/detail');
+    if(r && r.success){
+      const inf = r.data.info || {};
+      const rt = r.data.preset && r.data.preset.router || (p.router||{});
+      const fmtBytes = b => { b=+b||0; const u=['B','KB','MB','GB','TB']; let i=0; while(b>=1024&&i<u.length-1){b/=1024;i++;} return b.toFixed(i?2:0)+' '+u[i]; };
+      const num = n => (+n||0).toLocaleString('id-ID');
+      // tabel info interface (ringkas)
+      document.getElementById('dtInfo').innerHTML = `
+        <div class="row"><span class="k">Nama Interface</span><span class="v">${esc(p.iface_name)}</span></div>
+        <div class="row"><span class="k">Label</span><span class="v">${esc(p.label||p.iface_name)}</span></div>
+        <div class="row"><span class="k">Tipe</span><span class="v">${esc(inf.type||'-')}</span></div>
+        <div class="row"><span class="k">MAC Address</span><span class="v">${esc(inf.macAddress||'-')}</span></div>
+        <div class="row"><span class="k">MTU</span><span class="v">${esc(inf.mtu||'-')}</span></div>
+        <div class="row"><span class="k">Status</span><span class="v" style="color:${inf.running?'var(--g-ok)':'var(--g-crit)'}">${inf.running?'Running':'Down'}${inf.disabled?' (disabled)':''}</span></div>
+        ${inf.comment?`<div class="row"><span class="k">Komentar</span><span class="v">${esc(inf.comment)}</span></div>`:''}`;
+      // kartu statistik kumulatif
+      setTxt('dsTotalRx', fmtBytes(inf.rxByte));
+      setTxt('dsTotalTx', fmtBytes(inf.txByte));
+      setTxt('dsPktRx', num(inf.rxPacket));
+      setTxt('dsPktTx', num(inf.txPacket));
+      // info router
+      const stColor = (rt.status==='online'||rt.status==='up') ? 'var(--g-ok)' : (rt.status?'var(--g-crit)':'var(--g-text-dim)');
+      document.getElementById('dtRouter').innerHTML = `
+        <div class="row"><span class="k">Nama Router</span><span class="v">${esc(rt.name||'router#'+p.router_id)}</span></div>
+        <div class="row"><span class="k">IP Address</span><span class="v">${esc(rt.ip_address||'-')}</span></div>
+        <div class="row"><span class="k">Status</span><span class="v" style="color:${stColor}">${esc((rt.status||'—').toUpperCase())}</span></div>`;
+    } else {
+      document.getElementById('dtInfo').innerHTML = '<div class="nms-loading">Gagal memuat info interface.</div>';
+      document.getElementById('dtRouter').innerHTML = '<div class="nms-loading">—</div>';
+    }
+  }catch(e){
+    document.getElementById('dtInfo').innerHTML = '<div class="nms-loading">Gagal memuat info.</div>';
+    document.getElementById('dtRouter').innerHTML = '<div class="nms-loading">—</div>';
+  }
+}
+function nmsCloseDetail(){
+  document.getElementById('nmsDetail').classList.remove('show');
+  NMS.detOpenId = null;
+  NMS.detRange = 'live';
+  if(NMS.detChart){ try{ NMS.detChart.destroy(); }catch(e){} NMS.detChart=null; }
+}
+
+/* ── Range switch (Live / histori) ── */
+NMS.detRange = 'live';
+async function nmsSetRange(range){
+  if(!NMS.detOpenId) return;
+  NMS.detRange = range;
+  document.querySelectorAll('#dtRange .dt-range-btn').forEach(b=>b.classList.toggle('active', b.dataset.range===range));
+  const note = document.getElementById('dtChartNote');
+  if(range === 'live'){
+    note.textContent = 'Live · window 5 menit terakhir (refresh otomatis)';
+    const s = NMS.series[NMS.detOpenId] || { rx:[], tx:[] };
+    if(NMS.detChart) NMS.detChart.updateSeries([ { name:'RX', data: s.rx.slice() }, { name:'TX', data: s.tx.slice() } ], true);
+    return;
+  }
+  // histori dari server
+  note.textContent = 'Memuat riwayat…';
+  try{
+    const r = await App.api('/nms/interfaces/'+NMS.detOpenId+'/history?range='+range);
+    if(r && r.success){
+      const pts = (r.data && r.data.points) || [];
+      if(!pts.length){
+        note.textContent = 'Belum ada data riwayat untuk rentang ini. Data terkumpul tiap 5 menit — coba lagi nanti.';
+        if(NMS.detChart) NMS.detChart.updateSeries([ { name:'RX', data: [] }, { name:'TX', data: [] } ], true);
+        return;
+      }
+      // pakai rata-rata (avg) sebagai garis utama
+      const cats = pts.map(p=>p.t);
+      const rx = pts.map(p=>p.rxAvg);
+      const tx = pts.map(p=>p.txAvg);
+      const fmt = (r.data && r.data.fmt) || 'hour';
+      if(NMS.detChart){
+        NMS.detChart.updateOptions({ xaxis:{ type:'category', categories:cats, labels:{ show:true, rotate:0, style:{ fontSize:'9px' }, formatter:(v)=> fmt==='day' ? String(v).slice(5) : String(v).slice(11) } } }, false, false);
+        NMS.detChart.updateSeries([ { name:'RX (avg)', data: rx }, { name:'TX (avg)', data: tx } ], true);
+      }
+      const lbl = {'1d':'1 hari','3d':'3 hari','7d':'7 hari','30d':'30 hari'}[range]||range;
+      note.textContent = `Riwayat ${lbl} · rata-rata per ${fmt==='day'?'hari':'jam'} · ${pts.length} titik`;
+    } else { note.textContent = 'Gagal memuat riwayat.'; }
+  }catch(e){ note.textContent = 'Gagal memuat riwayat.'; }
+}
+
+/* ── Color picker ── */
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ── Picker ── */
+async function nmsOpenPicker(){
+  document.getElementById('nmsPicker').classList.add('show');
+  const sel = document.getElementById('pkRouter');
+  if(sel.options.length === 0){
+    try{
+      const r = await App.api('/nms/routers');
+      const rows = (r && r.data) || [];
+      if(!rows.length){
+        sel.innerHTML = '<option value="">Tidak ada router (API) terdaftar</option>';
+        document.getElementById('pkIfaceList').innerHTML = '<div class="nms-loading">Daftarkan router dengan monitoring API terlebih dahulu.</div>';
+        return;
+      }
+      sel.innerHTML = rows.map(d => `<option value="${d.id}">${d.name} (${d.ip_address||'-'})</option>`).join('');
+      nmsLoadIfaces();
+    }catch(e){ sel.innerHTML='<option value="">Gagal memuat router</option>'; }
+  }
+}
+function nmsClosePicker(){ document.getElementById('nmsPicker').classList.remove('show'); }
+
+async function nmsLoadIfaces(){
+  const rid = document.getElementById('pkRouter').value;
+  const box = document.getElementById('pkIfaceList');
+  if(!rid){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="nms-loading"><span class="nms-spin"></span> Memuat interface dari router…</div>';
+  try{
+    const r = await App.api('/nms/routers/'+rid+'/interfaces');
+    const list = (r && r.data) || [];
+    if(!list.length){ box.innerHTML = '<div class="nms-loading">Tidak ada interface terbaca.</div>'; return; }
+    box.innerHTML = list.map(i => `
+      <div class="if-row ${i.added?'added':''}" ${i.added?'':`onclick="nmsAddIface('${rid}','${i.name.replace(/'/g,"\\'")}', this)"`}>
+        <div class="if-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+        <div class="if-meta">
+          <div class="if-name">${i.name}</div>
+          <div class="if-type">${i.type}${i.comment?' · '+i.comment:''}</div>
+        </div>
+        <span class="if-state ${i.running?'run':'stop'}">${i.running?'RUNNING':'DOWN'}</span>
+        ${i.added ? '<span class="if-add">✓ ditambahkan</span>' : '<span class="if-add">+ tambah</span>'}
+      </div>`).join('');
+  }catch(e){ box.innerHTML = '<div class="nms-loading">Gagal memuat interface: '+(e.message||'error')+'</div>'; }
+}
+
+async function nmsAddIface(routerId, ifaceName, el){
+  if(el){ el.style.pointerEvents='none'; el.style.opacity='.5'; }
+  try{
+    const r = await App.api('/nms/interfaces', { method:'POST', body: JSON.stringify({ router_id: parseInt(routerId), iface_name: ifaceName }) });
+    if(r && r.success){
+      if(el){ el.classList.add('added'); el.querySelector('.if-add').textContent='✓ ditambahkan'; }
+      nmsLoadPanels(); // refresh grid in background
+    } else {
+      alert((r && r.message) || 'Gagal menambah');
+      if(el){ el.style.pointerEvents=''; el.style.opacity=''; }
+    }
+  }catch(e){ alert('Gagal menambah interface'); if(el){ el.style.pointerEvents=''; el.style.opacity=''; } }
+}
+
+/* ── Init ── */
+(function(){
+  nmsApplyTheme(localStorage.getItem('nms_theme') || 'dark');
+  // pulihkan interval refresh tersimpan
+  const savedInt = parseInt(localStorage.getItem('nms_interval'));
+  if(savedInt && [5000,30000,60000,300000,1800000].includes(savedInt)){
+    NMS.POLL_MS = savedInt;
+    const sel = document.getElementById('nmsInterval'); if(sel) sel.value = String(savedInt);
+  }
+  nmsLoadPanels();
+  NMS.timer = setInterval(nmsTick, NMS.POLL_MS);
+  document.addEventListener('keydown', e => { if(e.key==='Escape'){ nmsClosePicker(); nmsCloseDetail(); } });
+})();
+</script>
+</body>
+</html>

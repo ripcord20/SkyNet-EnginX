@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= typeof title !== 'undefined' ? title : 'Field Tracking' %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════
+       THEME — identik dengan gps-tracking.ejs
+    ══════════════════════════════════════════════════ */
+    :root {
+      --f-bg:             #f4f6f9;
+      --f-card:           #ffffff;
+      --f-primary:        #2563eb;
+      --f-primary-light:  #dbeafe;
+      --f-primary-dark:   #1d4ed8;
+      --f-primary-darker: #1e40af;
+      --f-gradient:       linear-gradient(135deg, #2563eb, #1d4ed8);
+      --f-accent:         #f59e0b;
+      --f-accent-light:   #fef3c7;
+      --f-danger:         #ef4444;
+      --f-danger-light:   #fee2e2;
+      --f-success:        #10b981;
+      --f-success-light:  #d1fae5;
+      --f-text:           #1e293b;
+      --f-text2:          #64748b;
+      --f-text3:          #94a3b8;
+      --f-border:         #e2e8f0;
+      --f-border2:        #f1f5f9;
+      --f-shadow:         0 1px 3px rgba(0,0,0,0.06);
+      --f-shadow-lg:      0 8px 25px rgba(0,0,0,0.08);
+      --f-radius:         12px;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       LAYOUT — sama persis dengan pola gps-tracking.ejs:
+       main-content padding 0, page mengisi sisa tinggi
+    ══════════════════════════════════════════════════ */
+    /* standalone — no main-content wrapper */
+
+    .tt-page {
+      background: var(--f-bg);
+      display: grid;
+      grid-template-columns: 300px 1fr 320px;
+      grid-template-rows: auto 1fr;
+      height: 100%;
+      max-height: 100%;
+      overflow: hidden;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ═══ INNER TOPBAR (span 3 kolom) ═══ */
+    .tt-topbar {
+      grid-column: 1 / 4;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--f-card);
+      border-bottom: 1px solid var(--f-border);
+      z-index: 5;
+    }
+
+    .ttb-left  { display:flex; align-items:center; gap:10px; }
+    .ttb-right { display:flex; align-items:center; gap:8px; }
+
+    .ttb-title {
+      font-size: 16px; font-weight: 700; color: var(--f-text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ttb-title svg { color: var(--f-primary); }
+
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .status-pill.active   { background:var(--f-success-light); color:#065f46; }
+    .status-pill.inactive { background:var(--f-border2); color:var(--f-text2); }
+
+    .pulse-dot {
+      width:7px; height:7px; border-radius:50%;
+      background:currentColor; animation:pulse-k 2s infinite;
+    }
+    @keyframes pulse-k {
+      0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)}
+    }
+
+    .btn-f {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:6px;
+      font-size:13px; font-weight:600; cursor:pointer;
+      transition:all .15s; border:1px solid var(--f-border);
+      background:var(--f-card); color:var(--f-text); font-family:inherit;
+    }
+    .btn-f:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-f.active  { background:var(--f-primary); color:white; border-color:var(--f-primary); }
+    .btn-f.primary {
+      background:var(--f-gradient); color:white;
+      border-color:transparent; box-shadow:0 2px 8px rgba(37,99,235,.3);
+    }
+    .btn-f.primary:hover { box-shadow:0 4px 14px rgba(37,99,235,.4); }
+
+    /* ═══ COL 1: TICKET SIDEBAR ═══ */
+    .tt-sidebar {
+      grid-column:1; grid-row:2;
+      background:var(--f-card); border-right:1px solid var(--f-border);
+      display:flex; flex-direction:column; overflow:hidden; min-height:0;
+    }
+
+    .ts-head {
+      padding:13px 16px; border-bottom:1px solid var(--f-border);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .ts-title { font-size:12px; font-weight:700; color:var(--f-text); text-transform:uppercase; letter-spacing:.5px; }
+    .ts-badge { background:var(--f-primary-light); color:var(--f-primary); font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; }
+
+    .ts-search { padding:10px 14px; border-bottom:1px solid var(--f-border2); flex-shrink:0; position:relative; }
+    .ts-search input {
+      width:100%; padding:7px 10px 7px 30px;
+      border:1px solid var(--f-border); border-radius:6px;
+      font-size:13px; font-family:inherit; color:var(--f-text);
+      background:var(--f-bg); transition:all .2s;
+    }
+    .ts-search input:focus { outline:none; border-color:var(--f-primary); box-shadow:0 0 0 3px rgba(37,99,235,.12); background:white; }
+    .ts-search svg { position:absolute; left:23px; top:50%; transform:translateY(-50%); color:var(--f-text3); pointer-events:none; }
+
+    .ts-list { flex:1; overflow-y:auto; min-height:0; }
+    .ts-list::-webkit-scrollbar { width:3px; }
+    .ts-list::-webkit-scrollbar-thumb { background:var(--f-border); border-radius:2px; }
+
+    .ticket-item { padding:13px 16px; border-bottom:1px solid var(--f-border2); cursor:pointer; transition:background .12s; }
+    .ticket-item:hover { background:#f8fafc; }
+    .ticket-item.selected { background:var(--f-primary-light); border-left:3px solid var(--f-primary); }
+    .ticket-item.locked   { opacity:.5; pointer-events:none; }
+
+    .ti-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+    .ti-num  { font-size:13px; font-weight:700; color:var(--f-text); }
+    .ti-priority { font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; text-transform:uppercase; letter-spacing:.3px; }
+    .pri-critical { background:#fce7f3; color:#9d174d; }
+    .pri-high     { background:var(--f-danger-light); color:#991b1b; }
+    .pri-medium   { background:var(--f-accent-light); color:#92400e; }
+    .pri-low      { background:var(--f-primary-light); color:var(--f-primary-darker); }
+
+    .ti-title { font-size:12.5px; color:var(--f-text); font-weight:500; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ti-meta  { display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--f-text2); }
+    .ti-meta svg { color:var(--f-text3); flex-shrink:0; }
+
+    .empty-s { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; color:var(--f-text3); gap:10px; }
+    .empty-s p     { font-size:13px; font-weight:500; color:var(--f-text2); text-align:center; }
+    .empty-s small { font-size:12px; color:var(--f-text3); text-align:center; }
+
+    /* ═══ COL 2: MAP ═══ */
+    .tt-map {
+      grid-column:2; grid-row:2;
+      position:relative; overflow:hidden; min-height:0;
+    }
+    #tt-map-leaf { position:absolute; inset:0; z-index:1; }
+
+    /* Map controls (kanan atas) */
+    .map-ctrl {
+      position:absolute; top:12px; right:12px; z-index:1000;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .mc-btn {
+      width:34px; height:34px; background:white;
+      border:1px solid var(--f-border); border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:all .15s; color:var(--f-text2); box-shadow:var(--f-shadow);
+    }
+    .mc-btn:hover  { background:#f8fafc; color:var(--f-primary); }
+    .mc-btn.active { background:var(--f-primary); color:white; border-color:var(--f-primary); }
+    .mc-sep { width:28px; height:1px; background:var(--f-border); margin:2px auto; }
+
+    /* GPS accuracy badge (kiri bawah) */
+    .map-acc {
+      position:absolute; bottom:14px; left:14px; z-index:1000;
+      background:white; border:1px solid var(--f-border); border-radius:8px;
+      padding:8px 13px; font-size:12px; font-weight:600; color:var(--f-text2);
+      display:none; align-items:center; gap:8px; box-shadow:var(--f-shadow-lg);
+    }
+    .map-acc svg { color:var(--f-primary); }
+
+    /* Overlay saat belum ada GPS */
+    .map-nogps {
+      position:absolute; inset:0; z-index:500;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:rgba(244,246,249,.88); gap:12px;
+    }
+    .map-nogps svg { opacity:.3; }
+    .map-nogps p     { font-size:14px; font-weight:600; color:var(--f-text2); }
+    .map-nogps small { font-size:12px; color:var(--f-text3); }
+
+    /* Leaflet popup */
+    .leaflet-popup-content-wrapper { padding:0; border-radius:10px; box-shadow:0 8px 30px rgba(0,0,0,.15); overflow:hidden; border:none; }
+    .leaflet-popup-content { margin:0; font-family:'DM Sans',sans-serif; min-width:210px; }
+    .leaflet-popup-tip { background:white; }
+    .leaflet-control-zoom { display:none !important; }
+    .pp-head { background:var(--f-gradient); padding:12px 14px; color:white; }
+    .pp-name { font-size:14px; font-weight:700; }
+    .pp-sub  { font-size:11px; opacity:.85; margin-top:2px; }
+    .pp-body { padding:10px 14px; }
+    .pp-row  { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid var(--f-border2); }
+    .pp-row:last-child { border-bottom:none; }
+    .pp-rk { color:var(--f-text2); }
+    .pp-rv { font-weight:600; color:var(--f-text); font-family:monospace; font-size:11.5px; }
+
+    /* ═══ COL 3: INFO PANEL ═══ */
+    .tt-info {
+      grid-column:3; grid-row:2;
+      background:var(--f-card); border-left:1px solid var(--f-border);
+      display:flex; flex-direction:column; overflow:hidden; min-height:0;
+    }
+    .ti-head { padding:14px 16px; border-bottom:1px solid var(--f-border); font-size:13px; font-weight:700; color:var(--f-text); flex-shrink:0; }
+    .ti-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:14px 16px; display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .ti-body::-webkit-scrollbar { width:3px; }
+    .ti-body::-webkit-scrollbar-thumb { background:var(--f-border); border-radius:2px; }
+
+    /* Stat row */
+    .stat-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .stat-card { background:var(--f-bg); border:1px solid var(--f-border); border-radius:8px; padding:12px 10px; text-align:center; }
+    .sc-val { font-size:20px; font-weight:800; color:var(--f-text); line-height:1.1; }
+    .sc-lbl { font-size:11px; font-weight:600; color:var(--f-text2); margin-top:3px; }
+
+    /* Active ticket */
+    .atc { background:var(--f-card); border:1px solid var(--f-border); border-radius:var(--f-radius); overflow:hidden; display:none; }
+    .atc.show { display:block; }
+    .atc-hd { background:var(--f-gradient); padding:12px 14px; display:flex; align-items:center; gap:10px; }
+    .atc-icon { width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,.2); border:1.5px solid rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .atc-meta { flex:1; min-width:0; }
+    .atc-num { font-size:14px; font-weight:700; color:white; }
+    .atc-sub { font-size:11px; color:rgba(255,255,255,.8); margin-top:1px; }
+    .live-badge { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:white; background:rgba(255,255,255,.2); padding:3px 8px; border-radius:10px; white-space:nowrap; }
+    .live-dot   { width:6px; height:6px; border-radius:50%; background:#4ade80; animation:pulse-k 1.5s infinite; }
+    .atc-bd { padding:12px 14px; }
+    .atc-row { display:flex; align-items:flex-start; gap:8px; padding:7px 0; border-bottom:1px solid var(--f-border2); font-size:13px; }
+    .atc-row:last-child { border-bottom:none; }
+    .atc-lbl { color:var(--f-text2); font-weight:500; width:80px; flex-shrink:0; }
+    .atc-val { color:var(--f-text); font-weight:600; flex:1; }
+
+    /* GPS section */
+    .gps-sec { background:var(--f-card); border:1px solid var(--f-border); border-radius:var(--f-radius); overflow:hidden; }
+    .gps-hd  { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; border-bottom:1px solid var(--f-border); }
+    .gps-title { font-size:13px; font-weight:700; color:var(--f-text); display:flex; align-items:center; gap:7px; }
+    .gps-title svg { color:var(--f-primary); }
+    .gps-live { display:none; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--f-success); }
+    .gps-live-dot { width:6px; height:6px; border-radius:50%; background:var(--f-success); animation:pulse-k 1.5s infinite; }
+    .gps-row { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; border-bottom:1px solid var(--f-border2); font-size:12.5px; }
+    .gps-row:last-child { border-bottom:none; }
+    .gps-lbl { display:flex; align-items:center; gap:7px; color:var(--f-text2); font-weight:500; }
+    .gps-lbl svg { color:var(--f-text3); flex-shrink:0; }
+    .gps-val { color:var(--f-text); font-weight:600; font-family:monospace; font-size:12px; }
+
+    /* Error alert */
+    .err-alert { display:none; align-items:center; gap:10px; padding:10px 14px; background:var(--f-danger-light); color:#991b1b; border:1px solid #fca5a5; border-radius:8px; font-size:12.5px; font-weight:600; }
+    .err-alert.show { display:flex; animation:shake .5s; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)} }
+
+    /* Hint */
+    .act-hint { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--f-text2); padding:9px 12px; background:var(--f-border2); border-radius:7px; }
+    .act-hint svg { flex-shrink:0; color:var(--f-text3); }
+
+    /* Action button */
+    .act-btn { width:100%; padding:13px 18px; border:none; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px; font-family:inherit; transition:all .2s; }
+    .act-btn.start { background:var(--f-gradient); color:white; box-shadow:0 3px 12px rgba(37,99,235,.35); }
+    .act-btn.start:hover:not(:disabled) { box-shadow:0 5px 18px rgba(37,99,235,.45); }
+    .act-btn.stop  { background:linear-gradient(135deg,var(--f-danger),#dc2626); color:white; box-shadow:0 3px 12px rgba(239,68,68,.35); }
+    .act-btn.stop:hover:not(:disabled)  { box-shadow:0 5px 18px rgba(239,68,68,.45); }
+    .act-btn:disabled { opacity:.55; cursor:not-allowed; box-shadow:none; }
+
+    /* Spinner */
+    .spin { width:16px; height:16px; border:2.5px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:sp .7s linear infinite; flex-shrink:0; }
+    @keyframes sp { to { transform:rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════════
+       MODAL — Stop Tracking Confirmation
+    ══════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; transition: opacity .25s ease;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal-overlay.fade-out { opacity: 0; }
+
+    .modal-card {
+      background: white; border-radius: 20px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+      overflow: hidden;
+      transform: scale(0.9) translateY(20px);
+      transition: transform .3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .modal-overlay.show .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-icon-area {
+      padding: 28px 24px 8px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .modal-icon-circle {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--f-danger-light);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .modal-icon-circle svg { color: var(--f-danger); }
+
+    .modal-title {
+      font-size: 18px; font-weight: 800; color: var(--f-text);
+      text-align: center; margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 13px; color: var(--f-text2);
+      text-align: center; line-height: 1.5;
+      max-width: 280px;
+    }
+
+    /* Session summary inside modal */
+    .modal-summary {
+      margin: 16px 24px 0;
+      background: var(--f-bg); border: 1px solid var(--f-border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .ms-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; font-size: 12.5px;
+      border-bottom: 1px solid var(--f-border2);
+    }
+    .ms-row:last-child { border-bottom: none; }
+    .ms-lbl { color: var(--f-text2); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .ms-lbl svg { width: 14px; height: 14px; color: var(--f-text3); }
+    .ms-val { font-weight: 700; color: var(--f-text); font-family: 'DM Sans', monospace; }
+
+    /* Notes textarea */
+    .modal-notes {
+      margin: 12px 24px 0;
+    }
+    .modal-notes label {
+      font-size: 12px; font-weight: 600; color: var(--f-text2);
+      display: block; margin-bottom: 6px;
+    }
+    .modal-notes textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--f-border); border-radius: 8px;
+      font-family: inherit; font-size: 13px; color: var(--f-text);
+      resize: none; background: var(--f-bg);
+      transition: all .2s;
+    }
+    .modal-notes textarea:focus {
+      outline: none; border-color: var(--f-primary);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      background: white;
+    }
+
+    /* Modal buttons */
+    .modal-actions {
+      display: flex; gap: 10px; padding: 20px 24px 24px;
+    }
+    .modal-btn {
+      flex: 1; padding: 12px 16px; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      border: none; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s;
+    }
+    .modal-btn.cancel {
+      background: var(--f-bg); color: var(--f-text);
+      border: 1px solid var(--f-border);
+    }
+    .modal-btn.cancel:hover { background: #f1f5f9; }
+    .modal-btn.confirm-stop {
+      background: linear-gradient(135deg, var(--f-danger), #dc2626);
+      color: white;
+      box-shadow: 0 3px 12px rgba(239,68,68,.3);
+    }
+    .modal-btn.confirm-stop:hover { box-shadow: 0 5px 18px rgba(239,68,68,.45); }
+    .modal-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .modal-btn .spin { width: 16px; height: 16px; border-width: 2.5px; }
+
+    /* ═══════════════════════════════════════════════════
+       MOBILE — Bottom tab bar + single-panel view
+    ══════════════════════════════════════════════════ */
+    .mob-tab-bar { display:none; }
+
+    @media (max-width:1100px) {
+      .tt-page { grid-template-columns: 260px 1fr 300px; }
+    }
+
+    @media (max-width:900px) {
+      .tt-page { grid-template-columns: 240px 1fr 280px; }
+    }
+
+    @media (max-width:768px) {
+      .tt-page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        height: 100vh;
+        max-height: 100vh;
+      }
+
+      .tt-topbar { grid-column:1; grid-row:1; padding:10px 14px; flex-wrap:wrap; gap:6px; }
+      .btn-f .hm { display:none; }
+
+      .mob-tab-bar {
+        display:flex;
+        grid-column:1; grid-row:2;
+        background:var(--f-card);
+        border-bottom:1px solid var(--f-border);
+      }
+      .mob-tab {
+        flex:1; padding:9px 8px;
+        display:flex; flex-direction:column; align-items:center; gap:3px;
+        cursor:pointer; font-size:10px; font-weight:600; color:var(--f-text3);
+        border-bottom:2px solid transparent; transition:all .15s;
+      }
+      .mob-tab svg { width:18px; height:18px; }
+      .mob-tab.active { color:var(--f-primary); border-bottom-color:var(--f-primary); }
+
+      .tt-sidebar, .tt-map, .tt-info {
+        grid-column:1; grid-row:3;
+        display:none;
+      }
+      .tt-sidebar.mob-on, .tt-map.mob-on, .tt-info.mob-on { display:flex; }
+      .tt-map.mob-on { display:block; }
+      .tt-map { min-height:300px; }
+      .tt-info { border-left:none; border-top:1px solid var(--f-border); }
+
+      /* Fix: seluruh info panel jadi satu blok scrollable di mobile */
+      .tt-info.mob-on {
+        display: block !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        /* override overflow:hidden dari base */
+        overflow: auto !important;
+      }
+
+      /* ti-head tetap terlihat di atas saat scroll */
+      .tt-info.mob-on .ti-head {
+        position: sticky;
+        top: 0;
+        background: var(--f-card);
+        z-index: 2;
+      }
+
+      /* ti-body: hilangkan nested scroll, biarkan parent yg scroll */
+      .tt-info.mob-on .ti-body {
+        overflow: visible !important;
+        flex: none;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* Fix: atc-bd row wrap agar teks panjang tidak terpotong */
+      .atc-row {
+        flex-wrap: wrap;
+      }
+      .atc-lbl {
+        width: 72px;
+        font-size: 12px;
+      }
+      .atc-val {
+        flex: 1;
+        min-width: 0;
+        word-break: break-word;
+        font-size: 12.5px;
+      }
+
+      /* map-acc di atas bottom nav baru (56px) */
+      .map-acc {
+        position: fixed !important;
+        bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+        left: 14px !important;
+        z-index: 499 !important;
+        font-size: 11px;
+        padding: 6px 10px !important;
+      }
+    }
+
+    /* ══════════════════════════════════════════════════
+       STANDALONE TECHNICIAN LAYOUT
+    ══════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; }
+
+    .tt-app { display: flex; height: 100vh; }
+
+    /* ── Sidebar — identik dengan technician-dashboard ── */
+    .tt-sidebar-nav {
+      width: 260px; flex-shrink: 0;
+      background: #fff; border-right: 1px solid #e2e8f0;
+      display: flex; flex-direction: column;
+      height: 100vh; position: sticky; top: 0; z-index: 200;
+    }
+
+    /* Brand */
+    .sb-brand {
+      display: flex; align-items: center; gap: 10px;
+      padding: 20px 20px 16px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;
+    }
+    .sb-logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: linear-gradient(135deg, #3b82f6, #38bdf8);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sb-logo svg { width: 18px; height: 18px; color: #fff; }
+    .sb-brand-text { line-height: 1.2; }
+    .sb-brand-text .n { font-size: 15px; font-weight: 700; color: #0f172a; letter-spacing: -.2px; }
+    .sb-brand-text .s { font-size: 10.5px; color: #94a3b8; font-weight: 500; margin-top: 1px; }
+
+    /* Nav */
+    .sb-menu { flex: 1; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; }
+    .sb-label {
+      font-size: 10px; font-weight: 700; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      padding: 10px 24px 4px; display: block;
+    }
+    .sb-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; margin: 1px 8px; border-radius: 8px;
+      color: #64748b; font-size: 13.5px; font-weight: 500;
+      text-decoration: none; transition: all .15s; cursor: pointer;
+    }
+    .sb-item svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 1.8; }
+    .sb-item:hover { background: #f1f5f9; color: #0f172a; }
+    .sb-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .sb-item.active svg { color: #2563eb; }
+
+    /* Profile footer */
+    .sb-user {
+      padding: 12px 16px 16px; border-top: 1px solid #e2e8f0;
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .sb-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #38bdf8);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 13px; flex-shrink: 0;
+      box-shadow: 0 0 0 2.5px #2563eb, 0 3px 10px rgba(37,99,235,.35);
+    }
+    .sb-u-info { min-width: 0; flex: 1; }
+    .sb-u-name { font-size: 12.5px; font-weight: 700; color: #0d1b3e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-u-role { font-size: 10.5px; color: #94a3b8; margin-top: 1px; text-transform: capitalize; }
+    .sb-logout {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; color: #94a3b8; transition: all .15s; flex-shrink: 0; text-decoration: none;
+      background: none; border: none; cursor: pointer;
+    }
+    .sb-logout:hover { background: rgba(245,54,92,.12); color: #ef4444; }
+
+    /* ── Main area ──────────────────────────────────── */
+    .tt-main {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden;
+    }
+
+    /* ── Suppress any injected admin elements ───────── */
+    .topbar, .bottom-nav, .sidebar:not(.tt-sidebar-nav) { display: none !important; }
+
+    /* ── Mobile: hide sidebar ────────────────────────── */
+    @media (max-width: 768px) {
+      .tt-sidebar-nav { display: none; }
+      .tt-main { height: 100vh; }
+    }
+
+    /* ══════════════════════════════════════════════════
+       MOBILE HEADER & BOTTOM NAV (identik dashboard)
+    ══════════════════════════════════════════════════ */
+    .m-header{
+      display:none;
+      background:linear-gradient(160deg,#1e40af 0%,#2563eb 55%,#0284c7 100%);
+      padding:18px 18px 26px;color:#fff;position:relative;overflow:hidden;
+      flex-shrink:0;
+    }
+    .m-header::after{content:'';position:absolute;top:-40px;right:-30px;width:160px;height:160px;background:radial-gradient(circle,rgba(6,182,212,.35),transparent 70%);border-radius:50%;}
+    .m-hdr-row{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+    .m-hi{font-size:12.5px;color:rgba(255,255,255,.8);font-weight:500;}
+    .m-name{font-size:20px;font-weight:800;margin-top:2px;letter-spacing:-.3px;}
+    .m-hdr-btns{display:flex;gap:8px;}
+    .m-hbtn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;position:relative;cursor:pointer;}
+    .m-hbtn svg{width:18px;height:18px;}
+
+    .tt-btm-nav{
+      display:none;position:fixed;bottom:0;left:0;right:0;
+      background:#fff;border-top:1px solid #e2e8f0;
+      padding:8px 12px calc(14px + env(safe-area-inset-bottom,0px));
+      z-index:400;box-shadow:0 -4px 20px rgba(0,0,0,.05);
+    }
+    .tt-btm-inner{display:flex;justify-content:space-around;max-width:480px;margin:0 auto;position:relative;}
+    .tt-bn{
+      display:flex;flex-direction:column;align-items:center;gap:3px;
+      padding:6px 10px;border-radius:10px;color:#94a3b8;
+      font-size:10.5px;font-weight:700;transition:all .18s;
+      flex:1;text-decoration:none;cursor:pointer;background:none;border:none;font-family:inherit;
+    }
+    .tt-bn svg{width:20px;height:20px;}
+    .tt-bn.active{color:#2563eb;}
+    .tt-bn.active svg{color:#2563eb;}
+    .tt-bn-fab{
+      position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+      width:54px;height:54px;border-radius:50%;
+      background:linear-gradient(135deg,#2563eb,#1d4ed8);
+      color:#fff;display:flex;align-items:center;justify-content:center;
+      box-shadow:0 10px 24px rgba(37,99,235,.45);border:4px solid #fff;
+      text-decoration:none;
+    }
+    .tt-bn-fab svg{width:22px;height:22px;}
+    /* GPS item — tidak pakai .active, background selalu transparan */
+    .tt-bn.tt-bn-gps { background: none !important; color: #2563eb; }
+    .tt-bn.tt-bn-gps:hover { background: none !important; }
+    /* FAB circle — selalu gradient biru, SVG selalu putih */
+    .tt-bn-fab { background: linear-gradient(135deg,#2563eb,#1d4ed8) !important; }
+    .tt-bn-fab svg { color: #fff !important; stroke: #fff !important; }
+
+    @media(max-width:768px){
+      .tt-sidebar-nav{display:none;}
+      .m-header{display:block;}
+      .tt-btm-nav{display:block;}
+      .tt-main{height:100vh;}
+      /* tt-page di mobile: full height minus header minus bottom nav */
+      .tt-page{
+        height:calc(100vh - 90px - 72px) !important;
+        max-height:calc(100vh - 90px - 72px) !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="tt-app">
+
+  <!-- ═══════════════════════════════════════════════
+       SIDEBAR TEKNISI (desktop ≥ 769px)
+  ════════════════════════════════════════════════ -->
+  <aside class="tt-sidebar-nav">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <div class="sb-brand-text">
+        <div class="n">DIGSnet</div>
+        <div class="s">Technician Portal</div>
+      </div>
+    </div>
+
+    <div class="sb-menu">
+      <div class="sb-label">Menu</div>
+      <a class="sb-item" href="/technician">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </a>
+      <a class="sb-item" href="/technician?tab=tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+        Tiket
+      </a>
+      <a class="sb-item" href="/technician?tab=workorders">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><rect x="9" y="2" width="6" height="13" rx="2"/></svg>
+        Work Order
+      </a>
+      <a class="sb-item active" href="/technician-tracking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        GPS Tracking
+      </a>
+      <div class="sb-label">Akun</div>
+      <a class="sb-item" href="/technician?tab=profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profil &amp; Statistik
+      </a>
+    </div>
+
+    <div class="sb-user">
+      <div class="sb-avatar" id="sbAvatar">T</div>
+      <div class="sb-u-info">
+        <div class="sb-u-name" id="sbUserName"><%= user?.name || user?.username || 'Teknisi' %></div>
+        <div class="sb-u-role"><%= (user?.role?.name || user?.role || 'Teknisi') %></div>
+      </div>
+      <button class="sb-logout" onclick="fetch('/api/auth/logout',{method:'POST'}).finally(()=>location.href='/login')" title="Logout" aria-label="Logout">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN AREA
+  ════════════════════════════════════════════════ -->
+  <div class="tt-main">
+
+    <!-- Mobile header gradient (≤768px) — identik dashboard -->
+    <div class="m-header">
+      <div class="m-hdr-row">
+        <div>
+          <div class="m-hi">Halo,</div>
+          <div class="m-name" id="mHeaderName">Teknisi</div>
+        </div>
+        <div class="m-hdr-btns">
+          <button class="m-hbtn" onclick="fetch('/api/auth/logout',{method:'POST'}).finally(()=>location.href='/login')" aria-label="Logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  <div class="tt-page">
+
+    <!-- ═══ INNER TOPBAR ═══ -->
+    <div class="tt-topbar">
+      <div class="ttb-left">
+        <div class="ttb-title">
+          Tickets Tracking GPS System
+        </div>
+      </div>
+      <div class="ttb-right">
+        <div id="topbar-status">
+          <span class="status-pill inactive">
+            <span class="pulse-dot"></span>
+            Tidak Aktif
+          </span>
+        </div>
+        <button class="btn-f" onclick="loadMyTickets()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+          <span class="hm">Refresh</span>
+        </button>
+        <button class="btn-f" id="btn-sat-top" onclick="toggleSat()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+          </svg>
+          <span class="hm">Street</span>
+        </button>
+        <button class="btn-f primary" onclick="centerMap()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+          <span class="hm">Lokasi Saya</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ MOBILE TAB BAR ═══ -->
+    <div class="mob-tab-bar">
+      <div class="mob-tab" id="mtab-map" onclick="mobSwitch('map')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+          <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+        Peta
+      </div>
+      <div class="mob-tab" id="mtab-tickets" onclick="mobSwitch('tickets')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        Tickets
+      </div>
+      <div class="mob-tab" id="mtab-info" onclick="mobSwitch('info')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+        </svg>
+        Info GPS
+      </div>
+    </div>
+
+    <!-- ═══ COL 1: TICKET SIDEBAR ═══ -->
+    <div class="tt-sidebar" id="tt-sidebar">
+      <div class="ts-head">
+        <span class="ts-title">Ticket Saya</span>
+        <span class="ts-badge" id="ticket-count">0</span>
+      </div>
+      <div class="ts-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-ticket" placeholder="Cari ticket..." oninput="filterTickets(this.value)">
+      </div>
+      <div class="ts-list" id="ticket-list">
+        <div class="empty-s">
+          <div class="spin" style="border-color:var(--f-border);border-top-color:var(--f-primary);width:20px;height:20px;border-width:2px;"></div>
+          <p>Memuat ticket...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ COL 2: MAP ═══ -->
+    <div class="tt-map" id="tt-map">
+      <div id="tt-map-leaf"></div>
+
+      <div class="map-ctrl">
+        <button class="mc-btn" onclick="leafMap.zoomIn()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="mc-btn" onclick="leafMap.zoomOut()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <button class="mc-btn" onclick="centerMap()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m10-10h-4M6 12H2"/></svg>
+        </button>
+        <div class="mc-sep"></div>
+        <button class="mc-btn" id="btn-sat-map" onclick="toggleSat()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </button>
+      </div>
+
+      <div class="map-acc" id="map-acc">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+        Akurasi: <strong id="map-acc-val">—</strong>
+      </div>
+
+      <div class="map-nogps" id="map-nogps">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        <p>Lokasi belum tersedia</p>
+        <small>Mulai tracking untuk melihat posisi Anda di peta</small>
+      </div>
+    </div>
+
+    <!-- ═══ COL 3: INFO PANEL ═══ -->
+    <div class="tt-info" id="tt-info">
+      <div class="ti-head">Status &amp; Informasi</div>
+      <div class="ti-body">
+
+        <div class="err-alert" id="err-alert">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="err-msg"></span>
+        </div>
+
+        <div id="stats-row" style="display:none;">
+          <div class="stat-row">
+            <div class="stat-card"><div class="sc-val" id="s-dur">0m</div><div class="sc-lbl">Durasi</div></div>
+            <div class="stat-card"><div class="sc-val" id="s-dist">0m</div><div class="sc-lbl">Jarak</div></div>
+            <div class="stat-card"><div class="sc-val" id="s-pts">0</div><div class="sc-lbl">Points</div></div>
+          </div>
+        </div>
+
+        <div class="atc" id="atc">
+          <div class="atc-hd">
+            <div class="atc-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <div class="atc-meta">
+              <div class="atc-num" id="atc-num">—</div>
+              <div class="atc-sub">Ticket aktif saat ini</div>
+            </div>
+            <div class="live-badge"><span class="live-dot"></span> LIVE</div>
+          </div>
+          <div class="atc-bd">
+            <div class="atc-row"><span class="atc-lbl">Judul</span>    <span class="atc-val" id="atc-title">—</span></div>
+            <div class="atc-row"><span class="atc-lbl">Customer</span> <span class="atc-val" id="atc-cust">—</span></div>
+            <div class="atc-row"><span class="atc-lbl">Prioritas</span><span class="atc-val" id="atc-prio">—</span></div>
+            <div class="atc-row"><span class="atc-lbl">Mulai</span>    <span class="atc-val" id="atc-start">—</span></div>
+          </div>
+        </div>
+
+        <div class="gps-sec">
+          <div class="gps-hd">
+            <div class="gps-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+              Lokasi GPS
+            </div>
+            <div class="gps-live" id="gps-live">
+              <div class="gps-live-dot"></div> Live
+            </div>
+          </div>
+          <div class="gps-row">
+            <span class="gps-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Latitude</span>
+            <span class="gps-val" id="g-lat">—</span>
+          </div>
+          <div class="gps-row">
+            <span class="gps-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>Longitude</span>
+            <span class="gps-val" id="g-lng">—</span>
+          </div>
+          <div class="gps-row">
+            <span class="gps-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Akurasi</span>
+            <span class="gps-val" id="g-acc">—</span>
+          </div>
+          <div class="gps-row">
+            <span class="gps-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Baterai</span>
+            <span class="gps-val" id="g-bat">—</span>
+          </div>
+          <div class="gps-row">
+            <span class="gps-lbl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Update</span>
+            <span class="gps-val" id="g-upd">—</span>
+          </div>
+        </div>
+
+        <div class="act-hint" id="act-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Pilih ticket dari daftar kiri lalu klik Mulai Tracking
+        </div>
+
+        <button class="act-btn start" id="act-btn" onclick="toggleTracking()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span id="btn-txt">Mulai Tracking</span>
+        </button>
+
+      </div>
+    </div>
+
+  </div><!-- /tt-page -->
+
+  <!-- ═══ STOP TRACKING MODAL ═══ -->
+  <div class="modal-overlay" id="stop-modal" onclick="if(event.target===this)closeStopModal()">
+    <div class="modal-card">
+      <div class="modal-icon-area">
+        <div class="modal-icon-circle">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+          </svg>
+        </div>
+        <div class="modal-title">Hentikan Tracking?</div>
+        <div class="modal-desc">Tracking GPS akan dihentikan dan sesi ini akan ditandai sebagai selesai.</div>
+      </div>
+
+      <div class="modal-summary">
+        <div class="ms-row">
+          <span class="ms-lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Ticket
+          </span>
+          <span class="ms-val" id="md-ticket">—</span>
+        </div>
+        <div class="ms-row">
+          <span class="ms-lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Durasi
+          </span>
+          <span class="ms-val" id="md-dur">—</span>
+        </div>
+        <div class="ms-row">
+          <span class="ms-lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Jarak
+          </span>
+          <span class="ms-val" id="md-dist">—</span>
+        </div>
+        <div class="ms-row">
+          <span class="ms-lbl">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+            Points
+          </span>
+          <span class="ms-val" id="md-pts">—</span>
+        </div>
+      </div>
+
+      <div class="modal-notes">
+        <label for="md-notes">Catatan (opsional)</label>
+        <textarea id="md-notes" rows="2" placeholder="Tulis catatan akhir sesi..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn cancel" onclick="closeStopModal()">
+          Batal
+        </button>
+        <button class="modal-btn confirm-stop" id="md-confirm" onclick="confirmStop()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop Tracking
+        </button>
+      </div>
+    </div>
+  </div>
+    <!-- Bottom nav (≤768px) — identik dashboard -->
+    <nav class="tt-btm-nav">
+      <div class="tt-btm-inner">
+        <a class="tt-bn" href="/technician">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Home</span>
+        </a>
+        <a class="tt-bn" href="/technician?tab=tickets">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+          <span>Tiket</span>
+        </a>
+        <a class="tt-bn tt-bn-gps" href="/technician-tracking" style="position:relative;">
+          <div class="tt-bn-fab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <span style="margin-top:28px;color:#2563eb;font-weight:800;">GPS</span>
+        </a>
+        <a class="tt-bn" href="/technician?tab=workorders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-4"/><rect x="9" y="2" width="6" height="13" rx="2"/></svg>
+          <span>WO</span>
+        </a>
+        <a class="tt-bn" href="/technician?tab=profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profil</span>
+        </a>
+      </div>
+    </nav>
+
+  </div><!-- /tt-main -->
+</div><!-- /tt-app -->
+
+<%# Load app.js SEBELUM socket dan script halaman — ini yang mendefinisikan App global %>
+<script src="/js/app.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════════ */
+let sess=null, selTicket=null, watchId=null, itvl=null;
+let curLoc=null, socket=null;
+let tickets=[], filtered=[];
+let leafMap=null, marker=null, circle=null;
+let trailPts=[], currentLayer='street';
+let streetLayer=null, satLayer=null, labelLayer=null;
+
+/* Trail layers */
+let trailShadow=null;      // garis bayangan (lebar, transparan)
+let trailMain=null;         // garis utama
+let trailArrows=[];         // panah arah di sepanjang rute
+let trailStartMarker=null;  // marker titik awal
+let trailDots=[];           // dot kecil di setiap titik GPS
+
+const CENTER = [-6.2088, 106.8456];
+
+/* ═══════════════════════════════════════════════════════
+   MAP — tile layers identik dengan gps-tracking.ejs
+════════════════════════════════════════════════════════ */
+function initMap() {
+  leafMap = L.map('tt-map-leaf', { center:CENTER, zoom:13, zoomControl:false });
+
+  // CartoDB Voyager (sama dengan gps-tracking.ejs)
+  streetLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd', maxZoom:19
+  });
+
+  // Google Satellite (imagery)
+  satLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution:'&copy; Google', maxZoom:21, subdomains:'0123'
+  });
+
+  // Label overlay di atas satellite (Google: jalan + label)
+  labelLayer = L.tileLayer('https://mt{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}', {
+    attribution:'', maxZoom:21, subdomains:'0123', opacity:1
+  });
+
+  streetLayer.addTo(leafMap);
+}
+
+function toggleSat() {
+  const lblTopbar = document.getElementById('btn-sat-top').querySelector('.hm');
+  if (currentLayer === 'street') {
+    leafMap.removeLayer(streetLayer);
+    leafMap.addLayer(satLayer);
+    leafMap.addLayer(labelLayer);
+    currentLayer = 'satellite';
+    if (lblTopbar) lblTopbar.textContent = 'Street';
+    ['btn-sat-top','btn-sat-map'].forEach(id => document.getElementById(id)?.classList.add('active'));
+  } else {
+    leafMap.removeLayer(satLayer);
+    leafMap.removeLayer(labelLayer);
+    leafMap.addLayer(streetLayer);
+    currentLayer = 'street';
+    if (lblTopbar) lblTopbar.textContent = 'Satellite';
+    ['btn-sat-top','btn-sat-map'].forEach(id => document.getElementById(id)?.classList.remove('active'));
+  }
+}
+
+function centerMap() {
+  if (curLoc) leafMap.setView([curLoc.latitude, curLoc.longitude], 17);
+  else leafMap.setView(CENTER, 13);
+}
+
+function setMapPos(lat, lng, acc) {
+  const ll = [lat, lng];
+  document.getElementById('map-nogps').style.display = 'none';
+  const accEl = document.getElementById('map-acc');
+  accEl.style.display = 'flex';
+  document.getElementById('map-acc-val').textContent = Math.round(acc) + ' m';
+
+  // ── Marker icon dengan arah heading ──
+  const heading = curLoc?.heading;
+  const hasHeading = heading !== null && heading !== undefined && !isNaN(heading);
+  const rotation = hasHeading ? heading : 0;
+
+  const iconHtml = `<div style="
+    width:40px;height:40px;border-radius:50%;
+    background:linear-gradient(135deg,#2563eb,#1d4ed8);
+    border:3px solid white;box-shadow:0 3px 16px rgba(37,99,235,.5);
+    display:flex;align-items:center;justify-content:center;position:relative;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="white" style="transform:rotate(${rotation}deg);transition:transform .5s ease">
+      <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+    </svg>
+  </div>`;
+
+  const icon = L.divIcon({ html:iconHtml, className:'', iconSize:[40,40], iconAnchor:[20,20], popupAnchor:[0,-24] });
+
+  if (!marker) {
+    marker = L.marker(ll, { icon }).addTo(leafMap);
+    leafMap.setView(ll, 16);
+  } else {
+    marker.setIcon(icon);
+    // Smooth marker movement
+    animateMarker(marker, marker.getLatLng(), L.latLng(ll), 600);
+  }
+
+  // ── Accuracy circle ──
+  if (!circle) {
+    circle = L.circle(ll, { radius:acc, color:'#2563eb', fillColor:'#2563eb', fillOpacity:.06, weight:1.5, dashArray:'4,4' }).addTo(leafMap);
+  } else {
+    circle.setLatLng(ll).setRadius(acc);
+  }
+
+  // ── Trail / Route ──
+  if (sess) {
+    // Jangan tambah titik terlalu dekat (< 3m) untuk menghindari clutter
+    if (trailPts.length > 0) {
+      const last = trailPts[trailPts.length - 1];
+      const dist = haversine(last[0], last[1], lat, lng);
+      if (dist < 3) {
+        // Terlalu dekat — update marker saja, jangan tambah trail point
+        return;
+      }
+    }
+
+    trailPts.push(ll);
+
+    // Gambar ulang trail
+    drawTrail();
+  }
+
+  // ── Popup ──
+  const t = selTicket || sess?.ticket;
+  marker.bindPopup(`
+    <div class="pp-head">
+      <div class="pp-name">Lokasi Saya</div>
+      <div class="pp-sub">${t ? t.ticket_number+' — '+(t.title||'') : 'Tracking aktif'}</div>
+    </div>
+    <div class="pp-body">
+      <div class="pp-row"><span class="pp-rk">Latitude</span>  <span class="pp-rv">${lat.toFixed(6)}</span></div>
+      <div class="pp-row"><span class="pp-rk">Longitude</span> <span class="pp-rv">${lng.toFixed(6)}</span></div>
+      <div class="pp-row"><span class="pp-rk">Akurasi</span>   <span class="pp-rv">${Math.round(acc)} m</span></div>
+      <div class="pp-row"><span class="pp-rk">Update</span>    <span class="pp-rv">${new Date().toLocaleTimeString('id-ID')}</span></div>
+    </div>`);
+}
+
+/**
+ * Animasi smooth marker movement (seperti di Gojek/Grab)
+ */
+function animateMarker(mkr, from, to, duration) {
+  const start = performance.now();
+  const fromLat = from.lat, fromLng = from.lng;
+  const dLat = to.lat - fromLat, dLng = to.lng - fromLng;
+
+  function step(now) {
+    const elapsed = now - start;
+    const t = Math.min(elapsed / duration, 1);
+    // Easing: ease-out cubic
+    const ease = 1 - Math.pow(1 - t, 3);
+    mkr.setLatLng([fromLat + dLat * ease, fromLng + dLng * ease]);
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/**
+ * Gambar trail rute — multi-layer seperti Google Maps / Gojek
+ * Layer 1: Shadow (lebar, transparan) — memberikan kedalaman
+ * Layer 2: Main line (solid, biru)
+ * Layer 3: Arrow decorators — menunjukkan arah perjalanan
+ * Layer 4: Start marker (titik hijau)
+ */
+function drawTrail() {
+  if (trailPts.length < 2) return;
+
+  // Smooth the trail points — simple moving average untuk 3 titik
+  const smoothed = smoothTrail(trailPts);
+
+  // ── Layer 1: Shadow ──
+  if (trailShadow) leafMap.removeLayer(trailShadow);
+  trailShadow = L.polyline(smoothed, {
+    color: '#1e40af',
+    weight: 8,
+    opacity: 0.15,
+    lineCap: 'round',
+    lineJoin: 'round'
+  }).addTo(leafMap);
+
+  // ── Layer 2: Main trail ──
+  if (trailMain) leafMap.removeLayer(trailMain);
+  trailMain = L.polyline(smoothed, {
+    color: '#3b82f6',
+    weight: 4,
+    opacity: 0.9,
+    lineCap: 'round',
+    lineJoin: 'round'
+  }).addTo(leafMap);
+
+  // ── Layer 3: Direction arrows setiap ~50m ──
+  clearArrows();
+  let accumDist = 0;
+  for (let i = 1; i < smoothed.length; i++) {
+    const prev = smoothed[i-1], curr = smoothed[i];
+    const segDist = haversine(prev[0], prev[1], curr[0], curr[1]);
+    accumDist += segDist;
+
+    if (accumDist >= 50) {  // Panah setiap ~50 meter
+      accumDist = 0;
+      const midLat = (prev[0] + curr[0]) / 2;
+      const midLng = (prev[1] + curr[1]) / 2;
+      const angle = bearing(prev[0], prev[1], curr[0], curr[1]);
+
+      const arrowIcon = L.divIcon({
+        html: `<div style="
+          width:16px;height:16px;
+          display:flex;align-items:center;justify-content:center;
+          transform:rotate(${angle}deg);
+        "><svg width="12" height="12" viewBox="0 0 24 24" fill="#1d4ed8" opacity="0.7"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg></div>`,
+        className: '',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      const arrowMarker = L.marker([midLat, midLng], {
+        icon: arrowIcon,
+        interactive: false
+      }).addTo(leafMap);
+      trailArrows.push(arrowMarker);
+    }
+  }
+
+  // ── Layer 4: Start marker (titik hijau) ──
+  if (!trailStartMarker && trailPts.length > 0) {
+    const startIcon = L.divIcon({
+      html: `<div style="
+        width:14px;height:14px;border-radius:50%;
+        background:#10b981;border:2.5px solid white;
+        box-shadow:0 2px 6px rgba(16,185,129,.4);
+      "></div>`,
+      className: '',
+      iconSize: [14, 14],
+      iconAnchor: [7, 7]
+    });
+    trailStartMarker = L.marker(trailPts[0], { icon: startIcon, interactive: false }).addTo(leafMap);
+  }
+}
+
+/**
+ * Smooth trail — simple 3-point moving average
+ * Menghilangkan zig-zag kecil dari noise GPS
+ */
+function smoothTrail(pts) {
+  if (pts.length <= 3) return pts;
+  const result = [pts[0]]; // keep first point exact
+  for (let i = 1; i < pts.length - 1; i++) {
+    const prev = pts[i-1], curr = pts[i], next = pts[i+1];
+    result.push([
+      (prev[0] + curr[0] + next[0]) / 3,
+      (prev[1] + curr[1] + next[1]) / 3
+    ]);
+  }
+  result.push(pts[pts.length - 1]); // keep last point exact
+  return result;
+}
+
+/**
+ * Bearing (derajat) dari titik A ke titik B
+ */
+function bearing(lat1, lng1, lat2, lng2) {
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2 * Math.PI / 180);
+  const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+            Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+}
+
+/**
+ * Clear arrow markers
+ */
+function clearArrows() {
+  trailArrows.forEach(a => leafMap.removeLayer(a));
+  trailArrows = [];
+}
+
+/**
+ * Clear all trail layers
+ */
+function clearTrail() {
+  if (trailShadow) { leafMap.removeLayer(trailShadow); trailShadow = null; }
+  if (trailMain) { leafMap.removeLayer(trailMain); trailMain = null; }
+  if (trailStartMarker) { leafMap.removeLayer(trailStartMarker); trailStartMarker = null; }
+  clearArrows();
+  trailPts = [];
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════ */
+async function init() {
+  initMap();
+  if (window.innerWidth <= 768) mobSwitch('map');
+  try {
+    await checkSession();
+    await loadMyTickets();
+    initSocket();
+  } catch(e) { showErr('Gagal memuat: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   SESSION CHECK
+════════════════════════════════════════════════════════ */
+async function checkSession() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const r = await fetch('/api/tracking/my-session', { headers:{'Authorization':'Bearer '+token} });
+    const d = await r.json();
+    if (d.success && d.data) {
+      sess=d.data; selTicket=d.data.ticket;
+      uiActive(); startWatch();
+    }
+  } catch(e) { console.warn('Session check:', e); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOAD TICKETS
+════════════════════════════════════════════════════════ */
+async function loadMyTickets() {
+  const token = localStorage.getItem('token');
+  const user  = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token) { showErr('Silakan login terlebih dahulu'); return; }
+  try {
+    const r = await fetch('/api/tickets?assigned_to='+user.id, { headers:{'Authorization':'Bearer '+token} });
+    const d = await r.json();
+    if (d.success && d.data) {
+      tickets  = d.data.filter(t => ['assigned','in_progress','open'].includes(t.status));
+      filtered = [...tickets];
+      renderTickets();
+    } else throw new Error(d.message || 'Gagal memuat ticket');
+  } catch(e) {
+    document.getElementById('ticket-list').innerHTML = `
+      <div class="empty-s">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.35"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>Gagal memuat ticket</p><small>${e.message}</small>
+      </div>`;
+  }
+}
+
+function filterTickets(q) {
+  const v = q.toLowerCase().trim();
+  filtered = v
+    ? tickets.filter(t =>
+        (t.ticket_number||'').toLowerCase().includes(v) ||
+        (t.title||'').toLowerCase().includes(v) ||
+        (t.customer?.name||'').toLowerCase().includes(v))
+    : [...tickets];
+  renderTickets();
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER TICKETS
+════════════════════════════════════════════════════════ */
+function renderTickets() {
+  const el = document.getElementById('ticket-list');
+  document.getElementById('ticket-count').textContent = tickets.length;
+  if (!filtered.length) {
+    el.innerHTML = `
+      <div class="empty-s">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.35">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <p>Tidak ada ticket</p><small>Belum ada ticket yang di-assign ke Anda</small>
+      </div>`;
+    return;
+  }
+  const PL={critical:'Critical',high:'Tinggi',medium:'Sedang',low:'Rendah'};
+  const PC={critical:'pri-critical',high:'pri-high',medium:'pri-medium',low:'pri-low'};
+  el.innerHTML = filtered.map(t => {
+    const sel=selTicket?.id===t.id, locked=sess&&!sel;
+    return `
+      <div class="ticket-item ${sel?'selected':''} ${locked?'locked':''}"
+           onclick="${locked?'':('pickTicket('+t.id+')')}">
+        <div class="ti-head">
+          <span class="ti-num">${t.ticket_number}</span>
+          <span class="ti-priority ${PC[t.priority]||'pri-low'}">${PL[t.priority]||t.priority}</span>
+        </div>
+        <div class="ti-title">${t.title||'Tanpa judul'}</div>
+        <div class="ti-meta">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          ${t.customer?.name||'Tidak ada customer'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function pickTicket(id) {
+  if (sess) { showErr('Tidak bisa ganti ticket saat tracking aktif'); return; }
+  selTicket = tickets.find(t => t.id===id);
+  renderTickets(); setHint();
+  if (window.innerWidth <= 768) mobSwitch('map');
+}
+
+/* ═══════════════════════════════════════════════════════
+   TRACKING
+════════════════════════════════════════════════════════ */
+async function toggleTracking() {
+  if (sess) await stopTracking(); else await startTracking();
+}
+
+async function startTracking() {
+  if (!selTicket) { showErr('Pilih ticket terlebih dahulu'); return; }
+  try {
+    setBtnLoad(true);
+    // Gunakan best-of-N sampling untuk posisi awal yang lebih akurat
+    const pos   = await getAccuratePos(4, 10000);
+    curLoc = { latitude:pos.coords.latitude, longitude:pos.coords.longitude, accuracy:pos.coords.accuracy };
+    const bat   = await getBat();
+    const token = localStorage.getItem('token');
+    const r = await fetch('/api/tracking/start', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify({ ticket_id:selTicket.id, latitude:curLoc.latitude, longitude:curLoc.longitude, accuracy:curLoc.accuracy, battery_level:bat })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.message||'HTTP '+r.status);
+    sess=d.data; trailPts=[[curLoc.latitude,curLoc.longitude]];
+    uiActive(); startWatch();
+    setMapPos(curLoc.latitude, curLoc.longitude, curLoc.accuracy);
+  } catch(e) {
+    let m=e.message;
+    if (m.includes('denied')||m.includes('PERMISSION')) m='GPS permission ditolak. Izinkan akses lokasi.';
+    else if (m.includes('401')) m='Token expired. Silakan login kembali.';
+    showErr(m);
+  } finally { setBtnLoad(false); }
+}
+
+async function stopTracking() {
+  if (!sess) return;
+  // Show modal instead of confirm()
+  openStopModal();
+}
+
+function openStopModal() {
+  const t = selTicket || sess?.ticket;
+  document.getElementById('md-ticket').textContent = t?.ticket_number || '—';
+  document.getElementById('md-dur').textContent = fmtDur(sess.total_duration || 0);
+  document.getElementById('md-dist').textContent = fmtDist(sess.total_distance || 0);
+  document.getElementById('md-pts').textContent = sess.points_count || 0;
+  document.getElementById('md-notes').value = '';
+
+  const overlay = document.getElementById('stop-modal');
+  overlay.classList.remove('fade-out');
+  overlay.classList.add('show');
+}
+
+function closeStopModal() {
+  const overlay = document.getElementById('stop-modal');
+  overlay.classList.add('fade-out');
+  setTimeout(() => { overlay.classList.remove('show', 'fade-out'); }, 250);
+}
+
+async function confirmStop() {
+  const btn = document.getElementById('md-confirm');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spin"></div> Menghentikan...';
+
+  try {
+    // Gunakan posisi terakhir yang sudah ada dari watchPosition — JANGAN request GPS baru
+    // Ini menghindari timeout 15 detik yang membuat proses stop lama
+    let lat, lng;
+    if (curLoc) {
+      lat = curLoc.latitude;
+      lng = curLoc.longitude;
+    } else {
+      // Fallback: coba ambil posisi cepat dengan maximumAge tinggi (boleh cache)
+      try {
+        const pos = await new Promise((res, rej) => {
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 60000  // boleh pakai cache hingga 1 menit
+          });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch(e) {
+        // Kalau tetap gagal, pakai posisi start session
+        lat = sess.start_latitude || 0;
+        lng = sess.start_longitude || 0;
+      }
+    }
+
+    const token = localStorage.getItem('token');
+    const notes = document.getElementById('md-notes').value.trim();
+    const r = await fetch('/api/tracking/stop', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sess.session_id,
+        latitude: lat,
+        longitude: lng,
+        notes: notes || null
+      })
+    });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.message);
+    stopWatch(); sess = null;
+    clearTrail();
+    closeStopModal();
+    uiInactive();
+  } catch (e) {
+    showErr(e.message);
+    closeStopModal();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop Tracking';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   GPS — High Accuracy Engine
+   Target: 5-10 meter accuracy
+════════════════════════════════════════════════════════ */
+
+/**
+ * Quick position — untuk stop tracking & fallback
+ * Boleh pakai cache, tidak perlu akurat banget
+ */
+function getPos() {
+  return new Promise((res,rej) => {
+    if (!navigator.geolocation) { rej(new Error('Geolocation tidak didukung')); return; }
+    navigator.geolocation.getCurrentPosition(res, err => {
+      rej(new Error(['','GPS permission ditolak','Posisi GPS tidak tersedia','GPS timeout'][err.code]||err.message));
+    }, {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 30000   // boleh cache 30 detik untuk kecepatan
+    });
+  });
+}
+
+/**
+ * Best-of-N sampling — untuk START tracking
+ * Ambil beberapa sample, pilih yang terbaik.
+ * Berhenti segera jika akurasi <= 10m.
+ */
+function getAccuratePos(maxSamples, timeoutMs) {
+  maxSamples = maxSamples || 5;
+  timeoutMs  = timeoutMs  || 12000;
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('Geolocation tidak didukung')); return; }
+    let best = null;
+    let count = 0;
+    let settled = false;
+
+    const done = (result) => {
+      if (settled) return;
+      settled = true;
+      navigator.geolocation.clearWatch(wid);
+      clearTimeout(fallback);
+      if (result) resolve(result);
+      else reject(new Error('GPS timeout'));
+    };
+
+    const wid = navigator.geolocation.watchPosition(
+      pos => {
+        count++;
+        console.log(`GPS sample #${count}: accuracy=${pos.coords.accuracy.toFixed(1)}m`);
+
+        if (!best || pos.coords.accuracy < best.coords.accuracy) {
+          best = pos;
+        }
+        // Target tercapai — langsung selesai
+        if (pos.coords.accuracy <= 10) {
+          done(best);
+          return;
+        }
+        // Sudah cukup sample — ambil yang terbaik
+        if (count >= maxSamples) {
+          done(best);
+        }
+      },
+      err => {
+        console.warn('GPS sample error:', err.message);
+        // Jika sudah punya data bagus, pakai itu
+        done(best);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: Math.min(timeoutMs, 10000),
+        maximumAge: 0   // paksa posisi fresh untuk start
+      }
+    );
+
+    // Hard timeout
+    const fallback = setTimeout(() => {
+      console.warn('GPS sampling timeout, best accuracy:', best?.coords.accuracy);
+      done(best);
+    }, timeoutMs);
+  });
+}
+
+/**
+ * Continuous watch — untuk tracking berjalan
+ * Strategi high-accuracy:
+ * 1. maximumAge: 0 — selalu minta posisi segar, TIDAK pakai cache
+ * 2. Filter noise: abaikan spike akurasi buruk
+ * 3. Minimum distance filter: abaikan update < 2m (noise statis)
+ */
+function startWatch() {
+  if (watchId) return;
+  document.getElementById('gps-live').style.display = 'flex';
+  let lastGood = null;      // posisi terakhir yang lolos filter
+  let warmupCount = 0;      // hitung beberapa reading pertama untuk warm-up
+
+  watchId = navigator.geolocation.watchPosition(p => {
+    const acc = p.coords.accuracy;
+    const lat = p.coords.latitude;
+    const lng = p.coords.longitude;
+    warmupCount++;
+
+    // WARM-UP: 3 reading pertama selalu diterima agar GPS lock cepat
+    if (warmupCount <= 3) {
+      curLoc = { latitude:lat, longitude:lng, accuracy:acc, speed:p.coords.speed, heading:p.coords.heading };
+      lastGood = { latitude:lat, longitude:lng, accuracy:acc };
+      updateGps();
+      setMapPos(lat, lng, acc);
+      return;
+    }
+
+    // FILTER 1: Buang reading dengan akurasi > 50m jika sudah punya yg < 20m
+    if (lastGood && lastGood.accuracy < 20 && acc > 50) {
+      console.log(`GPS filtered: acc ${acc.toFixed(0)}m too bad (had ${lastGood.accuracy.toFixed(0)}m)`);
+      return;
+    }
+
+    // FILTER 2: Buang jika akurasi > 4x lebih buruk dari terakhir
+    if (lastGood && lastGood.accuracy < 15 && acc > lastGood.accuracy * 4) {
+      console.log(`GPS filtered: acc spike ${acc.toFixed(0)}m vs ${lastGood.accuracy.toFixed(0)}m`);
+      return;
+    }
+
+    // FILTER 3: Minimum distance — abaikan gerakan < 2m (noise statis saat diam)
+    if (lastGood && acc < 25) {
+      const dist = haversine(lastGood.latitude, lastGood.longitude, lat, lng);
+      if (dist < 2 && acc >= lastGood.accuracy) {
+        // Posisi hampir sama, akurasi tidak lebih baik — skip
+        return;
+      }
+    }
+
+    // Lolos filter — update
+    curLoc = { latitude:lat, longitude:lng, accuracy:acc, speed:p.coords.speed, heading:p.coords.heading };
+    lastGood = { latitude:lat, longitude:lng, accuracy:acc };
+    updateGps();
+    setMapPos(lat, lng, acc);
+  }, e => {
+    console.warn('GPS watch error:', e.message);
+    // Jangan showErr untuk setiap watch error — terlalu noisy
+  }, {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0   // KUNCI akurasi tinggi: JANGAN pakai cache, selalu posisi segar
+  });
+
+  // Kirim update ke server setiap 15 detik (lebih sering = tracking lebih akurat)
+  itvl = setInterval(sendUpdate, 15000);
+}
+
+/**
+ * Haversine distance antara 2 koordinat (meter)
+ */
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function stopWatch() {
+  if (watchId) { navigator.geolocation.clearWatch(watchId); watchId=null; }
+  if (itvl)   { clearInterval(itvl); itvl=null; }
+  document.getElementById('gps-live').style.display = 'none';
+}
+
+async function sendUpdate() {
+  if (!sess||!curLoc) return;
+  // Jangan kirim jika akurasi terlalu buruk
+  if (curLoc.accuracy > 100) {
+    console.warn('GPS accuracy too low (' + Math.round(curLoc.accuracy) + 'm), skipping update');
+    return;
+  }
+  try {
+    const bat=await getBat(), token=localStorage.getItem('token');
+    const r = await fetch('/api/tracking/update', {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id:sess.session_id, latitude:curLoc.latitude, longitude:curLoc.longitude, accuracy:curLoc.accuracy, speed:curLoc.speed, heading:curLoc.heading, battery_level:bat })
+    });
+    const d = await r.json();
+    if (d.success&&d.data.session) { sess=d.data.session; updateStats(); }
+  } catch(e) { console.warn('Update err:',e); }
+}
+
+async function getBat() {
+  try { if('getBattery' in navigator){ const b=await navigator.getBattery(); return Math.round(b.level*100); } } catch(e){}
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════
+   UI
+════════════════════════════════════════════════════════ */
+function uiActive() {
+  const _actPill = '<span class="status-pill active" style="font-size:10px;padding:3px 8px;"><span class="pulse-dot"></span> Aktif</span>';
+  document.getElementById('topbar-status').innerHTML = '<span class="status-pill active"><span class="pulse-dot"></span> Tracking Aktif</span>';
+  const _mobP = document.getElementById('mob-status-pill'); if(_mobP) _mobP.innerHTML = _actPill;
+  const btn=document.getElementById('act-btn');
+  btn.className='act-btn stop';
+  btn.innerHTML=`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg><span id="btn-txt">Stop Tracking</span>`;
+  document.getElementById('stats-row').style.display='block';
+  updateStats();
+  const t=selTicket||sess?.ticket;
+  if (t) {
+    const PM={critical:'Critical',high:'Tinggi',medium:'Sedang',low:'Rendah'};
+    document.getElementById('atc').classList.add('show');
+    document.getElementById('atc-num').textContent   = t.ticket_number||'—';
+    document.getElementById('atc-title').textContent = t.title||'—';
+    document.getElementById('atc-cust').textContent  = t.customer?.name||'—';
+    document.getElementById('atc-prio').textContent  = PM[t.priority]||t.priority||'—';
+  }
+  if (sess?.started_at) {
+    document.getElementById('atc-start').textContent =
+      new Date(sess.started_at).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+  setHint(); renderTickets();
+}
+
+function uiInactive() {
+  const _inactPill = '<span class="status-pill inactive" style="font-size:10px;padding:3px 8px;"><span class="pulse-dot"></span> Tidak Aktif</span>';
+  document.getElementById('topbar-status').innerHTML = '<span class="status-pill inactive"><span class="pulse-dot"></span> Tidak Aktif</span>';
+  const _mobP2 = document.getElementById('mob-status-pill'); if(_mobP2) _mobP2.innerHTML = _inactPill;
+  const btn=document.getElementById('act-btn');
+  btn.className='act-btn start';
+  btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg><span id="btn-txt">Mulai Tracking</span>`;
+  document.getElementById('stats-row').style.display='none';
+  document.getElementById('atc').classList.remove('show');
+  ['g-lat','g-lng','g-acc','g-bat','g-upd'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='—';});
+  document.getElementById('map-nogps').style.display='flex';
+  document.getElementById('map-acc').style.display='none';
+  setHint(); renderTickets();
+}
+
+function updateStats() {
+  if (!sess) return;
+  document.getElementById('s-dur').textContent  = fmtDur(sess.total_duration||0);
+  document.getElementById('s-dist').textContent = fmtDist(sess.total_distance||0);
+  document.getElementById('s-pts').textContent  = sess.points_count||0;
+}
+
+function updateGps() {
+  if (!curLoc) return;
+  document.getElementById('g-lat').textContent = curLoc.latitude.toFixed(6);
+  document.getElementById('g-lng').textContent = curLoc.longitude.toFixed(6);
+  document.getElementById('g-acc').textContent = Math.round(curLoc.accuracy)+' m';
+  document.getElementById('g-upd').textContent = new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  getBat().then(b=>{if(b!==null)document.getElementById('g-bat').textContent=b+'%';});
+}
+
+function setHint() {
+  const el=document.getElementById('act-hint');
+  if (sess)
+    el.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--f-danger)" stroke-width="2" style="flex-shrink:0"><polygon points="5 3 19 12 5 21 5 3"/></svg>Tracking sedang berjalan`;
+  else if (selTicket)
+    el.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--f-success)" stroke-width="2.5" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>Ticket <strong>${selTicket.ticket_number}</strong> dipilih`;
+  else
+    el.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pilih ticket dari daftar kiri lalu klik Mulai Tracking`;
+}
+
+function setBtnLoad(on) {
+  const btn=document.getElementById('act-btn');
+  btn.disabled=on;
+  if(on) btn.innerHTML='<div class="spin"></div><span>Loading...</span>';
+}
+
+function showErr(msg) {
+  const el=document.getElementById('err-alert');
+  document.getElementById('err-msg').textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE TAB SWITCH
+════════════════════════════════════════════════════════ */
+function mobSwitch(tab) {
+  ['map','tickets','info'].forEach(t=>{
+    document.getElementById('mtab-'+t)?.classList.toggle('active',t===tab);
+    const panel = document.getElementById('tt-'+(t==='tickets'?'sidebar':t));
+    if (panel) panel.classList.toggle('mob-on', t===tab);
+  });
+  // Hide/show map-acc badge depending on active tab (karena fixed di mobile)
+  const accEl = document.getElementById('map-acc');
+  if (accEl) accEl.style.display = (tab === 'map' && curLoc) ? 'flex' : 'none';
+  setTimeout(()=>{ if(leafMap) leafMap.invalidateSize(); }, 160);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SOCKET — kirim token agar tidak "Authentication required"
+════════════════════════════════════════════════════════ */
+function initSocket() {
+  try {
+    if (typeof io === 'undefined') return;
+    const token = localStorage.getItem('token');
+    socket = io({
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+      // Kirim token saat handshake, sama dengan gps-tracking.ejs
+      auth: { token: token || '' }
+    });
+    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('connect_error', e => console.warn('Socket err:', e.message));
+    socket.on('technician:location:update', d => {
+      if (sess && d.session_id === sess.session_id) {
+        if (d.stats) { sess.total_distance=d.stats.total_distance; sess.total_duration=d.stats.total_duration; sess.points_count=d.stats.points_count; updateStats(); }
+        if (d.location) { curLoc={latitude:d.location.latitude,longitude:d.location.longitude,accuracy:curLoc?.accuracy||10}; updateGps(); setMapPos(curLoc.latitude,curLoc.longitude,curLoc.accuracy); }
+      }
+    });
+  } catch(e) { console.warn('Socket init failed:', e); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+════════════════════════════════════════════════════════ */
+function fmtDur(s)  { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60); return h?h+'j '+m+'m':m+'m'; }
+function fmtDist(m) { return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'; }
+
+setInterval(async()=>{ if(sess){const b=await getBat();if(b!==null)document.getElementById('g-bat').textContent=b+'%';}},60000);
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+<script>
+// Init sidebar avatar + mobile header name
+(function(){
+  // Ambil nama dari sidebar (server-side rendered)
+  const nm = document.getElementById('sbUserName');
+  if (nm) {
+    const name = nm.textContent.trim();
+    // Avatar initials
+    const av = document.getElementById('sbAvatar');
+    if (av) av.textContent = name.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase() || 'T';
+    // Mobile header name
+    const mhn = document.getElementById('mHeaderName');
+    if (mhn) mhn.textContent = name.split(' ')[0] || name;
+  }
+})();
+// (below: old avatar script replaced)
+// Init sidebar avatar initials — identik dengan technician-dashboard
+(function(){
+  const av = document.getElementById('sbAvatar');
+  const nm = document.getElementById('sbUserName');
+  if (av && nm) {
+    const name = nm.textContent.trim();
+    av.textContent = name.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase() || 'T';
+  }
+})();
+</script>
+</body>
+</html>

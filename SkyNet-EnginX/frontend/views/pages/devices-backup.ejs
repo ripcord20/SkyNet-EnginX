@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --dm-blue:#2563eb; --dm-blue-d:#1d4ed8; --dm-blue-l:#eff6ff;
+      --dm-green:#16a34a; --dm-green-d:#15803d; --dm-green-l:#f0fdf4;
+      --dm-red:#dc2626;   --dm-red-d:#b91c1c;   --dm-red-l:#fef2f2;
+      --dm-amber:#d97706; --dm-amber-d:#b45309; --dm-amber-l:#fffbeb;
+      --dm-teal:#0891b2;  --dm-teal-l:#ecfeff;
+      --dm-purple:#7c3aed; --dm-purple-l:#f5f3ff;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+
+    body { font-family:'Plus Jakarta Sans',sans-serif; }
+    .dm { font-family:'Plus Jakarta Sans',sans-serif; }
+    .mono { font-family:'JetBrains Mono',monospace; font-weight:500; }
+
+    /* ── HEADER ── */
+    .dm-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+    .dm-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .dm-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .dm-hdr-r    { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue   { background:var(--dm-blue); border-color:var(--dm-blue); color:#fff; }
+    .btn-blue:hover { background:var(--dm-blue-d); }
+    .btn-green  { background:var(--dm-green); border-color:var(--dm-green); color:#fff; }
+    .btn-green:hover { background:var(--dm-green-d); }
+    .btn-red    { background:var(--dm-red); border-color:var(--dm-red); color:#fff; }
+    .btn-red:hover { background:var(--dm-red-d); }
+    .btn-ghost  { background:transparent; border-color:transparent; color:var(--muted); }
+    .btn-ghost:hover { background:#f1f5f9; color:var(--text); }
+    .btn-sm     { padding:6px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; }
+    .chip-idle { background:#f1f5f9; border:1px solid var(--border); color:var(--muted); }
+    .chip-live { background:var(--dm-green-l); border:1px solid #bbf7d0; color:var(--dm-green); }
+    .live-dot  { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .chip-idle .live-dot { background:var(--faint); }
+    .chip-live .live-dot { background:var(--dm-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS — single strip with dividers ── */
+    .dm-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+    .dm-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .dm-card:last-child { border-right: none; }
+    .dm-card:hover { background: #fafbff; }
+
+    .dm-card.dmc-active { background: #2563eb; border-color: #2563eb; }
+    .dm-card.dmc-active:hover { background: #1d4ed8; }
+    .dm-card.dmc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .dm-card.dmc-active .card-val  { color: #fff; }
+    .dm-card.dmc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .dm-card.dmc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .dm-card.dmc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .dm-card.dmc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .dm-card.dmc-active .sp-dot    { fill: #fff !important; }
+
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-purple { background:#ede9fe; color:#6d28d9; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+
+    @media(max-width:700px) {
+      .dm-cards { grid-template-columns: repeat(2,1fr); }
+      .dm-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .dm-card:nth-child(odd)  { border-right: 1px solid #e8eaed; }
+      .dm-card:nth-child(even) { border-right: none; }
+      .dm-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .dm-cards { grid-template-columns:1fr; }
+      .dm-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .dm-card:last-child { border-bottom: none; }
+    }
+
+    /* ── CONTROLS ── */
+    .dm-ctrl { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:200px; max-width:320px; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:15px; height:15px; }
+    .search-wrap input { width:100%; padding:9px 11px 9px 36px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; background:#fff; color:var(--text); font-family:inherit; }
+    .search-wrap input:focus { outline:none; border-color:var(--dm-blue); box-shadow:0 0 0 3px rgba(37,99,235,.08); }
+    .dm-ctrl select { padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; background:#fff; color:var(--text); font-family:inherit; font-weight:600; cursor:pointer; }
+    .dm-ctrl select:focus { outline:none; border-color:var(--dm-blue); }
+    .ctrl-count { font-size:12px; color:var(--muted); font-weight:600; margin-left:auto; }
+
+    /* ── TABLE ── */
+    .dm-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .dm-table { width:100%; border-collapse:collapse; }
+    .dm-table thead th { text-align:left; padding:11px 14px; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; background:#f8fafc; border-bottom:1px solid var(--border); white-space:nowrap; }
+    .dm-table tbody td { padding:12px 14px; font-size:13px; color:var(--text); border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    .dm-table tbody tr:last-child td { border-bottom:none; }
+    .dm-table tbody tr:hover { background:#fafbff; }
+
+    /* Status dot */
+    .st-dot { width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; vertical-align:middle; margin-right:7px; }
+    .st-online { background:var(--dm-green); box-shadow:0 0 0 3px rgba(22,163,74,.18); animation:pulse 2s ease-in-out infinite; }
+    .st-offline { background:var(--dm-red); box-shadow:0 0 0 3px rgba(220,38,38,.14); }
+    .st-warning { background:var(--dm-amber); box-shadow:0 0 0 3px rgba(217,119,6,.18); }
+    .st-maintenance { background:var(--dm-teal); box-shadow:0 0 0 3px rgba(8,145,178,.18); }
+
+    .st-txt { font-size:12px; font-weight:700; text-transform:capitalize; }
+    .st-online-txt { color:var(--dm-green); }
+    .st-offline-txt { color:var(--dm-red); }
+    .st-warning-txt { color:var(--dm-amber); }
+    .st-maintenance-txt { color:var(--dm-teal); }
+
+    .dev-name { font-weight:700; color:var(--text); font-size:13.5px; }
+    .dev-brand { font-size:11px; color:var(--muted); margin-top:2px; font-weight:500; }
+
+    .ip-code { font-family:'JetBrains Mono',monospace; font-weight:500; font-size:12.5px; color:var(--text); background:#f1f5f9; padding:3px 8px; border-radius:6px; }
+
+    .type-badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; }
+    .type-router { background:#dbeafe; color:#1d4ed8; }
+    .type-switch { background:#ede9fe; color:#6d28d9; }
+    .type-olt    { background:#fce7f3; color:#be185d; }
+    .type-ont    { background:#fef3c7; color:#92400e; }
+    .type-access_point { background:#ccfbf1; color:#115e59; }
+    .type-server { background:#e0f2fe; color:#075985; }
+    .type-other  { background:#f1f5f9; color:#475569; }
+
+    .metric-bar { width:72px; }
+    .mb-track { background:#f1f5f9; border-radius:4px; height:6px; overflow:hidden; }
+    .mb-fill  { height:100%; transition:width .3s ease; border-radius:4px; }
+    .mb-blue  { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+    .mb-amber { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .mb-red   { background:linear-gradient(90deg,#ef4444,#f87171); }
+    .mb-pct   { font-size:11px; font-weight:700; color:var(--text); margin-top:2px; display:block; font-family:'JetBrains Mono',monospace; }
+
+    .uptime-txt { font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+
+    .act-group { display:flex; gap:4px; justify-content:flex-end; }
+    .act-btn { width:32px; height:32px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all .15s; }
+    .act-btn:hover { border-color:var(--dm-blue); color:var(--dm-blue); background:var(--dm-blue-l); }
+    .act-btn.act-del:hover { border-color:var(--dm-red); color:var(--dm-red); background:var(--dm-red-l); }
+    .act-btn.act-test:hover { border-color:var(--dm-green); color:var(--dm-green); background:var(--dm-green-l); }
+    .act-btn svg { width:14px; height:14px; }
+
+    .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+    .empty-state svg { color:var(--faint); margin-bottom:14px; }
+    .empty-state-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; }
+
+    /* Loading spinner */
+    .spin-wrap { text-align:center; padding:60px 20px; }
+    .spinner { display:inline-block; width:34px; height:34px; border:3px solid #e2e8f0; border-top-color:var(--dm-blue); border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── MODAL ── */
+    .dm-modal-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(15,23,42,.5);
+      z-index:1000; padding:20px;
+      align-items:center; justify-content:center;
+      backdrop-filter:blur(4px);
+    }
+    .dm-modal-overlay.active { display:flex; }
+    .dm-modal {
+      background:#fff; border-radius:18px;
+      width:100%; max-width:640px;
+      max-height:92vh; overflow-y:auto;
+      box-shadow:0 24px 60px rgba(0,0,0,.25);
+    }
+    .dm-modal-hdr {
+      padding:18px 24px;
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .dm-modal-hdr h2 { font-size:16px; font-weight:800; color:var(--text); margin:0; }
+    .dm-modal-close { background:none; border:none; cursor:pointer; color:var(--muted); padding:4px; border-radius:6px; transition:background .15s; }
+    .dm-modal-close:hover { background:#f1f5f9; color:var(--text); }
+
+    .dm-modal-body { padding:20px 24px; }
+    .dm-modal-ftr {
+      padding:14px 24px;
+      border-top:1px solid var(--border);
+      display:flex; gap:10px; justify-content:flex-end;
+      background:#fafbff;
+    }
+
+    /* Form */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .form-grid-full { grid-column:1/-1; }
+    .field { margin-bottom:14px; }
+    .field-label { font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+    .field-label .req { color:var(--dm-red); }
+    .field input, .field select, .field textarea {
+      width:100%; padding:9px 12px;
+      border:1.5px solid var(--border); border-radius:10px;
+      font-size:13px; background:#fff; color:var(--text);
+      font-family:inherit;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline:none; border-color:var(--dm-blue);
+      box-shadow:0 0 0 3px rgba(37,99,235,.08);
+    }
+    .field textarea { resize:vertical; min-height:60px; font-family:inherit; }
+    .field-hint { font-size:11px; color:var(--muted); margin-top:4px; }
+
+    .fieldset-group {
+      background:#f8fafc;
+      border:1.5px solid #e8eaed;
+      border-radius:12px;
+      padding:12px 16px;
+      margin-bottom:14px;
+    }
+    .fieldset-group-title {
+      font-size:11px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.4px;
+      margin-bottom:10px; display:flex; align-items:center; gap:6px;
+    }
+    .fieldset-group-title svg { width:13px; height:13px; color:var(--dm-blue); }
+
+    /* Test Connection Result */
+    .test-result { padding:12px 14px; border-radius:12px; margin-top:10px; font-size:12.5px; display:none; }
+    .test-result.show { display:block; }
+    .test-result.ok { background:var(--dm-green-l); border:1px solid #bbf7d0; color:#14532d; }
+    .test-result.fail { background:var(--dm-red-l); border:1px solid #fecaca; color:#7f1d1d; }
+    .test-result-title { font-weight:800; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .test-check-row { display:flex; align-items:center; gap:8px; padding:3px 0; font-size:11.5px; }
+    .test-check-row svg { flex-shrink:0; width:13px; height:13px; }
+    .test-check-ok { color:#15803d; }
+    .test-check-fail { color:#b91c1c; }
+    .test-check-detail { color:var(--muted); margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:11px; }
+
+    /* Conditional field wrapper */
+    .cond-hide { display:none; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content dm">
+
+      <!-- HEADER -->
+      <div class="dm-hdr">
+        <div class="dm-hdr-l">
+          <h1>Device Management</h1>
+          <p>Monitor dan kelola semua perangkat jaringan Anda</p>
+        </div>
+        <div class="dm-hdr-r">
+          <span class="live-chip chip-idle" id="liveChip">
+            <span class="live-dot"></span>
+            <span id="liveChipTxt">Idle</span>
+          </span>
+          <button class="btn btn-outline btn-sm" onclick="loadDeviceList(true)" id="refreshBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+          <button class="btn btn-blue btn-sm" onclick="openAddDevice()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Device
+          </button>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="dm-cards">
+        <div class="dm-card dmc-active" data-filter="all" onclick="setDeviceFilter(this,'all')">
+          <div class="card-lbl">Total Device</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="dTotal">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="dTotalPill">– unit</span>
+                <span class="card-sub">Semua perangkat</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dm-card" data-filter="online" onclick="setDeviceFilter(this,'online')">
+          <div class="card-lbl">Online</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="dOnline">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="dOnlinePill">0%</span>
+                <span class="card-sub">Device aktif</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dm-card" data-filter="offline" onclick="setDeviceFilter(this,'offline')">
+          <div class="card-lbl">Offline</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="dOffline">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-red" id="dOfflinePill">0%</span>
+                <span class="card-sub">Tidak terjangkau</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dm-card" data-filter="warning" onclick="setDeviceFilter(this,'warning')">
+          <div class="card-lbl">Warning</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="dWarning">–</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="dWarningPill">–</span>
+                <span class="card-sub">Perlu perhatian</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="dm-ctrl">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Cari nama atau IP..." id="searchDevices" oninput="applyFilter()">
+        </div>
+        <select id="typeFilter" onchange="applyFilter()">
+          <option value="">Semua tipe</option>
+          <option value="router">Router</option>
+          <option value="switch">Switch</option>
+          <option value="olt">OLT</option>
+          <option value="ont">ONT</option>
+          <option value="access_point">Access Point</option>
+          <option value="server">Server</option>
+          <option value="other">Other</option>
+        </select>
+        <span class="ctrl-count" id="ctrlCount">0 device</span>
+      </div>
+
+      <!-- TABLE -->
+      <div class="dm-wrap">
+        <table class="dm-table">
+          <thead>
+            <tr>
+              <th style="width:140px">Status</th>
+              <th>Name</th>
+              <th>IP Address</th>
+              <th>Type</th>
+              <th style="width:100px">CPU</th>
+              <th style="width:100px">Memory</th>
+              <th style="width:120px">Uptime</th>
+              <th style="width:160px;text-align:right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="deviceTbody">
+            <tr><td colspan="8" class="spin-wrap"><span class="spinner"></span><div style="margin-top:10px;color:var(--muted);font-size:13px">Memuat...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════ MODAL: Add / Edit Device ═══════ -->
+<div class="dm-modal-overlay" id="deviceModal">
+  <div class="dm-modal">
+    <div class="dm-modal-hdr">
+      <h2 id="deviceModalTitle">Tambah Device</h2>
+      <button class="dm-modal-close" onclick="closeDeviceModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dm-modal-body">
+      <input type="hidden" id="devId">
+
+      <!-- Basic Info -->
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label">Nama Device <span class="req">*</span></label>
+          <input type="text" id="devName" placeholder="MikroTik Core Router" maxlength="100">
+        </div>
+        <div class="field">
+          <label class="field-label">IP Address <span class="req">*</span></label>
+          <input type="text" id="devIp" placeholder="192.168.1.1">
+        </div>
+        <div class="field">
+          <label class="field-label">Tipe</label>
+          <select id="devType">
+            <option value="router">Router</option>
+            <option value="switch">Switch</option>
+            <option value="olt">OLT</option>
+            <option value="ont">ONT</option>
+            <option value="access_point">Access Point</option>
+            <option value="server">Server</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Brand / Vendor</label>
+          <input type="text" id="devBrand" placeholder="MikroTik, Cisco, Huawei...">
+        </div>
+        <div class="field">
+          <label class="field-label">Model</label>
+          <input type="text" id="devModel" placeholder="CCR1009, RB4011...">
+        </div>
+        <div class="field">
+          <label class="field-label">Lokasi</label>
+          <input type="text" id="devLocation" placeholder="Rack A / NOC">
+        </div>
+      </div>
+
+      <!-- Monitoring Config -->
+      <div class="fieldset-group">
+        <div class="fieldset-group-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M12 7v5l3 3"/></svg>
+          Monitoring
+        </div>
+        <div class="field">
+          <label class="field-label">Metode Monitoring</label>
+          <select id="devMonType" onchange="onMonTypeChange()">
+            <option value="snmp">SNMP saja</option>
+            <option value="api">API saja (MikroTik REST)</option>
+            <option value="both">SNMP + API</option>
+          </select>
+        </div>
+
+        <!-- SNMP fields -->
+        <div id="snmpFields">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">SNMP Community</label>
+              <input type="text" id="devSnmpCommunity" placeholder="public" value="public">
+            </div>
+            <div class="field">
+              <label class="field-label">SNMP Version</label>
+              <select id="devSnmpVersion">
+                <option value="2">v2c</option>
+                <option value="1">v1</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">SNMP Port</label>
+              <input type="number" id="devSnmpPort" value="161" placeholder="161">
+            </div>
+          </div>
+        </div>
+
+        <!-- API fields -->
+        <div id="apiFields" class="cond-hide">
+          <div class="form-grid">
+            <div class="field">
+              <label class="field-label">API Username</label>
+              <input type="text" id="devApiUser" placeholder="admin">
+            </div>
+            <div class="field">
+              <label class="field-label">API Password</label>
+              <input type="password" id="devApiPass" placeholder="••••••••">
+            </div>
+            <div class="field">
+              <label class="field-label">API Port</label>
+              <input type="number" id="devApiPort" value="80" placeholder="80 (HTTP) / 443 (HTTPS)">
+              <div class="field-hint">Gunakan 443 untuk HTTPS.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="field">
+        <label class="field-label">Catatan</label>
+        <textarea id="devNotes" placeholder="Catatan tambahan tentang device ini..." rows="2"></textarea>
+      </div>
+
+      <!-- Test Result -->
+      <div class="test-result" id="testResult"></div>
+    </div>
+    <div class="dm-modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeDeviceModal()">Batal</button>
+      <button class="btn btn-outline btn-sm" onclick="testConnectionFromModal()" id="btnTest" style="color:var(--dm-teal);border-color:var(--dm-teal)">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h3l3-9 6 18 3-9h5"/></svg>
+        Test Koneksi
+      </button>
+      <button class="btn btn-blue btn-sm" onclick="saveDevice()" id="btnSaveDev">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Simpan
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script>
+  /* eslint-disable */
+  var _DEVICES     = [];          // semua device hasil fetch
+  var _STATUS_FILT = 'all';       // filter stat card: all|online|offline|warning
+  var _REFRESH_INT = null;
+
+  // ── Escape helper (XSS-safe rendering) ──
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  // ── Load devices + stats ──
+  async function loadDeviceList(manual) {
+    try {
+      if (manual) setLive('loading');
+      const [statsRes, listRes] = await Promise.all([
+        App.api('/devices/stats'),
+        App.api('/devices?limit=200')
+      ]);
+
+      if (statsRes?.success) updateStats(statsRes.data);
+      if (listRes?.success) {
+        _DEVICES = listRes.data || [];
+        applyFilter();
+      }
+      setLive('live');
+    } catch (err) {
+      console.error('loadDeviceList:', err);
+      setLive('idle');
+    }
+  }
+
+  function setLive(mode) {
+    const chip = document.getElementById('liveChip');
+    const txt  = document.getElementById('liveChipTxt');
+    chip.className = 'live-chip ' + (mode === 'live' ? 'chip-live' : 'chip-idle');
+    txt.textContent = mode === 'live' ? 'Live' : (mode === 'loading' ? 'Memuat...' : 'Idle');
+  }
+
+  function updateStats(s) {
+    const total   = s.total   || 0;
+    const online  = s.online  || 0;
+    const offline = s.offline || 0;
+    const warning = s.warning || 0;
+
+    document.getElementById('dTotal').textContent   = total;
+    document.getElementById('dOnline').textContent  = online;
+    document.getElementById('dOffline').textContent = offline;
+    document.getElementById('dWarning').textContent = warning;
+
+    const pct = (n) => total > 0 ? Math.round((n/total)*100) + '%' : '0%';
+    document.getElementById('dTotalPill').textContent   = total + ' unit';
+    document.getElementById('dOnlinePill').textContent  = pct(online);
+    document.getElementById('dOfflinePill').textContent = pct(offline);
+    document.getElementById('dWarningPill').textContent = warning > 0 ? warning + ' alert' : '—';
+  }
+
+  // ── Filter card click ──
+  function setDeviceFilter(el, filter) {
+    document.querySelectorAll('.dm-card').forEach(c => c.classList.remove('dmc-active'));
+    el.classList.add('dmc-active');
+    _STATUS_FILT = filter;
+    applyFilter();
+  }
+
+  function applyFilter() {
+    const searchRaw = document.getElementById('searchDevices').value.trim().toLowerCase();
+    const typeFilt  = document.getElementById('typeFilter').value;
+
+    const filtered = _DEVICES.filter(d => {
+      if (_STATUS_FILT !== 'all' && d.status !== _STATUS_FILT) return false;
+      if (typeFilt && d.type !== typeFilt) return false;
+      if (searchRaw) {
+        const hay = ((d.name||'') + ' ' + (d.ip_address||'') + ' ' + (d.brand||'') + ' ' + (d.model||'')).toLowerCase();
+        if (!hay.includes(searchRaw)) return false;
+      }
+      return true;
+    });
+
+    renderTable(filtered);
+    document.getElementById('ctrlCount').textContent = filtered.length + ' device';
+  }
+
+  // ── Format uptime: "3d 4h" dst ──
+  function fmtUptime(u) {
+    if (!u) return '—';
+    // Kalau sudah string dari MikroTik (e.g. "1w2d"), tampilkan apa adanya
+    return esc(u);
+  }
+
+  // ── Metric bar color by pct ──
+  function mbClass(pct) {
+    const p = parseFloat(pct) || 0;
+    if (p >= 85) return 'mb-red';
+    if (p >= 60) return 'mb-amber';
+    return 'mb-blue';
+  }
+
+  function renderTable(list) {
+    const tbody = document.getElementById('deviceTbody');
+    if (!list.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+              <path d="M6 15h.01M10 15h4"/>
+            </svg>
+            <div class="empty-state-title">Belum ada device</div>
+            <div style="font-size:12.5px;margin-bottom:16px">Mulai dengan menambahkan perangkat jaringan pertama Anda</div>
+            <button class="btn btn-blue btn-sm" onclick="openAddDevice()">+ Tambah Device</button>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(d => {
+      const cpu = d.cpu_load != null ? Math.round(d.cpu_load) : null;
+      const mem = d.memory_usage != null ? Math.round(d.memory_usage) : null;
+
+      const cpuHtml = cpu != null ? `
+        <div class="metric-bar">
+          <div class="mb-track"><div class="mb-fill ${mbClass(cpu)}" style="width:${cpu}%"></div></div>
+          <span class="mb-pct">${cpu}%</span>
+        </div>` : '<span class="mb-pct" style="color:var(--faint)">—</span>';
+
+      const memHtml = mem != null ? `
+        <div class="metric-bar">
+          <div class="mb-track"><div class="mb-fill ${mbClass(mem)}" style="width:${mem}%"></div></div>
+          <span class="mb-pct">${mem}%</span>
+        </div>` : '<span class="mb-pct" style="color:var(--faint)">—</span>';
+
+      const status = d.status || 'offline';
+      const brandLine = [d.brand, d.model].filter(Boolean).join(' · ');
+
+      return `
+        <tr>
+          <td>
+            <span class="st-dot st-${esc(status)}"></span>
+            <span class="st-txt st-${esc(status)}-txt">${esc(status)}</span>
+          </td>
+          <td>
+            <div class="dev-name">${esc(d.name || '—')}</div>
+            ${brandLine ? `<div class="dev-brand">${esc(brandLine)}</div>` : ''}
+          </td>
+          <td><span class="ip-code">${esc(d.ip_address || '—')}</span></td>
+          <td><span class="type-badge type-${esc(d.type||'other')}">${esc(d.type || 'other')}</span></td>
+          <td>${cpuHtml}</td>
+          <td>${memHtml}</td>
+          <td><span class="uptime-txt">${fmtUptime(d.uptime)}</span></td>
+          <td>
+            <div class="act-group">
+              <button class="act-btn act-test" onclick="testDevice(${d.id})" title="Test Koneksi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h3l3-9 6 18 3-9h5"/></svg>
+              </button>
+              <button class="act-btn" onclick="editDevice(${d.id})" title="Edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="act-btn act-del" onclick="deleteDevice(${d.id})" title="Hapus">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // ── Modal handlers ──
+  function openAddDevice() {
+    document.getElementById('deviceModalTitle').textContent = 'Tambah Device';
+    document.getElementById('devId').value = '';
+    document.getElementById('devName').value = '';
+    document.getElementById('devIp').value = '';
+    document.getElementById('devType').value = 'router';
+    document.getElementById('devBrand').value = '';
+    document.getElementById('devModel').value = '';
+    document.getElementById('devLocation').value = '';
+    document.getElementById('devMonType').value = 'snmp';
+    document.getElementById('devSnmpCommunity').value = 'public';
+    document.getElementById('devSnmpVersion').value = '2';
+    document.getElementById('devSnmpPort').value = '161';
+    document.getElementById('devApiUser').value = '';
+    document.getElementById('devApiPass').value = '';
+    document.getElementById('devApiPort').value = '80';
+    document.getElementById('devNotes').value = '';
+    hideTestResult();
+    onMonTypeChange();
+    document.getElementById('deviceModal').classList.add('active');
+    setTimeout(() => document.getElementById('devName').focus(), 100);
+  }
+
+  function closeDeviceModal() {
+    document.getElementById('deviceModal').classList.remove('active');
+  }
+
+  function editDevice(id) {
+    const d = _DEVICES.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('deviceModalTitle').textContent = 'Edit Device';
+    document.getElementById('devId').value       = d.id;
+    document.getElementById('devName').value     = d.name || '';
+    document.getElementById('devIp').value       = d.ip_address || '';
+    document.getElementById('devType').value     = d.type || 'router';
+    document.getElementById('devBrand').value    = d.brand || '';
+    document.getElementById('devModel').value    = d.model || '';
+    document.getElementById('devLocation').value = d.location || '';
+    document.getElementById('devMonType').value  = d.monitoring_type || 'snmp';
+    document.getElementById('devSnmpCommunity').value = d.snmp_community || 'public';
+    document.getElementById('devSnmpVersion').value   = d.snmp_version || 2;
+    document.getElementById('devSnmpPort').value      = d.snmp_port || 161;
+    document.getElementById('devApiUser').value       = d.api_username || '';
+    document.getElementById('devApiPass').value       = '';  // password tidak dikembalikan
+    document.getElementById('devApiPort').value       = d.api_port || 80;
+    document.getElementById('devNotes').value         = d.notes || '';
+    hideTestResult();
+    onMonTypeChange();
+    document.getElementById('deviceModal').classList.add('active');
+  }
+
+  function onMonTypeChange() {
+    const v = document.getElementById('devMonType').value;
+    const snmpWrap = document.getElementById('snmpFields');
+    const apiWrap  = document.getElementById('apiFields');
+    snmpWrap.classList.toggle('cond-hide', v === 'api');
+    apiWrap.classList.toggle('cond-hide', v === 'snmp');
+  }
+
+  // ── Save (create/update) ──
+  async function saveDevice() {
+    const data = gatherFormData();
+    if (!data.name || !data.ip_address) {
+      return App.showToast('Nama dan IP wajib diisi', 'error');
+    }
+
+    const id = document.getElementById('devId').value;
+    const endpoint = id ? `/devices/${id}` : '/devices';
+    const method   = id ? 'PUT' : 'POST';
+
+    // Kalau edit & password kosong, jangan kirim (biar tidak overwrite)
+    if (id && !data.api_password) delete data.api_password;
+
+    const btn = document.getElementById('btnSaveDev');
+    btn.disabled = true;
+    try {
+      const res = await App.api(endpoint, {
+        method,
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res?.success) {
+        App.showToast(id ? 'Device berhasil diupdate' : 'Device berhasil ditambahkan', 'success');
+        closeDeviceModal();
+        loadDeviceList();
+      } else {
+        App.showToast(res?.message || 'Gagal menyimpan', 'error');
+      }
+    } catch (e) {
+      App.showToast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function gatherFormData() {
+    return {
+      name:            document.getElementById('devName').value.trim(),
+      ip_address:      document.getElementById('devIp').value.trim(),
+      type:            document.getElementById('devType').value,
+      brand:           document.getElementById('devBrand').value.trim() || null,
+      model:           document.getElementById('devModel').value.trim() || null,
+      location:        document.getElementById('devLocation').value.trim() || null,
+      monitoring_type: document.getElementById('devMonType').value,
+      snmp_community:  document.getElementById('devSnmpCommunity').value.trim() || 'public',
+      snmp_version:    parseInt(document.getElementById('devSnmpVersion').value) || 2,
+      snmp_port:       parseInt(document.getElementById('devSnmpPort').value) || 161,
+      api_username:    document.getElementById('devApiUser').value.trim() || null,
+      api_password:    document.getElementById('devApiPass').value || null,
+      api_port:        parseInt(document.getElementById('devApiPort').value) || null,
+      notes:           document.getElementById('devNotes').value.trim() || null
+    };
+  }
+
+  // ── Test connection from modal (not yet saved) ──
+  async function testConnectionFromModal() {
+    const data = gatherFormData();
+    if (!data.ip_address) {
+      return App.showToast('IP address wajib diisi dulu', 'error');
+    }
+    showTestResult('loading');
+    const btn = document.getElementById('btnTest');
+    btn.disabled = true;
+    try {
+      const res = await App.api('/devices/test', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res?.success) {
+        renderTestResult(res.data);
+      } else {
+        renderTestResult({ success: false, error: res?.message || 'Gagal' });
+      }
+    } catch (e) {
+      renderTestResult({ success: false, error: e.message });
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Test connection from row (already saved) ──
+  async function testDevice(id) {
+    const d = _DEVICES.find(x => x.id === id);
+    if (!d) return;
+    App.showToast(`Testing ${d.name}...`, 'info');
+    try {
+      const res = await App.api(`/devices/${id}/test-connection`, { method: 'POST' });
+      if (res?.success) {
+        const r = res.data;
+        if (r.success) {
+          App.showToast(`✓ ${d.name} online — ${r.ping_ms}ms${r.identity ? ' ('+r.identity+')' : ''}`, 'success');
+        } else {
+          App.showToast(`✕ ${d.name}: ${r.error || 'unreachable'}`, 'error');
+        }
+        loadDeviceList();
+      } else {
+        App.showToast(res?.message || 'Gagal', 'error');
+      }
+    } catch (e) {
+      App.showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  function showTestResult(state) {
+    const box = document.getElementById('testResult');
+    if (state === 'loading') {
+      box.className = 'test-result show';
+      box.style.background = '#eff6ff';
+      box.style.border = '1px solid #bfdbfe';
+      box.style.color = '#1e40af';
+      box.innerHTML = '<div class="test-result-title"><span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Sedang mencoba koneksi ke device...</div>';
+    }
+  }
+
+  function hideTestResult() {
+    const box = document.getElementById('testResult');
+    box.className = 'test-result';
+    box.innerHTML = '';
+  }
+
+  function renderTestResult(r) {
+    const box = document.getElementById('testResult');
+    const ok = r.success === true;
+    box.className = 'test-result show ' + (ok ? 'ok' : 'fail');
+    box.style.background = '';
+    box.style.border = '';
+    box.style.color = '';
+
+    let html = '<div class="test-result-title">';
+    if (ok) {
+      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> Koneksi Berhasil';
+      if (r.identity) html += ` — <span style="font-weight:600">${esc(r.identity)}</span>`;
+      if (r.ping_ms != null) html += ` <span style="font-weight:500;opacity:.8">(${r.ping_ms}ms)</span>`;
+    } else {
+      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Koneksi Gagal';
+      if (r.error) html += ` — <span style="font-weight:500">${esc(r.error)}</span>`;
+    }
+    html += '</div>';
+
+    // Detail checks
+    if (Array.isArray(r.checks) && r.checks.length) {
+      html += '<div style="margin-top:8px">';
+      r.checks.forEach(c => {
+        const cls = c.ok ? 'test-check-ok' : 'test-check-fail';
+        const icon = c.ok
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        html += `<div class="test-check-row ${cls}">${icon}<span>${esc(c.step)}</span><span class="test-check-detail">${esc(c.detail || '')}</span></div>`;
+      });
+      html += '</div>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  // ── Delete ──
+  async function deleteDevice(id) {
+    const d = _DEVICES.find(x => x.id === id);
+    if (!d) return;
+    if (!confirm(`Hapus device "${d.name}"?\n\nSemua log & traffic data terkait juga akan terhapus.`)) return;
+
+    try {
+      const res = await App.api(`/devices/${id}`, { method: 'DELETE' });
+      if (res?.success) {
+        App.showToast('Device dihapus', 'success');
+        loadDeviceList();
+      } else {
+        App.showToast(res?.message || 'Gagal menghapus', 'error');
+      }
+    } catch (e) {
+      App.showToast('Error: ' + e.message, 'error');
+    }
+  }
+
+  // ── Close modal pada klik di luar ──
+  document.getElementById('deviceModal').addEventListener('click', (e) => {
+    if (e.target.id === 'deviceModal') closeDeviceModal();
+  });
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDeviceList();
+    _REFRESH_INT = setInterval(() => loadDeviceList(), 30000);
+  });
+  window.addEventListener('beforeunload', () => {
+    if (_REFRESH_INT) clearInterval(_REFRESH_INT);
+  });
+</script>
+</body>
+</html>

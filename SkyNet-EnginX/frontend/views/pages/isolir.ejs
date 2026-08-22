@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{--d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;--d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;--d-red:#f5365c;--d-green:#00c896;}
+    body,html{font-family:'DM Sans',sans-serif;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .35s ease both}.a2{animation:fadeUp .35s .07s ease both}
+    .a3{animation:fadeUp .35s .14s ease both}.a4{animation:fadeUp .35s .21s ease both}.a5{animation:fadeUp .35s .28s ease both}
+
+    /* Stat cards */
+    /* ── STAT CARDS — single strip ── */
+    .fin-grid, .fin-grid-4 {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .fin-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .fin-card::before, .fin-card::after { display:none !important; content:none !important; }
+    .fin-card .b1,.fin-card .b2,.fin-card .b3,
+    .fin-card .orb,.fin-card .orb1,.fin-card .orb2 { display:none !important; }
+    .fin-card:last-child { border-right: none; }
+    .fin-card:hover { background: #fafbff; }
+    .fin-card.fc-active { background: #2563eb; border-color: #2563eb; }
+    .fin-card.fc-active:hover { background: #1d4ed8; }
+    .fin-card.fc-active .xc-lbl  { color: rgba(255,255,255,.70); }
+    .fin-card.fc-active .xc-val  { color: #fff; }
+    .fin-card.fc-active .xc-sub  { color: rgba(255,255,255,.60); }
+    .fin-card.fc-active .xc-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fin-card.fc-active .sp-line { stroke: rgba(255,255,255,.70) !important; }
+    .fin-card.fc-active .sp-fill { fill: rgba(255,255,255,.12) !important; }
+    .fin-card.fc-active .sp-dot  { fill: #fff !important; }
+    .xc-lbl  { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .xc-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .xc-left { display:flex; flex-direction:column; min-width:0; }
+    .xc-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .xc-val { font-size:26px; } }
+    .xc-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .xc-pill { display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .xc-blue   { background:#dbeafe; color:#1d4ed8; }
+    .xc-green  { background:#dcfce7; color:#16a34a; }
+    .xc-red    { background:#fee2e2; color:#dc2626; }
+    .xc-amber  { background:#fef3c7; color:#b45309; }
+    .xc-slate  { background:#f1f5f9; color:#475569; }
+    .xc-teal   { background:#cffafe; color:#0e7490; }
+    .xc-orange { background:#ffedd5; color:#c2410c; }
+    .xc-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .xc-spark { flex-shrink:0; width:72px; height:36px; }
+    .xc-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:repeat(2,1fr); }
+      .fin-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .fin-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .fin-card:nth-child(even) { border-right:none; }
+      .fin-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .fin-grid, .fin-grid-4 { grid-template-columns:1fr; }
+      .fin-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .fin-card:last-child { border-bottom:none; }
+    }
+        .iso-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    @media(max-width:960px){.iso-layout{grid-template-columns:1fr;}}
+
+    /* Cards */
+    .w-card{background:#fff;border:1px solid var(--d-border);border-radius:18px;overflow:hidden;margin-bottom:14px;}
+    .w-card-hdr{padding:14px 18px;border-bottom:1px solid var(--d-border);background:linear-gradient(135deg,#f8faff,#f0f4ff);}
+    .w-card-body{padding:16px 18px;}
+
+    /* Buttons */
+    .btn-primary{padding:9px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s;}
+    .btn-primary:hover{opacity:.9;}
+    .btn-danger{padding:9px 16px;border-radius:10px;border:1.5px solid #fca5a5;background:#fff0f2;color:#dc2626;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+    .btn-danger:hover{background:#fee2e2;}
+    .btn-success{padding:9px 16px;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#16a34a;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+    .btn-success:hover{background:#dcfce7;}
+    .btn-ghost{padding:7px 12px;border-radius:8px;border:1.5px solid var(--d-border);background:#f4f8ff;color:var(--d-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+    .btn-full{width:100%;justify-content:center;}
+    .btn-sm{padding:5px 11px;font-size:12px;border-radius:8px;}
+    .btn-xs{padding:3px 9px;font-size:11px;border-radius:7px;}
+
+    /* Form */
+    .pf-label{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:5px;}
+    .pf-input{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;outline:none;font-family:'DM Sans',sans-serif;transition:all .15s;}
+    .pf-input:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-select{width:100%;padding:9px 12px;border-radius:9px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;outline:none;font-family:'DM Sans',sans-serif;background:#fff;}
+    .pf-field{margin-bottom:12px;}
+    .pf-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+    /* Device card */
+    .dev-card{background:#fff;border:1px solid var(--d-border);border-radius:14px;padding:14px;margin-bottom:10px;transition:border-color .15s, box-shadow .15s;}
+    .dev-card:hover{border-color:#bfd3f5;box-shadow:0 4px 14px rgba(26,110,245,.08);}
+    .dev-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0;}
+    .dev-dot.online{background:#22c55e;box-shadow:0 0 0 3px #dcfce7;}
+    .dev-dot.offline{background:#ef4444;box-shadow:0 0 0 3px #fee2e2;}
+    .dev-dot.unknown{background:#94a3b8;box-shadow:0 0 0 3px #f1f5f9;}
+    /* Tombol aksi router — pill seragam, rapi */
+    .dev-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;}
+    .dev-act{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:8px;font-size:11.5px;font-weight:600;cursor:pointer;border:1px solid var(--d-border);background:#fff;color:#475569;transition:all .12s;font-family:inherit;}
+    .dev-act:hover{background:#f8fafc;border-color:#cbd5e1;}
+    .dev-act.primary{background:#f0fdf4;border-color:#86efac;color:#16a34a;}
+    .dev-act.primary:hover{background:#dcfce7;}
+    .dev-act.info{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;}
+    .dev-act.info:hover{background:#dbeafe;}
+    .dev-act.danger{background:#fff0f2;border-color:#fca5a5;color:#dc2626;margin-left:auto;}
+    .dev-act.danger:hover{background:#fee2e2;}
+
+    /* Table */
+    .iso-tbl{width:100%;border-collapse:collapse;font-size:12.5px;}
+    .iso-tbl th{padding:10px 16px;font-size:10px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;background:#f8faff;text-align:left;white-space:nowrap;border-bottom:1px solid var(--d-border);}
+    .iso-tbl td{padding:13px 16px;border-bottom:1px solid #f0f4ff;vertical-align:middle;}
+    .iso-tbl tbody tr:last-child td{border-bottom:none;}
+    .iso-tbl tbody tr{transition:background .12s;}
+    .iso-tbl tbody tr:hover td{background:#f8faff;}
+
+    /* ── MOBILE: tabel → kartu (stack) memakai data-label ── */
+    @media(max-width:860px){
+      .iso-tbl thead{ display:none; }
+      .iso-tbl, .iso-tbl tbody, .iso-tbl tr, .iso-tbl td{ display:block; width:100%; }
+      .iso-tbl tr{
+        background:#fff; border:1px solid var(--d-border); border-radius:14px;
+        margin-bottom:12px; padding:6px 4px; box-shadow:0 1px 3px rgba(15,23,42,.04);
+      }
+      .iso-tbl tbody tr:hover td{ background:transparent; }
+      .iso-tbl td{
+        border:none; padding:7px 14px;
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+        text-align:right;
+      }
+      .iso-tbl td > *{ min-width:0; }
+      .iso-tbl td .ip-tag{ white-space:normal; word-break:break-all; text-align:right; }
+      .iso-tbl td::before{
+        content:attr(data-label);
+        font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+        color:var(--d-muted); text-align:left; flex-shrink:0;
+      }
+      /* baris pertama (nama) tampil penuh tanpa label */
+      .iso-tbl td[data-label=""]{
+        justify-content:flex-start; text-align:left;
+        border-bottom:1px solid #f0f4ff; padding-bottom:10px; margin-bottom:2px;
+      }
+      .iso-tbl td[data-label=""]::before{ display:none; }
+      /* tombol aksi full-width di kartu */
+      .iso-tbl td[data-label=""]:last-child{
+        border-bottom:none; padding-top:10px;
+      }
+      .iso-tbl td[data-label=""]:last-child button{ width:100%; padding:9px; font-size:13px; }
+    }
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+    .badge.red{background:#fee2e2;color:#dc2626;}
+    .badge.green{background:#dcfce7;color:#16a34a;}
+    .badge.blue{background:#dbeafe;color:#1d4ed8;}
+    .badge.amber{background:#fef9c3;color:#92400e;}
+    .badge.gray{background:#f1f5f9;color:#64748b;}
+
+    /* IP */
+    .ip-tag{font-family:'DM Mono',monospace;font-size:11.5px;background:#eef2f9;padding:2px 7px;border-radius:5px;color:#334155;}
+
+    /* Toggle */
+    .toggle-wrap{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:13px;color:var(--d-text);cursor:pointer;}
+    .toggle-wrap input[type=checkbox]{accent-color:var(--d-blue1);width:14px;height:14px;}
+
+    /* Modal */
+    .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+    .modal-ov.open{display:flex;}
+    .modal-box{background:#fff;border-radius:18px;width:480px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal-hdr{padding:16px 20px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;justify-content:space-between;}
+    .modal-body{padding:20px;}
+    .modal-ft{padding:12px 20px;border-top:1px solid var(--d-border);display:flex;gap:8px;justify-content:flex-end;}
+
+    /* Guide */
+    .guide-box{background:#fff8e6;border:1.5px solid #fde68a;border-radius:12px;padding:13px 15px;font-size:12px;color:#92400e;line-height:1.8;}
+    .guide-box code{background:#fef3c7;padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;}
+
+    /* Empty */
+    .empty-state{text-align:center;padding:32px 16px;color:var(--d-muted);}
+    .empty-state svg{width:36px;height:36px;margin:0 auto 8px;display:block;opacity:.3;}
+
+    /* Tab bar */
+    .tab-bar{display:flex;gap:4px;background:#f4f8ff;padding:4px;border-radius:11px;margin-bottom:14px;width:fit-content;}
+    .tab-btn{padding:6px 16px;border-radius:8px;border:none;background:transparent;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--d-muted);transition:all .15s;font-family:'DM Sans',sans-serif;}
+    .tab-btn.active{background:#fff;color:var(--d-blue1);box-shadow:0 1px 5px rgba(26,110,245,.1);}
+  
+    /* ── Standardize card height (match queue.ejs) ── */
+    .fin-card { min-height: 108px; }
+    .xc-val   { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    .xc-lbl   { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    .xc-sub   { font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; transition: color .15s; }
+    .xc-meta  { display: flex; align-items: center; gap: 5px; margin-top: 6px; flex-wrap: nowrap; overflow: hidden; }
+    .xc-spark { flex-shrink: 0; width: 72px; height: 36px; }
+    .xc-spark svg { width: 72px; height: 36px; }
+    @media(max-width:1400px){ .xc-val { font-size: 26px; } }
+
+    /* ════════ MODERN POLISH (mobile-first redesign) ════════ */
+
+    /* Page header sticky di mobile dengan blur */
+    @media(max-width:768px) {
+      .iso-header {
+        position:sticky; top:0; z-index:20;
+        background:rgba(248,250,252,.92);
+        backdrop-filter:blur(10px);
+        -webkit-backdrop-filter:blur(10px);
+        margin:-12px -12px 14px;
+        padding:12px;
+        border-bottom:1px solid var(--d-border);
+      }
+      .iso-header h1 { font-size:18px !important; }
+      .iso-header p { display:none; }
+    }
+
+    /* Card lebih clean & soft shadow */
+    .w-card {
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+      transition: box-shadow .15s;
+    }
+    .w-card:hover { box-shadow: 0 4px 12px rgba(15,23,42,.06); }
+    .w-card-hdr {
+      background: #fff;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Tombol & input lebih besar di mobile (touch-friendly) */
+    @media(max-width:768px) {
+      .btn-full { padding:12px 16px; font-size:13.5px; }
+      .pf-input, .pf-select { padding:11px 13px; font-size:14px; }
+      .w-card-body { padding:14px; }
+      .w-card-hdr  { padding:12px 14px; }
+    }
+
+    /* Reorder mobile priority: Due Alerts > Router > Aksi Manual > Bypass > Settings */
+    @media(max-width:960px) {
+      .iso-layout { gap:12px; }
+      .iso-mobile-prio-due     { order:1; }
+      .iso-mobile-prio-router  { order:2; }
+      .iso-mobile-prio-aksi    { order:3; }
+      .iso-mobile-prio-bypass  { order:4; }
+      .iso-mobile-prio-setting { order:5; }
+    }
+
+    /* Stat cards subtle hover */
+    .fin-card { transition: transform .12s, box-shadow .15s; }
+    .fin-card:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(15,23,42,.06); }
+
+    /* Floating action button di mobile untuk auto-isolir */
+    .iso-fab {
+      display:none;
+      position:fixed; bottom:80px; right:16px;
+      width:48px; height:48px;
+      border-radius:50%; border:none;
+      background:linear-gradient(135deg,#1a6ef5,#0047cc);
+      color:#fff;
+      box-shadow:0 8px 24px rgba(26,110,245,.4);
+      cursor:pointer; z-index:30;
+      align-items:center; justify-content:center;
+      -webkit-tap-highlight-color:transparent;
+      transition:transform .15s;
+    }
+    .iso-fab:active { transform:scale(.92); }
+    .iso-fab svg { width:22px; height:22px; }
+    @media(max-width:768px) {
+      .iso-fab { display:inline-flex; }
+      .iso-header-action { display:none; }
+    }
+
+    /* ════════ DUE ALERTS LIST ════════ */
+    .w-card-hdr { display:flex; justify-content:space-between; align-items:center; }
+
+    .due-tabs {
+      display:flex; gap:0;
+      border-bottom:1px solid var(--d-border);
+      padding:0 8px;
+      background:#f8fafc;
+    }
+    .due-tab {
+      flex:1;
+      padding:10px 6px 9px;
+      background:none; border:none; cursor:pointer;
+      font-family:inherit; font-size:11px; font-weight:600;
+      color:var(--d-muted);
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      border-bottom:2px solid transparent;
+      transition:all .15s;
+      -webkit-tap-highlight-color:transparent;
+      min-width:0;
+    }
+    .due-tab:hover { color:var(--d-text); background:#f1f5f9; }
+    .due-tab.active {
+      color:#1e78ff; border-bottom-color:#1e78ff;
+      background:#fff;
+    }
+    .due-tab-lbl { font-size:11px; line-height:1; }
+    .due-tab-cnt {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:18px; height:16px; padding:0 5px;
+      background:#e2e8f0; color:#475569;
+      border-radius:8px; font-size:10px; font-weight:700;
+      line-height:1;
+    }
+    .due-tab-cnt.warn   { background:#fef3c7; color:#92400e; }
+    .due-tab-cnt.danger { background:#fee2e2; color:#991b1b; }
+    .due-tab-cnt.info   { background:#dbeafe; color:#1d4ed8; }
+    .due-tab.active .due-tab-cnt { background:#dbeafe; color:#1d4ed8; }
+    .due-tab.active .due-tab-cnt.warn   { background:#fed7aa; color:#9a3412; }
+    .due-tab.active .due-tab-cnt.danger { background:#fecaca; color:#7f1d1d; }
+
+    .due-list-wrap {
+      max-height:380px; overflow-y:auto;
+      background:#fff;
+    }
+    .due-list { display:flex; flex-direction:column; }
+
+    /* Item card — stacked vertically (head row, meta row, badges row, foot row).
+       JS renderer (renderDueItem) emits this multi-row structure, so .due-item
+       must be column flex; previous "row" definition caused all sub-rows to
+       jam horizontally and overflow. */
+    .due-item {
+      display:flex; flex-direction:column; gap:8px;
+      padding:13px 16px;
+      border-bottom:1px solid #f1f5f9;
+      transition:background .12s;
+    }
+    .due-item:hover { background:#f8fafc; }
+    .due-item:last-child { border-bottom:none; }
+
+    /* Row 1: checkbox + identitas */
+    .due-head {
+      display:flex; align-items:flex-start; gap:10px;
+      min-width:0;
+    }
+    .due-info { flex:1; min-width:0; }
+    .due-name-row {
+      display:flex; align-items:baseline; gap:8px;
+      min-width:0; flex-wrap:wrap;
+    }
+    .due-cid {
+      font-family:'Geist Mono',ui-monospace,monospace;
+      font-size:10.5px; color:#64748b;
+      background:#f1f5f9; padding:1px 6px; border-radius:4px;
+      flex-shrink:0;
+    }
+    .due-target { margin-top:4px; }
+    .due-target-tag {
+      display:inline-block;
+      font-family:'Geist Mono',ui-monospace,monospace;
+      font-size:10.5px; color:#0f766e;
+      background:#ccfbf1; padding:2px 7px; border-radius:5px;
+      letter-spacing:.02em;
+      max-width:100%;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .due-target-tag.pppoe { color:#9a3412; background:#fed7aa; }
+
+    /* Row 2: harga + status jatuh tempo */
+    .due-meta-row {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      min-width:0;
+    }
+    .due-amount-block { min-width:0; }
+    .due-warn {
+      font-size:11px; font-weight:700; color:#dc2626;
+      flex-shrink:0; white-space:nowrap;
+    }
+    .due-warn.amber { color:#d97706; }
+    .due-warn.green { color:#16a34a; }
+    .due-warn.muted { color:#64748b; }
+
+    /* Row 4: action button row */
+    .due-foot { display:flex; justify-content:flex-end; }
+    .due-foot .due-action { max-width:100%; }
+
+    .due-check {
+      width:16px; height:16px; flex-shrink:0;
+      border:1.5px solid #cbd5e1; border-radius:4px;
+      cursor:pointer; transition:all .12s;
+      background:#fff;
+      display:inline-flex; align-items:center; justify-content:center;
+      color:#fff; font-size:11px; font-weight:900;
+      -webkit-tap-highlight-color:transparent;
+      margin-top:1px; /* selaras dengan baseline nama */
+    }
+    .due-check:hover { border-color:#94a3b8; }
+    .due-check.checked { background:#1e78ff; border-color:#1e78ff; }
+    .due-check.disabled { background:#f1f5f9; border-color:#e2e8f0; cursor:not-allowed; opacity:.5; }
+
+    .due-name {
+      font-size:13px; font-weight:700; color:var(--d-text);
+      line-height:1.25;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      min-width:0; flex:1;
+    }
+    .due-meta {
+      display:flex; align-items:center; gap:6px;
+      font-size:10.5px; color:var(--d-muted); margin-top:2px;
+      flex-wrap:wrap;
+    }
+    .due-meta-id {
+      font-family:'Geist Mono',ui-monospace,monospace;
+      background:#f1f5f9; padding:1px 5px; border-radius:4px;
+      font-size:10px; color:#475569;
+    }
+    .due-meta-ip {
+      font-family:'Geist Mono',ui-monospace,monospace;
+      color:#475569; font-weight:600;
+    }
+    .due-meta-warn {
+      color:#dc2626; font-weight:700;
+    }
+    .due-meta-warn.amber { color:#d97706; }
+    .due-meta-warn.green { color:#16a34a; }
+
+    .due-badges {
+      display:flex; gap:4px; flex-wrap:wrap;
+    }
+    .due-badge {
+      font-size:9.5px; font-weight:700; padding:2px 6px;
+      border-radius:10px; line-height:1.2;
+      text-transform:uppercase; letter-spacing:.04em;
+    }
+    .due-badge.warn   { background:#fef3c7; color:#92400e; }
+    .due-badge.danger { background:#fee2e2; color:#991b1b; }
+    .due-badge.muted  { background:#f1f5f9; color:#64748b; }
+    .due-badge.info   { background:#dbeafe; color:#1d4ed8; }
+    .due-badge.static { background:#e0f2fe; color:#075985; }
+    .due-badge.pppoe  { background:#fef3c7; color:#854d0e; }
+
+    .due-amount {
+      font-size:13px; font-weight:700; color:var(--d-text);
+      font-family:'Geist Mono',ui-monospace,monospace;
+      letter-spacing:-.3px;
+      white-space:nowrap;
+    }
+    .due-amount-sub {
+      font-size:10px; font-weight:500; color:var(--d-muted);
+      margin-top:1px;
+      font-family:'Geist Mono',ui-monospace,monospace;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+      max-width:160px;
+    }
+
+    .due-action {
+      flex-shrink:0;
+      padding:6px 10px;
+      border:1.5px solid; border-radius:7px;
+      background:#fff;
+      font-size:11px; font-weight:700; font-family:inherit;
+      cursor:pointer; transition:all .12s;
+      display:inline-flex; align-items:center; gap:4px;
+      -webkit-tap-highlight-color:transparent;
+      white-space:nowrap;
+    }
+    .due-action:active { transform:scale(.96); }
+    .due-action.isolir  { color:#dc2626; border-color:#fecaca; background:#fef2f2; }
+    .due-action.isolir:hover  { background:#fee2e2; }
+    .due-action.restore { color:#16a34a; border-color:#bbf7d0; background:#f0fdf4; }
+    .due-action.restore:hover { background:#dcfce7; }
+    .due-action.detect  { color:#0369a1; border-color:#bae6fd; background:#f0f9ff; }
+    .due-action.detect:hover  { background:#e0f2fe; }
+    .due-action:disabled { opacity:.65; cursor:not-allowed; color:#64748b; border-color:#e2e8f0; background:#f8fafc; }
+
+    .due-empty {
+      padding:30px 20px; text-align:center; color:var(--d-muted);
+      font-size:12px;
+    }
+    .due-empty-title { font-size:13px; font-weight:700; color:var(--d-text); margin-bottom:3px; }
+
+    .due-bulk-bar {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 14px;
+      background:#f8fafc;
+      border-top:1px solid var(--d-border);
+    }
+    .due-bulk-bar .btn-danger,
+    .due-bulk-bar .btn-success { padding:6px 12px; font-size:11.5px; }
+    .due-bulk-bar > div:first-child { flex:1; }
+
+    /* Mobile compact */
+    @media(max-width:768px) {
+      .due-tab-lbl { font-size:10px; }
+      .due-item { padding:10px 12px; gap:8px; }
+      .due-name { font-size:12.5px; }
+      .due-meta { font-size:10px; }
+      .due-amount { font-size:11.5px; }
+      .due-action { padding:5px 8px; font-size:10.5px; }
+    }
+    /* ════════ TOP-LEVEL TABS (redesign — gaya panel Settings) ════════ */
+    .iso-maintabs{
+      display:flex; gap:4px; background:#fff; padding:5px;
+      border:1px solid var(--d-border); border-radius:14px;
+      margin-bottom:18px; width:fit-content; max-width:100%;
+      box-shadow:0 1px 2px rgba(15,23,42,.04); flex-wrap:wrap;
+    }
+    .iso-maintab{
+      padding:9px 18px; border-radius:10px; border:none; background:transparent;
+      font-size:13px; font-weight:700; cursor:pointer; color:var(--d-muted);
+      font-family:'DM Sans',sans-serif; transition:all .15s;
+      display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+    }
+    .iso-maintab svg{ width:16px !important; height:16px !important; flex-shrink:0; }
+    .iso-maintab:hover{ color:var(--d-text); background:#f4f8ff; }
+    .iso-maintab.active{
+      background:linear-gradient(135deg,#1a6ef5,#0047cc); color:#fff;
+      box-shadow:0 4px 12px rgba(26,110,245,.25);
+    }
+    .iso-maintab .mt-badge{
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:18px; height:18px; padding:0 6px; border-radius:9px;
+      font-size:11px; font-weight:800; background:#eef2f9; color:#475569;
+    }
+    .iso-maintab.active .mt-badge{ background:rgba(255,255,255,.25); color:#fff; }
+
+    /* KRITIS: sembunyikan pane non-aktif */
+    .iso-pane{ display:none; animation:fadeUp .3s ease both; }
+    .iso-pane.active{ display:block; }
+
+    /* Grid 2-kolom dalam pane operasional & kebijakan */
+    .iso-cols{ display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start; }
+    .iso-cols-policy{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+    @media(max-width:980px){ .iso-cols, .iso-cols-policy{ grid-template-columns:minmax(0,1fr); } }
+
+    /* Pane kebijakan: 1 kolom rapi, dibatasi lebarnya di desktop */
+    .iso-policy-single{ max-width:680px; }
+    #pane-policy .pf-row2{ grid-template-columns:1fr 1fr; }
+    @media(max-width:560px){ #pane-policy .pf-row2{ grid-template-columns:1fr; } }
+    #pane-policy .w-card{ margin-top:0 !important; }
+
+    .iso-sec-title{ font-size:12px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+      color:var(--d-muted); margin:2px 0 12px; display:flex; align-items:center; gap:7px; }
+
+    /* ════════ TYPE SEGMENT (3 tipe pelanggan) ════════ */
+    .ctype-tabs{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+    @media(max-width:860px){ .ctype-tabs{ grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:420px){ .ctype-tabs{ grid-template-columns:1fr; } }
+    .ctype-tab{
+      padding:11px 13px; border-radius:13px;
+      border:1.5px solid var(--d-border); background:#fff; cursor:pointer;
+      font-family:'DM Sans',sans-serif; text-align:left; transition:all .15s;
+      display:flex; align-items:center; gap:10px; min-width:0;
+    }
+    .ctype-tab:hover{ border-color:#bfd3f5; background:#f8faff; }
+    .ctype-tab.active{ border-color:var(--d-blue1); background:#f0f6ff; box-shadow:0 2px 8px rgba(26,110,245,.12); }
+    .ctype-ico{ width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .ctype-ico svg{ width:18px; height:18px; }
+    .ctype-ico.pppoe{ background:#dbeafe; color:#1d4ed8; }
+    .ctype-ico.hotspot{ background:#cffafe; color:#0e7490; }
+    .ctype-ico.static{ background:#dcfce7; color:#16a34a; }
+    .ctype-meta{ min-width:0; }
+    .ctype-name{ font-size:13px; font-weight:700; color:var(--d-text); line-height:1.1; }
+    .ctype-cnt{ font-size:11px; color:var(--d-muted); margin-top:2px; }
+    .ctype-cnt b{ color:var(--d-text); font-size:13px; }
+
+    /* Badge tipe pada baris tabel */
+    .tbadge{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:7px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+    .tbadge.pppoe{ background:#dbeafe; color:#1d4ed8; }
+    .tbadge.hotspot{ background:#cffafe; color:#0e7490; }
+    .tbadge.static{ background:#dcfce7; color:#16a34a; }
+
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="iso-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;color:#0d1b3e;margin:0 0 3px;">Isolir Management</h1>
+          <p style="font-size:12.5px;color:var(--d-muted);margin:0;">Block/unblock akses internet pelanggan via MikroTik Firewall</p>
+        </div>
+        <div class="iso-header-action" style="display:flex;gap:8px;">
+          <button class="btn-ghost" onclick="runAutoIsolir()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Jalankan Auto Isolir
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+<div class="fin-grid">
+        <div class="fin-card fc-active" id="xc-isolated" data-filter="isolated">
+          <div class="xc-lbl">Diisolir</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scIsolated">–</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-red" id="xp-isolated">—</span>
+                <span class="xc-sub" id="scIsolatedSub">Pelanggan terblokir</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-isolated" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-isolated-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-isolated-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-isolated-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-withip" data-filter="withip">
+          <div class="xc-lbl">Eligible</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scWithIP">–</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-amber" id="xp-withip">—</span>
+                <span class="xc-sub">Static IP / PPPoE</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-withip" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-withip-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-withip-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-withip-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-devices" data-filter="devices">
+          <div class="xc-lbl">Router Online</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scDevices">–</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-blue" id="xp-devices">—</span>
+                <span class="xc-sub" id="scDevicesSub">Device terdaftar</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-devices" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-devices-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-devices-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-devices-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="fin-card" id="xc-log24" data-filter="log24">
+          <div class="xc-lbl">Log 24 Jam</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scLog24">–</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-teal" id="xp-log24">—</span>
+                <span class="xc-sub">Aksi isolir & restore</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-log24" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-log24-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-log24-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-log24-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ TOP-LEVEL TABS ════════ -->
+      <div class="iso-maintabs a4" role="tablist">
+        <button class="iso-maintab active" data-pane="ops" onclick="switchMainTab('ops',this)" role="tab">
+          Operasional
+        </button>
+        <button class="iso-maintab" data-pane="cust" onclick="switchMainTab('cust',this)" role="tab">
+          Pelanggan
+        </button>
+        <button class="iso-maintab" data-pane="policy" onclick="switchMainTab('policy',this)" role="tab">
+          Kebijakan &amp; Lanjutan
+        </button>
+      </div>
+      <!-- ══════ PANE: OPERASIONAL (kontrol harian) ══════ -->
+      <div class="iso-pane active" id="pane-ops" data-pane="ops">
+        <div class="iso-cols">
+          <div>
+          <!-- MikroTik Devices -->
+          <div class="w-card iso-mobile-prio-router">
+            <div class="w-card-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="font-size:13px;font-weight:700;color:var(--d-text);">Router MikroTik</div>
+              <button class="btn-primary btn-sm" onclick="openDeviceModal()">+ Tambah</button>
+            </div>
+            <div class="w-card-body" id="deviceList">
+              <div class="empty-state">Memuat...</div>
+            </div>
+          </div>
+          </div>
+          <div>
+          <!-- Pelanggan Jatuh Tempo -->
+          <div class="w-card iso-mobile-prio-due">
+            <div class="w-card-hdr">
+              <div style="font-size:13px;font-weight:700;color:var(--d-text);">Pelanggan Jatuh Tempo</div>
+              <button class="btn-ghost btn-sm" onclick="loadDueAlerts()" title="Refresh" style="padding:4px 8px;font-size:11px;">↻</button>
+            </div>
+            <div class="w-card-body" style="padding:0;">
+              <!-- Sub-tabs: Akan / Overdue / Siap Isolir / Isolated -->
+              <div class="due-tabs" id="dueTabs">
+                <button class="due-tab active" data-due-tab="upcoming" onclick="switchDueTab('upcoming',this)">
+                  <span class="due-tab-lbl">Akan</span>
+                  <span class="due-tab-cnt" id="dcUpcoming">0</span>
+                </button>
+                <button class="due-tab" data-due-tab="overdue" onclick="switchDueTab('overdue',this)">
+                  <span class="due-tab-lbl">Overdue</span>
+                  <span class="due-tab-cnt warn" id="dcOverdue">0</span>
+                </button>
+                <button class="due-tab" data-due-tab="eligible" onclick="switchDueTab('eligible',this)">
+                  <span class="due-tab-lbl">Siap Isolir</span>
+                  <span class="due-tab-cnt danger" id="dcEligible">0</span>
+                </button>
+                <button class="due-tab" data-due-tab="isolated" onclick="switchDueTab('isolated',this)">
+                  <span class="due-tab-lbl">Isolir</span>
+                  <span class="due-tab-cnt info" id="dcIsolated">0</span>
+                </button>
+              </div>
+
+              <div class="due-list-wrap">
+                <div class="due-list" id="dueList">
+                  <div class="due-empty">
+                    <div style="font-size:24px;margin-bottom:6px;"></div>
+                    <div>Memuat data...</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bulk action bar -->
+              <div class="due-bulk-bar" id="dueBulkBar" style="display:none;">
+                <div style="font-size:12px;color:var(--d-muted);">
+                  <span id="dueBulkCount">0</span> dipilih
+                </div>
+                <button class="btn-danger btn-sm" onclick="bulkIsolir()" id="dueBulkIsolirBtn" style="display:none;">⛔ Isolir Semua</button>
+                <button class="btn-success btn-sm" onclick="bulkRestore()" id="dueBulkRestoreBtn" style="display:none;">✅ Restore Semua</button>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <!-- ══════ PANE: PELANGGAN (tabel detail) ══════ -->
+      <div class="iso-pane" id="pane-cust" data-pane="cust">
+          <!-- Tabs: Isolated / Eligible / Logs -->
+          <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('isolated',this)">Diisolir</button>
+            <button class="tab-btn" onclick="switchTab('eligible',this)">Semua Pelanggan</button>
+            <button class="tab-btn" onclick="switchTab('logs',this)">Log Aktivitas</button>
+          </div>
+
+          <!-- Isolated tab -->
+          <div id="tab-isolated">
+            <div class="w-card">
+              <div class="w-card-hdr">
+                <div style="font-size:13px;font-weight:700;color:var(--d-text);">Pelanggan Terblokir</div>
+              </div>
+              <div style="overflow-x:auto;" id="isolatedTableWrap">
+                <div class="empty-state">Memuat...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Eligible tab -->
+          <div id="tab-eligible" style="display:none;">
+            <!-- Segmen tipe pelanggan: PPPoE / Hotspot Binding / Static IP -->
+            <div class="ctype-tabs">
+              <button class="ctype-tab active" data-ctype="all" onclick="filterCustomerType('all',this)">
+                <span class="ctype-ico static" style="background:#eef2f9;color:#475569;">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </span>
+                <span class="ctype-meta"><div class="ctype-name">Semua</div><div class="ctype-cnt"><b id="ctAll">0</b> pelanggan</div></span>
+              </button>
+              <button class="ctype-tab" data-ctype="pppoe" onclick="filterCustomerType('pppoe',this)">
+                <span class="ctype-ico pppoe">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/></svg>
+                </span>
+                <span class="ctype-meta"><div class="ctype-name">PPPoE</div><div class="ctype-cnt"><b id="ctPppoe">0</b> pelanggan</div></span>
+              </button>
+              <button class="ctype-tab" data-ctype="hotspot_binding" onclick="filterCustomerType('hotspot_binding',this)">
+                <span class="ctype-ico hotspot">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </span>
+                <span class="ctype-meta"><div class="ctype-name">IP Static Hotspot</div><div class="ctype-cnt"><b id="ctHotspot">0</b> IP Binding</div></span>
+              </button>
+              <button class="ctype-tab" data-ctype="static" onclick="filterCustomerType('static',this)">
+                <span class="ctype-ico static">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"/></svg>
+                </span>
+                <span class="ctype-meta"><div class="ctype-name">Static IP Biasa</div><div class="ctype-cnt"><b id="ctStatic">0</b> pelanggan</div></span>
+              </button>
+            </div>
+
+            <div class="w-card">
+              <div class="w-card-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div style="font-size:13px;font-weight:700;color:var(--d-text);" id="eligibleTitle">Semua Pelanggan Eligible</div>
+                <div style="display:flex;align-items:center;gap:10px;flex:1;justify-content:flex-end;min-width:200px;">
+                  <div style="position:relative;flex:1;max-width:320px;">
+                    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="eligibleSearch" placeholder="Cari nama / CID / IP / PPPoE..." oninput="renderEligible()"
+                      style="width:100%;padding:8px 10px 8px 32px;border:1px solid var(--d-border);border-radius:8px;font-size:12.5px;box-sizing:border-box;font-family:inherit;">
+                  </div>
+                  <div style="font-size:11.5px;color:var(--d-muted);white-space:nowrap;" id="eligibleCount">–</div>
+                </div>
+              </div>
+              <div style="overflow-x:auto;" id="eligibleTableWrap">
+                <div class="empty-state">Memuat...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logs tab -->
+          <div id="tab-logs" style="display:none;">
+            <div class="w-card">
+              <div class="w-card-hdr"><div style="font-size:13px;font-weight:700;color:var(--d-text);">Log Aktivitas</div></div>
+              <div style="overflow-x:auto;" id="logsTableWrap">
+                <div class="empty-state">Memuat...</div>
+              </div>
+            </div>
+          </div>
+      </div>
+      <!-- ══════ PANE: KEBIJAKAN ══════ -->
+      <div class="iso-pane" id="pane-policy" data-pane="policy">
+        <div class="iso-policy-single">
+          <div class="iso-sec-title">Kebijakan Isolir &amp; Suspend</div>
+          <div class="w-card">
+            <div class="w-card-hdr"><div style="font-size:13px;font-weight:700;color:var(--d-text);display:flex;align-items:center;gap:7px;"><span style="font-size:14px;">⚙️</span> Pengaturan Isolir</div></div>
+            <div class="w-card-body">
+              <div class="pf-row2">
+                <div class="pf-field">
+                  <label class="pf-label">Toleransi (hari)</label>
+                  <input type="number" class="pf-input" id="graceDays" min="0" max="30" value="0" placeholder="0">
+                  <div style="font-size:11px;color:var(--d-muted);margin-top:3px;">0 = isolir tepat jatuh tempo</div>
+                </div>
+                <div class="pf-field">
+                  <label class="pf-label">Jam Auto-Isolir</label>
+                  <select class="pf-select" id="isolirAutoHour">
+                    <option value="-1">Setiap jam (begitu lewat grace)</option>
+                    <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option>
+                    <option value="3">03:00</option><option value="4">04:00</option><option value="5">05:00</option>
+                    <option value="6">06:00</option><option value="7">07:00</option><option value="8">08:00</option>
+                    <option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+                    <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option>
+                    <option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option>
+                    <option value="18">18:00</option><option value="19">19:00</option><option value="20">20:00</option>
+                    <option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+                  </select>
+                  <div style="font-size:11px;color:var(--d-muted);margin-top:3px;">Jam (server) proses auto-isolir.</div>
+                </div>
+              </div>
+
+              <label class="toggle-wrap">
+                <input type="checkbox" id="isolirNotifWa"> Notif WA saat isolir &amp; restore
+              </label>
+              <label class="toggle-wrap" style="margin-bottom:12px;">
+                <input type="checkbox" id="isolirAutoEnable"> Auto isolir otomatis (tiap jam)
+              </label>
+
+              <div class="pf-field" style="margin-bottom:10px;">
+                <label class="pf-label">Template Pesan WA Saat Diisolir</label>
+                <textarea class="pf-input" id="isolirWaMessage" rows="3" placeholder="Yth {nama}, layanan internet Anda (ID: {cid}) untuk sementara kami nonaktifkan karena tagihan belum dibayar. Total: {tagihan}. Bayar di: {url}" style="font-family:inherit;resize:vertical;"></textarea>
+                <div style="font-size:10.5px;color:var(--d-muted);margin-top:4px;">Placeholder: <code>{nama}</code> <code>{cid}</code> <code>{tagihan}</code> <code>{url}</code></div>
+              </div>
+
+              <div style="font-size:11px;color:var(--d-muted);line-height:1.5;margin-bottom:12px;">
+                Pengaturan ini <strong>tersinkron</strong> dengan <a href="/settings" style="color:var(--d-blue1);text-decoration:underline;">Settings &rsaquo; Isolir &amp; Suspend</a>.
+              </div>
+
+              <button class="btn-primary btn-full" onclick="saveSettings()">Simpan Settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- FAB: Auto Isolir (mobile only) -->
+    <button class="iso-fab" onclick="runAutoIsolir()" title="Jalankan Auto Isolir" aria-label="Jalankan Auto Isolir">
+      <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Device Modal -->
+<div class="modal-ov" id="deviceModal" onclick="if(event.target===this)closeModal('deviceModal')">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div style="font-size:14px;font-weight:700;color:#0d1b3e;" id="deviceModalTitle">Tambah Router untuk Isolir</div>
+      <button onclick="closeModal('deviceModal')" style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--d-border);background:#f4f8ff;cursor:pointer;font-size:16px;color:var(--d-muted);">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fDevId" value="">
+
+      <!-- Info banner: data router diambil dari /devices -->
+      <div style="padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:11.5px;color:#1e40af;line-height:1.55;margin-bottom:14px;">
+        <strong>Sumber data router:</strong> Daftar di bawah diambil dari halaman
+        <a href="/devices" style="color:#1d4ed8;text-decoration:underline;font-weight:600;">Device Management</a>
+        (type=router, brand=MikroTik, status aktif). Untuk menambah router baru,
+        tambahkan dulu di Device Management, lalu pilih di sini.
+      </div>
+
+      <!-- Device picker -->
+      <div class="pf-field">
+        <label class="pf-label">Device MikroTik <span style="color:#dc2626;">*</span></label>
+        <select class="pf-input" id="fDeviceId" onchange="onDevicePickChange()">
+          <option value="">— Pilih router dari Device Management —</option>
+        </select>
+        <div id="fDeviceHint" style="font-size:11px;color:var(--d-muted);margin-top:5px;">
+          Memuat daftar device...
+        </div>
+      </div>
+
+      <!-- Info detail device terpilih (readonly preview) -->
+      <div id="fDevicePreview" style="display:none;margin-bottom:12px;padding:10px 12px;background:#f8faff;border:1px solid var(--d-border);border-radius:8px;font-size:12px;">
+        <div style="font-weight:700;color:#0d1b3e;margin-bottom:4px;" id="fPrevName">—</div>
+        <div style="color:var(--d-muted);font-family:'DM Mono',monospace;font-size:11px;" id="fPrevHost">—</div>
+        <div style="color:var(--d-muted);font-size:11px;margin-top:2px;" id="fPrevProto">—</div>
+      </div>
+
+      <!-- Field isolir-specific -->
+      <div style="margin:6px 0 4px;padding-top:10px;border-top:1px dashed #dbe6f5;">
+        <div style="font-size:11px;font-weight:700;color:#0d1b3e;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Konfigurasi Isolir</div>
+      </div>
+
+      <div class="pf-row2">
+        <div class="pf-field">
+          <label class="pf-label">WAN Interface</label>
+          <input type="text" class="pf-input" id="fWan" value="ether1" placeholder="ether1">
+        </div>
+        <div class="pf-field">
+          <label class="pf-label">Port API Binary</label>
+          <input type="number" class="pf-input" id="fBinaryPort" value="8728" placeholder="8728 / 8729">
+        </div>
+      </div>
+
+      <div class="pf-field">
+        <label class="pf-label">URL Halaman Isolir</label>
+        <input type="text" class="pf-input" id="fIsolirUrl" placeholder="http://192.168.x.x:3000/p/isolir (kosongkan = pakai global)">
+        <div style="font-size:10.5px;color:var(--d-muted);margin-top:3px;line-height:1.4;">
+          Wajib <strong>HTTP</strong> (bukan HTTPS) dan IP LAN. Kosongkan untuk pakai URL global.
+        </div>
+        <div id="fIsolirUrlWarn" style="display:none;font-size:11px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:6px 8px;margin-top:6px;line-height:1.45;"></div>
+      </div>
+
+      <div class="pf-field">
+        <label class="pf-label">Catatan</label>
+        <input type="text" class="pf-input" id="fNotes" placeholder="Opsional">
+      </div>
+
+      <div style="margin-top:10px;padding:8px 10px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;font-size:11px;color:#854d0e;line-height:1.5;">
+        <strong>ⓘ Mode koneksi:</strong> Otomatis dari <code>api_protocol</code> di /devices.
+        <code>rest-http/https</code> → REST API, <code>api-plain/ssl</code> → Native Binary.
+        Port REST diambil dari <code>api_port</code> di /devices, port binary di sini (default 8728).
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost btn-sm" onclick="closeModal('deviceModal')">Batal</button>
+      <button class="btn-primary btn-sm" onclick="saveDevice()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bypass Per-Router Modal -->
+<div class="modal-ov" id="bypassRouterModal" onclick="if(event.target===this)closeModal('bypassRouterModal')">
+  <div class="modal-box" style="width:520px;">
+    <div class="modal-hdr">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#0d1b3e;">Bypass List per Router</div>
+        <div style="font-size:11.5px;color:var(--d-muted);" id="bypassRouterTitle">—</div>
+      </div>
+      <button onclick="closeModal('bypassRouterModal')" style="width:28px;height:28px;border-radius:7px;border:1.5px solid var(--d-border);background:#f4f8ff;cursor:pointer;font-size:16px;color:var(--d-muted);">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--d-muted);margin-bottom:12px;line-height:1.55;">
+        Bypass khusus router ini (selain bypass global). Saat <strong>Setup Firewall</strong> atau <strong>Sync Bypass</strong>, daftar yang akan di-push = <em>global ∪ router-ini</em>.
+      </div>
+
+      <div id="bypassRouterListWrap" style="margin-bottom:14px;max-height:240px;overflow-y:auto;border:1px solid var(--d-border);border-radius:10px;background:#f8faff;">
+        <div class="empty-state" style="padding:14px;font-size:11.5px;">Memuat...</div>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--d-muted);margin-bottom:7px;">Tambah Bypass Khusus Router</div>
+      <div style="display:flex;gap:6px;align-items:stretch;margin-bottom:14px;">
+        <input type="text" class="pf-input" id="bypassRouterAddr" placeholder="103.10.20.30 atau 103.10.20.0/24" style="flex:1;font-size:12.5px;">
+        <input type="text" class="pf-input" id="bypassRouterLabel" placeholder="Label (opsional)" style="width:140px;font-size:12.5px;">
+        <button class="btn-primary btn-sm" onclick="addBypassRouter()" style="padding:7px 14px;">+ Tambah</button>
+      </div>
+
+      <!-- Preview merged list -->
+      <details style="margin-top:6px;">
+        <summary style="cursor:pointer;font-size:11.5px;color:var(--d-muted);font-weight:600;padding:6px 0;">
+          Lihat preview daftar gabungan (global + router) yang akan di-push
+        </summary>
+        <div id="bypassMergedPreview" style="margin-top:8px;padding:10px;background:#f8faff;border:1px solid var(--d-border);border-radius:8px;font-size:11.5px;font-family:'DM Mono',monospace;max-height:160px;overflow-y:auto;">
+          —
+        </div>
+      </details>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost btn-sm" onclick="closeModal('bypassRouterModal')">Tutup</button>
+      <button class="btn-success btn-sm" onclick="syncBypassToRouter()">↑ Sync ke Router</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/isolir.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'isolated':'#dc2626','withip':'#d97706','devices':'#2563eb','log24':'#0891b2'},IDS={'isolated':'scIsolated','withip':'scWithIP','devices':'scDevices','log24':'scLog24'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(C).forEach(k=>{
+      const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      const p=document.getElementById('xp-'+k);if(p)p.textContent=v;
+    });
+  }
+  window._isoUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',upd);
+})();
+</script>
+</body></html>

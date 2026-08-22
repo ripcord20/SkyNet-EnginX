@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    * { box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --border-light: #e2e8f0;
+      --border-medium: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --accent-blue: #3b82f6;
+      --accent-blue-light: #dbeafe;
+      --accent-green: #10b981;
+      --accent-green-light: #d1fae5;
+      --accent-orange: #f59e0b;
+      --accent-orange-light: #fef3c7;
+      --accent-red: #ef4444;
+      --accent-red-light: #fee2e2;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .resources-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 24px 24px;
+    }
+    
+    /* Page Header */
+    .page-header-modern {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .page-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .page-title-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .page-title-modern {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 0;
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .refresh-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-left: 12px;
+    }
+    
+    .refresh-indicator svg {
+      width: 14px;
+      height: 14px;
+    }
+    
+    /* Grid Layout */
+    .resources-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    @media (max-width: 1100px) {
+      .resources-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Modern Card */
+    .resource-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .resource-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    
+    /* Card Header */
+    .card-header-modern {
+      padding: 24px;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    
+    .card-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .card-icon-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: inherit;
+      opacity: 0.1;
+    }
+    
+    .card-icon-wrapper.router {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+    
+    .card-icon-wrapper.server {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .card-icon-wrapper svg {
+      width: 24px;
+      height: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .card-title-modern {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    
+    .card-subtitle {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    
+    .status-badge.online {
+      background: var(--accent-green-light);
+      color: #065f46;
+    }
+    
+    .status-badge.offline {
+      background: var(--accent-red-light);
+      color: #991b1b;
+    }
+    
+    .status-badge.loading {
+      background: var(--accent-orange-light);
+      color: #92400e;
+    }
+    
+    .status-badge svg {
+      width: 12px;
+      height: 12px;
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Card Body */
+    .card-body-modern {
+      padding: 24px;
+    }
+    
+    /* Info Grid */
+    .info-grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      transition: all 0.2s;
+    }
+    
+    .info-row:hover {
+      background: #e8eef5;
+      transform: translateX(2px);
+    }
+    
+    .info-label-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .info-icon {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+    
+    .info-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+    
+    /* Progress Section */
+    .progress-section {
+      display: grid;
+      gap: 16px;
+    }
+    
+    .progress-card {
+      padding: 18px;
+      background: var(--bg-tertiary);
+      border-radius: 14px;
+      border: 1px solid var(--border-light);
+    }
+    
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .progress-label-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .progress-icon-small {
+      width: 18px;
+      height: 18px;
+      color: var(--text-secondary);
+    }
+    
+    .progress-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .progress-value-group {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    
+    .progress-percent {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      letter-spacing: -0.02em;
+    }
+    
+    .progress-detail {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    /* Progress Bar */
+    .progress-bar-container {
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .progress-bar-fill.low {
+      background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    }
+    
+    .progress-bar-fill.medium {
+      background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .progress-bar-fill.high {
+      background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    /* Error State */
+    .error-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .error-icon-wrapper {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: var(--accent-red-light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .error-icon-wrapper svg {
+      width: 40px;
+      height: 40px;
+      color: var(--accent-red);
+    }
+    
+    .error-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+    
+    .error-message {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    
+    /* Loading State */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 20px;
+      border: 4px solid var(--border-light);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    
+    /* Utility */
+    .text-green { color: #059669; }
+    .text-orange { color: #d97706; }
+    .text-red { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+      <%- include('../partials/topbar') %>
+      <main class="page-content">
+        <div class="resources-container">
+          
+          <!-- Page Header -->
+          <div class="page-header-modern">
+            <div class="page-title-group">
+           
+              <h1 class="page-title-modern">System Resources</h1>
+            </div>
+            <p class="page-subtitle">
+              Real-time monitoring of router and server performance
+              
+            </p>
+          </div>
+
+          <!-- Resources Grid -->
+          <div class="resources-grid">
+            
+            <!-- Router Card -->
+            <div class="resource-card">
+              <div class="card-header-modern">
+                <div class="card-title-group">
+                  <div class="card-icon-wrapper router">
+                    <svg stroke="white" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="card-title-modern">Router Resources</h3>
+                    <p class="card-subtitle">MikroTik RouterOS</p>
+                  </div>
+                </div>
+                <div class="status-badge loading" id="router-status">
+                  <span class="status-dot"></span>
+                  Loading
+                </div>
+              </div>
+              <div class="card-body-modern" id="router-content">
+                <div class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <p class="loading-text">Fetching router data...</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Server Card -->
+            <div class="resource-card">
+              <div class="card-header-modern">
+                <div class="card-title-group">
+                  <div class="card-icon-wrapper server">
+                    <svg stroke="white" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                      <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                      <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="card-title-modern">Server Resources</h3>
+                    <p class="card-subtitle">Node.js Application</p>
+                  </div>
+                </div>
+                <div class="status-badge loading" id="server-status">
+                  <span class="status-dot"></span>
+                  Loading
+                </div>
+              </div>
+              <div class="card-body-modern" id="server-content">
+                <div class="loading-state">
+                  <div class="loading-spinner"></div>
+                  <p class="loading-text">Fetching server data...</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Heroicons SVG templates
+    const icons = {
+      chip: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="6" height="6"></rect><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2"></path></svg>',
+      memory: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>',
+      clock: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
+      cube: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"></path></svg>',
+      tag: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>',
+      server: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect></svg>',
+      code: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>',
+      database: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>',
+      activity: '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>',
+    };
+
+    // Utility functions
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+    }
+
+    function getProgressClass(percent) {
+      if (percent < 60) return 'low';
+      if (percent < 85) return 'medium';
+      return 'high';
+    }
+
+    function getProgressColor(percent) {
+      if (percent < 60) return 'text-green';
+      if (percent < 85) return 'text-orange';
+      return 'text-red';
+    }
+
+    // Fetch resources data
+    async function loadResources() {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (token && token !== 'null') {
+          headers['Authorization'] = 'Bearer ' + token;
+        }
+
+        const res = await fetch('/api/resources/all', {
+          headers,
+          credentials: 'include'
+        });
+        
+        const data = await res.json();
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch resources');
+        }
+
+        renderRouterData(data.data.router);
+        renderServerData(data.data.server);
+      } catch(e) {
+        console.error('[Resources]', e.message);
+        showError('router');
+        showError('server');
+      }
+    }
+
+    function showError(type) {
+      const statusEl = document.getElementById(`${type}-status`);
+      statusEl.innerHTML = '<span class="status-dot"></span> Error';
+      statusEl.className = 'status-badge offline';
+    }
+
+    function renderRouterData(router) {
+      const statusEl = document.getElementById('router-status');
+      const contentEl = document.getElementById('router-content');
+
+      if (router.error) {
+        statusEl.innerHTML = '<span class="status-dot"></span> Offline';
+        statusEl.className = 'status-badge offline';
+        contentEl.innerHTML = `
+          <div class="error-state">
+            <div class="error-icon-wrapper">
+              <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h4 class="error-title">Router Unavailable</h4>
+            <p class="error-message">${router.error}</p>
+          </div>
+        `;
+        return;
+      }
+
+      statusEl.innerHTML = '<span class="status-dot"></span> Online';
+      statusEl.className = 'status-badge online';
+
+      const cpuClass = getProgressClass(router.cpuLoad);
+      const memClass = getProgressClass(router.memoryUsagePercent);
+      const cpuColor = getProgressColor(router.cpuLoad);
+      const memColor = getProgressColor(router.memoryUsagePercent);
+
+      contentEl.innerHTML = `
+        <div class="info-grid">
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.tag}</div>
+              <span class="info-label">Identity</span>
+            </div>
+            <span class="info-value">${router.identity}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.code}</div>
+              <span class="info-label">Version</span>
+            </div>
+            <span class="info-value">${router.version}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.cube}</div>
+              <span class="info-label">Board</span>
+            </div>
+            <span class="info-value">${router.boardName}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.clock}</div>
+              <span class="info-label">Uptime</span>
+            </div>
+            <span class="info-value">${router.uptime}</span>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-card">
+            <div class="progress-header">
+              <div class="progress-label-group">
+                <div class="progress-icon-small">${icons.chip}</div>
+                <span class="progress-label">CPU Load</span>
+              </div>
+              <div class="progress-value-group">
+                <span class="progress-percent ${cpuColor}">${router.cpuLoad}%</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill ${cpuClass}" style="width: ${router.cpuLoad}%"></div>
+            </div>
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-header">
+              <div class="progress-label-group">
+                <div class="progress-icon-small">${icons.database}</div>
+                <span class="progress-label">Memory Usage</span>
+              </div>
+              <div class="progress-value-group">
+                <span class="progress-percent ${memColor}">${router.memoryUsagePercent}%</span>
+                <span class="progress-detail">${formatBytes(router.usedMemory)} / ${formatBytes(router.totalMemory)}</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill ${memClass}" style="width: ${router.memoryUsagePercent}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderServerData(server) {
+      const statusEl = document.getElementById('server-status');
+      const contentEl = document.getElementById('server-content');
+
+      statusEl.innerHTML = '<span class="status-dot"></span> Online';
+      statusEl.className = 'status-badge online';
+
+      const cpuClass = getProgressClass(server.cpuLoadPercent);
+      const memClass = getProgressClass(server.memoryUsagePercent);
+      const cpuColor = getProgressColor(server.cpuLoadPercent);
+      const memColor = getProgressColor(server.memoryUsagePercent);
+
+      contentEl.innerHTML = `
+        <div class="info-grid">
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.server}</div>
+              <span class="info-label">Hostname</span>
+            </div>
+            <span class="info-value">${server.hostname}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.cube}</div>
+              <span class="info-label">Platform</span>
+            </div>
+            <span class="info-value">${server.platform}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.code}</div>
+              <span class="info-label">Node.js</span>
+            </div>
+            <span class="info-value">${server.nodeVersion}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.clock}</div>
+              <span class="info-label">Uptime</span>
+            </div>
+            <span class="info-value">${server.uptime}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.chip}</div>
+              <span class="info-label">CPU Cores</span>
+            </div>
+            <span class="info-value">${server.cpuCount}</span>
+          </div>
+          <div class="info-row">
+            <div class="info-label-group">
+              <div class="info-icon">${icons.activity}</div>
+              <span class="info-label">Load Average</span>
+            </div>
+            <span class="info-value">${server.loadAvg.join(', ')}</span>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-card">
+            <div class="progress-header">
+              <div class="progress-label-group">
+                <div class="progress-icon-small">${icons.chip}</div>
+                <span class="progress-label">CPU Load</span>
+              </div>
+              <div class="progress-value-group">
+                <span class="progress-percent ${cpuColor}">${server.cpuLoadPercent}%</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill ${cpuClass}" style="width: ${Math.min(server.cpuLoadPercent, 100)}%"></div>
+            </div>
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-header">
+              <div class="progress-label-group">
+                <div class="progress-icon-small">${icons.database}</div>
+                <span class="progress-label">Memory Usage</span>
+              </div>
+              <div class="progress-value-group">
+                <span class="progress-percent ${memColor}">${server.memoryUsagePercent}%</span>
+                <span class="progress-detail">${formatBytes(server.usedMemory)} / ${formatBytes(server.totalMemory)}</span>
+              </div>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill ${memClass}" style="width: ${server.memoryUsagePercent}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Auto-refresh every 10 seconds
+    loadResources();
+    setInterval(loadResources, 10000);
+  </script>
+</body>
+</html>

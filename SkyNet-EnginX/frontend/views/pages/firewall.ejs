@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --fw-blue:#2563eb;  --fw-blue-d:#1d4ed8; --fw-blue-l:#eff6ff;
+      --fw-green:#16a34a; --fw-green-d:#15803d; --fw-green-l:#f0fdf4;
+      --fw-red:#dc2626;   --fw-red-d:#b91c1c;   --fw-red-l:#fef2f2;
+      --fw-amber:#d97706; --fw-amber-d:#b45309; --fw-amber-l:#fffbeb;
+      --fw-teal:#0891b2;  --fw-teal-l:#ecfeff;
+      --fw-slate:#475569;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .fw { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .fw-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .fw-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .fw-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .fw-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+
+    /* ── STAT CARDS ── */
+    /* ── STAT CARDS — single strip with dividers ── */
+    .fw-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .fw-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .fw-card:last-child { border-right: none; }
+    .fw-card:hover { background: #fafbff; }
+
+    /* Active — biru solid */
+    .fw-card.fwc-active { background: #2563eb; border-color: #2563eb; }
+    .fw-card.fwc-active:hover { background: #1d4ed8; }
+    .fw-card.fwc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .fw-card.fwc-active .card-val  { color: #fff; }
+    .fw-card.fwc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .fw-card.fwc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .fw-card.fwc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .fw-card.fwc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .fw-card.fwc-active .sp-dot    { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+    /* body */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+    /* meta */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-red    { background:#fee2e2; color:#dc2626; }
+    .pill-amber  { background:#fef3c7; color:#b45309; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .pill-teal   { background:#cffafe; color:#0e7490; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    /* responsive */
+    @media(max-width:700px) {
+      .fw-cards { grid-template-columns:repeat(2,1fr); }
+      .fw-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .fw-card:nth-child(odd)  { border-right: 1px solid #e8eaed; }
+      .fw-card:nth-child(even) { border-right: none; }
+      .fw-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .fw-cards { grid-template-columns:1fr; }
+      .fw-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .fw-card:last-child { border-bottom: none; }
+    }
+
+    /* ── TABS ── */
+    .fw-tabs-wrap { display:flex; gap:4px; margin-bottom:16px; }
+    .fw-tab { padding:8px 20px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid var(--border); background:#fff; color:var(--muted); transition:all .15s; }
+    .fw-tab.active { background:var(--fw-blue); border-color:var(--fw-blue); color:#fff; }
+    .fw-tab:not(.active):hover { background:#f8fafc; border-color:#cbd5e1; }
+
+    /* ── TABLE WRAP ── */
+    .fw-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .fw-tbl-hdr  { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .fw-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .fw-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:200px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--fw-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .fw-tbl-hdr select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .fw-tbl-hdr select:focus { border-color:var(--fw-blue); }
+
+    /* Table */
+    .fw-table { width:100%; border-collapse:collapse; }
+    .fw-table thead tr { background:#f8fafc; }
+    .fw-table th { padding:10px 14px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .fw-table tbody tr { border-bottom:1px solid #f8fafc; transition:background .1s; }
+    .fw-table tbody tr:hover { background:#f8fafc; }
+    .fw-table tbody tr:last-child { border-bottom:none; }
+    .fw-table tbody tr.rule-disabled { opacity:.45; }
+    .fw-table td { padding:10px 14px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell { color:var(--faint); font-size:12px; font-weight:700; }
+
+    /* Chain badge */
+    .chain-badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+    .chain-input   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .chain-forward { background:var(--fw-amber-l); color:var(--fw-amber); border:1px solid #fde68a; }
+    .chain-output  { background:var(--fw-green-l); color:var(--fw-green); border:1px solid #bbf7d0; }
+    .chain-srcnat  { background:var(--fw-teal-l); color:var(--fw-teal); border:1px solid #a5f3fc; }
+    .chain-dstnat  { background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; }
+    .chain-other   { background:#f1f5f9; color:var(--muted); border:1px solid var(--border); }
+
+    /* Action badge */
+    .action-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; white-space:nowrap; }
+    .act-accept    { background:var(--fw-green-l); color:#15803d; border:1px solid #bbf7d0; }
+    .act-drop      { background:var(--fw-red-l);   color:#b91c1c; border:1px solid #fecaca; }
+    .act-reject    { background:var(--fw-amber-l); color:var(--fw-amber); border:1px solid #fde68a; }
+    .act-masquerade{ background:var(--fw-teal-l);  color:var(--fw-teal);  border:1px solid #a5f3fc; }
+    .act-dst-nat,
+    .act-src-nat   { background:var(--fw-blue-l);  color:var(--fw-blue);  border:1px solid #bfdbfe; }
+    .act-other     { background:#f1f5f9; color:var(--muted); border:1px solid var(--border); }
+
+    .mono-cell { font-family:monospace; font-size:11.5px; color:#334155; }
+    .mono-any  { color:var(--faint); font-style:italic; }
+    .comment-cell { font-size:11.5px; color:var(--muted); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .hits-cell { font-size:11px; font-weight:600; color:var(--muted); white-space:nowrap; }
+    .hits-val  { font-size:12px; font-weight:700; color:var(--text); }
+
+    .toggle-btn { padding:4px 10px; border-radius:7px; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; font-family:inherit; }
+    .toggle-enable  { background:#fff; border-color:#bbf7d0; color:#15803d; }
+    .toggle-enable:hover  { background:var(--fw-green-l); }
+    .toggle-disable { background:#fff; border-color:var(--border); color:var(--muted); }
+    .toggle-disable:hover { background:#f8fafc; }
+
+    /* Empty */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    @media(max-width:900px) {
+      .fw-table th:nth-child(4),.fw-table td:nth-child(4),
+      .fw-table th:nth-child(6),.fw-table td:nth-child(6) { display:none; }
+      .search-wrap input { width:150px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout fw">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="fw-hdr">
+        <div class="fw-hdr-l">
+          <h1>
+            Firewall Rules
+          </h1>
+          <p>Monitor dan kelola aturan firewall Mikrotik</p>
+        </div>
+        <div class="fw-hdr-r">
+          <div id="mtSelectorMount"></div>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="fw-cards">
+
+        <div class="fw-card fwc-active" id="fwc-total" data-filter="total" onclick="fwcClick(this)">
+          <div class="card-lbl">Filter Rules</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sfTotal">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="fw-pill-total">— rules</span>
+                <span class="card-sub">Total rule filter</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="fw-card" id="fwc-active" data-filter="active" onclick="fwcClick(this)">
+          <div class="card-lbl">Active</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sfActive">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="fw-pill-active">— rules</span>
+                <span class="card-sub">Rule aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-active" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-active-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-active-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-active-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="fw-card" id="fwc-disabled" data-filter="disabled" onclick="fwcClick(this)">
+          <div class="card-lbl">Disabled</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sfDisabled">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-slate" id="fw-pill-disabled">— rules</span>
+                <span class="card-sub">Rule nonaktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-disabled" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-disabled-fill" d="" fill="#475569" opacity=".12"/>
+                <path class="sp-line" id="sp-disabled-line" d="" stroke="#475569"/>
+                <circle class="sp-dot" id="sp-disabled-dot" r="2.5" fill="#475569"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="fw-card" id="fwc-nat" data-filter="nat" onclick="fwcClick(this)">
+          <div class="card-lbl">NAT Rules</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="sfNat">0</span>
+              <div class="card-meta">
+                <span class="card-pill pill-amber" id="fw-pill-nat">— rules</span>
+                <span class="card-sub">Total rule NAT</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-nat" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-nat-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-nat-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-nat-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tabs -->
+      <div class="fw-tabs-wrap">
+        <button class="fw-tab active" data-tab="filter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Filter Rules
+        </button>
+        <button class="fw-tab" data-tab="nat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:5px"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/></svg>
+          NAT Rules
+        </button>
+      </div>
+
+      <!-- Filter Tab -->
+      <div id="tabFilter">
+        <div class="fw-tbl-wrap">
+          <div class="fw-tbl-hdr">
+            <div class="fw-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fw-blue)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Filter Rules
+              <span class="fw-count" id="filterCount">0 rule</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <div class="search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="filterSearch" placeholder="Cari alamat, port, komentar...">
+              </div>
+              <select id="filterChain">
+                <option value="">All Chains</option>
+                <option value="input">Input</option>
+                <option value="forward">Forward</option>
+                <option value="output">Output</option>
+              </select>
+              <select id="filterAction">
+                <option value="">All Actions</option>
+                <option value="accept">Accept</option>
+                <option value="drop">Drop</option>
+                <option value="reject">Reject</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="fw-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Chain</th>
+                  <th>Action</th>
+                  <th>Protocol</th>
+                  <th>Src → Dst</th>
+                  <th>Port</th>
+                  <th>Komentar</th>
+                  <th>Hits</th>
+                  <th>Toggle</th>
+                </tr>
+              </thead>
+              <tbody id="filterTbody">
+                <tr><td colspan="9">
+                  <div class="tbl-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <p>Memuat rules...</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAT Tab -->
+      <div id="tabNat" style="display:none;">
+        <div class="fw-tbl-wrap">
+          <div class="fw-tbl-hdr">
+            <div class="fw-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fw-blue)" stroke-width="2.5"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21,16 21,21 16,21"/></svg>
+              NAT Rules
+              <span class="fw-count" id="natCount">0 rule</span>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="fw-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Chain</th>
+                  <th>Action</th>
+                  <th>Src</th>
+                  <th>Dst</th>
+                  <th>To Address</th>
+                  <th>To Port</th>
+                  <th>Komentar</th>
+                  <th>Hits</th>
+                </tr>
+              </thead>
+              <tbody id="natTbody">
+                <tr><td colspan="9">
+                  <div class="tbl-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/></svg>
+                    <p>Memuat NAT rules...</p>
+                  </div>
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+<script src="/js/app.js"></script>
+<script src="/js/mikrotik-selector.js"></script>
+<script src="/js/firewall.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={total:[],active:[],disabled:[],nat:[]};
+  const COLORS={total:'#2563eb',active:'#16a34a',disabled:'#475569',nat:'#d97706'};
+  function sparkPath(vals){
+    if(!vals||vals.length<2)return null;
+    const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W,H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1],fp=pts[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function drawSpark(id,vals){
+    const sp=sparkPath(vals); if(!sp)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',sp.fill);
+    if(l)l.setAttribute('d',sp.d);
+    if(d){d.setAttribute('cx',sp.dot[0].toFixed(1));d.setAttribute('cy',sp.dot[1].toFixed(1));}
+  }
+  function readNum(id){const el=document.getElementById(id);return el?parseFloat(el.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function updateAll(){
+    const vals={total:readNum('sfTotal'),active:readNum('sfActive'),disabled:readNum('sfDisabled'),nat:readNum('sfNat')};
+    Object.keys(vals).forEach(k=>{
+      hist[k].push(vals[k]);
+      if(hist[k].length>MAX)hist[k].shift();
+      drawSpark('sp-'+k,hist[k]);
+      const p=document.getElementById('fw-pill-'+k);
+      if(p)p.textContent=vals[k]+' rules';
+    });
+  }
+  window._fwUpdateCards=updateAll;
+  ['sfTotal','sfActive','sfDisabled','sfNat'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)new MutationObserver(()=>setTimeout(updateAll,50)).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+  document.addEventListener('DOMContentLoaded',updateAll);
+})();
+function fwcClick(el){
+  const cards=document.querySelectorAll('.fw-card[data-filter]');
+  const wasActive=el.classList.contains('fwc-active');
+  const COLORS={total:'#2563eb',active:'#16a34a',disabled:'#475569',nat:'#d97706'};
+  cards.forEach(c=>{
+    c.classList.remove('fwc-active');
+    const col=COLORS[c.dataset.filter]||'#64748b';
+    const line=c.querySelector('.sp-line'),fill=c.querySelector('.sp-fill'),dot=c.querySelector('.sp-dot');
+    if(line)line.style.stroke=col;
+    if(fill)fill.style.fill=col;
+    if(dot)dot.style.fill=col;
+  });
+  if(!wasActive){
+    el.classList.add('fwc-active');
+    const line=el.querySelector('.sp-line'),fill=el.querySelector('.sp-fill'),dot=el.querySelector('.sp-dot');
+    if(line)line.style.stroke='rgba(255,255,255,.70)';
+    if(fill)fill.style.fill='rgba(255,255,255,.12)';
+    if(dot)dot.style.fill='#fff';
+    // sync tab filter
+    const filter=el.dataset.filter;
+    if(filter==='nat'){
+      const natTab=document.querySelector('.fw-tab[data-tab="nat"]');
+      if(natTab)natTab.click();
+    } else if(filter==='total'||filter==='active'||filter==='disabled'){
+      const filterTab=document.querySelector('.fw-tab[data-tab="filter"]');
+      if(filterTab)filterTab.click();
+    }
+  }
+}
+</script>
+</body>
+</html>

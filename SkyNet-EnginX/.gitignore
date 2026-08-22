@@ -1,0 +1,47 @@
+# ── Dependencies & build ────────────────────
+node_modules/
+dist/
+.DS_Store
+desktop.ini
+
+# ── Secrets: all env variants ───────────────
+# Covers .env, .env.local, .env.production, and manually-made backups like
+# ".env copy", ".env.bak", ".env.old" that slipped into the repo before.
+.env
+.env.*
+*.env
+.env copy
+.env.bak
+.env.old
+
+# ── Logs ────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ── Runtime uploads & secrets stored as JSON ─
+# The app writes mikrotik_config.json / acs_config.json / olt_config.json to
+# uploads/. They contain plaintext credentials and must never be committed.
+uploads/*.json
+uploads/wa_auth/
+uploads/media/
+
+# Static uploads inside the frontend public dir are runtime data, not source.
+frontend/public/uploads/tickets/
+frontend/public/uploads/workorders/
+frontend/public/uploads/payment/
+frontend/public/uploads/assets/
+frontend/public/uploads/infra/
+
+# ── Developer noise: "copy" duplicates ──────
+# Editors often create "foo - Copy.js" / "foo copy.ejs" as manual backups.
+# These should never reach production; keep them out of the repo.
+**/*[Cc]opy*.js
+**/*[Cc]opy*.ejs
+**/*[Cc]opy*.css
+
+# ── Misc ────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+coverage/

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{--d-bg:#eef2f9;--d-card:#fff;--d-border:#e0e7f3;--d-text:#0d1b3e;--d-muted:#6b7fa8;--d-blue1:#1a6ef5;}
+    .bc-page{font-family:'DM Sans',sans-serif;}
+
+    /* ── Stat Cards ── */
+        /* ── STAT CARDS — single strip ── */
+    .bc-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .bc-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .bc-card::before, .bc-card::after { display:none !important; content:none !important; }
+    .bc-card:last-child { border-right: none; }
+    .bc-card:hover { background: #fafbff; }
+    .bc-card.xc-active { background: #2563eb; border-color: #2563eb; }
+    .bc-card.xc-active:hover { background: #1d4ed8; }
+    .bc-card.xc-active .xc-lbl  { color: rgba(255,255,255,.70); }
+    .bc-card.xc-active .xc-val  { color: #fff; }
+    .bc-card.xc-active .xc-sub  { color: rgba(255,255,255,.60); }
+    .bc-card.xc-active .xc-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .bc-card.xc-active .sp-line { stroke: rgba(255,255,255,.70) !important; }
+    .bc-card.xc-active .sp-fill { fill: rgba(255,255,255,.12) !important; }
+    .bc-card.xc-active .sp-dot  { fill: #fff !important; }
+    .xc-lbl  { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .xc-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .xc-left { display:flex; flex-direction:column; min-width:0; }
+    .xc-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .xc-val { font-size:26px; } }
+    .xc-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .xc-pill { display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .xc-blue   { background:#dbeafe; color:#1d4ed8; }
+    .xc-green  { background:#dcfce7; color:#16a34a; }
+    .xc-red    { background:#fee2e2; color:#dc2626; }
+    .xc-amber  { background:#fef3c7; color:#b45309; }
+    .xc-teal   { background:#cffafe; color:#0e7490; }
+    .xc-orange { background:#ffedd5; color:#c2410c; }
+    .xc-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .xc-spark { flex-shrink:0; width:72px; height:36px; }
+    .xc-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .bc-grid { grid-template-columns:repeat(2,1fr); }
+      .bc-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .bc-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .bc-card:nth-child(even) { border-right:none; }
+      .bc-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .bc-grid { grid-template-columns:1fr; }
+      .bc-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .bc-card:last-child { border-bottom:none; }
+    }
+    .fc-chip{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:rgba(255,255,255,.2);padding:2px 8px;border-radius:20px;display:inline-block;}
+    .fc-val{font-size:28px;font-weight:800;line-height:1;margin:7px 0 3px;font-family:'DM Mono',monospace;}
+    .fc-sub{font-size:11px;color:rgba(255,255,255,.7);}
+    .fc-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .fc-bar{height:3px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:12px;}
+    .fc-bar-f{height:100%;border-radius:99px;background:rgba(255,255,255,.8);transition:width .7s;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    .a1{animation:fadeUp .35s ease both}.a2{animation:fadeUp .35s .07s ease both}
+    .a3{animation:fadeUp .35s .14s ease both}.a4{animation:fadeUp .35s .21s ease both}
+    .a5{animation:fadeUp .35s .28s ease both}
+
+    /* ── Main layout ── */
+    .bc-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+    @media(max-width:960px){.bc-layout{grid-template-columns:1fr;}}
+
+    /* ── Form panel ── */
+    .form-panel{background:#fff;border:1px solid var(--d-border);border-radius:20px;overflow:hidden;position:sticky;top:78px;}
+    @media(max-width:960px){.form-panel{position:static;}}
+    .form-panel-hdr{padding:16px 18px;border-bottom:1px solid var(--d-border);display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#f8faff,#f0f4ff);}
+    .form-panel-body{padding:18px;}
+
+    .pf-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--d-muted);display:block;margin-bottom:5px;}
+    .pf-input,.pf-select{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:13px;box-sizing:border-box;font-family:'DM Sans',sans-serif;outline:none;background:#fff;color:var(--d-text);transition:all .15s;}
+    .pf-input:focus,.pf-select:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-textarea{width:100%;padding:9px 11px;border-radius:9px;border:1.5px solid var(--d-border);font-size:12px;box-sizing:border-box;font-family:'DM Mono',monospace;resize:vertical;min-height:90px;outline:none;line-height:1.7;transition:all .15s;}
+    .pf-textarea:focus{border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.08);}
+    .pf-field{margin-bottom:12px;}
+
+    /* Target tabs */
+    .target-tabs{display:flex;gap:5px;flex-wrap:wrap;}
+    .ttab{padding:5px 11px;border-radius:20px;border:1.5px solid var(--d-border);background:#fff;color:var(--d-muted);font-size:11.5px;font-weight:600;cursor:pointer;transition:all .15s;}
+    .ttab.active{background:var(--d-blue1);border-color:var(--d-blue1);color:#fff;}
+    .ttab:hover:not(.active){border-color:var(--d-blue1);color:var(--d-blue1);}
+
+    /* Target count */
+    .target-count-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#1a6ef5;background:#eff6ff;border:1px solid #bfdbfe;padding:4px 10px;border-radius:8px;margin-top:6px;}
+
+    /* Anti-block box */
+    .anti-block-box{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;}
+
+    /* Submit buttons */
+    .bc-btn{width:100%;padding:10px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;}
+    .bc-btn:hover{opacity:.9;transform:translateY(-1px);}
+    .bc-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+    .bc-btn-green{background:linear-gradient(135deg,#00c896,#00a07a);color:#fff;}
+    .bc-btn-blue {background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;}
+    .bc-btn-ghost{background:#f4f8ff;border:1.5px solid var(--d-border);color:var(--d-blue1);}
+
+    /* ── List panel ── */
+    .list-panel{background:#fff;border:1px solid var(--d-border);border-radius:20px;overflow:hidden;}
+    .list-panel-hdr{padding:14px 18px;border-bottom:1px solid #f0f4ff;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .list-search input{padding:7px 12px 7px 30px;border:1.5px solid var(--d-border);border-radius:9px;font-size:12.5px;outline:none;background:#f8faff;width:180px;transition:all .15s;}
+    .list-search{position:relative;}
+    .list-search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;}
+    .list-search input:focus{border-color:var(--d-blue1);background:#fff;}
+
+    /* Broadcast cards (mobile) + table (desktop) */
+    .bc-cards{display:none;}
+    @media(max-width:700px){.bc-cards{display:block;}.bc-table-wrap{display:none;}}
+
+    /* Table */
+    .bc-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+    .bc-table thead th{padding:9px 14px;font-size:10px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;background:#f8faff;text-align:left;white-space:nowrap;border-bottom:1px solid #f0f4ff;}
+    .bc-table tbody td{padding:11px 14px;border-bottom:1px solid #f8faff;vertical-align:middle;}
+    .bc-table tbody tr:last-child td{border-bottom:none;}
+    .bc-table tbody tr:hover td{background:#f8faff;}
+
+    /* Mobile broadcast card */
+    .bc-item{border-bottom:1px solid #f0f4ff;padding:14px 18px;}
+    .bc-item:last-child{border-bottom:none;}
+
+    /* Status badges */
+    .st{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+    .st::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+    .st-draft    {background:#f1f5f9;color:#64748b;}
+    .st-scheduled{background:#fef3c7;color:#d97706;}
+    .st-running  {background:#dbeafe;color:#2563eb;}
+    .st-completed{background:#dcfce7;color:#16a34a;}
+    .st-cancelled{background:#fee2e2;color:#dc2626;}
+    .st-failed   {background:#fee2e2;color:#dc2626;}
+
+    /* Progress bar */
+    .prog-bar{height:4px;background:#f0f4ff;border-radius:99px;overflow:hidden;min-width:60px;}
+    .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1a6ef5,#00c2f0);}
+
+    /* Action buttons */
+    .act-btn{display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid;transition:all .12s;white-space:nowrap;}
+    .act-send{background:#f0fdf4;border-color:#bbf7d0;color:#16a34a;} .act-send:hover{background:#dcfce7;}
+    .act-stop{background:#fff0f2;border-color:#fecaca;color:#dc2626;} .act-stop:hover{background:#fee2e2;}
+    .act-del {background:#fff0f2;border-color:#fecaca;color:#dc2626;} .act-del:hover{background:#fee2e2;}
+
+    .tbl-empty{padding:40px 20px;text-align:center;color:#94a3b8;}
+    .tbl-empty svg{width:36px;height:36px;margin-bottom:8px;opacity:.35;}
+
+    /* Pagination */
+    .bc-pagination{padding:12px 18px;display:flex;justify-content:center;gap:5px;border-top:1px solid #f0f4ff;}
+    .pg-btn{padding:5px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--d-border);background:#fff;color:var(--d-text);transition:background .12s;}
+    .pg-btn:hover{background:#f4f8ff;}
+    .pg-btn.active{background:var(--d-blue1);border-color:var(--d-blue1);color:#fff;}
+
+    @media(max-width:640px){
+      .fc-val{font-size:22px!important;}
+      .fc-bar{display:none;}
+      .form-panel-body{padding:14px;}
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout bc-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;" class="a1">
+        <div>
+          <h1 style="font-size:21px;font-weight:800;color:#0d1b3e;margin:0 0 3px;">Broadcast Manager</h1>
+          <p style="font-size:12.5px;color:var(--d-muted);margin:0;">Kirim pesan massal ke pelanggan dengan sistem anti-block</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="bc-grid">
+        <div class="bc-card xc-active" id="bcc-total" data-filter="total" onclick="bcCardClick(this)">
+          <div class="xc-lbl">Total</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="fcTotal">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-blue" id="bc-pill-total">—</span>
+                <span class="xc-sub">Semua broadcast</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bc-card" id="bcc-done" data-filter="done" onclick="bcCardClick(this)">
+          <div class="xc-lbl">Selesai</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="fcDone">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-teal" id="bc-pill-done">—</span>
+                <span class="xc-sub">Completed</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-done" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-done-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-done-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-done-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bc-card" id="bcc-sent" data-filter="sent" onclick="bcCardClick(this)">
+          <div class="xc-lbl">Terkirim</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="fcSent">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-green" id="bc-pill-sent">—</span>
+                <span class="xc-sub">Pesan terkirim (total)</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-sent" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-sent-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-sent-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-sent-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="bc-card" id="bcc-failed" data-filter="failed" onclick="bcCardClick(this)">
+          <div class="xc-lbl">Gagal</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="fcFailed">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-red" id="bc-pill-failed">—</span>
+                <span class="xc-sub">Gagal kirim</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-failed" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-failed-fill" d="" fill="#dc2626" opacity=".12"/>
+                <path class="sp-line" id="sp-failed-line" d="" stroke="#dc2626"/>
+                <circle class="sp-dot" id="sp-failed-dot" r="2.5" fill="#dc2626"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        </div>
+
+      <!-- Main layout -->
+      <div class="bc-layout a5">
+
+        <!-- Form Panel -->
+        <div class="form-panel">
+          <div class="form-panel-hdr">
+            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#1a6ef5,#0047cc);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </div>
+            <div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--d-text);">Buat Broadcast</div>
+              <div style="font-size:11px;color:var(--d-muted);">Pesan massal ke pelanggan</div>
+            </div>
+          </div>
+          <div class="form-panel-body">
+
+            <div class="pf-field">
+              <label class="pf-label">Judul *</label>
+              <input type="text" class="pf-input" id="bcTitle" placeholder="Contoh: Promo Bulan Ini">
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label">Template</label>
+              <select class="pf-select" id="bcTemplate" onchange="onTplChange(this.value)">
+                <option value="">— Pilih template (opsional) —</option>
+              </select>
+            </div>
+
+            <div class="pf-field">
+              <label class="pf-label" style="display:flex;justify-content:space-between;">
+                <span>Pesan *</span>
+                <span id="msgCount" style="font-weight:400;color:var(--d-muted);">0 karakter</span>
+              </label>
+              <textarea class="pf-textarea" id="bcMessage" placeholder="Halo {nama},&#10;&#10;Informasi untuk Anda..." oninput="updateMsgCount()"></textarea>
+              <div style="font-size:10.5px;color:var(--d-muted);margin-top:3px;">Variabel: <code>{nama}</code> <code>{cid}</code> <code>{paket}</code> <code>{harga}</code> <code>{phone}</code></div>
+            </div>
+
+            <!-- Target -->
+            <div class="pf-field">
+              <label class="pf-label">Target Penerima</label>
+              <div class="target-tabs" id="targetTabs">
+                <button class="ttab active" onclick="setTarget('all',this)">Semua</button>
+                <button class="ttab" onclick="setTarget('active',this)">Aktif</button>
+                <button class="ttab" onclick="setTarget('overdue',this)">Overdue</button>
+                <button class="ttab" onclick="setTarget('by_package',this)">Per Paket</button>
+                <button class="ttab" onclick="setTarget('custom',this)">Manual</button>
+              </div>
+              <input type="hidden" id="bcTargetType" value="all">
+              <div id="targetCountWrap" style="display:none;margin-top:7px;">
+                <span class="target-count-badge" id="targetCountBadge">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+                  <span id="targetCountNum">0</span> penerima
+                </span>
+              </div>
+              <div id="pkgPanel" style="display:none;margin-top:8px;">
+                <select class="pf-select" id="bcPackage" onchange="updateTargetCount()">
+                  <option value="">Pilih paket</option>
+                </select>
+              </div>
+              <div id="manualPanel" style="display:none;margin-top:8px;">
+                <!-- Sub-tab untuk mode custom: Manual nomor vs Pilih Customer -->
+                <div class="custom-mode-tabs" id="customModeTabs" style="display:flex;gap:0;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:8px;">
+                  <button type="button" class="cmtab active" data-mode="manual" onclick="setCustomMode('manual',this)" style="flex:1;padding:7px 10px;border:none;background:#fff;border-radius:6px;font-size:11.5px;font-weight:600;color:#0d1b3e;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                    Ketik Nomor Manual
+                  </button>
+                  <button type="button" class="cmtab" data-mode="pick" onclick="setCustomMode('pick',this)" style="flex:1;padding:7px 10px;border:none;background:transparent;border-radius:6px;font-size:11.5px;font-weight:500;color:#64748b;cursor:pointer;font-family:inherit;">
+                    Pilih dari Daftar Customer
+                  </button>
+                </div>
+
+                <!-- Mode Manual: textarea nomor (existing) -->
+                <div id="manualModeBox">
+                  <textarea class="pf-textarea" id="bcManual" rows="3" placeholder="628123456789&#10;628987654321&#10;(satu nomor per baris)" style="min-height:70px;" oninput="countManual()"></textarea>
+                  <div style="font-size:11px;color:var(--d-muted);margin-top:3px;" id="manualCount">0 nomor valid</div>
+                </div>
+
+                <!-- Mode Pick: tombol buka modal + summary terpilih (BARU) -->
+                <div id="pickModeBox" style="display:none;">
+                  <button type="button" onclick="openCustomerPicker()" style="width:100%;padding:10px 12px;background:linear-gradient(135deg,#1a6ef5,#0047cc);color:#fff;border:none;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span id="pickerBtnLbl">Buka Daftar Customer</span>
+                  </button>
+                  <div id="pickerSummary" style="margin-top:6px;font-size:11.5px;color:var(--d-muted);"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Anti-block box -->
+            <div class="anti-block-box">
+              <svg width="14" height="14" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <div>
+                <div style="font-size:11.5px;font-weight:700;color:#15803d;">Sistem Anti-Block Aktif</div>
+                <div style="font-size:11px;color:#16a34a;margin-top:1px;">Delay + random jitter antar pesan — hindari rate limit WA</div>
+              </div>
+            </div>
+
+            <!-- Interval + Schedule -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="pf-field" style="margin-bottom:0;">
+                <label class="pf-label">Interval (detik)</label>
+                <input type="number" class="pf-input" id="bcInterval" value="10" min="8" max="300">
+                <div style="font-size:10px;color:var(--d-muted);margin-top:2px;">Min 8 detik</div>
+              </div>
+              <div class="pf-field" style="margin-bottom:0;">
+                <label class="pf-label">Jadwal (opsional)</label>
+                <input type="datetime-local" class="pf-input" id="bcScheduled">
+                <div style="font-size:10px;color:var(--d-muted);margin-top:2px;">Kosong = sekarang</div>
+              </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:7px;margin-top:14px;">
+              <button class="bc-btn bc-btn-green" onclick="createBroadcast('now')" id="btnSendNow">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                Kirim Sekarang
+              </button>
+              <button class="bc-btn bc-btn-blue" onclick="createBroadcast('schedule')" id="btnSchedule">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Jadwalkan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- List Panel -->
+        <div class="list-panel a5">
+          <div class="list-panel-hdr">
+            <div>
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--d-muted);">Riwayat Broadcast</div>
+              <div style="font-size:11.5px;color:var(--d-muted);margin-top:1px;" id="bcListSub">–</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <div class="list-search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="bcSearch" placeholder="Cari judul..." oninput="onSearch()">
+              </div>
+              <select id="filterStatus" style="padding:6px 10px;border:1.5px solid var(--d-border);border-radius:8px;font-size:12px;outline:none;background:#f8faff;cursor:pointer;" onchange="loadBroadcasts()">
+                <option value="">Semua</option>
+                <option value="draft">Draft</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="running">Running</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Desktop table -->
+          <div class="bc-table-wrap" style="overflow-x:auto;">
+            <table class="bc-table">
+              <thead><tr>
+                <th>Judul & Target</th>
+                <th>Progress</th>
+                <th>Interval</th>
+                <th>Jadwal</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr></thead>
+              <tbody id="bcTable">
+                <tr><td colspan="6"><div class="tbl-empty"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg><p>Memuat...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile cards -->
+          <div class="bc-cards" id="bcCards">
+            <div class="tbl-empty"><p>Memuat...</p></div>
+          </div>
+
+          <div class="bc-pagination" id="bcPagination"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     Customer Picker Modal (untuk target_type=custom mode=pick)
+     Slide-up bottom sheet di mobile, centered modal di desktop.
+     Komponen:
+       - Search input (debounced 300ms)
+       - Select all toggle
+       - Counter terpilih / total
+       - List checkbox dengan info nama + CID + phone + paket
+       - Tombol Konfirmasi (apply selection) & Batal
+     ════════════════════════════════════════════════════════════════════ -->
+<div id="customerPickerModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.55);animation:cpFade .15s ease;">
+  <div class="cp-card" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(580px,calc(100vw - 24px));max-height:min(85vh,720px);background:#fff;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.25);display:flex;flex-direction:column;overflow:hidden;font-family:Inter,system-ui,sans-serif;">
+
+    <!-- Header -->
+    <div style="padding:16px 20px;border-bottom:1px solid #eef0f5;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div>
+        <div style="font-size:14.5px;font-weight:700;color:#0d1b3e;">Pilih Customer</div>
+        <div style="font-size:11.5px;color:#64748b;margin-top:2px;">Search & ceklis customer yang akan dikirim broadcast</div>
+      </div>
+      <button type="button" onclick="closeCustomerPicker()" style="background:#f1f5f9;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#64748b;font-size:18px;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+
+    <!-- Search + Select all bar -->
+    <div style="padding:12px 20px;border-bottom:1px solid #eef0f5;background:#fafbfc;">
+      <div style="position:relative;margin-bottom:10px;">
+        <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);" width="14" height="14" fill="none" stroke="#94a3b8" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="cpSearchInput" oninput="cpOnSearch()" placeholder="Cari nama, CID, atau nomor HP..." style="width:100%;padding:9px 12px 9px 34px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;">
+        <label style="display:inline-flex;align-items:center;gap:7px;cursor:pointer;color:#475569;font-weight:500;">
+          <input type="checkbox" id="cpSelectAll" onchange="cpToggleAll(this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:#1a6ef5;">
+          <span>Pilih semua di halaman</span>
+        </label>
+        <div id="cpCountInfo" style="color:#64748b;font-weight:500;">0 dipilih</div>
+      </div>
+    </div>
+
+    <!-- List body (scroll) -->
+    <div id="cpListBody" style="flex:1;overflow-y:auto;padding:4px 0;min-height:200px;">
+      <div style="padding:30px 20px;text-align:center;color:#94a3b8;font-size:12.5px;">Memuat customer…</div>
+    </div>
+
+    <!-- Footer actions -->
+    <div style="padding:14px 20px;border-top:1px solid #eef0f5;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fafbfc;">
+      <div id="cpFooterMeta" style="font-size:11.5px;color:#64748b;">—</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" onclick="closeCustomerPicker()" style="padding:8px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;font-size:12.5px;font-weight:600;color:#475569;cursor:pointer;font-family:inherit;">Batal</button>
+        <button type="button" onclick="cpConfirm()" id="cpConfirmBtn" style="padding:8px 16px;background:linear-gradient(135deg,#1a6ef5,#0047cc);border:none;border-radius:8px;font-size:12.5px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;">Konfirmasi</button>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes cpFade { from { opacity: 0; } to { opacity: 1; } }
+  .cp-item {
+    display:flex; align-items:center; gap:11px;
+    padding:10px 20px; border-bottom:1px solid #f1f5f9;
+    cursor:pointer; transition: background .12s;
+  }
+  .cp-item:hover { background: #f8fafc; }
+  .cp-item.checked { background: #eff6ff; }
+  .cp-item input[type=checkbox] { width:16px; height:16px; cursor:pointer; accent-color:#1a6ef5; flex-shrink:0; }
+  .cp-item-body { flex:1; min-width:0; }
+  .cp-name { font-size:13px; font-weight:600; color:#0d1b3e; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cp-meta { font-size:11px; color:#64748b; margin-top:2px; display:flex; gap:8px; flex-wrap:wrap; }
+  .cp-meta .chip { background:#f1f5f9; padding:1px 7px; border-radius:4px; color:#475569; }
+  .cp-status-dot { width:6px; height:6px; border-radius:50%; }
+  .cp-status-dot.active { background:#10b981; }
+  .cp-status-dot.isolated { background:#f59e0b; }
+  @media (max-width:640px){
+    .cp-card { width: 100vw !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; left: 0 !important; top: 0 !important; transform: none !important; }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/broadcast.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'total':'#2563eb','done':'#0891b2','sent':'#16a34a','failed':'#dc2626'},IDS={'total':'fcTotal','done':'fcDone','sent':'fcSent','failed':'fcFailed'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(C).forEach(k=>{
+      const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      const p=document.getElementById('bc-pill-'+k);if(p)p.textContent=v;
+    });
+  }
+  window._bcUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',upd);
+})();
+function bcCardClick(el){
+  const all=document.querySelectorAll('.bc-card[data-filter]');
+  const C={'total':'#2563eb','done':'#0891b2','sent':'#16a34a','failed':'#dc2626'};
+  all.forEach(c=>{
+    c.classList.remove('xc-active');
+    const col=C[c.dataset.filter]||'#64748b';
+    const l=c.querySelector('.sp-line'),f=c.querySelector('.sp-fill'),d=c.querySelector('.sp-dot');
+    if(l)l.style.stroke=col;if(f)f.style.fill=col;if(d)d.style.fill=col;
+  });
+  el.classList.add('xc-active');
+  const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+  if(l)l.style.stroke='rgba(255,255,255,.70)';
+  if(f)f.style.fill='rgba(255,255,255,.12)';
+  if(d)d.style.fill='#fff';
+  // Sync filterStatus dropdown & reload list
+  const STATUS_MAP = {
+    'total':  '',
+    'done':   'completed',
+    'sent':   '',           // total_sent bukan status - tampilkan semua
+    'failed': 'failed'
+  };
+  const sel = document.getElementById('filterStatus');
+  if(sel){
+    sel.value = STATUS_MAP[el.dataset.filter] ?? '';
+    if(typeof loadBroadcasts === 'function') loadBroadcasts();
+  }
+}
+</script>
+</body></html>

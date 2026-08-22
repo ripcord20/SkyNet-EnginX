@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root{ --el-bg:#eef2f9;--el-card:#fff;--el-border:#e0e7f3;--el-text:#0d1b3e;--el-muted:#6b7fa8;
+      --el-blue:#1f8bff;--el-blue-deep:#1565e0;--el-green:#16a34a;--el-red:#dc2626;--el-amber:#e08a00; }
+    body{background:var(--el-bg);font-family:'DM Sans',sans-serif;}
+    .el-hdr{margin-bottom:18px;}
+    .el-title{font-size:22px;font-weight:800;color:var(--el-text);}
+    .el-sub{font-size:13px;color:var(--el-muted);margin-top:3px;}
+
+    .el-filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+    .el-inp,.el-sel{border:1.5px solid var(--el-border);border-radius:9px;padding:9px 11px;font-family:inherit;font-size:13px;
+      color:var(--el-text);background:#fff;outline:none;transition:all .15s;}
+    .el-inp:focus,.el-sel:focus{border-color:var(--el-blue);box-shadow:0 0 0 3px rgba(31,139,255,.1);}
+    .el-inp.search{min-width:220px;flex:1;max-width:320px;}
+    .el-btn{padding:9px 16px;border-radius:10px;font-size:12.5px;font-weight:700;border:none;cursor:pointer;font-family:inherit;
+      background:linear-gradient(135deg,var(--el-blue),var(--el-blue-deep));color:#fff;display:inline-flex;align-items:center;gap:7px;}
+    .el-btn.ghost{background:#fff;color:var(--el-text);border:1.5px solid var(--el-border);}
+    .el-btn.ghost:hover{border-color:var(--el-red);color:var(--el-red);}
+
+    .el-panel{background:var(--el-card);border:1px solid var(--el-border);border-radius:16px;overflow:hidden;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    thead th{text-align:left;padding:13px 14px;font-size:11px;font-weight:700;color:var(--el-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--el-border);background:#f8fafe;}
+    tbody td{padding:12px 14px;border-bottom:1px solid #f0f4fa;color:var(--el-text);vertical-align:middle;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:hover{background:#fafcff;}
+    .el-recip{font-weight:600;}
+    .el-subj{color:var(--el-muted);font-size:12px;}
+    .el-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;display:inline-block;}
+    .b-sent{background:#e7f7ef;color:#0a8a4f;}
+    .b-failed{background:#fdeaea;color:#c4302b;}
+    .b-retry{background:#fff4e0;color:#a86a00;}
+    .b-pending{background:#eef2f9;color:#6b7fa8;}
+    .el-type{font-size:11px;color:var(--el-muted);font-family:'DM Mono',monospace;}
+    .el-time{font-size:12px;color:var(--el-muted);white-space:nowrap;}
+    .el-retry{padding:5px 11px;border-radius:8px;font-size:11.5px;font-weight:700;border:1.5px solid var(--el-border);background:#fff;color:var(--el-blue);cursor:pointer;font-family:inherit;}
+    .el-retry:hover{border-color:var(--el-blue);background:#f0f7ff;}
+    .el-retry:disabled{opacity:.5;cursor:default;}
+
+    .el-foot{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:#fafcff;border-top:1px solid #f0f4fa;flex-wrap:wrap;gap:10px;}
+    .el-pginfo{font-size:12px;color:var(--el-muted);}
+    .el-pg{display:flex;gap:6px;}
+    .el-pgbtn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--el-border);background:#fff;color:var(--el-text);cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;}
+    .el-pgbtn:disabled{opacity:.4;cursor:default;}
+    .el-empty{text-align:center;color:var(--el-muted);padding:44px;font-size:13px;}
+
+    .el-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;
+      background:#0d1b3e;color:#fff;padding:13px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:10002;
+      transition:all .3s;box-shadow:0 12px 30px rgba(13,27,62,.3);pointer-events:none;max-width:90vw;}
+    .el-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .el-toast.err{background:#b91c1c;}
+    @media(max-width:700px){ .el-subj,.el-type{display:none;} }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar', { active: active }) %>
+  <div class="main-content">
+    <%- include('../partials/topbar', { user: user }) %>
+    <main class="page-content">
+      <div class="el-hdr">
+        <div class="el-title">Riwayat Email</div>
+        <div class="el-sub">Catatan setiap email yang dikirim sistem — status, jenis, dan kegagalan</div>
+      </div>
+
+      <div class="el-filters">
+        <input class="el-inp search" id="q" placeholder="Cari penerima / subjek…" onkeydown="if(event.key==='Enter')applyFilter()">
+        <select class="el-sel" id="status" onchange="applyFilter()">
+          <option value="all">Semua Status</option>
+          <option value="sent">Terkirim</option>
+          <option value="failed">Gagal</option>
+          <option value="retrying">Antri Retry</option>
+        </select>
+        <select class="el-sel" id="type" onchange="applyFilter()">
+          <option value="all">Semua Jenis</option>
+          <option value="finance_report">Laporan Keuangan</option>
+          <option value="daily_digest">Digest Harian</option>
+          <option value="invoice_unpaid">Tagihan Invoice</option>
+          <option value="invoice_paid">Kwitansi Lunas</option>
+          <option value="invoice_overdue">Invoice Overdue</option>
+          <option value="email_broadcast">Broadcast Email</option>
+          <option value="voucher_delivery">Kirim Voucher</option>
+          <option value="isolir">Isolir</option>
+          <option value="backup">Backup MikroTik</option>
+          <option value="customer_welcome">Selamat Datang</option>
+          <option value="test">Email Uji</option>
+          <option value="other">Lainnya</option>
+        </select>
+        <input class="el-inp" type="date" id="from" onchange="applyFilter()">
+        <input class="el-inp" type="date" id="to" onchange="applyFilter()">
+        <button class="el-btn" onclick="applyFilter()">Filter</button>
+        <button class="el-btn ghost" onclick="cleanup()">Bersihkan &gt;90 hari</button>
+      </div>
+
+      <div class="el-panel">
+        <table>
+          <thead><tr>
+            <th>Penerima</th><th>Jenis</th><th>Status</th><th>Waktu</th><th style="text-align:right;">Aksi</th>
+          </tr></thead>
+          <tbody id="rows">
+            <tr><td colspan="5"><div class="el-empty">Memuat…</div></td></tr>
+          </tbody>
+        </table>
+        <div class="el-foot">
+          <div class="el-pginfo" id="pginfo">—</div>
+          <div class="el-pg">
+            <button class="el-pgbtn" id="prev" onclick="goto(state.page-1)">‹</button>
+            <button class="el-pgbtn" id="next" onclick="goto(state.page+1)">›</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="el-toast" id="toast"></div>
+
+<script src="/js/app.js"></script>
+<script>
+  const state={ page:1, limit:25, pages:1 };
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function api(url,opt){ if(window.App&&App.api) return App.api(url,opt);
+    return fetch('/api'+url,Object.assign({headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},credentials:'include'},opt||{})).then(r=>r.json()); }
+  function toast(msg,isErr){ const t=document.getElementById('toast'); t.textContent=msg; t.className='el-toast show'+(isErr?' err':''); setTimeout(()=>t.className='el-toast'+(isErr?' err':''),3000); }
+
+  const TYPE_LBL={ finance_report:'Laporan Keuangan', daily_digest:'Digest Harian', invoice_overdue:'Invoice Overdue',
+    invoice_unpaid:'Tagihan Invoice', invoice_paid:'Kwitansi Lunas', email_broadcast:'Broadcast Email',
+    voucher_delivery:'Kirim Voucher', backup:'Backup MikroTik',
+    customer_welcome:'Selamat Datang', test:'Email Uji', other:'Lainnya', payment:'Pembayaran', isolir:'Isolir', broadcast:'Broadcast' };
+  function badge(st){
+    if(st==='sent') return '<span class="el-badge b-sent">TERKIRIM</span>';
+    if(st==='failed') return '<span class="el-badge b-failed">GAGAL</span>';
+    if(st==='retrying') return '<span class="el-badge b-retry">ANTRI RETRY</span>';
+    return '<span class="el-badge b-pending">'+esc((st||'').toUpperCase())+'</span>';
+  }
+  function fmtTime(s){ if(!s) return '-'; const d=new Date(s); return d.toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+
+  function rowHtml(r){
+    const canRetry=(r.status==='failed'||r.status==='retrying');
+    const action=canRetry
+      ? '<button class="el-retry" onclick="retryOne('+r.id+',this)">Kirim Ulang</button>'
+      : '<span style="color:#cbd5e1;">—</span>';
+    const err=r.error_message?'<div class="el-subj" style="color:#c4302b;">'+esc(r.error_message)+'</div>':'';
+    const retryInfo=(r.retry_count>0)?' · percobaan '+r.retry_count:'';
+    return '<tr>'
+      +'<td><div class="el-recip">'+esc(r.recipient)+'</div><div class="el-subj">'+esc(r.subject||'(tanpa subjek)')+'</div>'+err+'</td>'
+      +'<td><span class="el-type">'+esc(TYPE_LBL[r.type]||r.type||'-')+'</span></td>'
+      +'<td>'+badge(r.status)+'<div class="el-subj" style="font-size:10.5px;">'+(r.has_attachment?'📎 lampiran':'')+retryInfo+'</div></td>'
+      +'<td class="el-time">'+fmtTime(r.sent_at)+'</td>'
+      +'<td style="text-align:right;">'+action+'</td>'
+      +'</tr>';
+  }
+
+  function qs(){
+    const p=new URLSearchParams();
+    p.set('page',state.page); p.set('limit',state.limit);
+    const q=document.getElementById('q').value.trim(); if(q) p.set('q',q);
+    const st=document.getElementById('status').value; if(st&&st!=='all') p.set('status',st);
+    const ty=document.getElementById('type').value; if(ty&&ty!=='all') p.set('type',ty);
+    const fr=document.getElementById('from').value; if(fr) p.set('from',fr);
+    const to=document.getElementById('to').value; if(to) p.set('to',to);
+    return p.toString();
+  }
+
+  async function load(){
+    const tb=document.getElementById('rows');
+    tb.innerHTML='<tr><td colspan="5"><div class="el-empty">Memuat…</div></td></tr>';
+    try{
+      const r=await api('/email-log?'+qs());
+      if(!r||!r.success){ tb.innerHTML='<tr><td colspan="5"><div class="el-empty">Gagal memuat data.</div></td></tr>'; return; }
+      if(!r.data.length){ tb.innerHTML='<tr><td colspan="5"><div class="el-empty">Belum ada email yang tercatat.</div></td></tr>'; }
+      else tb.innerHTML=r.data.map(rowHtml).join('');
+      state.page=r.page; state.pages=r.pages||1;
+      document.getElementById('pginfo').textContent='Halaman '+r.page+' dari '+(r.pages||1)+' · '+r.total+' email';
+      document.getElementById('prev').disabled=(r.page<=1);
+      document.getElementById('next').disabled=(r.page>=(r.pages||1));
+    }catch(e){ tb.innerHTML='<tr><td colspan="5"><div class="el-empty">Kesalahan jaringan.</div></td></tr>'; }
+  }
+  function applyFilter(){ state.page=1; load(); }
+  function goto(p){ if(p<1||p>state.pages) return; state.page=p; load(); }
+
+  async function retryOne(id,btn){
+    btn.disabled=true; const _t=btn.textContent; btn.textContent='Mengirim…';
+    try{
+      const r=await api('/email-log/'+id+'/retry',{method:'POST',body:'{}'});
+      if(r&&r.success){ toast(r.message||'Dikirim ulang'); load(); }
+      else { toast((r&&r.message)||'Gagal kirim ulang',true); btn.disabled=false; btn.textContent=_t; }
+    }catch(e){ toast('Kesalahan jaringan',true); btn.disabled=false; btn.textContent=_t; }
+  }
+
+  async function cleanup(){
+    if(!confirm('Hapus semua log email yang lebih lama dari 90 hari?')) return;
+    try{
+      const r=await api('/email-log/cleanup?days=90',{method:'DELETE'});
+      if(r&&r.success){ toast(r.message||'Log dibersihkan'); load(); }
+      else toast((r&&r.message)||'Gagal membersihkan',true);
+    }catch(e){ toast('Kesalahan jaringan',true); }
+  }
+
+  load();
+</script>
+</body>
+</html>

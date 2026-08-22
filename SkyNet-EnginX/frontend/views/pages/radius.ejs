@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --rd-blue:#2563eb; --rd-blue-l:#eff6ff;
+      --rd-green:#16a34a; --rd-green-l:#f0fdf4;
+      --rd-red:#dc2626; --rd-red-l:#fef2f2;
+      --rd-amber:#d97706; --rd-amber-l:#fffbeb;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .rd { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    .rd-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .rd-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .rd-hdr-l p { font-size:13px; color:var(--muted); margin:0; }
+    .rd-hdr-r { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-primary { background:var(--rd-blue); border-color:var(--rd-blue); color:#fff; }
+    .btn-primary:hover { background:#1d4ed8; }
+    .btn-green { background:var(--rd-green); border-color:var(--rd-green); color:#fff; }
+    .btn-green:hover { background:#15803d; }
+    .btn-red { background:var(--rd-red); border-color:var(--rd-red); color:#fff; }
+    .btn-red:hover { background:#b91c1c; }
+    .btn-sm { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    .status-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+    .status-pill .dot { width:7px; height:7px; border-radius:50%; }
+    .status-on  { background:var(--rd-green-l); color:var(--rd-green); }
+    .status-on .dot { background:var(--rd-green); box-shadow:0 0 0 3px #16a34a22; }
+    .status-off { background:#f1f5f9; color:var(--muted); }
+    .status-off .dot { background:var(--faint); }
+
+    .rd-cards { display:grid; grid-template-columns:repeat(4,1fr); background:#fff; border-radius:16px; border:1px solid #e8eaed; overflow:hidden; margin-bottom:20px; }
+    .rd-card { padding:18px 20px; border-right:1px solid #e8eaed; }
+    .rd-card:last-child { border-right:none; }
+    .rd-card-lbl { font-size:12px; font-weight:500; color:#64748b; margin-bottom:8px; }
+    .rd-card-val { font-size:26px; font-weight:800; color:#0f172a; letter-spacing:-1px; }
+    @media(max-width:900px){ .rd-cards{ grid-template-columns:repeat(2,1fr);} .rd-card:nth-child(2){border-right:none;} }
+
+    .tabs { display:flex; gap:4px; border-bottom:1.5px solid var(--border); margin-bottom:16px; }
+    .tab-btn { padding:10px 16px; font-size:13px; font-weight:600; color:var(--muted); background:none; border:none; border-bottom:2.5px solid transparent; cursor:pointer; font-family:inherit; margin-bottom:-1.5px; }
+    .tab-btn.active { color:var(--rd-blue); border-bottom-color:var(--rd-blue); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    .rd-tbl-wrap { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; margin-bottom:20px; }
+    .rd-tbl-hdr { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .rd-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .rd-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    table.rd-table { width:100%; border-collapse:collapse; }
+    .rd-table thead tr { background:#f8fafc; }
+    .rd-table th { padding:10px 16px; font-size:10.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; text-align:left; border-bottom:1px solid #f1f5f9; white-space:nowrap; }
+    .rd-table tbody tr { border-bottom:1px solid #f8fafc; }
+    .rd-table tbody tr:hover { background:#f8fafc; }
+    .rd-table tbody tr:last-child { border-bottom:none; }
+    .rd-table td { padding:11px 16px; font-size:13px; color:#374151; vertical-align:middle; }
+    .mono { font-family:monospace; font-size:12px; }
+    .badge { display:inline-flex; align-items:center; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .badge-blue  { background:var(--rd-blue-l); color:var(--rd-blue); }
+    .badge-green { background:var(--rd-green-l); color:var(--rd-green); }
+    .badge-gray  { background:#f1f5f9; color:var(--muted); }
+    .row-actions { display:flex; gap:6px; }
+    .icon-btn { width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1.5px solid var(--border); background:#fff; cursor:pointer; color:#64748b; }
+    .icon-btn:hover { background:#f8fafc; color:#0f172a; }
+    .icon-btn svg { width:14px; height:14px; }
+    .icon-btn.danger:hover { background:var(--rd-red-l); color:var(--rd-red); border-color:#fecaca; }
+
+    .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
+    .tbl-empty svg { width:34px; height:34px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    .toggle { position:relative; display:inline-block; width:36px; height:20px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .toggle-track { position:absolute; inset:0; background:#cbd5e1; border-radius:20px; cursor:pointer; transition:.15s; }
+    .toggle-track:before { content:''; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; }
+    .toggle input:checked + .toggle-track { background:var(--rd-green); }
+    .toggle input:checked + .toggle-track:before { transform:translateX(16px); }
+
+    /* Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1000; align-items:center; justify-content:center; padding:20px; }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+    .modal-hdr { padding:18px 22px; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; }
+    .modal-hdr h3 { margin:0; font-size:15px; font-weight:700; }
+    .modal-close { cursor:pointer; color:var(--faint); background:none; border:none; padding:4px; }
+    .modal-body { padding:20px 22px; display:flex; flex-direction:column; gap:14px; }
+    .modal-ftr { padding:16px 22px; border-top:1px solid #f1f5f9; display:flex; justify-content:flex-end; gap:8px; }
+    .field label { display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:5px; }
+    .field input, .field select, .field textarea {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; font-family:inherit; outline:none; background:#f8fafc; color:var(--text);
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--rd-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .field-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .modal-box.wide { max-width:560px; }
+
+    /* ── NAS grouped cards ── */
+    .site-group { margin-bottom:20px; }
+    .site-group-hdr { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:13px; font-weight:700; color:var(--text); }
+    .site-group-count { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+    .nas-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; }
+    .nas-card { background:#fff; border:1.5px solid var(--border); border-radius:14px; padding:16px 18px; }
+    .nas-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; gap:8px; }
+    .nas-card-name { font-size:14px; font-weight:800; color:var(--text); }
+    .nas-card-sub { font-size:11.5px; color:var(--faint); margin-top:2px; }
+    .nas-card-body { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#475569; margin:10px 0; }
+    .nas-card-body .row { display:flex; justify-content:space-between; gap:8px; }
+    .nas-card-body .row b { color:var(--text); font-family:monospace; font-weight:600; }
+    .nas-card-ftr { display:flex; gap:8px; margin-top:12px; align-items:center; }
+    .mode-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:10.5px; font-weight:700; }
+    .mode-wireguard { background:#f5f3ff; color:#7c3aed; }
+    .mode-direct { background:var(--rd-blue-l); color:var(--rd-blue); }
+
+    .result-qr { text-align:center; padding:10px 0; }
+    .result-qr img { width:200px; height:200px; border:1.5px solid var(--border); border-radius:12px; padding:8px; }
+    .result-conf { background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px; font-family:monospace; font-size:11.5px; white-space:pre-wrap; word-break:break-all; max-height:180px; overflow-y:auto; }
+    .detail-row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid #f8fafc; font-size:13px; }
+    .detail-row span:first-child { color:var(--muted); }
+    .detail-row span:last-child { font-family:monospace; font-weight:600; color:var(--text); text-align:right; }
+    .reveal-secret { display:inline-flex; align-items:center; gap:6px; }
+    .reveal-secret button { background:none; border:none; cursor:pointer; color:var(--rd-blue); padding:0; }
+  </style>
+</head>
+<body>
+<div class="app-layout rd">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div class="rd-hdr">
+        <div class="rd-hdr-l">
+          <h1>RADIUS Server</h1>
+          <p>AAA terpusat untuk autentikasi PPPoE/Hotspot lewat RADIUS (RFC 2865/2866)</p>
+        </div>
+        <div class="rd-hdr-r">
+          <span class="status-pill status-off" id="serverStatusPill"><span class="dot"></span><span id="serverStatusText">Memuat...</span></span>
+          <button class="btn btn-green btn-sm" id="btnServerStart" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Start Server
+          </button>
+          <button class="btn btn-red btn-sm" id="btnServerStop" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+            Stop Server
+          </button>
+          <button class="btn btn-outline btn-sm" id="btnRefresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="rd-cards">
+        <div class="rd-card"><div class="rd-card-lbl">NAS Clients Aktif</div><div class="rd-card-val" id="statNas">—</div></div>
+        <div class="rd-card"><div class="rd-card-lbl">RADIUS Users Aktif</div><div class="rd-card-val" id="statUsers">—</div></div>
+        <div class="rd-card"><div class="rd-card-lbl">Sesi Berjalan</div><div class="rd-card-val" id="statSessions">—</div></div>
+        <div class="rd-card"><div class="rd-card-lbl">Access-Accept / Reject</div><div class="rd-card-val" style="font-size:20px"><span id="statAccept" style="color:var(--rd-green)">—</span> / <span id="statReject" style="color:var(--rd-red)">—</span></div></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="nas">NAS Clients</button>
+        <button class="tab-btn" data-tab="users">RADIUS Users</button>
+        <button class="tab-btn" data-tab="sessions">Sesi Aktif</button>
+      </div>
+
+      <!-- NAS CLIENTS -->
+      <div class="tab-panel active" id="panel-nas">
+        <div class="rd-hdr" style="margin-bottom:14px">
+          <div class="rd-hdr-l">
+            <span class="rd-count" id="nasCount">0 NAS</span>
+          </div>
+          <div class="rd-hdr-r">
+            <button class="btn btn-outline btn-sm" id="btnAddNasDirect">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              NAS — IP Manual
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnAddNasWireguard">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              NAS via WireGuard
+            </button>
+          </div>
+        </div>
+        <div id="nasGroups"><div class="tbl-empty"><p>Memuat...</p></div></div>
+        <p style="font-size:12px;color:var(--faint)">
+          <b>IP Manual</b>: router harus punya IP publik/reachable — isi manual di router: <code>/radius add service=ppp,hotspot address=&lt;IP-server-ini&gt; secret=&lt;secret&gt;</code>.
+          &nbsp;·&nbsp; <b>via WireGuard</b>: router tidak perlu IP publik sama sekali — connect lewat tunnel, IP &amp; secret RADIUS otomatis.
+        </p>
+      </div>
+
+      <!-- RADIUS USERS -->
+      <div class="tab-panel" id="panel-users">
+        <div class="rd-tbl-wrap">
+          <div class="rd-tbl-hdr">
+            <div class="rd-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rd-blue)" stroke-width="2.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              RADIUS Users <span class="rd-count" id="usersCount">0</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="searchUsers" placeholder="Cari username..." style="padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;background:#f8fafc;font-family:inherit;width:180px;">
+              <button class="btn btn-primary btn-sm" id="btnAddUser">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Tambah User
+              </button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rd-table">
+              <thead><tr><th>Username</th><th>Pelanggan</th><th>Rate Limit</th><th>Login Terakhir</th><th>Status</th><th style="text-align:right">Aksi</th></tr></thead>
+              <tbody id="usersTbody"><tr><td colspan="6"><div class="tbl-empty"><p>Memuat...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div class="tab-panel" id="panel-sessions">
+        <div class="rd-tbl-wrap">
+          <div class="rd-tbl-hdr">
+            <div class="rd-tbl-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--rd-blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Sesi Accounting <span class="rd-count" id="sessionsCount">0</span>
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+              <input type="checkbox" id="activeOnlyToggle" checked> Hanya yang aktif
+            </label>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rd-table">
+              <thead><tr><th>Username</th><th>NAS</th><th>Framed IP</th><th>Mulai</th><th>Durasi</th><th>Upload</th><th>Download</th></tr></thead>
+              <tbody id="sessionsTbody"><tr><td colspan="7"><div class="tbl-empty"><p>Memuat...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal: NAS Client (mode IP Manual) -->
+<div class="modal-overlay" id="nasModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="nasModalTitle">Tambah NAS — IP Manual</h3><button class="modal-close" onclick="closeModal('nasModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="nasId">
+      <div class="field"><label>Nama</label><input type="text" id="nasName" placeholder="Router Inti - Kantor Pusat"></div>
+      <div class="field"><label>IP Address NAS</label><input type="text" id="nasIp" placeholder="10.0.0.1" class="mono"><div class="field-hint">IP sumber paket RADIUS dari router ini (harus reachable dari server ini)</div></div>
+      <div class="field"><label>Shared Secret</label><input type="text" id="nasSecret" placeholder="Kosongkan saat edit = tidak diubah" class="mono"></div>
+      <div class="field-row">
+        <div class="field"><label>Tipe</label>
+          <select id="nasType"><option value="mikrotik">MikroTik</option><option value="other">Lainnya</option></select>
+        </div>
+        <div class="field"><label>Lokasi/Site (opsional)</label><input type="text" id="nasSite" placeholder="mis. Kampung Mandar"></div>
+      </div>
+      <div class="field"><label>Link ke Device (opsional)</label><select id="nasDeviceId"><option value="">— Tidak ada —</option></select></div>
+      <div class="field"><label>Deskripsi</label><input type="text" id="nasDesc" placeholder="Opsional"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveNas">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: NAS via WireGuard -->
+<div class="modal-overlay" id="nasWgModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>NAS via WireGuard</h3><button class="modal-close" onclick="closeModal('nasWgModal')">&times;</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nama</label><input type="text" id="nasWgName" placeholder="Router Cabang - Kampung Mandar"></div>
+      <div class="field"><label>Interface WireGuard</label><select id="nasWgServerId"></select><div class="field-hint">Kalau belum ada interface, buat dulu di menu WireGuard VPN</div></div>
+      <div class="field-row">
+        <div class="field"><label>Lokasi/Site (opsional)</label><input type="text" id="nasWgSite" placeholder="mis. Kampung Mandar"></div>
+        <div class="field"><label>Link ke Device (opsional)</label><select id="nasWgDeviceId"><option value="">— Tidak ada —</option></select></div>
+      </div>
+      <div class="field"><label>Deskripsi</label><input type="text" id="nasWgDesc" placeholder="Opsional"></div>
+      <div class="field-hint">IP tunnel &amp; secret RADIUS akan digenerate otomatis. Setelah dibuat, config WireGuard (QR/file) untuk router akan langsung ditampilkan.</div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasWgModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveNasWg">Buat NAS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: NAS Detail -->
+<div class="modal-overlay" id="nasDetailModal">
+  <div class="modal-box wide">
+    <div class="modal-hdr"><h3 id="nasDetailTitle">Detail NAS</h3><button class="modal-close" onclick="closeModal('nasDetailModal')">&times;</button></div>
+    <div class="modal-body" id="nasDetailBody">
+      <div class="tbl-empty"><p>Memuat...</p></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('nasDetailModal')">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tambah Port Forward -->
+<div class="modal-overlay" id="pfModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3>Tambah Port Forward</h3><button class="modal-close" onclick="closeModal('pfModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pfNasId">
+      <div class="field-row">
+        <div class="field"><label>Port Publik</label><input type="text" id="pfPublicPort" placeholder="8291"></div>
+        <div class="field"><label>Port Tujuan (di router)</label><input type="text" id="pfTargetPort" placeholder="8291"></div>
+      </div>
+      <div class="field"><label>Protokol</label>
+        <select id="pfProtocol"><option value="tcp">TCP</option><option value="udp">UDP</option></select>
+      </div>
+      <div class="field"><label>Keterangan</label><input type="text" id="pfDesc" placeholder="mis. Winbox"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('pfModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSavePf">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: RADIUS User -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="userModalTitle">Tambah RADIUS User</h3><button class="modal-close" onclick="closeModal('userModal')">&times;</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="userId">
+      <div class="field"><label>Username</label><input type="text" id="userUsername" placeholder="cust0001"></div>
+      <div class="field"><label>Password</label><input type="text" id="userPassword" placeholder="Kosongkan saat edit = tidak diubah" class="mono"></div>
+      <div class="field"><label>Link ke Pelanggan (opsional)</label><input type="text" id="userCustomerId" placeholder="Customer ID (angka)"></div>
+      <div class="field-row">
+        <div class="field"><label>Rate Limit (Mikrotik-Rate-Limit)</label><input type="text" id="userRateLimit" placeholder="5M/2M"></div>
+        <div class="field"><label>Framed IP (opsional)</label><input type="text" id="userFramedIp" placeholder="10.10.0.5" class="mono"></div>
+      </div>
+      <div class="field"><label>Catatan</label><textarea id="userNotes" rows="2" placeholder="Opsional"></textarea></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('userModal')">Batal</button>
+      <button class="btn btn-primary btn-sm" id="btnSaveUser">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/radius.js"></script>
+</body>
+</html>

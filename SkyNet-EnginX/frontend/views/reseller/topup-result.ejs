@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a8f80">
+  <title>Status Top-up</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:#f4f7fb;color:#0f1b34;min-height:100dvh;
+      display:flex;align-items:center;justify-content:center;padding:24px;}
+    .card{background:#fff;border:1px solid #eef1f7;border-radius:24px;padding:34px 26px;max-width:420px;
+      width:100%;text-align:center;box-shadow:0 18px 44px rgba(20,40,90,.08);}
+    .ic{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+      margin:0 auto 20px;background:#fef6e0;color:#a9760a;}
+    .ic.ok{background:#e7f7ef;color:#0a9a5a;}
+    .ic.wait{background:#eaf1ff;color:#2456d6;}
+    h1{font-size:21px;font-weight:800;letter-spacing:-.4px;}
+    p{font-size:14px;color:#8a95ad;margin-top:8px;line-height:1.5;}
+    .amt{font-family:'DM Mono',monospace;font-weight:800;font-size:26px;letter-spacing:-.5px;margin:16px 0;color:#0a8f80;}
+    .btn{display:block;width:100%;padding:14px;border:none;border-radius:14px;font-family:inherit;font-size:15px;
+      font-weight:800;cursor:pointer;margin-top:22px;text-decoration:none;}
+    .btn-teal{background:linear-gradient(135deg,#0fb6a3,#0a8f80);color:#fff;box-shadow:0 10px 24px rgba(13,150,140,.3);}
+    .spin{width:40px;height:40px;border:3.5px solid #dfe5ef;border-top-color:#0a8f80;border-radius:50%;
+      animation:spin .8s linear infinite;margin:0 auto;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .ref{font-family:'DM Mono',monospace;font-size:11.5px;color:#b3bccf;margin-top:14px;}
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="ic wait"><div class="spin"></div></div>
+    <h1 id="title">Memeriksa Pembayaran…</h1>
+    <p id="sub">Mohon tunggu, kami sedang mengonfirmasi pembayaran Anda.</p>
+    <div class="ref" id="refLine"></div>
+  </div>
+
+<script>
+  const TOKEN = localStorage.getItem('reseller_token');
+  const REF = "<%= ref %>";
+  const fmtRp = n => 'Rp '+Number(n||0).toLocaleString('id-ID');
+  document.getElementById('refLine').textContent = REF ? ('Ref: '+REF) : '';
+
+  // Resolve topup id dari ref RTOP-{id}-{ts}
+  const m = String(REF).match(/^RTOP-(\d+)-\d+$/);
+  const ID = m ? m[1] : null;
+
+  function render(state, data){
+    const card=document.getElementById('card');
+    if(state==='paid'){
+      card.innerHTML = `<div class="ic ok"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h1>Top-up Berhasil</h1><div class="amt">${fmtRp(data.amount)}</div>
+        <p>Saldo Anda sekarang <b>${fmtRp(data.balance)}</b>.</p>
+        <a class="btn btn-teal" href="/reseller/dashboard">Kembali ke Dashboard</a>`;
+    } else if(state==='failed'){
+      card.innerHTML = `<div class="ic" style="background:#fdeaea;color:#c0392f"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>
+        <h1>Pembayaran Belum Selesai</h1>
+        <p>Pembayaran belum terkonfirmasi atau dibatalkan. Jika sudah membayar, saldo akan masuk otomatis dalam beberapa menit.</p>
+        <a class="btn btn-teal" href="/reseller/dashboard">Kembali ke Dashboard</a>`;
+    }
+  }
+
+  let tries=0;
+  async function poll(){
+    if(!TOKEN || !ID){ render('failed'); return; }
+    tries++;
+    try{
+      const r = await fetch('/reseller/api/topup/'+ID+'/status',{headers:{'Authorization':'Bearer '+TOKEN,'X-Requested-With':'XMLHttpRequest'}});
+      const j = await r.json();
+      if(j.success && j.data.status==='paid'){ render('paid', j.data); return; }
+      if(j.success && (j.data.status==='expired'||j.data.status==='rejected')){ render('failed'); return; }
+    }catch(e){}
+    if(tries>=24){ render('failed'); return; } // ~2 menit
+    setTimeout(poll, 5000);
+  }
+  poll();
+</script>
+</body>
+</html>

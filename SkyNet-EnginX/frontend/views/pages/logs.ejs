@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="app-layout">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- ── Header ─────────────────────────────────────────── -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h1>Activity Logs</h1>
+        </div>
+      </div>
+
+      <!-- ── Filter bar ─────────────────────────────────────── -->
+      <div class="lg-card lg-filters">
+        <div class="lg-filter-grid">
+          <div class="lg-field">
+            <label>Module</label>
+            <select id="logModule" class="lg-input">
+              <option value="">Semua Module</option>
+              <option value="auth">Auth (login/logout)</option>
+              <option value="customer">Customer</option>
+              <option value="device">Device / MikroTik</option>
+              <option value="infrastructure">Infrastructure</option>
+              <option value="package">Package</option>
+              <option value="payment">Payment</option>
+              <option value="invoice">Invoice</option>
+              <option value="user">User</option>
+              <option value="role">Role</option>
+              <option value="asset">Asset</option>
+              <option value="broadcast">Broadcast WA</option>
+              <option value="push_notif">Push Notification</option>
+              <option value="ont">ONT</option>
+              <option value="customer_portal_password">Portal Customer</option>
+            </select>
+          </div>
+
+          <div class="lg-field">
+            <label>Action</label>
+            <select id="logAction" class="lg-input">
+              <option value="">Semua Aksi</option>
+              <option value="create">Create</option>
+              <option value="update">Update</option>
+              <option value="delete">Delete</option>
+              <option value="login">Login</option>
+              <option value="logout">Logout</option>
+              <option value="import">Import</option>
+              <option value="generate">Generate</option>
+              <option value="reset">Reset</option>
+              <option value="sync">Sync</option>
+              <option value="reboot">Reboot</option>
+              <option value="assign">Assign</option>
+              <option value="unassign">Unassign</option>
+            </select>
+          </div>
+
+          <div class="lg-field">
+            <label>Dari</label>
+            <input type="date" id="logFrom" class="lg-input">
+          </div>
+
+          <div class="lg-field">
+            <label>Sampai</label>
+            <input type="date" id="logTo" class="lg-input">
+          </div>
+
+          <div class="lg-field lg-field-actions">
+            <button type="button" class="lg-btn lg-btn-primary" id="logApply">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Terapkan
+            </button>
+            <button type="button" class="lg-btn lg-btn-ghost" id="logReset">Reset</button>
+            <button type="button" class="lg-btn lg-btn-ghost" id="logRefresh" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Table ──────────────────────────────────────────── -->
+      <div class="lg-card">
+        <div class="lg-card-head">
+          <span class="lg-stat" id="logTotalStat">— log entries</span>
+          <span class="lg-stat-sub" id="logRangeStat"></span>
+        </div>
+
+        <div class="lg-table-wrap">
+          <table class="lg-table">
+            <thead>
+              <tr>
+                <th style="width:160px;">Time</th>
+                <th style="width:160px;">User</th>
+                <th style="width:110px;">Action</th>
+                <th style="width:140px;">Module</th>
+                <th>Description</th>
+                <th style="width:120px;">IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="logTable">
+              <tr><td colspan="6" class="lg-loading">Memuat data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="lg-pagination" id="logPagination"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<style>
+  :root {
+    --lg-blue:        #1d4ed8;
+    --lg-blue-d:      #1e3a8a;
+    --lg-blue-l:      #dbeafe;
+    --lg-blue-lighter:#eff6ff;
+    --lg-success:     #16a34a;
+    --lg-success-l:   #dcfce7;
+    --lg-warn:        #d97706;
+    --lg-warn-l:      #fef3c7;
+    --lg-danger:      #dc2626;
+    --lg-danger-l:    #fee2e2;
+    --lg-info:        #0891b2;
+    --lg-info-l:      #cffafe;
+    --lg-gray-50:     #f8fafc;
+    --lg-gray-100:    #f1f5f9;
+    --lg-gray-200:    #e2e8f0;
+    --lg-gray-400:    #94a3b8;
+    --lg-gray-600:    #475569;
+    --lg-gray-800:    #1e293b;
+  }
+  .page-content { padding:24px 28px; font-family:'DM Sans', system-ui, sans-serif; }
+  .page-header h1 { font-size:24px; font-weight:700; color:var(--lg-gray-800); margin:0; }
+  .lg-subtitle { font-size:13px; color:var(--lg-gray-600); margin:4px 0 0; }
+
+  /* Card */
+  .lg-card {
+    background:#fff; border:1px solid var(--lg-gray-200); border-radius:12px;
+    margin-top:16px; overflow:hidden;
+  }
+  .lg-card-head {
+    display:flex; align-items:center; gap:12px;
+    padding:14px 18px; border-bottom:1px solid var(--lg-gray-100);
+  }
+  .lg-stat { font-size:13px; font-weight:600; color:var(--lg-gray-800); }
+  .lg-stat-sub { font-size:11.5px; color:var(--lg-gray-600); margin-left:auto; }
+
+  /* Filter grid — responsive */
+  .lg-filters .lg-filter-grid {
+    display:grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr auto;
+    gap:12px;
+    padding:16px 18px;
+  }
+  @media (max-width: 900px) {
+    .lg-filters .lg-filter-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .lg-field-actions { grid-column: 1 / -1; }
+  }
+  @media (max-width: 500px) {
+    .lg-filters .lg-filter-grid { grid-template-columns: 1fr; }
+  }
+  .lg-field label {
+    display:block; font-size:10.5px; font-weight:700; color:var(--lg-gray-600);
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px;
+  }
+  .lg-input {
+    width:100%; box-sizing:border-box;
+    padding:9px 11px; border:1.5px solid var(--lg-gray-200); border-radius:8px;
+    font-family:inherit; font-size:13px; color:var(--lg-gray-800); background:#fff;
+    transition:border-color .15s, box-shadow .15s; outline:none;
+  }
+  .lg-input:focus {
+    border-color:var(--lg-blue);
+    box-shadow:0 0 0 3px rgba(29,78,216,.1);
+  }
+  .lg-field-actions {
+    display:flex; align-items:flex-end; gap:8px;
+  }
+  .lg-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:9px 14px; border-radius:8px; font-family:inherit;
+    font-size:12.5px; font-weight:600; cursor:pointer;
+    border:1.5px solid transparent; transition:all .15s;
+    white-space:nowrap;
+  }
+  .lg-btn-primary {
+    background:var(--lg-blue); color:#fff; border-color:var(--lg-blue);
+  }
+  .lg-btn-primary:hover { background:var(--lg-blue-d); border-color:var(--lg-blue-d); }
+  .lg-btn-ghost {
+    background:#fff; color:var(--lg-gray-800); border-color:var(--lg-gray-200);
+  }
+  .lg-btn-ghost:hover { background:var(--lg-gray-50); border-color:var(--lg-gray-400); }
+
+  /* Table */
+  .lg-table-wrap { overflow-x:auto; }
+  .lg-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .lg-table thead th {
+    background:var(--lg-gray-50); padding:11px 14px; text-align:left;
+    font-weight:700; color:var(--lg-gray-600); text-transform:uppercase;
+    font-size:10.5px; letter-spacing:.4px;
+    border-bottom:1.5px solid var(--lg-gray-200);
+    white-space:nowrap;
+  }
+  .lg-table tbody td {
+    padding:12px 14px; border-bottom:1px solid var(--lg-gray-100);
+    vertical-align:top;
+  }
+  .lg-table tbody tr:hover { background:var(--lg-gray-50); }
+  .lg-table tbody tr:last-child td { border-bottom:none; }
+  .lg-row-clickable { cursor:pointer; transition:background .12s; }
+  .lg-row-clickable:hover { background:var(--lg-blue-lighter) !important; }
+  .lg-row-clickable td { position:relative; }
+  .lg-row-clickable:hover::after {
+    content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+    background:var(--lg-blue); pointer-events:none;
+  }
+
+  .lg-time-main { font-weight:600; color:var(--lg-gray-800); white-space:nowrap; }
+  .lg-time-sub  { font-size:11px; color:var(--lg-gray-400); margin-top:2px; }
+  .lg-user-name { font-weight:600; color:var(--lg-gray-800); }
+  .lg-user-email { font-size:11px; color:var(--lg-gray-400); margin-top:2px; }
+  .lg-user-none { color:var(--lg-gray-400); font-style:italic; font-size:12px; }
+  .lg-ip { font-family:'DM Mono', 'Monaco', monospace; font-size:11.5px; color:var(--lg-gray-600); }
+  .lg-desc { color:var(--lg-gray-800); }
+
+  /* Action & module badges */
+  .lg-badge {
+    display:inline-block; padding:3px 9px; border-radius:11px;
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px;
+    white-space:nowrap;
+  }
+  .lg-badge-create { background:var(--lg-success-l); color:var(--lg-success); }
+  .lg-badge-update { background:var(--lg-blue-l); color:var(--lg-blue); }
+  .lg-badge-delete { background:var(--lg-danger-l); color:var(--lg-danger); }
+  .lg-badge-login,
+  .lg-badge-logout { background:var(--lg-info-l); color:var(--lg-info); }
+  .lg-badge-default { background:var(--lg-gray-100); color:var(--lg-gray-600); }
+
+  .lg-module {
+    display:inline-block; padding:2px 8px; border-radius:6px;
+    background:var(--lg-gray-100); color:var(--lg-gray-600);
+    font-size:11px; font-weight:600;
+    font-family:'DM Mono', monospace;
+  }
+
+  .lg-loading, .lg-empty {
+    text-align:center; padding:40px 16px !important;
+    color:var(--lg-gray-400); font-style:italic; font-size:13px;
+  }
+  .lg-empty-icon { display:block; margin:0 auto 10px; color:#cbd5e1; }
+  .lg-error { color:var(--lg-danger); }
+
+  /* Pagination */
+  .lg-pagination {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 18px; border-top:1px solid var(--lg-gray-100); background:var(--lg-gray-50);
+    font-size:12px; color:var(--lg-gray-600);
+    flex-wrap:wrap; gap:10px;
+  }
+  .lg-pagination-empty { display:none; }
+  .lg-page-info { font-weight:500; }
+  .lg-page-controls { display:flex; gap:4px; }
+  .lg-page-btn {
+    min-width:32px; padding:6px 10px; border-radius:6px;
+    border:1px solid var(--lg-gray-200); background:#fff;
+    font-family:inherit; font-size:12px; font-weight:600;
+    color:var(--lg-gray-800); cursor:pointer; transition:all .15s;
+  }
+  .lg-page-btn:hover:not(:disabled) {
+    background:var(--lg-blue-lighter); border-color:var(--lg-blue); color:var(--lg-blue);
+  }
+  .lg-page-btn.active {
+    background:var(--lg-blue); color:#fff; border-color:var(--lg-blue);
+  }
+  .lg-page-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .lg-page-ellipsis { padding:6px 4px; color:var(--lg-gray-400); }
+
+  /* ──────── Detail Modal ──────── */
+  .lg-modal-ov {
+    display:none; position:fixed; inset:0;
+    background:rgba(13,27,62,.55); backdrop-filter:blur(6px);
+    z-index:9999; align-items:flex-end; justify-content:center; padding:0;
+  }
+  .lg-modal-ov.active { display:flex; animation:lgOvIn .2s ease; }
+  @keyframes lgOvIn { from { opacity:0; } to { opacity:1; } }
+  .lg-modal-bx {
+    background:#fff; width:100%; max-width:720px;
+    border-radius:22px 22px 0 0; max-height:92vh;
+    display:flex; flex-direction:column; overflow:hidden;
+    box-shadow:0 -8px 32px rgba(0,0,0,.15);
+    animation:lgSheetUp .26s cubic-bezier(.32,1.24,.5,1);
+  }
+  @keyframes lgSheetUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+  @media (min-width: 600px) {
+    .lg-modal-ov { align-items:center; padding:16px; }
+    .lg-modal-bx { border-radius:22px; max-height:88vh;
+      box-shadow:0 24px 60px rgba(0,0,0,.18);
+      animation:lgScaleIn .22s cubic-bezier(.32,1.24,.5,1); }
+    @keyframes lgScaleIn { from { transform:scale(.94); opacity:0; } to { transform:scale(1); opacity:1; } }
+  }
+  .lg-modal-handle {
+    width:38px; height:4px; border-radius:2px; background:#d4dae4;
+    margin:10px auto 0; flex-shrink:0;
+  }
+  @media (min-width: 600px) { .lg-modal-handle { display:none; } }
+  .lg-modal-hdr {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 22px 14px; border-bottom:1px solid var(--lg-gray-100);
+    flex-shrink:0;
+  }
+  .lg-modal-ttl { font-size:16px; font-weight:800; color:var(--lg-gray-800); margin:0; letter-spacing:-.2px; }
+  .lg-modal-cls {
+    width:30px; height:30px; border-radius:50%; background:var(--lg-gray-50);
+    border:none; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:var(--lg-gray-600); font-size:14px; flex-shrink:0;
+    transition:background .15s;
+  }
+  .lg-modal-cls:hover { background:var(--lg-gray-200); }
+  .lg-modal-body {
+    padding:18px 22px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    flex:1; min-height:0;
+  }
+
+  .lg-meta-grid {
+    display:grid; grid-template-columns:repeat(2, 1fr); gap:14px 18px;
+    margin-bottom:18px;
+  }
+  @media (max-width: 500px) { .lg-meta-grid { grid-template-columns:1fr; gap:12px; } }
+  .lg-meta-item { min-width:0; }
+  .lg-meta-label {
+    font-size:10.5px; font-weight:700; color:var(--lg-gray-600);
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
+  }
+  .lg-meta-value {
+    font-size:13px; color:var(--lg-gray-800); word-break:break-word;
+  }
+  .lg-meta-value-mono {
+    font-family:'DM Mono', monospace; font-size:12px;
+    background:var(--lg-gray-50); padding:5px 8px; border-radius:6px;
+    display:inline-block;
+  }
+
+  .lg-section-title {
+    font-size:12px; font-weight:700; color:var(--lg-gray-600);
+    text-transform:uppercase; letter-spacing:.4px;
+    margin:20px 0 8px; padding-bottom:6px;
+    border-bottom:1.5px solid var(--lg-gray-200);
+    display:flex; align-items:center; gap:6px;
+  }
+  .lg-data-grid {
+    display:grid; grid-template-columns:max-content 1fr; gap:8px 14px;
+    padding:12px 14px; background:var(--lg-gray-50); border-radius:8px;
+    font-size:12.5px;
+  }
+  .lg-data-key { font-weight:600; color:var(--lg-gray-600); }
+  .lg-data-val { color:var(--lg-gray-800); word-break:break-word; }
+  .lg-data-val-null { color:var(--lg-gray-400); font-style:italic; }
+  .lg-data-empty {
+    padding:14px; background:var(--lg-gray-50); border-radius:8px;
+    color:var(--lg-gray-400); font-style:italic; font-size:12.5px; text-align:center;
+  }
+</style>
+
+<!-- ════ DETAIL MODAL ════ -->
+<div id="logDetailModal" class="lg-modal-ov">
+  <div class="lg-modal-bx">
+    <div class="lg-modal-handle"></div>
+    <div class="lg-modal-hdr">
+      <h3 class="lg-modal-ttl">Detail Activity Log</h3>
+      <button class="lg-modal-cls" onclick="closeLogDetail()" aria-label="Tutup">✕</button>
+    </div>
+    <div class="lg-modal-body" id="logDetailBody">
+      <div class="lg-loading" style="padding:24px 0;">Memuat detail…</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.2/dist/socket.io.min.js"></script>
+<script src="/js/app.js"></script>
+
+<script>
+'use strict';
+(() => {
+  const API = '/api/activity-logs';
+
+  // ── State ────────────────────────────────────────────
+  let currentPage = 1;
+  const PER_PAGE  = 25;
+
+  // ── Helpers ──────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  }
+
+  function fmtFullTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '—';
+    // Format: "22 Mei 2026, 19:10"  (sesuai permintaan user)
+    // Manual format supaya konsisten di semua browser (id-ID locale kadang
+    // pakai titik untuk separator jam, kita paksa colon).
+    const tanggal = d.toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${tanggal}, ${hh}:${mm}`;
+  }
+
+  function fmtRelTime(iso) {
+    if (!iso) return '';
+    const diff = Date.now() - new Date(iso).getTime();
+    const s = Math.floor(diff / 1000);
+    if (s < 30)   return 'baru saja';
+    if (s < 60)   return s + ' dtk lalu';
+    const m = Math.floor(s / 60);
+    if (m < 60)   return m + ' mnt lalu';
+    const h = Math.floor(m / 60);
+    if (h < 24)   return h + ' jam lalu';
+    const dy = Math.floor(h / 24);
+    if (dy < 30)  return dy + ' hari lalu';
+    return new Date(iso).toLocaleDateString('id-ID', { day:'numeric', month:'short' });
+  }
+
+  function actionBadgeClass(action) {
+    const a = (action || '').toLowerCase();
+    if (a === 'create' || a === 'generate' || a === 'import' || a === 'assign')      return 'lg-badge-create';
+    if (a === 'update' || a === 'sync' || a === 'reboot' || a === 'recalculate')      return 'lg-badge-update';
+    if (a === 'delete' || a === 'reset' || a === 'unassign')                          return 'lg-badge-delete';
+    if (a === 'login' || a === 'logout')                                              return 'lg-badge-login';
+    return 'lg-badge-default';
+  }
+
+  // ── API call ─────────────────────────────────────────
+  async function fetchLogs(page = 1) {
+    const params = new URLSearchParams({
+      page:  String(page),
+      limit: String(PER_PAGE),
+    });
+    const module = document.getElementById('logModule').value;
+    const action = document.getElementById('logAction').value;
+    const from   = document.getElementById('logFrom').value;
+    const to     = document.getElementById('logTo').value;
+    if (module) params.set('module', module);
+    if (action) params.set('action', action);
+    if (from)   params.set('from',   from);
+    if (to) {
+      // Include the whole day "to" — append 23:59:59
+      params.set('to', to + 'T23:59:59');
+    }
+
+    const r = await fetch(API + '?' + params.toString(), { credentials:'same-origin' });
+    if (!r.ok) {
+      if (r.status === 403) throw new Error('Akses ditolak. Hanya admin/superadmin yang bisa lihat activity logs.');
+      throw new Error('HTTP ' + r.status);
+    }
+    const j = await r.json();
+    if (!j.success) throw new Error(j.message || 'Gagal memuat data');
+    return j;
+  }
+
+  // ── Render ───────────────────────────────────────────
+  function renderRow(log) {
+    const user = log.user || {};
+    const userHtml = user.id
+      ? `<div class="lg-user-name">${esc(user.name || 'User #' + user.id)}</div>
+         <div class="lg-user-email">${esc(user.email || '')}</div>`
+      : `<span class="lg-user-none">(sistem / anon)</span>`;
+
+    // Sequelize sometimes returns as camelCase createdAt and sometimes
+    // snake_case created_at depending on model config. Try both, prefer
+    // whichever has a value.
+    const ts = log.created_at || log.createdAt || null;
+
+    const actionClass = actionBadgeClass(log.action);
+    const moduleLabel = log.module || '—';
+
+    return `
+      <tr class="lg-row-clickable" data-log-id="${log.id}">
+        <td>
+          <div class="lg-time-main">${ts ? esc(fmtFullTime(ts)) : '—'}</div>
+          <div class="lg-time-sub">${ts ? esc(fmtRelTime(ts)) : ''}</div>
+        </td>
+        <td>${userHtml}</td>
+        <td><span class="lg-badge ${actionClass}">${esc(log.action || '—')}</span></td>
+        <td><span class="lg-module">${esc(moduleLabel)}</span></td>
+        <td class="lg-desc">${esc(log.description || '—')}</td>
+        <td class="lg-ip">${esc(log.ip_address || log.ipAddress || '—')}</td>
+      </tr>`;
+  }
+
+  function renderTable(rows) {
+    const tbody = document.getElementById('logTable');
+    if (!rows.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="6" class="lg-empty">
+          <svg class="lg-empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          Tidak ada log untuk filter ini.
+        </td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(renderRow).join('');
+  }
+
+  function renderPagination(pagination) {
+    const el = document.getElementById('logPagination');
+    if (!pagination || pagination.total <= 0) {
+      el.className = 'lg-pagination lg-pagination-empty';
+      el.innerHTML = '';
+      return;
+    }
+    el.className = 'lg-pagination';
+
+    const { total, page, limit, totalPages } = pagination;
+    const start = (page - 1) * limit + 1;
+    const end = Math.min(page * limit, total);
+
+    // Build page numbers — show max 7 buttons with ellipsis
+    const pages = [];
+    const range = 2;
+    pages.push(1);
+    if (page - range > 2) pages.push('…');
+    for (let i = Math.max(2, page - range); i <= Math.min(totalPages - 1, page + range); i++) {
+      pages.push(i);
+    }
+    if (page + range < totalPages - 1) pages.push('…');
+    if (totalPages > 1) pages.push(totalPages);
+
+    const btns = pages.map(p => {
+      if (p === '…') return '<span class="lg-page-ellipsis">…</span>';
+      const active = p === page ? ' active' : '';
+      return `<button class="lg-page-btn${active}" data-page="${p}">${p}</button>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="lg-page-info">Menampilkan <b>${start}–${end}</b> dari <b>${total.toLocaleString('id-ID')}</b> log</div>
+      <div class="lg-page-controls">
+        <button class="lg-page-btn" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>‹ Prev</button>
+        ${btns}
+        <button class="lg-page-btn" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>Next ›</button>
+      </div>`;
+  }
+
+  // ── Load workflow ────────────────────────────────────
+  async function load(page = 1) {
+    currentPage = page;
+    document.getElementById('logTable').innerHTML =
+      '<tr><td colspan="6" class="lg-loading">Memuat data…</td></tr>';
+    document.getElementById('logTotalStat').textContent = '— log entries';
+    document.getElementById('logRangeStat').textContent = '';
+
+    try {
+      const r = await fetchLogs(page);
+      renderTable(r.data || []);
+      renderPagination(r.pagination);
+      const total = r.pagination?.total || 0;
+      document.getElementById('logTotalStat').textContent =
+        total.toLocaleString('id-ID') + ' log entries';
+    } catch (e) {
+      document.getElementById('logTable').innerHTML =
+        `<tr><td colspan="6" class="lg-loading lg-error">Gagal: ${esc(e.message)}</td></tr>`;
+      document.getElementById('logPagination').className = 'lg-pagination lg-pagination-empty';
+    }
+  }
+
+  // ── Event handlers ───────────────────────────────────
+  document.getElementById('logApply').addEventListener('click',   () => load(1));
+  document.getElementById('logRefresh').addEventListener('click', () => load(currentPage));
+  document.getElementById('logReset').addEventListener('click',   () => {
+    document.getElementById('logModule').value = '';
+    document.getElementById('logAction').value = '';
+    document.getElementById('logFrom').value   = '';
+    document.getElementById('logTo').value     = '';
+    load(1);
+  });
+
+  // Auto-apply saat filter berubah (UX lebih cepat)
+  ['logModule', 'logAction'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => load(1));
+  });
+  ['logFrom', 'logTo'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => load(1));
+  });
+
+  // Pagination click delegation
+  document.getElementById('logPagination').addEventListener('click', (e) => {
+    const btn = e.target.closest('.lg-page-btn');
+    if (!btn || btn.disabled) return;
+    const p = parseInt(btn.dataset.page, 10);
+    if (!isNaN(p) && p >= 1) load(p);
+  });
+
+  // ── Row click → buka modal detail ────────────────────
+  document.getElementById('logTable').addEventListener('click', (e) => {
+    const tr = e.target.closest('.lg-row-clickable');
+    if (!tr) return;
+    const id = tr.dataset.logId;
+    if (id) openLogDetail(id);
+  });
+
+  // Click backdrop tutup modal
+  document.getElementById('logDetailModal').addEventListener('click', (e) => {
+    if (e.target.id === 'logDetailModal') closeLogDetail();
+  });
+  // ESC tutup modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('logDetailModal').classList.contains('active')) {
+      closeLogDetail();
+    }
+  });
+
+  // ── Detail modal ─────────────────────────────────────
+  window.openLogDetail = async function (id) {
+    const modal = document.getElementById('logDetailModal');
+    const body  = document.getElementById('logDetailBody');
+    body.innerHTML = '<div class="lg-loading" style="padding:24px 0;">Memuat detail…</div>';
+    modal.classList.add('active');
+    try {
+      const r = await fetch(`${API}/${id}`, { credentials:'same-origin' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      if (!j.success) throw new Error(j.message || 'Gagal');
+      renderDetail(j.data);
+    } catch (e) {
+      body.innerHTML = `<div class="lg-loading lg-error" style="padding:24px 0;">Gagal: ${esc(e.message)}</div>`;
+    }
+  };
+
+  window.closeLogDetail = function () {
+    document.getElementById('logDetailModal').classList.remove('active');
+  };
+
+  function renderKV(obj) {
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+      return `<div class="lg-data-empty">Tidak ada data tersimpan</div>`;
+    }
+    const entries = Object.entries(obj).filter(([k]) => k !== 'id');
+    if (!entries.length) return `<div class="lg-data-empty">Tidak ada data tersimpan</div>`;
+    return `
+      <div class="lg-data-grid">
+        ${entries.map(([k, v]) => {
+          let valHtml;
+          if (v === null || v === undefined || v === '') {
+            valHtml = `<span class="lg-data-val-null">— null</span>`;
+          } else if (typeof v === 'object') {
+            // Nested object/array → JSON stringify
+            valHtml = `<code style="font-family:'DM Mono',monospace;font-size:11.5px;">${esc(JSON.stringify(v))}</code>`;
+          } else {
+            valHtml = esc(String(v));
+          }
+          return `<div class="lg-data-key">${esc(k)}</div><div class="lg-data-val">${valHtml}</div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function renderDetail(log) {
+    const user = log.user || {};
+    const ts = log.created_at || log.createdAt || null;
+    const actionClass = actionBadgeClass(log.action);
+
+    // Parse old/new data — bisa berupa object langsung, atau JSON string
+    let oldData = log.old_data;
+    let newData = log.new_data;
+    if (typeof oldData === 'string') { try { oldData = JSON.parse(oldData); } catch (_) {} }
+    if (typeof newData === 'string') { try { newData = JSON.parse(newData); } catch (_) {} }
+
+    const body = document.getElementById('logDetailBody');
+    body.innerHTML = `
+      <div class="lg-meta-grid">
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Waktu</div>
+          <div class="lg-meta-value">${ts ? esc(fmtFullTime(ts)) : '—'}<br><span style="font-size:11px;color:var(--lg-gray-400);">${ts ? esc(fmtRelTime(ts)) : ''}</span></div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">User</div>
+          <div class="lg-meta-value">${user.id ? esc(user.name || ('User #' + user.id)) : '<span style="color:var(--lg-gray-400);font-style:italic">(sistem / anon)</span>'}${user.email ? `<br><span style="font-size:11px;color:var(--lg-gray-400);">${esc(user.email)}</span>` : ''}</div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Aksi</div>
+          <div class="lg-meta-value"><span class="lg-badge ${actionClass}">${esc(log.action || '—')}</span></div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Module</div>
+          <div class="lg-meta-value"><span class="lg-module">${esc(log.module || '—')}</span></div>
+        </div>
+        <div class="lg-meta-item" style="grid-column:1/-1">
+          <div class="lg-meta-label">Description</div>
+          <div class="lg-meta-value">${esc(log.description || '—')}</div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Target Type</div>
+          <div class="lg-meta-value">${log.target_type ? `<span class="lg-meta-value-mono">${esc(log.target_type)}</span>` : '<span style="color:var(--lg-gray-400);font-style:italic">—</span>'}</div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Target ID</div>
+          <div class="lg-meta-value">${log.target_id ? `<span class="lg-meta-value-mono">#${esc(log.target_id)}</span>` : '<span style="color:var(--lg-gray-400);font-style:italic">—</span>'}</div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">IP Address</div>
+          <div class="lg-meta-value"><span class="lg-meta-value-mono">${esc(log.ip_address || log.ipAddress || '—')}</span></div>
+        </div>
+        <div class="lg-meta-item">
+          <div class="lg-meta-label">Log ID</div>
+          <div class="lg-meta-value"><span class="lg-meta-value-mono">#${esc(log.id)}</span></div>
+        </div>
+        ${log.user_agent || log.userAgent ? `
+        <div class="lg-meta-item" style="grid-column:1/-1">
+          <div class="lg-meta-label">User Agent</div>
+          <div class="lg-meta-value" style="font-size:11px;color:var(--lg-gray-600);">${esc(log.user_agent || log.userAgent)}</div>
+        </div>` : ''}
+      </div>
+
+      ${oldData ? `
+        <div class="lg-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Data Sebelum (Old Data)
+        </div>
+        ${renderKV(oldData)}
+      ` : ''}
+
+      ${newData ? `
+        <div class="lg-section-title">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Data Sesudah (New Data)
+        </div>
+        ${renderKV(newData)}
+      ` : ''}
+
+      ${!oldData && !newData ? `
+        <div class="lg-data-empty" style="margin-top:14px">
+          Detail data tidak tersedia untuk log lama.<br>
+          <span style="font-size:11px;">Log baru (setelah update sistem) akan menyimpan snapshot detail entity.</span>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // ── Init ─────────────────────────────────────────────
+  load(1);
+})();
+</script>
+
+</body>
+</html>

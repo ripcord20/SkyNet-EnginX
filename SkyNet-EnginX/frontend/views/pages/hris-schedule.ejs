@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .hris-page { font-family:'DM Sans',sans-serif; background:#eef2f9 !important; }
+    .tabs { display:flex; gap:8px; margin-bottom:18px; }
+    .tab { padding:9px 18px; border-radius:10px; border:1.5px solid #e0e7f3; background:#fff; cursor:pointer; font-size:13.5px; font-weight:600; color:#475569; }
+    .tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .panel { display:none; } .panel.active { display:block; }
+    .grid-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+    .item-card { background:#fff; border:1px solid #e8eaed; border-radius:14px; padding:16px; }
+    .item-card h4 { margin:0 0 4px; font-size:15px; font-weight:700; }
+    .item-sub { font-size:12.5px; color:#94a3b8; }
+    .card-acts { display:flex; gap:6px; margin-top:12px; }
+    .mini-btn { flex:1; padding:7px; border:1px solid #e2e8f0; background:#f8fafc; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; color:#475569; }
+    .mini-btn.del:hover{ background:#fee2e2; color:#dc2626; border-color:#fecaca; }
+    .h-input { padding:9px 12px; border:1.5px solid #e0e7f3; border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .h-modal-bg { position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+    .h-modal-bg.show{ display:flex; }
+    .h-modal { background:#fff; border-radius:16px; width:100%; max-width:520px; padding:24px; max-height:90vh; overflow:auto; }
+    .h-modal h3{ margin:0 0 16px; font-size:18px; font-weight:800; }
+    .h-field{ display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+    .h-field label{ font-size:12px; font-weight:600; color:#475569; }
+    .h-field input, .h-field select { padding:9px 12px; border:1.5px solid #e0e7f3; border-radius:9px; font-size:13.5px; font-family:inherit; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .foot { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+    .toast{ position:fixed; bottom:24px; right:24px; padding:12px 18px; border-radius:10px; color:#fff; font-weight:600; z-index:2500; display:none; }
+  </style>
+</head>
+<body>
+<div class="app-layout hris-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <div style="margin-bottom:20px">
+        <div style="font-size:22px;font-weight:800;color:#0d1b3e">Shift, Lokasi & Jadwal</div>
+        <div style="font-size:13px;color:#6b7fa8;margin-top:2px">Master data untuk validasi absensi</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="shifts" onclick="switchTab('shifts')">Shift</div>
+        <div class="tab" data-tab="locations" onclick="switchTab('locations')">Lokasi Kerja</div>
+        <div class="tab" data-tab="schedule" onclick="switchTab('schedule')">Jadwal</div>
+      </div>
+
+      <!-- SHIFTS -->
+      <div class="panel active" id="panel-shifts">
+        <button class="btn-blue" style="margin-bottom:14px" onclick="openShift()">+ Tambah Shift</button>
+        <div class="grid-cards" id="shiftCards"></div>
+      </div>
+
+      <!-- LOCATIONS -->
+      <div class="panel" id="panel-locations">
+        <button class="btn-blue" style="margin-bottom:14px" onclick="openLoc()">+ Tambah Lokasi</button>
+        <div class="grid-cards" id="locCards"></div>
+      </div>
+
+      <!-- SCHEDULE -->
+      <div class="panel" id="panel-schedule">
+        <div class="item-card" style="margin-bottom:14px">
+          <div style="font-weight:700;margin-bottom:12px">Assign Jadwal (rentang tanggal)</div>
+          <div class="row2">
+            <div class="h-field"><label>Karyawan</label><select id="sc_emp" class="h-input"></select></div>
+            <div class="h-field"><label>Shift</label><select id="sc_shift" class="h-input"></select></div>
+            <div class="h-field"><label>Dari tanggal</label><input id="sc_from" type="date" class="h-input"></div>
+            <div class="h-field"><label>Sampai tanggal</label><input id="sc_to" type="date" class="h-input"></div>
+            <div class="h-field"><label>Lokasi</label><select id="sc_loc" class="h-input"></select></div>
+            <div class="h-field"><label>Tipe Hari</label><select id="sc_daytype" class="h-input"><option value="kerja">Kerja</option><option value="libur">Libur</option></select></div>
+          </div>
+          <button class="btn-blue" onclick="assignSchedule()">Simpan Jadwal</button>
+        </div>
+        <div class="item-card">
+          <div style="font-weight:700;margin-bottom:10px">Jadwal Tersimpan</div>
+          <div id="scheduleList" style="font-size:13px;color:#64748b">Pilih karyawan untuk melihat jadwal.</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- SHIFT MODAL -->
+<div class="h-modal-bg" id="shiftModal"><div class="h-modal">
+  <h3 id="shiftModalTitle">Tambah Shift</h3>
+  <div class="h-field"><label>Nama Shift</label><input id="sh_name" placeholder="Pagi / Malam"></div>
+  <div class="row2">
+    <div class="h-field"><label>Kode</label><input id="sh_code" placeholder="P / M"></div>
+    <div class="h-field"><label>Warna</label><input id="sh_color" type="color" value="#2563eb"></div>
+    <div class="h-field"><label>Jam Masuk</label><input id="sh_start" type="time"></div>
+    <div class="h-field"><label>Jam Pulang</label><input id="sh_end" type="time"></div>
+    <div class="h-field"><label>Toleransi Telat (menit)</label><input id="sh_grace" type="number" value="10"></div>
+    <div class="h-field"><label>Istirahat (menit)</label><input id="sh_break" type="number" value="60"></div>
+  </div>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="sh_cross"> Shift malam (lintas hari)</label>
+  <div class="foot"><button class="btn-outline" onclick="closeModal('shiftModal')">Batal</button><button class="btn-blue" onclick="saveShift()">Simpan</button></div>
+</div></div>
+
+<!-- LOCATION MODAL -->
+<div class="h-modal-bg" id="locModal"><div class="h-modal">
+  <h3 id="locModalTitle">Tambah Lokasi</h3>
+  <div class="h-field"><label>Nama Lokasi</label><input id="lc_name" placeholder="Kantor Pusat"></div>
+  <div class="h-field"><label>Alamat</label><input id="lc_address"></div>
+  <div class="row2">
+    <div class="h-field"><label>Latitude</label><input id="lc_lat" placeholder="-6.4194"></div>
+    <div class="h-field"><label>Longitude</label><input id="lc_lng" placeholder="106.7"></div>
+    <div class="h-field"><label>Radius (meter)</label><input id="lc_radius" type="number" value="100"></div>
+    <div class="h-field"><label>Akurasi maks (meter)</label><input id="lc_maxacc" type="number" value="50"></div>
+  </div>
+  <button class="btn-outline" style="margin-bottom:10px" onclick="useMyLocation()">📍 Pakai Lokasi Saya</button>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px"><input type="checkbox" id="lc_anyloc"> Boleh absen dari mana saja</label>
+  <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="lc_rejectmock" checked> Tolak fake/mock GPS</label>
+  <div class="foot"><button class="btn-outline" onclick="closeModal('locModal')">Batal</button><button class="btn-blue" onclick="saveLoc()">Simpan</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+const API = '/api';
+const authH = () => ({ 'Content-Type':'application/json', 'Authorization':`Bearer ${TOKEN}` });
+function toast(m,ok=true){ const t=document.getElementById('toast'); t.textContent=m; t.style.background=ok?'#16a34a':'#dc2626'; t.style.display='block'; setTimeout(()=>t.style.display='none',2600); }
+let shifts=[], locations=[], employees=[];
+let editShiftId=null, editLocId=null;
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+async function loadAll(){
+  const [sr,lr,er] = await Promise.all([
+    fetch(API+'/hris/shifts',{headers:authH()}).then(r=>r.json()),
+    fetch(API+'/hris/locations',{headers:authH()}).then(r=>r.json()),
+    fetch(API+'/hris/employees?limit=500',{headers:authH()}).then(r=>r.json())
+  ]);
+  shifts=sr.data||[]; locations=lr.data||[]; employees=er.data||[];
+  renderShifts(); renderLocs(); fillScheduleSelects();
+}
+
+function renderShifts(){
+  document.getElementById('shiftCards').innerHTML = shifts.length ? shifts.map(s=>`
+    <div class="item-card" style="border-left:4px solid ${s.color||'#2563eb'}">
+      <h4>${s.name} ${s.code?`<span style="font-size:12px;color:#94a3b8">(${s.code})</span>`:''}</h4>
+      <div class="item-sub">${s.start_time.slice(0,5)} – ${s.end_time.slice(0,5)}${s.crosses_midnight?' (+1 hari)':''}</div>
+      <div class="item-sub">Toleransi telat ${s.grace_late_minutes}m · istirahat ${s.break_minutes}m</div>
+      <div class="card-acts"><button class="mini-btn" onclick='openShift(${JSON.stringify(s)})'>Edit</button><button class="mini-btn del" onclick="delShift(${s.id})">Hapus</button></div>
+    </div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Belum ada shift</div>';
+}
+function renderLocs(){
+  document.getElementById('locCards').innerHTML = locations.length ? locations.map(l=>`
+    <div class="item-card">
+      <h4>${l.name}</h4>
+      <div class="item-sub">${l.address||'–'}</div>
+      <div class="item-sub">${l.allow_any_location?'Bebas lokasi':`Radius ${l.radius_meters}m · akurasi ≤${l.max_accuracy_meters}m`}</div>
+      <div class="item-sub">${l.reject_mock_location?'🛡 Tolak mock GPS':'Mock diizinkan'}</div>
+      <div class="card-acts"><button class="mini-btn" onclick='openLoc(${JSON.stringify(l)})'>Edit</button><button class="mini-btn del" onclick="delLoc(${l.id})">Hapus</button></div>
+    </div>`).join('') : '<div style="color:#94a3b8;font-size:13px">Belum ada lokasi</div>';
+}
+
+// ── Shift modal ──
+function openShift(s){ editShiftId = s?.id||null;
+  document.getElementById('shiftModalTitle').textContent = s?'Edit Shift':'Tambah Shift';
+  document.getElementById('sh_name').value=s?.name||''; document.getElementById('sh_code').value=s?.code||'';
+  document.getElementById('sh_color').value=s?.color||'#2563eb';
+  document.getElementById('sh_start').value=s?.start_time?.slice(0,5)||''; document.getElementById('sh_end').value=s?.end_time?.slice(0,5)||'';
+  document.getElementById('sh_grace').value=s?.grace_late_minutes??10; document.getElementById('sh_break').value=s?.break_minutes??60;
+  document.getElementById('sh_cross').checked=!!s?.crosses_midnight;
+  document.getElementById('shiftModal').classList.add('show');
+}
+async function saveShift(){
+  const payload={ name:document.getElementById('sh_name').value, code:document.getElementById('sh_code').value||null,
+    color:document.getElementById('sh_color').value, start_time:document.getElementById('sh_start').value,
+    end_time:document.getElementById('sh_end').value, grace_late_minutes:+document.getElementById('sh_grace').value,
+    break_minutes:+document.getElementById('sh_break').value, crosses_midnight:document.getElementById('sh_cross').checked };
+  if(!payload.name||!payload.start_time||!payload.end_time){ toast('Nama & jam wajib', false); return; }
+  const url = editShiftId?API+'/hris/shifts/'+editShiftId:API+'/hris/shifts';
+  const r=await fetch(url,{method:editShiftId?'PUT':'POST',headers:authH(),body:JSON.stringify(payload)});
+  const j=await r.json(); if(j.success){ toast('Shift tersimpan'); closeModal('shiftModal'); loadAll(); } else toast(j.message,false);
+}
+async function delShift(id){ if(!confirm('Hapus shift ini?'))return; const r=await fetch(API+'/hris/shifts/'+id,{method:'DELETE',headers:authH()}); const j=await r.json(); if(j.success){toast('Dihapus');loadAll();}else toast(j.message,false); }
+
+// ── Location modal ──
+function openLoc(l){ editLocId=l?.id||null;
+  document.getElementById('locModalTitle').textContent=l?'Edit Lokasi':'Tambah Lokasi';
+  document.getElementById('lc_name').value=l?.name||''; document.getElementById('lc_address').value=l?.address||'';
+  document.getElementById('lc_lat').value=l?.latitude||''; document.getElementById('lc_lng').value=l?.longitude||'';
+  document.getElementById('lc_radius').value=l?.radius_meters??100; document.getElementById('lc_maxacc').value=l?.max_accuracy_meters??50;
+  document.getElementById('lc_anyloc').checked=!!l?.allow_any_location; document.getElementById('lc_rejectmock').checked=l?l.reject_mock_location:true;
+  document.getElementById('locModal').classList.add('show');
+}
+function useMyLocation(){ if(!navigator.geolocation){toast('GPS tidak didukung',false);return;}
+  navigator.geolocation.getCurrentPosition(p=>{ document.getElementById('lc_lat').value=p.coords.latitude.toFixed(7); document.getElementById('lc_lng').value=p.coords.longitude.toFixed(7); toast('Lokasi terisi'); }, e=>toast('Gagal ambil lokasi',false), {enableHighAccuracy:true});
+}
+async function saveLoc(){
+  const payload={ name:document.getElementById('lc_name').value, address:document.getElementById('lc_address').value,
+    latitude:document.getElementById('lc_lat').value, longitude:document.getElementById('lc_lng').value,
+    radius_meters:+document.getElementById('lc_radius').value, max_accuracy_meters:+document.getElementById('lc_maxacc').value,
+    allow_any_location:document.getElementById('lc_anyloc').checked, reject_mock_location:document.getElementById('lc_rejectmock').checked };
+  if(!payload.name||!payload.latitude||!payload.longitude){ toast('Nama & koordinat wajib', false); return; }
+  const url = editLocId?API+'/hris/locations/'+editLocId:API+'/hris/locations';
+  const r=await fetch(url,{method:editLocId?'PUT':'POST',headers:authH(),body:JSON.stringify(payload)});
+  const j=await r.json(); if(j.success){ toast('Lokasi tersimpan'); closeModal('locModal'); loadAll(); } else toast(j.message,false);
+}
+async function delLoc(id){ if(!confirm('Hapus lokasi ini?'))return; const r=await fetch(API+'/hris/locations/'+id,{method:'DELETE',headers:authH()}); const j=await r.json(); if(j.success){toast('Dihapus');loadAll();}else toast(j.message,false); }
+
+// ── Schedule ──
+function fillScheduleSelects(){
+  document.getElementById('sc_emp').innerHTML = employees.map(e=>`<option value="${e.id}">${e.full_name} (${e.employee_no})</option>`).join('');
+  document.getElementById('sc_shift').innerHTML = '<option value="">— default —</option>'+shifts.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('sc_loc').innerHTML = '<option value="">— default —</option>'+locations.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  document.getElementById('sc_emp').onchange = loadSchedule;
+  if(employees.length) loadSchedule();
+}
+function eachDate(from,to){ const out=[]; let d=new Date(from); const e=new Date(to); while(d<=e){ out.push(d.toISOString().slice(0,10)); d.setDate(d.getDate()+1);} return out; }
+async function assignSchedule(){
+  const employee_id=document.getElementById('sc_emp').value;
+  const from=document.getElementById('sc_from').value, to=document.getElementById('sc_to').value;
+  if(!employee_id||!from||!to){ toast('Karyawan & rentang tanggal wajib', false); return; }
+  const dates=eachDate(from,to);
+  const payload={ employee_id:+employee_id, dates, shift_id:document.getElementById('sc_shift').value||null,
+    work_location_id:document.getElementById('sc_loc').value||null, day_type:document.getElementById('sc_daytype').value };
+  const r=await fetch(API+'/hris/schedules/bulk',{method:'POST',headers:authH(),body:JSON.stringify(payload)});
+  const j=await r.json(); if(j.success){ toast(j.message); loadSchedule(); } else toast(j.message,false);
+}
+async function loadSchedule(){
+  const employee_id=document.getElementById('sc_emp').value; if(!employee_id) return;
+  const r=await fetch(API+'/hris/schedules?employee_id='+employee_id,{headers:authH()}); const j=await r.json();
+  const box=document.getElementById('scheduleList');
+  if(!j.data||!j.data.length){ box.innerHTML='<span style="color:#94a3b8">Belum ada jadwal</span>'; return; }
+  box.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:6px">'+j.data.map(s=>`<span style="background:${s.shift?.color||'#e2e8f0'}22;border:1px solid #e2e8f0;padding:4px 9px;border-radius:8px;font-size:12px">${s.work_date.slice(5)} · ${s.shift?.name||s.day_type}</span>`).join('')+'</div>';
+}
+
+loadAll();
+</script>
+</body>
+</html>

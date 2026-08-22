@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --d-bg:#eef2f9; --d-card:#fff; --d-border:#e0e7f3;
+      --d-text:#0d1b3e; --d-muted:#6b7fa8;
+      --d-blue1:#1a6ef5; --d-blue2:#0047cc;
+      --d-green:#00c896; --d-red:#f5365c; --d-orange:#fb8c00;
+    }
+    .wo-page { font-family:'DM Sans',sans-serif; background:var(--d-bg) !important; }
+
+    /* ── Fin-cards ── */
+    /* ── STAT CARDS — single strip ── */
+    .wo-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      background: #fff; border-radius: 16px;
+      border: 1px solid #e8eaed; overflow: hidden; margin-bottom: 20px;
+    }
+    .wo-card {
+      padding: 20px 22px 18px; border-right: 1px solid #e8eaed;
+      cursor: pointer; display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden; transition: background .15s;
+    }
+    .wo-card::before, .wo-card::after { display:none !important; content:none !important; }
+    .wo-card:last-child { border-right: none; }
+    .wo-card:hover { background: #fafbff; }
+    .wo-card.xc-active { background: #2563eb; border-color: #2563eb; }
+    .wo-card.xc-active:hover { background: #1d4ed8; }
+    .wo-card.xc-active .xc-lbl  { color: rgba(255,255,255,.70); }
+    .wo-card.xc-active .xc-val  { color: #fff; }
+    .wo-card.xc-active .xc-sub  { color: rgba(255,255,255,.60); }
+    .wo-card.xc-active .xc-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .wo-card.xc-active .sp-line { stroke: rgba(255,255,255,.70) !important; }
+    .wo-card.xc-active .sp-fill { fill: rgba(255,255,255,.12) !important; }
+    .wo-card.xc-active .sp-dot  { fill: #fff !important; }
+    .xc-lbl  { font-size:12px; font-weight:500; color:#64748b; margin-bottom:10px; letter-spacing:.1px; transition:color .15s; }
+    .xc-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .xc-left { display:flex; flex-direction:column; min-width:0; }
+    .xc-val  { font-size:30px; font-weight:800; color:#0f172a; letter-spacing:-1.2px; line-height:1; transition:color .15s; }
+    @media(max-width:1400px){ .xc-val { font-size:26px; } }
+    .xc-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .xc-pill { display:inline-flex; align-items:center; gap:2px; padding:1px 6px; border-radius:100px; font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0; transition:all .15s; }
+    .xc-blue   { background:#dbeafe; color:#1d4ed8; }
+    .xc-green  { background:#dcfce7; color:#16a34a; }
+    .xc-red    { background:#fee2e2; color:#dc2626; }
+    .xc-amber  { background:#fef3c7; color:#b45309; }
+    .xc-slate  { background:#f1f5f9; color:#475569; }
+    .xc-teal   { background:#cffafe; color:#0e7490; }
+    .xc-orange { background:#ffedd5; color:#c2410c; }
+    .xc-sub  { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition:color .15s; }
+    .xc-spark { flex-shrink:0; width:72px; height:36px; }
+    .xc-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+    @media(max-width:700px) {
+      .wo-grid { grid-template-columns:repeat(2,1fr); }
+      .wo-card { border-right:none; border-bottom:1px solid #e8eaed; }
+      .wo-card:nth-child(odd)  { border-right:1px solid #e8eaed; }
+      .wo-card:nth-child(even) { border-right:none; }
+      .wo-card:nth-last-child(-n+2) { border-bottom:none; }
+    }
+    @media(max-width:400px) {
+      .wo-grid { grid-template-columns:1fr; }
+      .wo-card { border-right:none !important; border-bottom:1px solid #e8eaed; }
+      .wo-card:last-child { border-bottom:none; }
+    }
+        .w-card { background:var(--d-card);border:1px solid var(--d-border);border-radius:22px;box-shadow:0 2px 12px rgba(26,110,245,.05); }
+
+    /* ── Buttons ── */
+    .btn-fin { padding:9px 18px;border-radius:11px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px; }
+    .btn-primary-fin { background:var(--d-blue1);color:#fff;box-shadow:0 4px 14px rgba(26,110,245,.3); }
+    .btn-primary-fin:hover { background:var(--d-blue2);transform:translateY(-1px);box-shadow:0 6px 18px rgba(26,110,245,.4); }
+    .btn-ghost { background:var(--d-card);color:var(--d-text);border:1.5px solid var(--d-border); }
+    .btn-ghost:hover { border-color:var(--d-blue1);color:var(--d-blue1);background:#f0f5ff; }
+
+    /* ── Search/filter ── */
+    .search-wrap { position:relative; }
+    .search-wrap input { width:100%;padding:10px 14px 10px 40px;box-sizing:border-box;border:1.5px solid var(--d-border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);background:#fff;transition:border-color .15s,box-shadow .15s;outline:none; }
+    .search-wrap input:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .search-wrap .si { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--d-muted);pointer-events:none; }
+    .filter-select { padding:9px 13px;border:1.5px solid var(--d-border);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--d-text);background:#fff;cursor:pointer;outline:none;transition:border-color .15s; }
+    .filter-select:focus { border-color:var(--d-blue1); }
+
+    /* ── Table ── */
+    .wo-table { width:100%;border-collapse:collapse;font-family:'Plus Jakarta Sans',sans-serif; }
+    .wo-table thead th { text-align:left;padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--d-muted);border-bottom:1px solid var(--d-border);background:#f8faff;white-space:nowrap; }
+    .wo-table tbody tr { border-bottom:1px solid #f0f4fc;transition:background .1s; }
+    .wo-table tbody tr:hover { background:#f4f8ff; }
+    .wo-table tbody tr:last-child { border-bottom:none; }
+    .wo-table td { padding:13px 16px;vertical-align:middle;font-size:13px;color:var(--d-text); }
+
+    /* WO Number badge */
+    .wo-num { font-family:'DM Mono',monospace;font-size:11.5px;color:var(--d-blue1);background:#eef3ff;padding:3px 8px;border-radius:6px;display:inline-block;white-space:nowrap; }
+
+    /* Type badges */
+    .type-badge { font-size:11px;font-weight:700;padding:3px 9px;border-radius:6px;display:inline-block;white-space:nowrap; }
+    .type-installation { background:#eff6ff;color:#1d4ed8; }
+    .type-maintenance  { background:#fff7ed;color:#c2410c; }
+    .type-dismantle    { background:#fff0f2;color:#be123c; }
+    .type-survey       { background:#f0fdf4;color:#15803d; }
+    .type-repair       { background:#fefce8;color:#a16207; }
+    .type-other        { background:#f8fafc;color:#64748b; }
+
+    /* Status badges */
+    .sb { font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;white-space:nowrap; }
+    .sb-dot { width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0; }
+    .sb-pending     { background:#fff7ed;color:#c2410c;border-color:#fed7aa; }
+    .sb-assigned    { background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe; }
+    .sb-in_progress { background:#fefce8;color:#a16207;border-color:#fde68a; }
+    .sb-done        { background:#f0fdf4;color:#15803d;border-color:#bbf7d0; }
+    .sb-cancelled   { background:#f8fafc;color:#64748b;border-color:#e2e8f0; }
+
+    /* Priority */
+    .prio { font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase; }
+    .prio-low      { background:#f0fdf4;color:#16a34a; }
+    .prio-medium   { background:#fffbeb;color:#d97706; }
+    .prio-high     { background:#fff7ed;color:#ea580c; }
+    .prio-critical { background:#fff0f2;color:var(--d-red); }
+
+    /* Technician */
+    .tech-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1a6ef5,#0047cc);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0; }
+    .tech-avatar.manual { background:linear-gradient(135deg,#64748b,#475569); }
+
+    /* Due date */
+    .due-ok      { color:var(--d-muted); }
+    .due-soon    { color:var(--d-orange);font-weight:600; }
+    .due-overdue { color:var(--d-red);font-weight:600; }
+
+    /* Row actions */
+    .rb { padding:5px 12px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;border:1.5px solid; }
+    .rb-view { background:#fff;color:var(--d-blue1);border-color:#bfdbfe; }
+    .rb-view:hover { background:#eef3ff; }
+    .rb-edit { background:#fff;color:#059669;border-color:#a7f3d0; }
+    .rb-edit:hover { background:#f0fdf9; }
+    .rb-del  { background:#fff;color:#cbd5e0;border-color:#e2e8f0;padding:5px 8px; }
+    .rb-del:hover { color:var(--d-red);border-color:#fecdd3;background:#fff4f5; }
+
+    /* ── Detail Drawer (side panel) ── */
+    .wo-drawer-overlay { position:fixed;top:64px;left:0;right:0;bottom:0;background:rgba(13,27,62,.4);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(2px); }
+    .wo-drawer-overlay.open { opacity:1;pointer-events:all; }
+    .wo-drawer {
+      position:fixed;top:64px;right:-620px;width:600px;max-width:95vw;
+      height:calc(100vh - 64px);
+      background:#fff;box-shadow:-8px 0 40px rgba(0,0,0,.14);z-index:801;
+      transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;
+    }
+    .wo-drawer.open { right:0; }
+    .wo-drawer-header {
+      padding:14px 16px 14px 20px;border-bottom:1px solid var(--d-border);
+      display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;
+    }
+    .wo-drawer-title  { font-size:15px;font-weight:800;color:var(--d-text);margin:0; }
+    /* Tombol close di header — hanya tampil di desktop */
+    .wo-drawer-close  {
+      min-width:80px;height:34px;border-radius:9px;background:#f4f7ff;border:1.5px solid var(--d-border);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+      color:var(--d-muted);font-size:12.5px;font-weight:600;font-family:'DM Sans',sans-serif;
+      transition:all .15s;flex-shrink:0;
+    }
+    .wo-drawer-close:hover { background:#fee2e2;color:#dc2626;border-color:#fecdd3; }
+    .wo-drawer-body   { flex:1;overflow-y:auto;padding:20px 24px; }
+    .wo-drawer-footer { padding:16px 20px;border-top:1px solid var(--d-border);display:flex;gap:8px;background:#f8faff;flex-shrink:0; }
+
+    /* Tombol close di footer — hanya tampil di mobile */
+    .wo-footer-close { display:none; }
+
+    @media(max-width:768px) {
+      .wo-drawer { width:100%;max-width:100%;right:-100%;top:0;height:100vh; }
+      .wo-drawer-overlay { top:0; }
+      /* Sembunyikan tombol close dari header di mobile */
+      .wo-drawer-close { display:none; }
+      /* Tampilkan tombol close di footer mobile */
+      .wo-footer-close { display:flex !important; }
+    }
+
+    /* Detail sections */
+    .detail-section { margin-bottom:20px; }
+    .detail-section-title { font-size:11px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:flex;align-items:center;gap:6px; }
+    .detail-section-title::after { content:'';flex:1;height:1px;background:var(--d-border); }
+    .detail-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .detail-item label { display:block;font-size:11px;font-weight:700;color:var(--d-muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em; }
+    .detail-item span  { font-size:13.5px;color:var(--d-text);font-weight:500; }
+
+    /* Photo grid */
+    .photo-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px; }
+    .photo-item { position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:#f0f4ff; }
+    .photo-item img { width:100%;height:100%;object-fit:cover;cursor:pointer;transition:transform .2s; }
+    .photo-item img:hover { transform:scale(1.05); }
+    .photo-del-btn { position:absolute;top:5px;right:5px;background:rgba(220,38,38,.85);color:#fff;border:none;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s; }
+    .photo-item:hover .photo-del-btn { opacity:1; }
+    .photo-upload-box { border:2px dashed var(--d-border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all .15s;background:#f8faff; }
+    .photo-upload-box:hover { border-color:var(--d-blue1);background:#f0f5ff; }
+    .photo-upload-box p { font-size:12px;color:var(--d-muted);margin:4px 0 0; }
+
+    /* Status stepper */
+    .status-steps { display:flex;align-items:center;gap:0;margin-bottom:20px; }
+    .step { display:flex;align-items:center;gap:6px;flex:1;position:relative; }
+    .step:not(:last-child)::after { content:'';position:absolute;top:14px;left:calc(50% + 14px);right:-50%;height:2px;background:var(--d-border);z-index:0; }
+    .step.done-step::after { background:var(--d-blue1); }
+    .step-circle { width:28px;height:28px;border-radius:50%;border:2px solid var(--d-border);background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--d-muted);z-index:1;flex-shrink:0;margin:0 auto; }
+    .step.active-step .step-circle { border-color:var(--d-blue1);background:var(--d-blue1);color:#fff; }
+    .step.done-step  .step-circle  { border-color:#00a07a;background:#00a07a;color:#fff; }
+    .step-label { font-size:10px;font-weight:600;color:var(--d-muted);text-align:center;margin-top:4px; }
+    .step.active-step .step-label { color:var(--d-blue1); }
+    .step.done-step  .step-label  { color:#00a07a; }
+    .step-wrap { display:flex;flex-direction:column;align-items:center;flex:1; }
+
+    /* ── Modal Form ── */
+    .modal-ov { display:none;position:fixed;inset:0;background:rgba(13,27,62,.55);z-index:900;align-items:flex-start;justify-content:center;overflow-y:auto;padding:28px 16px;backdrop-filter:blur(3px); }
+    .modal-ov.active { display:flex; }
+    .modal-bx { background:#fff;border-radius:22px;width:680px;max-width:100%;padding:30px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(0,0,0,.18); }
+    .modal-ttl { font-size:17px;font-weight:800;color:var(--d-text);margin:0 0 20px; }
+    .modal-cls { position:absolute;top:18px;right:18px;background:var(--d-bg);border:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--d-muted);font-size:16px;transition:background .15s; }
+    .modal-cls:hover { background:var(--d-border); }
+    .flbl { display:block;font-size:11.5px;font-weight:700;color:var(--d-muted);margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase; }
+    .flbl .req { color:var(--d-red); }
+    .finput { width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--d-border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--d-text);outline:none;transition:border-color .15s,box-shadow .15s;background:#fff; }
+    .finput:focus { border-color:var(--d-blue1);box-shadow:0 0 0 3px rgba(26,110,245,.1); }
+    .finput::placeholder { color:#b0bcdc; }
+    textarea.finput { resize:vertical; }
+
+    /* Technician toggle */
+    .tech-toggle { display:flex;border:1.5px solid var(--d-border);border-radius:10px;overflow:hidden;margin-bottom:12px; }
+    .tech-toggle-btn { flex:1;padding:8px;text-align:center;font-size:12.5px;font-weight:600;cursor:pointer;background:#fff;color:var(--d-muted);border:none;transition:all .15s; }
+    .tech-toggle-btn.active { background:var(--d-blue1);color:#fff; }
+
+    /* Form section divider */
+    .form-section { font-size:11px;font-weight:700;color:var(--d-muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--d-border); }
+
+    /* Toast */
+    .toast-ok  { background:#e6fff7;border:1px solid #a7f3d0;color:#00875a;padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+    .toast-err { background:#fff0f2;border:1px solid #fecdd3;color:var(--d-red);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13.5px; }
+
+    /* Delete confirm */
+    .del-icon-ring { width:68px;height:68px;border-radius:50%;background:#fff0f2;margin:0 auto 16px;display:flex;align-items:center;justify-content:center; }
+
+    /* Lightbox */
+    .lightbox { position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:2000;display:none;align-items:center;justify-content:center; }
+    .lightbox.open { display:flex; }
+    .lightbox img { max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain; }
+    .lightbox-close { position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s; }
+    .lightbox-close:hover { background:rgba(255,255,255,.25); }
+
+    /* Animations */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .a1{animation:fadeUp .45s ease both} .a2{animation:fadeUp .45s .07s ease both}
+    .a3{animation:fadeUp .45s .14s ease both} .a4{animation:fadeUp .45s .21s ease both}
+    .a5{animation:fadeUp .45s .28s ease both}
+    @media(max-width:1100px) { .fin-grid-4{grid-template-columns:repeat(2,1fr)!important;} }
+    @keyframes spin{to{transform:translateY(-50%) rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="app-layout wo-page">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Toast -->
+      <div id="toastOk"  class="toast-ok  a1" style="display:none"></div>
+      <div id="toastErr" class="toast-err a1" style="display:none"></div>
+
+      <!-- PAGE HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px" class="a1">
+        <div>
+          <div style="font-size:22px;font-weight:800;color:var(--d-text)">Work Order</div>
+          <div style="font-size:13px;color:var(--d-muted);margin-top:2px" id="woHeaderSub">Manajemen pekerjaan lapangan teknisi</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="openAdd()" class="btn-fin btn-primary-fin">
+            <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            <span>Buat Work Order</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 FIN-CARDS -->
+              <div class="wo-grid">
+        <div class="wo-card xc-active" id="woc-all" data-filter="all" onclick="woCardClick(this)">
+          <div class="xc-lbl">Total WO</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scTotal">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-blue" id="wo-pill-all">—</span>
+                <span class="xc-sub">Semua status</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-all" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-all-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-all-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-all-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="wo-card" id="woc-pending" data-filter="pending" onclick="woCardClick(this)">
+          <div class="xc-lbl">Pending</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scPending">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-amber" id="wo-pill-pending">—</span>
+                <span class="xc-sub">Menunggu penugasan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-pending" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-pending-fill" d="" fill="#d97706" opacity=".12"/>
+                <path class="sp-line" id="sp-pending-line" d="" stroke="#d97706"/>
+                <circle class="sp-dot" id="sp-pending-dot" r="2.5" fill="#d97706"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="wo-card" id="woc-progress" data-filter="progress" onclick="woCardClick(this)">
+          <div class="xc-lbl">In Progress</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scInProgress">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-teal" id="wo-pill-progress">—</span>
+                <span class="xc-sub">Sedang dikerjakan</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-progress" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-progress-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-progress-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-progress-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="wo-card" id="woc-done" data-filter="done" onclick="woCardClick(this)">
+          <div class="xc-lbl">Done</div>
+          <div class="xc-body">
+            <div class="xc-left">
+              <span class="xc-val" id="scDone">0</span>
+              <div class="xc-meta">
+                <span class="xc-pill xc-green" id="wo-pill-done">—</span>
+                <span class="xc-sub">Selesai</span>
+              </div>
+            </div>
+            <div class="xc-spark">
+              <svg id="sp-done" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-done-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-done-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-done-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        </div>
+
+      <!-- TABLE CARD -->
+      <div class="w-card a5">
+        <div style="display:flex;align-items:center;gap:10px;padding:18px 20px 16px;flex-wrap:wrap;border-bottom:1px solid var(--d-border)">
+          <div class="search-wrap" style="flex:1;max-width:280px">
+            <svg class="si" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="woSearch" placeholder="Cari nomor, judul, teknisi…">
+          </div>
+          <select id="filterStatus" class="filter-select">
+            <option value="">Semua Status</option>
+            <option value="pending">Pending</option>
+            <option value="assigned">Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="done">Done</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select id="filterType" class="filter-select">
+            <option value="">Semua Tipe</option>
+            <option value="installation">Installation</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="dismantle">Dismantle</option>
+            <option value="survey">Survey</option>
+            <option value="repair">Repair</option>
+            <option value="other">Other</option>
+          </select>
+          <select id="filterPriority" class="filter-select">
+            <option value="">Semua Prioritas</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <div style="font-size:12.5px;color:var(--d-muted);margin-left:auto;font-weight:600" id="woCountLbl">—</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="wo-table">
+            <thead>
+              <tr>
+                <th>No WO</th>
+                <th>Tipe</th>
+                <th>Judul / Customer</th>
+                <th>Teknisi</th>
+                <th>Jadwal</th>
+                <th>Prioritas</th>
+                <th>Status</th>
+                <th style="text-align:right;padding-right:20px">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="woTableBody">
+              <tr><td colspan="8" style="text-align:center;padding:52px;color:var(--d-muted)">
+                <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;display:block;color:var(--d-muted);opacity:.4"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                <div style="font-size:14px;font-weight:600;color:var(--d-text)">Memuat data…</div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ════ DETAIL DRAWER ════ -->
+<div class="wo-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="wo-drawer" id="woDrawer">
+  <div class="wo-drawer-header">
+    <div>
+      <div class="wo-drawer-title" id="drawerTitle">Detail Work Order</div>
+      <div style="font-size:12px;color:var(--d-muted);margin-top:2px" id="drawerWoNum"></div>
+    </div>
+    <button class="wo-drawer-close" onclick="closeDrawer()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Close
+    </button>
+  </div>
+  <div class="wo-drawer-body" id="drawerBody">
+    <!-- populated by JS -->
+  </div>
+  <div class="wo-drawer-footer" id="drawerFooter">
+    <!-- populated by JS -->
+  </div>
+
+</div>
+
+<!-- ════ MODAL Add/Edit ════ -->
+<div id="woModal" class="modal-ov">
+  <div class="modal-bx">
+    <button onclick="closeModal()" class="modal-cls">✕</button>
+    <div class="modal-ttl" id="modalTitle">Buat Work Order Baru</div>
+    <div style="overflow-y:auto;max-height:75vh">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="grid-column:1/-1">
+          <label class="flbl">Judul Pekerjaan <span class="req">*</span></label>
+          <input type="text" class="finput" id="f_title" placeholder="Contoh: Instalasi Baru - Pak Budi">
+        </div>
+        <div>
+          <label class="flbl">Tipe <span class="req">*</span></label>
+          <select class="finput" id="f_type">
+            <option value="installation">Installation</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="dismantle">Dismantle</option>
+            <option value="survey">Survey</option>
+            <option value="repair">Repair</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Prioritas</label>
+          <select class="finput" id="f_priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Status</label>
+          <select class="finput" id="f_status">
+            <option value="pending">Pending</option>
+            <option value="assigned">Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="done">Done</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Jadwal Tanggal</label>
+          <input type="date" class="finput" id="f_scheduled_date">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="flbl">Deskripsi</label>
+          <textarea class="finput" id="f_description" rows="2" placeholder="Detail pekerjaan yang harus dilakukan…"></textarea>
+        </div>
+      </div>
+
+      <div class="form-section">Teknisi</div>
+      <div class="tech-toggle">
+        <button type="button" class="tech-toggle-btn active" id="techTypeUser" onclick="setTechType('user')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Pilih dari User
+        </button>
+        <button type="button" class="tech-toggle-btn" id="techTypeManual" onclick="setTechType('manual')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Input Manual
+        </button>
+      </div>
+      <div id="techUserPanel">
+        <label class="flbl">User / Teknisi</label>
+        <select class="finput" id="f_assigned_user_id">
+          <option value="">— Pilih user —</option>
+        </select>
+      </div>
+      <div id="techManualPanel" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label class="flbl">Nama Teknisi</label>
+          <input type="text" class="finput" id="f_technician_name" placeholder="Nama teknisi lapangan">
+        </div>
+        <div>
+          <label class="flbl">No HP Teknisi</label>
+          <input type="text" class="finput" id="f_technician_phone" placeholder="08xx…">
+        </div>
+      </div>
+
+      <div class="form-section">Lokasi & Referensi</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="grid-column:1/-1">
+          <label class="flbl">Alamat Lokasi</label>
+          <input type="text" class="finput" id="f_location_address" placeholder="Alamat tempat pekerjaan dilakukan">
+        </div>
+        <div>
+          <label class="flbl">Customer</label>
+          <select class="finput" id="f_customer_id">
+            <option value="">— Pilih customer (opsional) —</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Ticket</label>
+          <select class="finput" id="f_ticket_id">
+            <option value="">— Pilih ticket (opsional) —</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="flbl">Catatan</label>
+          <textarea class="finput" id="f_notes" rows="2" placeholder="Catatan tambahan untuk teknisi…"></textarea>
+        </div>
+      </div>
+
+      <!-- WA Notification toggle -->
+      <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding:12px 14px;background:#f0f9ff;border-radius:10px;border:1.5px solid #bae6fd">
+        <input type="checkbox" id="f_send_wa" checked style="width:16px;height:16px;cursor:pointer;accent-color:var(--d-blue1)">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--d-text);display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="color:#16a34a"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Kirim notifikasi WA ke teknisi
+          </div>
+          <div style="font-size:11.5px;color:var(--d-muted);margin-top:1px">Nomor HP teknisi wajib diisi untuk fitur ini</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="saveWO()" class="btn-fin btn-primary-fin" id="btnSaveWO" style="flex:1;justify-content:center;padding:11px">
+          <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span id="btnSaveTxt">Buat Work Order</span>
+        </button>
+        <button onclick="closeModal()" class="btn-fin btn-ghost" style="padding:11px 22px">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL Delete Confirm ════ -->
+<div id="delModal" class="modal-ov">
+  <div class="modal-bx" style="max-width:420px">
+    <button onclick="closeDelModal()" class="modal-cls">✕</button>
+    <div style="text-align:center;padding:10px 0 22px">
+      <div class="del-icon-ring">
+        <svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </div>
+      <div style="font-size:17px;font-weight:800;color:var(--d-text);margin-bottom:8px">Hapus Work Order?</div>
+      <div style="font-size:13px;color:var(--d-muted)" id="delMsg">WO ini akan dihapus permanen.</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;padding-bottom:4px">
+      <button onclick="closeDelModal()" class="btn-fin btn-ghost" style="min-width:110px">Batal</button>
+      <button onclick="confirmDelete()" class="btn-fin" style="min-width:110px;background:#f43f5e;color:#fff;border:none;box-shadow:0 4px 14px rgba(244,63,94,.3)">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LIGHTBOX ════ -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script src="/js/app.js"></script>
+<script src="/js/work-orders.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20,hist={},C={'all':'#2563eb','pending':'#d97706','progress':'#0891b2','done':'#16a34a'},IDS={'all':'scTotal','pending':'scPending','progress':'scInProgress','done':'scDone'};
+  Object.keys(C).forEach(k=>hist[k]=[]);
+  function sp(v){
+    if(!v||v.length<2)return null;
+    const mn=Math.min(...v),mx=Math.max(...v),r=mx-mn||1;
+    const p=v.map((n,i)=>[(i/(v.length-1))*W,H-((n-mn)/r)*(H-6)-3]);
+    const d=p.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=p[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=p[p.length-1],fp=p[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+  function draw(id,v){
+    const s=sp(v);if(!s)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',s.fill);if(l)l.setAttribute('d',s.d);
+    if(d){d.setAttribute('cx',s.dot[0].toFixed(1));d.setAttribute('cy',s.dot[1].toFixed(1));}
+  }
+  function rn(id){const e=document.getElementById(id);return e?parseFloat(e.textContent.replace(/[^\d.]/g,''))||0:0;}
+  function upd(){
+    Object.keys(C).forEach(k=>{
+      const v=rn(IDS[k]);hist[k].push(v);if(hist[k].length>MAX)hist[k].shift();
+      draw('sp-'+k,hist[k]);
+      const p=document.getElementById('wo-pill-'+k);if(p)p.textContent=v;
+    });
+  }
+  window._woUpd=upd;
+  Object.values(IDS).forEach(id=>{const e=document.getElementById(id);if(e)new MutationObserver(()=>setTimeout(upd,50)).observe(e,{childList:true,characterData:true,subtree:true});});
+  document.addEventListener('DOMContentLoaded',upd);
+})();
+function woCardClick(el){
+  const all=document.querySelectorAll('.wo-card[data-filter]');
+  const was=el.classList.contains('xc-active');
+  const C={'all':'#2563eb','pending':'#d97706','progress':'#0891b2','done':'#16a34a'};
+  all.forEach(c=>{
+    c.classList.remove('xc-active');
+    const col=C[c.dataset.filter]||'#64748b';
+    const l=c.querySelector('.sp-line'),f=c.querySelector('.sp-fill'),d=c.querySelector('.sp-dot');
+    if(l)l.style.stroke=col;if(f)f.style.fill=col;if(d)d.style.fill=col;
+  });
+  el.classList.add('xc-active');
+  const l=el.querySelector('.sp-line'),f=el.querySelector('.sp-fill'),d=el.querySelector('.sp-dot');
+  if(l)l.style.stroke='rgba(255,255,255,.70)';
+  if(f)f.style.fill='rgba(255,255,255,.12)';
+  if(d)d.style.fill='#fff';
+  const fm={'all':'','pending':'pending','progress':'in_progress','done':'done'};
+  if(typeof setFilter==='function') setFilter(fm[el.dataset.filter]||'');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - <%= appName %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    :root {
+      --q-blue:#2563eb;  --q-blue-d:#1d4ed8; --q-blue-l:#eff6ff;
+      --q-green:#16a34a; --q-green-d:#15803d; --q-green-l:#f0fdf4;
+      --q-red:#dc2626;   --q-red-d:#b91c1c;   --q-red-l:#fef2f2;
+      --q-amber:#d97706; --q-amber-d:#b45309; --q-amber-l:#fffbeb;
+      --q-teal:#0891b2;  --q-teal-l:#ecfeff;
+      --q-orange:#ea580c;
+      --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --faint:#94a3b8;
+      --rc:16px;
+    }
+    * { box-sizing:border-box; }
+    .q { font-family:'Plus Jakarta Sans',sans-serif; }
+
+    /* ── HEADER ── */
+    .q-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .q-hdr-l h1 { font-size:22px; font-weight:800; color:var(--text); margin:0 0 4px; display:flex; align-items:center; gap:10px; }
+    .q-hdr-l p  { font-size:13px; color:var(--muted); margin:0; }
+    .q-hdr-r    { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+    .btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid; transition:all .15s; white-space:nowrap; font-family:inherit; }
+    .btn svg { width:15px; height:15px; flex-shrink:0; }
+    .btn-outline { background:#fff; border-color:var(--border); color:#374151; }
+    .btn-outline:hover { background:#f8fafc; border-color:#cbd5e1; }
+    .btn-blue  { background:var(--q-blue); border-color:var(--q-blue); color:#fff; }
+    .btn-blue:hover { background:var(--q-blue-d); }
+    .btn-red   { background:var(--q-red); border-color:var(--q-red); color:#fff; }
+    .btn-red:hover { background:var(--q-red-d); }
+    .btn-sm    { padding:5px 12px; font-size:12px; border-radius:8px; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* Live chip */
+    .live-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 13px; border-radius:20px; font-size:12px; font-weight:700; background:var(--q-green-l); border:1px solid #bbf7d0; color:var(--q-green); }
+    .live-chip .ldot { width:7px; height:7px; border-radius:50%; background:var(--q-green); animation:pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.75)} }
+
+    /* ── STAT CARDS — single strip with dividers ── */
+    .q-cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e8eaed;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+
+    .q-card {
+      padding: 20px 22px 18px;
+      border-right: 1px solid #e8eaed;
+      cursor: pointer;
+      display: flex; flex-direction: column; gap: 0;
+      position: relative; overflow: hidden;
+      transition: background .15s;
+    }
+    .q-card:last-child { border-right: none; }
+    .q-card:hover { background: #fafbff; }
+
+    /* Active — biru solid */
+    .q-card.qc-active { background: #2563eb; border-color: #2563eb; }
+    .q-card.qc-active:hover { background: #1d4ed8; }
+    .q-card.qc-active .card-lbl  { color: rgba(255,255,255,.70); }
+    .q-card.qc-active .card-val  { color: #fff; }
+    .q-card.qc-active .card-sub  { color: rgba(255,255,255,.60); }
+    .q-card.qc-active .card-pill { background: rgba(255,255,255,.20) !important; color: rgba(255,255,255,.90) !important; }
+    .q-card.qc-active .sp-line   { stroke: rgba(255,255,255,.70) !important; }
+    .q-card.qc-active .sp-fill   { fill: rgba(255,255,255,.12) !important; }
+    .q-card.qc-active .sp-dot    { fill: #fff !important; }
+
+    /* label */
+    .card-lbl { font-size: 12px; font-weight: 500; color: #64748b; margin-bottom: 10px; letter-spacing: .1px; transition: color .15s; }
+
+    /* body */
+    .card-body { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+    .card-left { display:flex; flex-direction:column; min-width:0; }
+
+    /* angka */
+    .card-val { font-size: 30px; font-weight: 800; color: #0f172a; letter-spacing: -1.2px; line-height: 1; transition: color .15s; }
+    @media(max-width:1400px){ .card-val { font-size:26px; } }
+
+    /* meta */
+    .card-meta { display:flex; align-items:center; gap:5px; margin-top:6px; flex-wrap:wrap; }
+    .card-pill {
+      display:inline-flex; align-items:center; gap:2px;
+      padding:1px 6px; border-radius:100px;
+      font-size:10.5px; font-weight:700; white-space:nowrap; flex-shrink:0;
+      transition: all .15s;
+    }
+    .pill-blue   { background:#dbeafe; color:#1d4ed8; }
+    .pill-green  { background:#dcfce7; color:#16a34a; }
+    .pill-slate  { background:#f1f5f9; color:#475569; }
+    .pill-teal   { background:#cffafe; color:#0e7490; }
+    .pill-orange { background:#ffedd5; color:#c2410c; }
+    .card-sub { font-size:11px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; transition: color .15s; }
+
+    /* sparkline */
+    .card-spark { flex-shrink:0; width:72px; height:36px; }
+    .card-spark svg { width:72px; height:36px; }
+    .sp-fill { transition:fill .3s; }
+    .sp-line { stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .sp-dot  { }
+
+    /* ── Responsive stat cards ── */
+    @media(max-width:1000px) {
+      .q-cards { grid-template-columns:repeat(3,1fr); }
+      .q-card:nth-child(3) { border-right: none; }
+      .q-card:nth-child(-n+3) { border-bottom: 1px solid #e8eaed; }
+      .q-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:600px) {
+      .q-cards { grid-template-columns:repeat(2,1fr); }
+      .q-card { border-right: none; border-bottom: 1px solid #e8eaed; }
+      .q-card:nth-child(odd) { border-right: 1px solid #e8eaed; }
+      .q-card:nth-child(even) { border-right: none; }
+      .q-card:nth-last-child(-n+2) { border-bottom: none; }
+    }
+    @media(max-width:400px) {
+      .q-cards { grid-template-columns:1fr; }
+      .q-card { border-right: none !important; border-bottom: 1px solid #e8eaed; }
+      .q-card:last-child { border-bottom: none; }
+    }
+    .q-card.qc-active { border-color: #2563eb; }
+
+
+    /* ── CONNECTION BANNER ── */
+    .conn-banner { border-radius:10px; padding:11px 16px; display:flex; align-items:center; gap:10px; margin-bottom:16px; font-size:13px; font-weight:500; border:1.5px solid; transition: opacity .35s ease, transform .35s ease, max-height .35s ease, padding .35s ease, margin .35s ease; opacity:1; max-height:80px; }
+    .conn-success { background:var(--q-green-l); color:#15803d; border-color:#bbf7d0; }
+    .conn-info    { background:var(--q-blue-l);  color:var(--q-blue); border-color:#bfdbfe; }
+    .conn-error   { background:var(--q-red-l);   color:var(--q-red);  border-color:#fecaca; }
+    /* State saat fade-out (dipasang sebelum display:none) */
+    .conn-banner.conn-fadeout {
+      opacity: 0;
+      transform: translateY(-6px);
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-width: 0;
+    }
+
+    /* ── TABLE ── */
+    .q-tbl-wrap  { background:#fff; border:1.5px solid var(--border); border-radius:var(--rc); overflow:hidden; }
+    .q-tbl-hdr   { padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px; }
+    .q-tbl-title { font-size:14px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+    .q-count     { font-size:11px; font-weight:600; background:#f1f5f9; color:var(--muted); padding:2px 9px; border-radius:20px; }
+
+    .search-wrap { position:relative; }
+    .search-wrap svg { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--faint); pointer-events:none; width:14px; height:14px; }
+    .search-wrap input { padding:8px 12px 8px 33px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; font-family:inherit; color:var(--text); width:220px; transition:all .15s; }
+    .search-wrap input:focus { border-color:var(--q-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .q-tbl-hdr select { padding:8px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; outline:none; background:#f8fafc; color:#374151; cursor:pointer; font-family:inherit; }
+    .q-tbl-hdr select:focus { border-color:var(--q-blue); }
+
+    .q-table { width:100%; border-collapse:collapse; table-layout:auto; }
+    .q-table thead tr { background:#fafbfc; }
+    .q-table th { padding:11px 14px; font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.06em; text-align:left; border-bottom:1px solid #eef2f7; white-space:nowrap; }
+    .q-table tbody tr { border-bottom:1px solid #f5f7fa; transition:background .15s; }
+    .q-table tbody tr:hover { background:#fafbff; }
+    .q-table tbody tr:last-child { border-bottom:none; }
+    .q-table tbody tr.row-disabled { opacity:.6; }
+    .q-table td { padding:12px 14px; font-size:13px; color:#374151; vertical-align:middle; }
+
+    .num-cell { color:#94a3b8; font-size:11px; font-weight:700; font-variant-numeric:tabular-nums; font-family:'Geist Mono',ui-monospace,Menlo,monospace; width:36px; }
+    .name-cell { font-weight:700; color:var(--text); cursor:pointer; letter-spacing:-.2px; line-height:1.3; font-size:13px; }
+    .name-cell:hover { color:var(--q-blue); }
+    .comment-sub { font-size:11px; color:#94a3b8; margin-top:2px; font-weight:500; }
+
+    .target-cell { min-width:220px; max-width:360px; }
+    .ip-chips { display:flex; flex-wrap:wrap; gap:4px; }
+    .ip-chip { font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:10.5px; font-weight:600; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; border-radius:5px; padding:1.5px 6px; letter-spacing:-.2px; cursor:pointer; transition:all .15s; }
+    .ip-chip:hover { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    .ip-chip.single { background:#eff6ff; color:#1d4ed8; border-color:#dbeafe; }
+    .ip-more { font-size:10.5px; font-weight:700; color:#64748b; background:#fff; border:1px dashed #cbd5e1; border-radius:5px; padding:1.5px 6px; cursor:pointer; transition:all .15s; font-family:inherit; }
+    .ip-more:hover { background:#f8fafc; color:var(--q-blue); border-color:var(--q-blue); border-style:solid; }
+
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+    .pill-on  { background:var(--q-green-l); color:#15803d; }
+    .pill-off { background:#f1f5f9; color:#94a3b8; }
+    .sdot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+    .sdot-on  { animation:pulse 2s infinite; }
+
+    .bw-cell { min-width:180px; }
+    .bw-line { display:flex; align-items:center; gap:7px; margin-bottom:5px; }
+    .bw-line:last-child { margin-bottom:0; }
+    .bw-arr { width:13px; height:13px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; font-size:8px; font-weight:900; line-height:1; }
+    .arr-rx { background:#dbeafe; color:#1d4ed8; }
+    .arr-tx { background:#ffedd5; color:#c2410c; }
+    .bw-val  { font-size:11.5px; font-weight:700; font-variant-numeric:tabular-nums; min-width:66px; letter-spacing:-.2px; }
+    .bw-val.rx { color:#1d4ed8; }
+    .bw-val.tx { color:#c2410c; }
+    .bw-bar  { flex:1; height:4px; background:#f1f5f9; border-radius:2px; overflow:hidden; min-width:30px; }
+    .bw-fill { height:100%; border-radius:2px; transition:width .5s ease, background .3s; }
+    .bw-pct  { font-size:10px; font-weight:700; color:#94a3b8; width:28px; text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
+    .bw-pct.warn   { color:#c2410c; }
+    .bw-pct.danger { color:#dc2626; }
+    .bw-limit-sub { font-size:10px; color:#94a3b8; font-family:'Geist Mono',ui-monospace,Menlo,monospace; margin-top:3px; padding-top:3px; border-top:1px dashed #eef2f7; display:flex; gap:10px; }
+    .bw-limit-sub span { color:#64748b; font-weight:600; }
+    .bw-limit-sub span.unlim { color:#cbd5e1; font-style:italic; font-family:'Plus Jakarta Sans',sans-serif; }
+
+    .prio-box { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; width:40px; height:40px; border-radius:10px; background:#f8fafc; border:1px solid #e2e8f0; gap:1px; }
+    .prio-val { font-size:14px; font-weight:800; color:var(--text); line-height:1; letter-spacing:-.5px; font-variant-numeric:tabular-nums; }
+    .prio-lbl { font-size:8px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
+    .prio-box.hi  { background:#fef2f2; border-color:#fecaca; }
+    .prio-box.hi .prio-val { color:#b91c1c; }
+    .prio-box.hi .prio-lbl { color:#dc2626; }
+    .prio-box.mid { background:#fffbeb; border-color:#fde68a; }
+    .prio-box.mid .prio-val { color:#b45309; }
+    .prio-box.mid .prio-lbl { color:#d97706; }
+
+    /* ── ACTION BUTTONS — segmented pill, modern & clean ── */
+    .act-group {
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #e8eaed;
+      border-radius: 9px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15,23,42,.04);
+      float: right;
+    }
+    .act-ic {
+      width: 32px; height: 30px;
+      padding: 0; margin: 0;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #64748b;
+      transition: background-color .15s, color .15s;
+      font-family: inherit;
+      position: relative;
+    }
+    .act-ic + .act-ic { border-left: 1px solid #eef2f7; }
+    .act-ic svg { width: 16px; height: 16px; display: block; }
+    .act-ic:focus { outline: none; }
+    .act-ic:focus-visible {
+      outline: 2px solid var(--q-blue);
+      outline-offset: -2px;
+      z-index: 1;
+    }
+    .act-ic:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* Edit — biru */
+    .act-edit:hover  { background: #eff6ff; color: #1d4ed8; }
+    .act-edit:active { background: #dbeafe; }
+
+    /* Pause (saat queue active) — amber */
+    .act-pause       { color: #b45309; }
+    .act-pause:hover { background: #fffbeb; color: #92400e; }
+    .act-pause:active{ background: #fef3c7; }
+
+    /* Play (saat queue disabled) — hijau */
+    .act-play        { color: #15803d; }
+    .act-play:hover  { background: #f0fdf4; color: #14532d; }
+    .act-play:active { background: #dcfce7; }
+
+    /* Delete — merah */
+    .act-del         { color: #dc2626; }
+    .act-del:hover   { background: #fef2f2; color: #b91c1c; }
+    .act-del:active  { background: #fee2e2; }
+
+    /* Hover lift untuk seluruh group */
+    .act-group:hover { box-shadow: 0 2px 6px -1px rgba(15,23,42,.08); border-color: #d1d5db; }
+
+    /* Pada baris disabled, tombol pause/play tetap kontras (overrride opacity row) */
+    .row-disabled .act-group { opacity: 1; }
+
+    @media (max-width: 560px) {
+      .act-ic { width: 30px; height: 28px; }
+      .act-ic svg { width: 14px; height: 14px; }
+    }
+
+    /* Empty */
+    .tbl-empty { text-align:center; padding:60px 20px; color:var(--faint); }
+    .tbl-empty svg { width:36px; height:36px; opacity:.35; margin-bottom:10px; }
+    .tbl-empty p { font-size:13px; margin:0; }
+
+    /* Skeleton loader — saat menunggu MikroTik respons (REST API bisa lambat utk banyak queue) */
+    .q-skel {
+      display:inline-block;
+      background:linear-gradient(90deg,#f1f5f9 0%,#e2e8f0 50%,#f1f5f9 100%);
+      background-size:200% 100%;
+      animation:q-shimmer 1.4s ease-in-out infinite;
+      border-radius:4px;
+      max-width:100%;
+    }
+    .q-skel-text { vertical-align:middle; }
+    @keyframes q-shimmer {
+      0%   { background-position:200% 0; }
+      100% { background-position:-200% 0; }
+    }
+    .q-skel-row td { padding:14px 14px !important; vertical-align:middle; }
+    .q-skel-row { border-bottom:1px solid #f5f7fa !important; }
+
+    /* Inline spinner (untuk text "Menghubungkan...") */
+    .q-spin {
+      display:inline-block;
+      width:11px; height:11px;
+      border:2px solid #e2e8f0;
+      border-top-color:var(--q-blue);
+      border-radius:50%;
+      animation:q-spin 0.7s linear infinite;
+      flex-shrink:0;
+    }
+    @keyframes q-spin { to { transform:rotate(360deg); } }
+
+    /* ── DETAIL PANEL (modernized) ── */
+    #detailPanel { position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1100; display:none; align-items:flex-end; justify-content:center; backdrop-filter:blur(2px); }
+    @media(min-width:640px){ #detailPanel { align-items:center; } }
+    .detail-box { background:#fff; border-radius:20px 20px 0 0; width:100%; max-width:680px; max-height:92vh; overflow-y:auto; font-family:'Plus Jakarta Sans',sans-serif; box-shadow:0 20px 60px -15px rgba(15,23,42,.3); }
+    @media(min-width:640px){ .detail-box { border-radius:20px; max-height:88vh; } }
+
+    /* Header with soft gradient */
+    .detail-hdr { padding:22px 26px 18px; background:linear-gradient(135deg,var(--q-blue-l) 0%,#fff 60%); border-bottom:1px solid #f0f4f8; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    .detail-hdr-l h3 { font-size:18px; font-weight:800; color:var(--text); margin:0; letter-spacing:-.3px; line-height:1.2; }
+    .detail-chip { display:inline-flex; align-items:center; gap:5px; margin-top:6px; font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:11px; font-weight:600; background:#fff; color:var(--q-blue-d); border:1px solid #dbeafe; border-radius:5px; padding:2px 7px; }
+    .detail-close { width:32px; height:32px; border-radius:10px; border:1px solid var(--border); background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--muted); transition:all .15s; flex-shrink:0; padding:0; font-family:inherit; }
+    .detail-close svg { width:15px; height:15px; stroke-width:2; }
+    .detail-close:hover { background:#f1f5f9; color:var(--q-red); border-color:#fecaca; }
+
+    .detail-body { padding:20px 26px 22px; }
+    @media(max-width:560px) {
+      .detail-hdr { padding:18px 18px 14px; }
+      .detail-body { padding:16px 18px 18px; }
+      .detail-hdr-l h3 { font-size:16px; }
+      .drate-val { font-size:17px; }
+      .drate-val.compact { font-size:14px; }
+    }
+
+    /* Metric strip — single bordered grid, no heavy boxes */
+    .detail-rates { display:grid; grid-template-columns:repeat(4,1fr); gap:0; background:#fff; border:1px solid #eef2f7; border-radius:14px; overflow:hidden; margin-bottom:18px; }
+    .drate-card { padding:14px 16px; border-right:1px solid #eef2f7; border-bottom:none; border-radius:0; background:none; border-top:none; border-left:none; min-width:0; }
+    .drate-card:last-child { border-right:none; }
+    @media(max-width:560px) {
+      .detail-rates { grid-template-columns:repeat(2,1fr); }
+      .drate-card { padding:12px 14px; }
+      .drate-card:nth-child(1),
+      .drate-card:nth-child(2) { border-bottom:1px solid #eef2f7; }
+      .drate-card:nth-child(2) { border-right:none; }
+      .drate-card:nth-child(3) { border-right:1px solid #eef2f7; }
+      .drate-card:nth-child(4) { border-right:none; }
+    }
+    .drate-lbl { display:flex; align-items:center; gap:5px; font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+    .drate-ic { width:15px; height:15px; border-radius:4px; display:inline-flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; line-height:1; flex-shrink:0; }
+    .drate-ic svg { width:10px; height:10px; stroke-width:2.2; }
+    .drate-ic.rx { background:#cffafe; color:#06b6d4; }
+    .drate-ic.tx { background:#fef3c7; color:#d97706; }
+    .drate-ic.dl { background:#cffafe; color:#0891b2; }
+    .drate-ic.ul { background:#dcfce7; color:#15803d; }
+    .drate-val { font-size:18px; font-weight:800; letter-spacing:-.5px; line-height:1.1; color:var(--text); font-variant-numeric:tabular-nums; display:flex; align-items:baseline; gap:3px; }
+    .drate-val.compact { font-size:15px; }
+    .drate-unit { font-size:11px; color:#94a3b8; font-weight:600; }
+    .drate-sub { font-size:10px; color:#94a3b8; margin-top:3px; font-weight:500; }
+
+    /* Info strip */
+    .detail-info { display:grid; grid-template-columns:auto auto 1fr; gap:18px; align-items:center; padding:12px 16px; background:#fafbfc; border:1px solid #eef2f7; border-radius:12px; margin-bottom:18px; }
+    @media(max-width:560px) {
+      .detail-info { grid-template-columns:1fr 1fr; gap:12px 14px; padding:11px 14px; }
+      .detail-info > .dinfo-item:nth-child(3) { grid-column:1/-1; }
+    }
+    .dinfo-item { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .dinfo-lbl { font-size:9px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; }
+    .dinfo-val { font-size:12px; font-weight:700; color:var(--text); display:inline-flex; align-items:center; gap:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dinfo-sdot { width:5px; height:5px; border-radius:50%; background:#22c55e; animation:pulse 2s infinite; flex-shrink:0; }
+    .dinfo-prio { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:800; border-radius:5px; padding:2px 7px; font-variant-numeric:tabular-nums; }
+    .dinfo-prio.hi  { background:#fef2f2; color:#b91c1c; }
+    .dinfo-prio.mid { background:#fffbeb; color:#b45309; }
+    .dinfo-prio.low { background:#f1f5f9; color:#64748b; }
+
+    /* Segmented tabs */
+    .detail-tabs { display:inline-flex; background:#f1f5f9; border-radius:10px; padding:3px; gap:2px; margin-bottom:14px; border:none; }
+    .dtab { padding:6px 14px; border:none; background:transparent; border-radius:8px; font-size:12px; font-weight:700; color:var(--muted); cursor:pointer; font-family:inherit; transition:all .15s; display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; }
+    .dtab svg { width:12px; height:12px; stroke-width:2; }
+    .dtab .live-dot { width:5px; height:5px; border-radius:50%; background:#22c55e; animation:pulse 2s infinite; }
+    .dtab.active { background:#fff; color:var(--text); box-shadow:0 1px 3px rgba(15,23,42,.08); }
+
+    /* Chart container */
+    .mchart-wrap { background:#fff; border:1px solid #eef2f7; border-radius:14px; overflow:hidden; }
+    .mchart-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 14px 8px; border-bottom:1px solid #f5f7fa; flex-wrap:wrap; gap:8px; }
+    .mchart-legend { display:flex; gap:10px; flex-wrap:wrap; }
+    .mchart-lg { display:flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; }
+    .mchart-lg .sw { width:12px; height:2px; border-radius:1px; }
+    .mchart-lg.dashed .sw { background:transparent; border-top:2px dashed currentColor; height:0; }
+
+    @media(max-width:560px) {
+      .mchart-hdr { padding:10px 12px 6px; gap:6px; }
+      .mchart-legend { gap:8px; }
+      .mchart-lg { font-size:10px; }
+    }
+
+    .hist-btns { display:inline-flex; gap:2px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:2px; margin-bottom:0; flex-wrap:nowrap; }
+    .hist-btn { padding:4px 10px; border:none; background:transparent; border-radius:6px; font-size:10.5px; font-weight:700; color:var(--muted); cursor:pointer; font-family:inherit; transition:all .15s; }
+    .hist-btn:hover { color:var(--q-blue); }
+    .hist-btn.active { background:var(--q-blue); color:#fff; }
+
+    #historyStatus { font-size:11px; color:var(--faint); text-align:center; min-height:16px; padding:8px 12px 0; }
+
+    .chart-wrap { position:relative; height:200px; padding:10px 12px 8px; background:#fff; border:none; border-radius:0; }
+    .chart-wrap-lg { height:260px; padding:4px 4px 0; }
+
+    /* ── MODAL ── */
+    .q-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1200; display:none; align-items:center; justify-content:center; }
+    .q-modal-box { background:#fff; border-radius:16px; padding:24px; width:500px; max-width:96vw; max-height:90vh; overflow-y:auto; font-family:'Plus Jakarta Sans',sans-serif; }
+    .q-modal-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .q-modal-hdr h3 { font-size:16px; font-weight:800; color:var(--text); margin:0; }
+    .q-modal-close { background:#f8fafc; border:1.5px solid var(--border); border-radius:8px; padding:5px 11px; cursor:pointer; font-size:16px; color:var(--muted); font-family:inherit; }
+    .q-modal-close:hover { background:#f1f5f9; }
+    .form-row { display:flex; gap:12px; }
+    .form-row .form-group { flex:1; }
+    .form-group { margin-bottom:14px; }
+    .form-label { display:block; font-size:11px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+    .form-control { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; font-size:13px; background:#f8fafc; color:var(--text); outline:none; font-family:inherit; transition:border .15s; }
+    .form-control:focus { border-color:var(--q-blue); background:#fff; box-shadow:0 0 0 3px #2563eb14; }
+    .form-hint { font-size:11px; color:var(--faint); margin-top:4px; }
+    .q-modal-footer { display:flex; justify-content:flex-end; gap:8px; margin-top:20px; padding-top:16px; border-top:1.5px solid #f1f5f9; }
+
+    @media(max-width:768px) {
+      .search-wrap input { width:160px; }
+      .q-table th:nth-child(3),.q-table td:nth-child(3),
+      .q-table th:nth-child(6),.q-table td:nth-child(6) { display:none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-layout q">
+  <%- include('../partials/sidebar') %>
+  <div class="main-content">
+    <%- include('../partials/topbar') %>
+    <main class="page-content">
+
+      <!-- Header -->
+      <div class="q-hdr">
+        <div class="q-hdr-l">
+          <h1>
+            Simple Queue
+          </h1>
+          <p>Monitor & kelola bandwidth queue Mikrotik secara real-time</p>
+        </div>
+        <div class="q-hdr-r">
+          <div id="mtSelectorMount"></div>
+          <div class="live-chip"><span class="ldot"></span>LIVE</div>
+          <button class="btn btn-outline btn-sm" id="btnConfigMT">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+            MikroTik Config
+          </button>
+          <button class="btn btn-blue btn-sm" id="btnAddQueue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Queue
+          </button>
+        </div>
+      </div>
+
+      <!-- Connection banner -->
+      <div id="connectionBanner"></div>
+
+      <!-- Stat cards -->
+      <div class="q-cards">
+
+        <!-- Total Queues -->
+        <div class="q-card qc-active" id="qc-total" data-filter="all" onclick="qcClick(this)">
+          <div class="card-lbl">Total Queues</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statTotal">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-blue" id="qp-total">— queue</span>
+                <span class="card-sub">Semua queue</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-total" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-total-fill" d="" fill="#2563eb" opacity=".12"/>
+                <path class="sp-line" id="sp-total-line" d="" stroke="#2563eb"/>
+                <circle class="sp-dot" id="sp-total-dot" r="2.5" fill="#2563eb"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active -->
+        <div class="q-card" id="qc-active" data-filter="active" onclick="qcClick(this)">
+          <div class="card-lbl">Active</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statActive">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-green" id="qp-active">— queue</span>
+                <span class="card-sub">Queue aktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-active" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-active-fill" d="" fill="#16a34a" opacity=".12"/>
+                <path class="sp-line" id="sp-active-line" d="" stroke="#16a34a"/>
+                <circle class="sp-dot" id="sp-active-dot" r="2.5" fill="#16a34a"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disabled -->
+        <div class="q-card" id="qc-disabled" data-filter="disabled" onclick="qcClick(this)">
+          <div class="card-lbl">Disabled</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statDisabled">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-slate" id="qp-disabled">— queue</span>
+                <span class="card-sub">Queue nonaktif</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-disabled" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-disabled-fill" d="" fill="#475569" opacity=".12"/>
+                <path class="sp-line" id="sp-disabled-line" d="" stroke="#475569"/>
+                <circle class="sp-dot" id="sp-disabled-dot" r="2.5" fill="#475569"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total RX -->
+        <div class="q-card" id="qc-rx" data-filter="rx" onclick="qcClick(this)">
+          <div class="card-lbl">Total RX</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statTotalRx">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-teal" id="qp-rx">↓ Mbps</span>
+                <span class="card-sub">Download agregat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-rx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-rx-fill" d="" fill="#0891b2" opacity=".12"/>
+                <path class="sp-line" id="sp-rx-line" d="" stroke="#0891b2"/>
+                <circle class="sp-dot" id="sp-rx-dot" r="2.5" fill="#0891b2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total TX -->
+        <div class="q-card" id="qc-tx" data-filter="tx" onclick="qcClick(this)">
+          <div class="card-lbl">Total TX</div>
+          <div class="card-body">
+            <div class="card-left">
+              <span class="card-val" id="statTotalTx">—</span>
+              <div class="card-meta">
+                <span class="card-pill pill-orange" id="qp-tx">↑ Mbps</span>
+                <span class="card-sub">Upload agregat</span>
+              </div>
+            </div>
+            <div class="card-spark">
+              <svg id="sp-tx" viewBox="0 0 72 36" preserveAspectRatio="none">
+                <path class="sp-fill" id="sp-tx-fill" d="" fill="#ea580c" opacity=".12"/>
+                <path class="sp-line" id="sp-tx-line" d="" stroke="#ea580c"/>
+                <circle class="sp-dot" id="sp-tx-dot" r="2.5" fill="#ea580c"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Queue Table -->
+      <div class="q-tbl-wrap">
+        <div class="q-tbl-hdr">
+          <div class="q-tbl-title">
+            
+            Daftar Queue
+            <span class="q-count" id="queueCount">0 queue</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="queueSearch" placeholder="Cari nama, target IP...">
+            </div>
+            <select id="filterStatus">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="disabled">Disabled</option>
+            </select>
+            <button class="btn btn-outline btn-sm" id="btnRefresh">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+            <select id="intervalPicker" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:#f8fafc;outline:none;cursor:pointer;font-family:inherit;color:#374151;">
+              <option value="2">2 dtk</option>
+              <option value="3" selected>3 dtk</option>
+              <option value="5">5 dtk</option>
+              <option value="10">10 dtk</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="q-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">#</th>
+                <th>Nama Queue</th>
+                <th>Target IP</th>
+                <th style="width:100px;">Status</th>
+                <th style="width:210px;">Bandwidth Live</th>
+                <th style="width:64px;text-align:center;">Prio</th>
+                <th style="width:116px;text-align:right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="queueTbody">
+              <tr><td colspan="7">
+                <div class="tbl-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16,3 21,3 21,8"/><line x1="4" y1="20" x2="21" y2="3"/></svg>
+                  <p>Memuat queue...</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── DETAIL PANEL ── -->
+<div id="detailPanel">
+  <div class="detail-box">
+    <div class="detail-hdr">
+      <div class="detail-hdr-l">
+        <h3 id="detailName">—</h3>
+        <span class="detail-chip" id="detailTarget">—</span>
+      </div>
+      <button class="detail-close" id="btnCloseDetail" title="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-rates">
+        <div class="drate-card">
+          <div class="drate-lbl"><span class="drate-ic rx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg></span>Download</div>
+          <div class="drate-val"><span id="detailRxRate" style="color:#06b6d4">0</span><span class="drate-unit">Mbps</span></div>
+          <div class="drate-sub">Maks: <span id="detailMaxDown">—</span></div>
+        </div>
+        <div class="drate-card">
+          <div class="drate-lbl"><span class="drate-ic tx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg></span>Upload</div>
+          <div class="drate-val"><span id="detailTxRate" style="color:#f59e0b">0</span><span class="drate-unit">Mbps</span></div>
+          <div class="drate-sub">Maks: <span id="detailMaxUp">—</span></div>
+        </div>
+        <div class="drate-card">
+          <div class="drate-lbl"><span class="drate-ic dl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg></span>Total DL</div>
+          <div class="drate-val compact"><span id="detailBytesDown" style="color:#0891b2">—</span></div>
+          <div class="drate-sub">Sejak reset</div>
+        </div>
+        <div class="drate-card">
+          <div class="drate-lbl"><span class="drate-ic ul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12L12 7.5m0 0L16.5 12M12 7.5V21"/></svg></span>Total UL</div>
+          <div class="drate-val compact"><span id="detailBytesUp" style="color:#15803d">—</span></div>
+          <div class="drate-sub">Sejak reset</div>
+        </div>
+      </div>
+
+      <div class="detail-info">
+        <div class="dinfo-item">
+          <span class="dinfo-lbl">Status</span>
+          <span class="dinfo-val" id="detailStatus">—</span>
+        </div>
+        <div class="dinfo-item">
+          <span class="dinfo-lbl">Prioritas</span>
+          <span class="dinfo-val" id="detailPriorityWrap">—</span>
+        </div>
+        <div class="dinfo-item" style="min-width:0">
+          <span class="dinfo-lbl">Keterangan</span>
+          <span class="dinfo-val" id="detailComment" style="font-weight:500;color:#64748b;">—</span>
+        </div>
+      </div>
+
+      <div class="detail-tabs">
+        <button class="dtab active" id="tabLive" onclick="QueuePage.switchDetailTab('live')">
+          <span class="live-dot"></span>Real Time
+        </button>
+        <button class="dtab" id="tabHistory" onclick="QueuePage.switchDetailTab('history')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>History
+        </button>
+      </div>
+
+      <div id="paneLive">
+        <div class="mchart-wrap">
+          <div class="mchart-hdr">
+            <div class="mchart-legend">
+              <span class="mchart-lg" style="color:#06b6d4"><span class="sw" style="background:#06b6d4"></span>Download</span>
+              <span class="mchart-lg" style="color:#f59e0b"><span class="sw" style="background:#f59e0b"></span>Upload</span>
+            </div>
+          </div>
+          <div class="chart-wrap" id="detailChart"></div>
+        </div>
+      </div>
+
+      <div id="paneHistory" style="display:none">
+        <div class="mchart-wrap">
+          <div class="mchart-hdr">
+            <div class="mchart-legend">
+              <span class="mchart-lg" style="color:#06b6d4"><span class="sw" style="background:#06b6d4"></span>Avg DL</span>
+              <span class="mchart-lg dashed" style="color:#0e7490"><span class="sw"></span>Max DL</span>
+              <span class="mchart-lg" style="color:#f59e0b"><span class="sw" style="background:#f59e0b"></span>Avg UL</span>
+              <span class="mchart-lg dashed" style="color:#b45309"><span class="sw"></span>Max UL</span>
+            </div>
+            <div class="hist-btns">
+              <button class="hist-btn active" onclick="QueuePage.switchHistoryRange('1h')">1j</button>
+              <button class="hist-btn" onclick="QueuePage.switchHistoryRange('6h')">6j</button>
+              <button class="hist-btn" onclick="QueuePage.switchHistoryRange('24h')">24j</button>
+              <button class="hist-btn" onclick="QueuePage.switchHistoryRange('7d')">7h</button>
+              <button class="hist-btn" onclick="QueuePage.switchHistoryRange('30d')">30h</button>
+            </div>
+          </div>
+          <div id="historyStatus"></div>
+          <div class="chart-wrap chart-wrap-lg" id="historyChart"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD / EDIT MODAL ── -->
+<div id="queueModal" class="q-modal-overlay">
+  <div class="q-modal-box">
+    <div class="q-modal-hdr">
+      <h3 id="modalTitle">Tambah Queue</h3>
+      <button class="q-modal-close" id="closeModal">✕</button>
+    </div>
+    <form id="queueForm">
+      <input type="hidden" id="queueId">
+      <div class="form-group">
+        <label class="form-label">Nama Queue</label>
+        <input type="text" id="qName" class="form-control" placeholder="cth: Pelanggan-001" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target IP</label>
+        <input type="text" id="qTarget" class="form-control" placeholder="192.168.1.100 atau 192.168.1.0/24" required>
+        <div class="form-hint">IP address atau subnet pelanggan</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Max Download</label>
+          <input type="text" id="qMaxDown" class="form-control" placeholder="10M" value="10M" required>
+          <div class="form-hint">cth: 10M, 5M, 1G</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Max Upload</label>
+          <input type="text" id="qMaxUp" class="form-control" placeholder="5M" value="5M" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prioritas</label>
+          <select id="qPriority" class="form-control">
+            <option value="1">1 (Tertinggi)</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8" selected>8 (Default)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="qDisabled" class="form-control">
+            <option value="false">Active</option>
+            <option value="true">Disabled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Keterangan</label>
+        <input type="text" id="qComment" class="form-control" placeholder="Nama pelanggan / paket">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parent</label>
+        <select id="qParent" class="form-control">
+          <option value="none">— Tanpa Parent (top-level) —</option>
+        </select>
+        <div class="form-hint">Pilih queue induk untuk membatasi bandwidth bersama (mis. queue server/VLAN)</div>
+      </div>
+      <div class="q-modal-footer">
+        <button type="button" class="btn btn-outline" id="cancelModal">Batal</button>
+        <button type="submit" class="btn btn-blue" id="saveQueue">Simpan Queue</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MIKROTIK CONFIG MODAL ── -->
+<div id="configModal" class="q-modal-overlay">
+  <div class="q-modal-box">
+    <div class="q-modal-hdr">
+      <h3>MikroTik Config</h3>
+      <button class="q-modal-close" id="closeConfigModal">✕</button>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:11.5px;line-height:1.5;">
+      <strong>Config global (fallback)</strong> — dipakai jika belum ada device router terdaftar di menu Device Management. Untuk multi-router, daftarkan tiap MikroTik sebagai device.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Host / IP</label>
+      <input type="text" id="cfgHost" class="form-control" placeholder="192.168.88.1">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Port</label>
+        <input type="number" id="cfgPort" class="form-control" value="80">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SSL</label>
+        <select id="cfgSSL" class="form-control">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" id="cfgUser" class="form-control" value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" id="cfgPass" class="form-control">
+    </div>
+    <div id="testResult" style="margin:8px 0;font-size:13px;min-height:20px;"></div>
+    <div class="q-modal-footer">
+      <button type="button" class="btn btn-outline" id="btnTestConn">Test Connection</button>
+      <button type="button" class="btn btn-blue" id="btnSaveConfig">Simpan Config</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+<script src="/js/app.js"></script>
+<script src="/js/mikrotik-selector.js"></script>
+<script src="/js/queue.js"></script>
+
+<script>
+(function(){
+  const W=72,H=36,MAX=20;
+  const hist={total:[],active:[],disabled:[],rx:[],tx:[]};
+  const COLORS={total:'#2563eb',active:'#16a34a',disabled:'#475569',rx:'#0891b2',tx:'#ea580c'};
+
+  function sparkPath(vals){
+    if(!vals||vals.length<2)return null;
+    const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
+    const pts=vals.map((v,i)=>[(i/(vals.length-1))*W,H-((v-mn)/rng)*(H-6)-3]);
+    const d=pts.reduce((a,[x,y],i)=>{
+      if(!i)return'M'+x.toFixed(1)+','+y.toFixed(1);
+      const[px,py]=pts[i-1],cx=(px+x)/2;
+      return a+' C'+cx.toFixed(1)+','+py.toFixed(1)+' '+cx.toFixed(1)+','+y.toFixed(1)+' '+x.toFixed(1)+','+y.toFixed(1);
+    },'');
+    const lp=pts[pts.length-1],fp=pts[0];
+    return{d,fill:d+' L'+lp[0].toFixed(1)+','+H+' L'+fp[0].toFixed(1)+','+H+' Z',dot:lp};
+  }
+
+  function drawSpark(id,vals){
+    const sp=sparkPath(vals); if(!sp)return;
+    const f=document.getElementById(id+'-fill'),l=document.getElementById(id+'-line'),d=document.getElementById(id+'-dot');
+    if(f)f.setAttribute('d',sp.fill);
+    if(l)l.setAttribute('d',sp.d);
+    if(d){d.setAttribute('cx',sp.dot[0].toFixed(1));d.setAttribute('cy',sp.dot[1].toFixed(1));}
+  }
+
+  function readNum(id){
+    const el=document.getElementById(id);
+    if(!el)return 0;
+    const txt=el.textContent.replace(/[^\d.]/g,'');
+    return parseFloat(txt)||0;
+  }
+
+  function updateAll(){
+    const vals={
+      total:   readNum('statTotal'),
+      active:  readNum('statActive'),
+      disabled:readNum('statDisabled'),
+      rx:      readNum('statTotalRx'),
+      tx:      readNum('statTotalTx'),
+    };
+    Object.keys(vals).forEach(k=>{
+      hist[k].push(vals[k]);
+      if(hist[k].length>MAX)hist[k].shift();
+      drawSpark('sp-'+k,hist[k]);
+      // Pill update: hanya untuk count card (total/active/disabled).
+      // RX/TX pill di-handle oleh QueuePage.updateStats() agar auto-scale Mbps↔Gbps.
+      if (k === 'rx' || k === 'tx') return;
+      const pill=document.getElementById('qp-'+k);
+      if(!pill)return;
+      pill.textContent=vals[k]+' queue';
+    });
+  }
+
+  window._qUpdateCards=updateAll;
+
+  ['statTotal','statActive','statDisabled','statTotalRx','statTotalTx'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)new MutationObserver(()=>setTimeout(updateAll,50)).observe(el,{childList:true,characterData:true,subtree:true});
+  });
+
+  document.addEventListener('DOMContentLoaded',updateAll);
+})();
+
+function qcClick(el){
+  const cards=document.querySelectorAll('.q-card[data-filter]');
+  const wasActive=el.classList.contains('qc-active');
+  const COLORS={total:'#2563eb',active:'#16a34a',disabled:'#475569',rx:'#0891b2',tx:'#ea580c'};
+
+  cards.forEach(c=>{
+    c.classList.remove('qc-active');
+    const f=c.dataset.filter==='all'?'total':c.dataset.filter;
+    const col=COLORS[f]||'#64748b';
+    const line=c.querySelector('.sp-line'),fill=c.querySelector('.sp-fill'),dot=c.querySelector('.sp-dot');
+    if(line)line.style.stroke=col;
+    if(fill)fill.style.fill=col;
+    if(dot)dot.style.fill=col;
+  });
+
+  if(!wasActive){
+    el.classList.add('qc-active');
+    const line=el.querySelector('.sp-line'),fill=el.querySelector('.sp-fill'),dot=el.querySelector('.sp-dot');
+    if(line)line.style.stroke='rgba(255,255,255,.70)';
+    if(fill)fill.style.fill='rgba(255,255,255,.12)';
+    if(dot)dot.style.fill='#fff';
+
+    // Sync filter dropdown
+    const filter=el.dataset.filter;
+    const sel=document.getElementById('filterStatus');
+    if(sel && (filter==='active'||filter==='disabled')){
+      sel.value=filter;
+      sel.dispatchEvent(new Event('change'));
+    } else if(sel){
+      sel.value='';
+      sel.dispatchEvent(new Event('change'));
+    }
+  } else {
+    const sel=document.getElementById('filterStatus');
+    if(sel){sel.value='';sel.dispatchEvent(new Event('change'));}
+  }
+}
+</script>
+</body>
+</html>
