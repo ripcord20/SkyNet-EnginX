@@ -1,6 +1,10 @@
 # ── Dependencies & build ────────────────────
 node_modules/
 dist/
+
+# ── Multi-tenant runtime stacks (Pola B) ────
+# Per-tenant app copies + registry created by scripts/tenant.js. Runtime only.
+tenants-runtime/
 .DS_Store
 desktop.ini
 
